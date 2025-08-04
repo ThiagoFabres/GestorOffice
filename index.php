@@ -1,3 +1,9 @@
+<?php
+session_start();
+if (isset($_SESSION['usuario'])) {
+    session_destroy();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,13 +17,7 @@
 </head>
 <body style="background-color: #f3f4f7;">
 
-<?php
-if (!empty($_POST)) {
-    echo "<pre>";
-    print_r($_POST);
-    echo "</pre>";
-}
-?>
+
 
 <!-- Login -->
 
@@ -25,18 +25,18 @@ if (!empty($_POST)) {
     <div class="card-body">
 <div id="card-titulo"> <h1>Login</h1></div>
 <div id="card-sub">Entre com a sua conta.</div>
-<form action="/" method="post">
+<form action="login.php" method="post">
     <div style="display:flex; flex-direction:row;" class="mb-3">
         <div class="input-icon">
         <i class="bi bi-person"></i>
         </div>
-        <input type="text" class="form-control" id="username" placeholder="Email" name="username" required>
+        <input type="text" class="form-control" id="username" placeholder="Email" name="email" required>
     </div>
     <div style="display:flex; flex-direction:row;" class="mb-3">
         <div class="input-icon">
         <i class="bi bi-lock"></i>
         </div>
-        <input type="password" class="form-control" id="password" placeholder="Password" name="password" required>
+        <input type="password" class="form-control" id="password" placeholder="Password" name="senha" required>
     </div>
     <div class="footer">
     <button type="submit" style="background-color:#5856d6; padding-inline:1.5em; " class="btn btn-primary">Login</button>
