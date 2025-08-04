@@ -1,0 +1,324 @@
+.conta-header {
+    float: right;
+    position: relative;
+}
+
+#userBtn {
+    background: none;
+    border: none;
+    font-size: 1.2em;
+    color: #181f2b;
+    outline: none;
+    cursor: pointer;
+}
+
+#userMenu {
+    display: none;
+    position: absolute;
+    top: 2.5em;
+    right: 0;
+    background: #fff;
+    border: 1px solid #dbdfe6;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    min-width: 120px;
+    padding: 0.5em 1em;
+}
+/* Estilo para o menu suspenso do usuário */
+
+#userBtn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
+    position: relative;
+}
+
+#userMenu {
+    display: none;
+    position: absolute;
+    top: 2.2em;
+    right: 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 0.5em;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    min-width: 120px;
+
+    padding: 0.5em 0;
+}
+#userMenu a {
+    display: flex;
+    align-items: center;
+    padding: 1em;
+    color: #181f2b;
+    text-decoration: none;
+    font-size: 1em;
+    gap: 0.5em;
+    border-radius: 0.3em;
+    transition: background 0.2s;
+}
+#userMenu a:hover {
+    background: #f3f4f7;
+}
+
+
+@keyframes forwards {
+    from {
+        border-radius: 0;
+        background-color: #181f2b;
+
+    }
+    to {
+        
+        border-radius: 1.5em;
+        background-color: #0f141b;
+
+    }
+
+    from {
+        
+        border-radius: 1.5em;
+        background-color: #0f141b;
+
+    }
+
+    to {
+        
+        border-radius: 0.4em;
+        background-color: rgb(20, 23, 29);
+
+    }
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+}
+
+@keyframes forwards-superior {
+    from {border: 2px solid #2a2f366c;
+        border-radius: 0;
+        font-size: 1.1em;
+    }
+    to {
+        border: 2px solid #2a2f366c;
+        border-radius: 1.5em;
+        font-size: 1.2em;
+    }
+
+    from {
+        border: 2px solid #2a2f366c;
+        border-radius: 1.5em;
+        font-size: 1.3em;
+    }
+
+    to {
+        border: 2px solid white;
+        background-color: #252b36;
+        border-radius: 1em;
+        font-size: 1em;
+    }
+}
+
+#card-titulo {
+    font-size: 1.5em;
+    color: #181f2b;
+    margin-bottom: 0.5em;
+}
+
+#card-sub {
+    font-size: 1em;
+    color: #6a6e76;
+    margin-bottom: 1em;
+}
+
+.card {
+    box-shadow: none;
+}
+
+.card input{
+    height: 2.4em;
+    border-radius: 0 5px 5px 0;
+}
+
+.input-icon {
+    border: 1px solid #dbdfe6;
+    border-right:none;
+    height: 2.4em;
+    background-color: #f3f4f7;
+    border-radius: 5px 0 0 5px ;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.input-icon i {
+    color: #3c424b;
+    font-size: 1.2em;
+    padding: 0.5em;
+}
+
+.login-card {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    border: 1px solid #ccc;
+    transform: translate(-50%, -50%);
+    width: 45%;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+}
+
+#menu-superior {
+    position: fixed;
+width: 100%;
+    height: 4em;
+
+}
+
+#titulo-container {   
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+#titulo-header {
+    
+    display: flex;
+    align-items: center;     
+    height: auto;            
+    width: 100%;
+
+}
+
+
+
+
+
+.superior-item {
+    display: none;
+}
+
+@media (max-width: 900px) {
+    .superior-item {
+        display: flex !important;
+        position: relative;
+
+        background: #181f2b;
+        color: #fff;
+    }
+    #menu-superior {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: auto;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 0.2em 0.5em;
+        gap: 0.5em;
+        background: #181f2b;
+
+    }
+}
+
+
+
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #f3f4f7;
+    display: flex;
+    flex-wrap: wrap;
+    font-family: Arial, sans-serif;
+    min-height: 100vh;
+}
+
+
+#barra-lateral {
+    width: 16em;
+    height: 100vh;
+    background-color: #212631;
+    position: fixed;
+    left: 0;
+    top: 0;
+
+    display: flex;
+    flex-direction: column;
+}
+
+#logo-container {
+    width: 100%;
+    height: 13em;
+    border-bottom: 2px solid #2a2f366c;
+    background-color: #212631;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+
+#header {
+    display:flex;
+    background-color: white;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    top: 0;
+    position: fixed;
+    left: 16em;
+    width: calc(100vw - 16em);
+    min-width: 0;
+    height: 4em;
+    border-bottom: 2px solid #dbdfe6;
+    background: #fff;
+
+    pointer-events: auto;
+}
+/* Garante que o conteúdo principal não fique sob o header fixo */
+.main, .container, #content {
+    margin-top: 4em !important;
+}
+
+#header p {
+    font-size: 1.2rem;
+    padding-left: 2em;
+    color: #00000070;
+}
+
+
+
+
+
+.menu-item a {
+    display: flex;
+    align-items: center;
+    padding: 0.5em 1em;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 1.2em;
+    color: whitesmoke;
+
+}
+.menu-item a:hover {
+    animation-name: forwards;
+    animation-fill-mode: forwards;
+    animation-duration: 0.1s;
+}
+
+
+
