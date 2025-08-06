@@ -1,6 +1,43 @@
+.input-status {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1em;
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    height: 38px;
+}
+
 .conta-header {
     float: right;
     position: relative;
+}
+
+.input-form-adm {
+    margin-bottom: 1em;
+}
+
+.input-form-adm-group {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+}
+
+.input-form-adm-group div {
+    width:calc(100% / 3);
+}
+
+.input-form-contato-adm-group {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+
+}
+
+
+
+.input-form-contato-adm-group div {
+    width:calc(100% / 2);
 }
 
 #userBtn {
@@ -24,6 +61,7 @@
     padding: 0.5em 1em;
 }
 /* Estilo para o menu suspenso do usuário */
+
 
 #userBtn {
     background: none;
@@ -240,7 +278,6 @@ width: 100%;
 }
 
 body {
-    background-color: #f3f4f7;
     display: flex;
     flex-wrap: wrap;
     font-family: Arial, sans-serif;
@@ -290,8 +327,13 @@ body {
     pointer-events: auto;
 }
 /* Garante que o conteúdo principal não fique sob o header fixo */
-.main, .container, #content {
+.main, .container{
     margin-top: 4em !important;
+}
+
+.container {
+    width: 100%;
+    background-color: #f3f4f7;
 }
 
 #header p {
