@@ -11,6 +11,7 @@ class Usuario {
     public $consultar;
     public $cargo;
 
+
     public function __construct($id_usuario = null, $id_empresa = null, $nome = '', $email = '', $senha = '', $processar = 0, $consultar = 0, $cargo = null) {
         $this->id_usuario = $id_usuario;
         $this->id_empresa = $id_empresa;
@@ -38,16 +39,30 @@ class Usuario {
         return $pdo->lastInsertId();
     }
 
-    public static function read($id = null) {
+    public static function read($id = null, $email = null) {
         $pdo = (new Database())->connect();
-        if ($id) {
-            $stmt = $pdo->prepare('SELECT * FROM usuario where id_usuario = 1');
-            $stmt->execute([$id]);
-            return $stmt->fetchObject('Usuario');
-        } else {
-            $stmt = $pdo->query('SELECT * FROM usuario');
-            return $stmt->fetchAll(PDO::FETCH_CLASS);
+        $query = 'SELECT * FROM usuario';
+        $conditions = [];
+        if ($id != null) $conditions[] = 'id_usuario = :id_usuario';
+        if ($email != null) $conditions[] = 'email = :email';
+        if ($conditions) {
+            $query .= ' WHERE ' . implode(' AND ', $conditions);
         }
+        if ($email != null) {
+            $query .= ' LIMIT 1';
+        }
+        $stmt = $pdo->prepare($query);
+        if ($id != null) {
+            $stmt->bindValue(':id_usuario', $id);
+        }
+        if ($email != null) {
+            $stmt->bindValue(':email', $email);
+        }
+        $stmt->execute();
+        
+            return $stmt->fetch(PDO::FETCH_OBJ);
+        
+
     }
 
     public static function update($usuario) {
