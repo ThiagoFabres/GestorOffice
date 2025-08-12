@@ -16,8 +16,6 @@ if (isset($_SESSION['usuario'])) {
     <title>Gestor Office</title>
 </head>
 <body style="background-color: #f3f4f7;">
-
-
 <!-- Login -->
 
 <div class="card login-card">
