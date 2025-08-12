@@ -18,7 +18,6 @@ if (isset($_SESSION['usuario'])) {
 <body style="background-color: #f3f4f7;">
 
 
-
 <!-- Login -->
 
 <div class="card login-card">
@@ -44,7 +43,7 @@ if (isset($_SESSION['usuario'])) {
     </div>
     </div>
 </div>
-
+</form>
 
 
 
