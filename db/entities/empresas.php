@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . '/../base.php';
 
 class Empresa {
@@ -9,14 +10,18 @@ class Empresa {
     public $bairro;
     public $cidade;
     public $estado;
-    public $cnpj_cpf;
+    public $cpf;
+    public $cnpj;
     public $email;
     public $celular;
     public $fixo;
-    public $contato;
-    public $ativo;
+    public $status;
 
-    public function __construct($id = null, $razao_soc = '', $nom_fant = '', $rua = '', $bairro = '', $cidade = '', $estado = '', $cnpj_cpf = '', $email = '', $celular = '', $fixo = '', $contato = '', $ativo = 1) {
+    public $data_r;
+
+    public $cep;
+
+    public function __construct($id = null, $razao_soc = '', $nom_fant = '', $rua = '', $bairro = '', $cidade = '', $estado = '', $cpf = '',$cnpj = '', $email = '', $celular = '', $fixo = '',  $status = 1, $data_r = '', $cep = '') {
         $this->id = $id;
         $this->razao_soc = $razao_soc;
         $this->nom_fant = $nom_fant;
@@ -24,66 +29,104 @@ class Empresa {
         $this->bairro = $bairro;
         $this->cidade = $cidade;
         $this->estado = $estado;
-        $this->cnpj_cpf = $cnpj_cpf;
+        $this->cpf = $cpf;
+        $this->cnpj = $cnpj;
         $this->email = $email;
         $this->celular = $celular;
         $this->fixo = $fixo;
-        $this->contato = $contato;
-        $this->ativo = $ativo;
+        $this->status = $status;
+        $this->data_r = $data_r;
+        $this->cep = $cep;
     }
 
     public static function create($empresa) {
         $pdo = (new Database())->connect();
-        $sql = 'INSERT INTO empresas (razao_soc, nom_fant, rua, bairro, cidade, estado, cnpj_cpf, email, celular, fixo, contato, ativo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+        $sql = 'INSERT INTO empresas (razao_soc, nom_fant, rua, bairro, cidade, estado, cpf, cnpj, email, celular, fixo, status, data_r, cep) VALUES (:razao_soc, :nom_fant, :rua, :bairro, :cidade, :estado, :cpf, :cnpj, :email, :celular, :fixo, :status, :data_r, :cep)';
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([
-            $empresa->razao_soc,
-            $empresa->nom_fant,
-            $empresa->rua,
-            $empresa->bairro,
-            $empresa->cidade,
-            $empresa->estado,
-            $empresa->cnpj_cpf,
-            $empresa->email,
-            $empresa->celular,
-            $empresa->fixo,
-            $empresa->contato,
-            $empresa->ativo
-        ]);
-        return $pdo->lastInsertId();
+
+        $stmt->bindValue(':razao_soc', $empresa->razao_soc);
+        $stmt->bindValue(':nom_fant', $empresa->nom_fant);
+        $stmt->bindValue(':rua', $empresa->rua);
+        $stmt->bindValue(':bairro', $empresa->bairro);
+        $stmt->bindValue(':cidade', $empresa->cidade);
+        $stmt->bindValue(':estado', $empresa->estado);
+        $stmt->bindValue(':cpf', $empresa->cpf);
+        $stmt->bindValue(':cnpj', $empresa->cnpj);
+        $stmt->bindValue(':email', $empresa->email);
+        $stmt->bindValue(':celular', $empresa->celular);
+        $stmt->bindValue(':fixo', $empresa->fixo);
+        $stmt->bindValue(':status', $empresa->status);
+        $stmt->bindValue(':data_r', $empresa->data_r);
+        $stmt->bindValue(':cep', $empresa->cep);
+
+       return $stmt->execute(); 
     }
 
-    public static function read($id = null) {
+        public static function read($id = null, $email = null) {
         $pdo = (new Database())->connect();
-        if ($id) {
-            $stmt = $pdo->prepare('SELECT * FROM empresas WHERE id = ?');
-            $stmt->execute([$id]);
-            return $stmt->fetchObject('Empresa');
-        } else {
-            $stmt = $pdo->query('SELECT * FROM empresas');
-            return $stmt->fetchAll(PDO::FETCH_CLASS);
+        $query = 'SELECT * FROM empresas';
+        $conditions = [];
+        if ($id != null) $conditions[] = 'id = :id';
+        if ($email != null) $conditions[] = 'email = :email';
+        
+        
+        if ($conditions) {
+            $query .= ' WHERE ' . implode(' AND ', $conditions);
         }
+        if ($email != null) {
+            $query .= ' LIMIT 1';
+        }
+        $stmt = $pdo->prepare($query);
+        if ($id != null) {
+            $stmt->bindValue(':id', $id);
+        }
+        if ($email != null) {
+            $stmt->bindValue(':email', $email);
+        }
+        $stmt->execute();
+        
+            return $stmt->fetchAll(PDO::FETCH_OBJ);
     }
 
     public static function update($empresa) {
         $pdo = (new Database())->connect();
-        $sql = 'UPDATE empresas SET razao_soc = ?, nom_fant = ?, rua = ?, bairro = ?, cidade = ?, estado = ?, cnpj_cpf = ?, email = ?, celular = ?, fixo = ?, contato = ?, ativo = ? WHERE id = ?';
+        $sql = 'UPDATE empresas SET 
+        razao_soc = :razao_soc, 
+        nom_fant = :nom_fant, 
+        rua = :rua, 
+        bairro = :bairro, 
+        cidade = :cidade, 
+        estado = :estado, 
+        cpf = :cpf, 
+        cnpj = :cnpj, 
+        email = :email, 
+        celular = :celular, 
+        fixo = :fixo, 
+        status = :status, 
+        cep = :cep, 
+        data_r = :data_r 
+    WHERE id = :id';
+
         $stmt = $pdo->prepare($sql);
-        return $stmt->execute([
-            $empresa->razao_soc,
-            $empresa->nom_fant,
-            $empresa->rua,
-            $empresa->bairro,
-            $empresa->cidade,
-            $empresa->estado,
-            $empresa->cnpj_cpf,
-            $empresa->email,
-            $empresa->celular,
-            $empresa->fixo,
-            $empresa->contato,
-            $empresa->ativo,
-            $empresa->id
-        ]);
+
+ $stmt->bindValue(':razao_soc', $empresa->razao_soc);
+    $stmt->bindValue(':nom_fant', $empresa->nom_fant);
+    $stmt->bindValue(':rua', $empresa->rua);
+    $stmt->bindValue(':bairro', $empresa->bairro);
+    $stmt->bindValue(':cidade', $empresa->cidade);
+    $stmt->bindValue(':estado', $empresa->estado);
+    $stmt->bindValue(':cpf', $empresa->cpf);
+    $stmt->bindValue(':cnpj', $empresa->cnpj);
+    $stmt->bindValue(':email', $empresa->email);
+    $stmt->bindValue(':celular', $empresa->celular);
+    $stmt->bindValue(':fixo', $empresa->fixo);
+    $stmt->bindValue(':status', $empresa->status);
+    $stmt->bindValue(':cep', $empresa->cep);
+    $stmt->bindValue(':data_r', $empresa->data_r);
+    $stmt->bindValue(':id', $empresa->id, PDO::PARAM_INT); // ← Faltava esse bind
+
+       return $stmt->execute(); 
+        
     }
 
     public static function delete($id) {
