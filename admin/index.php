@@ -8,28 +8,8 @@ require_once __DIR__ . '/../db/entities/cargo.php';
 session_start();
 
 
-if(!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 1) {
-    header('Location: /');
-}
 
-if (isset($_POST['acao']) && $_POST['acao'] == 'inserir_cliente') {
-    $nome = $_POST['nome'];
-    $fantasia = $_POST['fantasia'];
-    $cnpj = $_POST['cnpj'];
-    $cpf = $_POST['cpf'];
-    $cep = $_POST['cep'];
-    $endereco = $_POST['endereco'];
-    $bairro = $_POST['bairro'];
-    $cidade = $_POST['cidade'];
-    $estado = $_POST['estado'];
-    $celular = $_POST['celular'];
-    $telefone = $_POST['telefone'];
-    $email = $_POST['email'];
-    $status = isset($_POST['status']) ? 1 : 0;
-
-
-
-    function permissao() {
+function permissao() {
         // Exemplo: só permite se o usuário logado for admin
         return isset($_SESSION['usuario']) && $_SESSION['usuario']->cargo == Cargo::ADMIN;
     }
@@ -46,29 +26,54 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'inserir_cliente') {
         return true;
     }
 
+if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 1) {
+    header('Location: /');
+    exit;
+}
+
+if (isset($_POST['acao']) && $_POST['acao'] == 'editar') {
+    $id = $_POST['id'];
+    $nome = $_POST['nome'];
+    $fantasia = $_POST['fantasia'];
+    $cnpj = $_POST['cnpj'];
+    $cpf = $_POST['cpf'];
+    $cep = $_POST['cep'];
+    $endereco = $_POST['endereco'];
+    $bairro = $_POST['bairro'];
+    $cidade = $_POST['cidade'];
+    $estado = $_POST['estado'];
+    $celular = $_POST['celular'];
+    $telefone = $_POST['telefone'];
+    $email = $_POST['email'];
+    $status = isset($_POST['status']) ? 1 : 0;
+    $data_r = $_POST['data_r'];
+
     $empresa = new Empresa(
-        null, // id
+        $id, // id
         $nome,
         $fantasia,
         $endereco,
         $bairro,
         $cidade,
         $estado,
+        $cpf,
         $cnpj,
         $email,
         $celular,
         $telefone,
-        '', // contato
-        $status
-    );
+        $status,
+        $data_r,
+        $cep
+);
 
-// Exemplo de criação de usuário com validação de cargo
+
+
 $gestor = new Usuario(
     null, // id_usuario
-    null, // id_empresa
+    $id, // id_empresa
     $nome,
     $email,
-    password_hash('123456', PASSWORD_DEFAULT),
+    null,
     0, // processar
     0, // consultar
     Cargo::GESTOR
@@ -82,11 +87,82 @@ try {
     echo 'Erro: ' . $e->getMessage();
 }
 
-    $empresaId = Empresa::create($empresa);
-    $gestor->id_empresa = $empresaId;
+Empresa::update($empresa);
+Usuario::update($gestor);
+
+
+
+
+
+}
+
+if (isset($_POST['acao']) && $_POST['acao'] == 'adicionar') {
+
+    $nome = $_POST['nome'];
+    $fantasia = $_POST['fantasia'];
+    $cnpj = $_POST['cnpj'];
+    $cpf = $_POST['cpf'];
+    $cep = $_POST['cep'];
+    $endereco = $_POST['endereco'];
+    $bairro = $_POST['bairro'];
+    $cidade = $_POST['cidade'];
+    $estado = $_POST['estado'];
+    $celular = $_POST['celular'];
+    $telefone = $_POST['telefone'];
+    $email = $_POST['email'];
+    $status = isset($_POST['status']) ? 1 : 0;
+
+
+    
+
+    $empresa = new Empresa(
+        null, // id
+        $nome,
+        $fantasia,
+        $endereco,
+        $bairro,
+        $cidade,
+        $estado,
+        $cpf,
+        $cnpj,
+        $email,
+        $celular,
+        $telefone,
+        $status,
+        date('Y-m-d H:i:s'), // data_r
+        $cep
+
+    );
+
+
+// Exemplo de criação de usuário com validação de cargo
+$gestor = new Usuario(
+    null, // id_usuario
+    null, // id_empresa
+    $nome,
+    $email,
+    '123456',
+    0, // processar
+    0, // consultar
+    Cargo::GESTOR,
+    $status
+);
+
+// Atribuindo cargo
+try {
+    atribuirCargo($gestor->cargo);
+    // O cargo foi atribuído com sucesso
+} catch (Exception $e) {
+    echo 'Erro: ' . $e->getMessage();
+}
+
+    Empresa::create($empresa);
+    $empresacriada = Empresa::read(null, $email);
+    $empresaid = $empresacriada[0];
+    $gestor->id_empresa = $empresaid->id;
     Usuario::create($gestor);
 
-    header('Location: index.php');
+
 } else {
     $error = "Dados inválidos.";
 
@@ -110,7 +186,7 @@ try {
     <title>Calendario</title>
 </head>
 
-<body >
+<body id="body" >
 
 
     <nav id="barra-lateral">
@@ -119,7 +195,7 @@ try {
         </div>
 
         <div id="Adicionar empresa-lateral" class="menu-item">
-            <a href="/admin/"> <div style="width:10%; height:10%; align-items:center;"><i class="bi bi-building"></i></div> Adicionar Empresas</a>
+            <a href="/admin/"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-building"></i></div> Adicionar Empresas</a>
         </div>
 
         
@@ -129,15 +205,23 @@ try {
 
 
     <div id="header">
-    <div id="titulo-header"><a>Dashboard</a></div>
+        
+        <button onclick="encolher()" style="background:none;border:none;font-size:1.2em;color:#181f2b;outline:none;cursor:pointer; z-index:1000;">
+            <span class="btn bi bi-list"></span>
+        </button>
+        
+    <div id="titulo-header">
+        
+        <a>Dashboard</a>
+    </div>
     <div id="menu-superior">
         <a class="superior-item" href="/admin/">Dashboard</a>
     </div>
     <div class="conta-header" style="position:relative; float:right; margin-right:2em;">
         <button id="userBtn" type="button" style="background:none;border:none;font-size:1.2em;color:#181f2b;outline:none;cursor:pointer;">
-            <span style="color:#181f2b;">Admin</span>
+            <span style="color:#181f2b;"><?= $_SESSION['usuario']->nome ?> </span>
         </button>
-        <div id="userMenu" style="right:0;">
+        <div id="userMenu" style="right:0; z-index: 1000000;">
             <a href="/" class="dropdown-item">
                 <i class="bi bi-box-arrow-left"></i> Logout
         </a>
@@ -147,21 +231,161 @@ try {
 
 
 
-    <div class="container">
-            <a href="index.php?acao=adicionar" style="width: 10em; margin-bottom: 2em;" type="button"
-                class="btn btn-primary">
-                Adicionar Empresa
-            </a>
+    
+        <?php if(!isset($_GET['acao']) || $_GET['acao'] !== 'editar') { ?>
+            
+            <div class="main" id="container">
+
+                <div class="botao">
+        <a href="index.php?acao=adicionar" class="btn btn-primary btn-lg botao-adm-adicionar">Nova Empresa</a>
     </div>
 
-    <?php
     
-    echo '<pre>';
-    print_r($_POST);  
-    echo '</pre>';
+    <div class="tabela">
 
-    ?>
+      <div class="tabela-borda">
+        
+            <div class="row">
+                <div class="col-md-12">
+                
 
+                    <table class="table table-striped">
+                        <div class="titulo-tabela"><h4>Empresas</h4></div>
+                        
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Telefone</th>
+                                <th>Endereco</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            $empresas = Empresa::read();
+                            foreach ($empresas as $empresa) {
+                                $status = ($empresa->status == 0) ? 'INATIVO' : 'ATIVO';
+                                 $link = 'index.php?acao=editar&&id=' . $empresa->id;
+                                ?>
+                                    
+                                        <tr class="tr-clientes" onclick="window.location.href='<?= $link ?>'" style="cursor: pointer;">
+                                            <td>
+                                                <?php if($status == 'INATIVO') echo($status . ' - ') ?><?=$empresa->nom_fant?>
+                                                <p>Razao social: <?=$empresa->razao_soc?></p>
+                                            </td>
+                                            <td>
+                                                <?=$empresa->celular?>
+                                                <p> Fixo:<?=$empresa->fixo?></p>
+                                            </td>
+
+                                            <td>
+                                                <?=$empresa->rua . ', ' . $empresa->bairro . ' ' . $empresa->cidade . '-' . $empresa->estado ?>
+                                                <p>CEP: <?= $empresa->cep ?></p>
+                                            </td>
+                                            <td>
+                                                <?=$status?>
+                                            </td>
+                                        </tr>
+
+                            <?php }
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
+    </div>
+    </div> 
+    </div>
+    </div>
+<?php } else if($_GET['acao'] == 'editar') { ?>
+    
+    <?php 
+    $id = $_GET['id']; 
+    $empresa = Empresa::read($id);
+    print_r($empresa); 
+    $empresa = $empresa[0];
+     ?>
+    
+    <div class="main-edit">
+    <div class="tabela-edit">
+        <div class=" edit-card">
+    <div class="card-body">
+
+<div id="card-sub">Edite os dados do cliente</div>
+<form action="index.php" method="post">
+
+    <input type="hidden" name="data_r" value="<?=$empresa->data_r?>">
+    <input type="hidden" name="id" value="<?=$empresa->id?>">
+ 
+    <div style="display:flex; flex-direction:row;" class="mb-3">
+        <input type="text" class="form-control" id="nome" placeholder="Razao social / Nome" name="nome" value="<?= $empresa->razao_soc ?>" required>
+    </div>
+
+    <div style="display:flex; flex-direction:row;" class="mb-3">
+        <input type="text" class="form-control" id="senha" placeholder="Nome fantasia" name="fantasia" value="<?= $empresa->nom_fant ?>" required>
+    </div>
+
+    <div style="display:flex; flex-direction:row;" class="mb-3">
+        <input type="text" class="form-control" id="cnpj" placeholder="CNPJ" name="cnpj" value="<?= $empresa->cpf ?>" required>
+    </div>
+
+    <div style="display:flex; flex-direction:row;" class="mb-3">
+        <input type="text" class="form-control" id="cpf" placeholder="CPF" name="cpf" value="<?= $empresa->cnpj ?>" required>
+    </div>
+
+    <div style="display:flex; flex-direction:row;" class="mb-3">
+        <input type="text" class="form-control" id="cep" placeholder="CEP" name="cep" value="<?= $empresa->cep ?>" required>
+    </div>
+
+    <div style="display:flex; flex-direction:row;" class="mb-3">
+        <input type="text" class="form-control" id="endereco" placeholder="Endereço" name="endereco" value="<?= $empresa->rua ?>" required>
+    </div>
+
+    <div class="input-form-adm-group input-form-adm">
+
+    <div style="display:flex; flex-direction:row;" class="mb-3">
+        <input style="border-top-right-radius: 0; border-bottom-right-radius: 0;" type="text" class="form-control" id="bairro" placeholder="Bairro" name="bairro" value="<?= $empresa->bairro?>" required>
+    </div>
+
+    <div style="display:flex; flex-direction:row;" class="mb-3">
+        <input style=" border-radius: 0;" type="text" class="form-control" id="cidade" placeholder="Cidade" name="cidade" value="<?= $empresa->cidade ?>" required>
+    </div>
+
+    <div style="display:flex; flex-direction:row;" class="mb-3">
+        <input style="border-top-left-radius: 0; border-bottom-left-radius: 0;" type="text" class="form-control" id="estado" placeholder="Estado" name="estado" value="<?= $empresa->estado ?>" required>
+    </div>
+
+    </div>
+
+    <div class="input-form-contato-adm-group input-form-adm">
+
+    <div style="display:flex; flex-direction:row;" class="mb-3">
+        <input style="border-top-right-radius: 0; border-bottom-right-radius: 0;" type="text" class="form-control" id="celular" placeholder="Celular" name="celular" value="<?= $empresa->celular ?>" required>
+    </div>
+
+    <div style="display:flex; flex-direction:row;" class="mb-3">
+        <input  style="border-top-left-radius: 0; border-bottom-left-radius: 0;" type="text" class="form-control" id="telefone" placeholder="Telefone fixo" name="telefone" value="<?= $empresa->fixo ?>" required>
+    </div>
+
+    </div>
+
+    <div style="display:flex; flex-direction:row;" class="mb-3">
+        <input type="text" class="form-control" id="email" placeholder="E-mail" name="email" value="<?= $empresa->email ?>" required>
+    </div>
+
+    <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+            <label for="status" style="margin-bottom:0;">Ativo</label>
+            <input type="checkbox" <?php if($empresa->status == 1) {?> checked <?php }; ?> onchange="" name="status" class="form-check-input"
+            value="">
+    </div>
+
+    <button name="acao" value="editar" type="submit" style="background-color:#5856d6; padding-inline:1.5em; " class="btn btn-primary">Salvar</button>
+</form>
+
+    </div>
+</div>
+</div>
+</div>
+    <?php } ?>
 
     <!-- Modal -->
     <div class="modal fade" id="modal_empresa" tabindex="-1" role="dialog"
@@ -273,14 +497,14 @@ try {
                         <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
                             <label for="status" style="margin-bottom:0;">Ativo</label>
                             <input type="checkbox" checked onchange="" name="status" class="form-check-input"
-                                 value="" required>
+                                 value="">
                         </div>
 
                         
 
                         <div style="margin-bottom: 3em;" class="footer">
 
-                        <button name="acao" value="inserir_cliente" class="btn btn-success" style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0;" disabled href="consulta_cliente.php">Salvar</button>
+                        <button name="acao" value="adicionar" class="btn btn-success" style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0;" disabled href="consulta_cliente.php">Salvar</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Fechar</button>
                             
 
@@ -329,18 +553,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     function checar() {
-        var nome = document.querySelector('.input-nome input').value;
-        var fantasia = document.querySelector('.input-fantasia input').value;
-        var cpf = document.querySelector('.input-cpf input').value;
-        var cnpj = document.querySelector('.input-cnpj input').value;
-        var cep = document.querySelector('.input-cep input').value;
-        var endereco = document.querySelector('.input-endereco input').value;
-        var bairro = document.querySelector('.input-bairro input').value;
-        var cidade = document.querySelector('.input-cidade input').value;
-        var estado = document.querySelector('.input-estado input').value;
-        var celular = document.querySelector('.input-celular input').value;
-        var telefone = document.querySelector('.input-telefone input').value;
-        var email = document.querySelector('.input-email input').value;
+        let nome = document.querySelector('.input-nome input').value;
+        let fantasia = document.querySelector('.input-fantasia input').value;
+        let cpf = document.querySelector('.input-cpf input').value;
+        let cnpj = document.querySelector('.input-cnpj input').value;
+        let cep = document.querySelector('.input-cep input').value;
+        let endereco = document.querySelector('.input-endereco input').value;
+        let bairro = document.querySelector('.input-bairro input').value;
+        let cidade = document.querySelector('.input-cidade input').value;
+        let estado = document.querySelector('.input-estado input').value;
+        let celular = document.querySelector('.input-celular input').value;
+        let telefone = document.querySelector('.input-telefone input').value;
+        let email = document.querySelector('.input-email input').value;
 
 
 
@@ -351,9 +575,57 @@ document.addEventListener('DOMContentLoaded', function() {
             document.querySelector('button[name="acao"]').disabled = true;
         }
     }
+
+    function encolher() {
+        let barra = document.getElementById('barra-lateral');
+        let container = document.getElementById('container');
+        let superior = document.getElementById('header');
+        let body = document.getElementById('body');
+
+
+
+
+
+
+if (barra.style.animationName === 'encolher') {
+
+            superior.style.animationName = 'expandir-header'
+            superior.style.animationDuration = '0.5s';
+            superior.style.animationFillMode = 'backwards';
+
+            barra.style.animationName = 'expandir';
+            barra.style.animationDuration = '0.5s';
+            barra.style.animationFillMode = 'backwards';
+            
+            container.style.animationName = 'expandir-container'
+            container.style.animationDuration = '0.5s';
+            container.style.animationFillMode = 'backwards';
+
+            body.style.animationName = 'expandir-container'
+            body.style.animationDuration = '0.5s';
+            body.style.animationFillMode = 'backwards';
+            return;
+        } else {
+
+        superior.style.animationName = 'encolher-header'
+        superior.style.animationDuration = '0.5s';
+        superior.style.animationFillMode = 'forwards';
+
+        barra.style.animationName = 'encolher';
+        barra.style.animationDuration = '0.5s';
+        barra.style.animationFillMode = 'forwards';
+
+        container.style.animationName = 'encolher'
+        container.style.animationDuration = '0.5s';
+        container.style.animationFillMode = 'forwards';
+
+        body.style.animationName = 'encolher'
+        body.style.animationDuration = '0.5s';
+        body.style.animationFillMode = 'forwards';
+    }}
 </script>
 
-<?php if (isset($_GET['acao']) && $_GET['acao'] == 'editar' || isset($_GET['acao']) && $_GET['acao'] == 'adicionar') { ?>
+<?php if ( isset($_GET['acao']) && $_GET['acao'] == 'adicionar') { ?>
     <script>
         window.addEventListener('DOMContentLoaded', function () {
             var modalEl = document.getElementById('modal_empresa');
@@ -363,8 +635,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.location.href = 'index.php';
             });
         });
+
+
     </script>
 <?php }
 ; ?>
 
-</html>
+
+
+</html>0
+
+
