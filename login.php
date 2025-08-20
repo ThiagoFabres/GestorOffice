@@ -7,6 +7,8 @@ require_once  __DIR__ . '/db/entities/cargo.php';
 
 session_start();
 
+if(!isset($_POST['acao'])) {
+
 if (isset($_POST['email']) && isset($_POST['senha'])) {
     $email = $_POST['email'];
     $senha = $_POST['senha'];
@@ -57,6 +59,71 @@ if (isset($_POST['email']) && isset($_POST['senha'])) {
 echo $error;
 
 
+} else if (isset($_POST['acao']) && $_POST['acao'] == 'editar') {
+    if(isset($_POST['nova_senha']) && isset($_POST['senha_confirmar'])) {
 
+            if($_POST['nova_senha'] !== $_POST['senha_confirmar']) {
+                echo "As senhas não coincidem.";
+                exit;
+            } 
+            } else {
+                echo "As senhas não.";
+            }
+
+    if (isset($_POST['email']) && isset($_POST['senha']) && isset($_POST['nova_senha'])) {
+        $email = $_POST['email'];
+        $senha = $_POST['senha'];
+        $nova_senha = $_POST['nova_senha'];
+
+        if ($email && $senha && $nova_senha) {
+            $usuario = Usuario::read(null, $email);
+
+            if ($usuario && password_verify($senha, $usuario[0]->senha)) {
+                $usuario[0]->senha = $nova_senha;
+
+                Usuario::update($usuario[0]);
+                $_SESSION['usuario'] = $usuario[0];
+                $success = "Senha atualizada com sucesso.";
+
+                    switch ($usuario[0]->cargo) {
+                    case 1:
+                        header('Location: admin/index.php');
+                        break;  
+                    case 2:
+                        $empresa = Empresa::read($usuario[0]->id_empresa);
+
+                    if ($empresa[0]->status == 1) {
+                        header('Location: gestor/index.php');
+                    } else {
+                        $error = "Empresa inativa.";
+                    }
+                        break;
+                    
+                    case 3:
+                        $empresa = Empresa::read($usuario[0]->id_empresa);
+
+                    if ($empresa[0]->status == 1 && $usuario[0]->status == 1) {
+                        header('Location: usuario/index.php');  
+                    } else {
+                        $error = "Empresa ou usuario inativo.";
+                    }
+                        break;
+
+                }
+                exit;
+                
+
+            } else {
+                $error = "Email ou senha inválidos.";
+            }
+        } else {
+            $error = "Por favor, preencha todos os campos.";
+        }
+    } else {
+        $error = "Dados inválidos.";
+    }
+
+    echo isset($success) ? $success : $error;
+}
 
 ?>
