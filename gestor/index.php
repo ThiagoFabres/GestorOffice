@@ -87,8 +87,10 @@ try {
 }
 
 
-
-    Usuario::create($usuario);
+    if(!Usuario::read(null,$email)) {
+        Usuario::create($usuario);
+    }
+    
 
     header('Location: index.php');
 } else {
@@ -112,7 +114,7 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
-    <title>Calendario</title>
+    <title>Gestor Office Control</title>
 </head>
 
 <body id="body" >
@@ -120,14 +122,14 @@ try {
 
     <nav id="barra-lateral">
         <div id="logo-container">
-            <img width="100%" height="100%" src="/gestor-office.png" alt="Logo" class="logo">
+            <img width="220px" height="220px" src="/gestor-office.png" alt="Logo" class="logo">
+        </div>
+    <div id="itens-menu">
+
+        <div class="menu-item">
+            <a href="/gestor/"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-person"></i></div> Adicionar Usuario </a>
         </div>
 
-        <div id="Adicionar empresa-lateral" class="menu-item">
-            <a href="/gestor/"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-person"></i></div> Adicionar Usuarios</a>
-        </div>
-
-        
         </div>
 
     </nav>
