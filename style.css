@@ -1,3 +1,67 @@
+/* Centralizar accordion dentro de .main */
+.main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 60vh;
+}
+
+.custom-accordion {
+    width: 75%;
+    border: 1px solid #d3d4d4;
+}
+/* Accordions customizados */
+
+.custom-accordion .accordion-item {
+    border: none;
+    background: #fff;
+    border: 1px solid #dbdfe6;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    min-height: 38px;
+}
+
+
+.custom-accordion .accordion-button {
+    border-radius: 8px;
+    background: #fff;
+    color: #222;
+    font-weight: 500;
+    box-shadow: none;
+    border: none;
+    transition: background 0.2s;
+    min-height: 38px;
+    padding: 0.4em 1em;
+    font-size: 1em;
+}
+
+.custom-accordion .accordion-button:not(.collapsed) {
+    background: #f5f6fa;
+    color: #5856d6;
+}
+
+.custom-accordion .accordion-button:after {
+    color: #5856d6;
+    font-size: 1.2em;
+}
+
+
+.custom-accordion .accordion-body {
+    border-top: 1px solid #eee;
+    background: #fafbfc;
+    border-radius: 0 0 8px 8px;
+    padding: 0.75em 1.25em;
+    font-size: 0.98em;
+}
+
+.inner-accordion {
+
+    padding: 1em;
+    background: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
 *,
 *::before,
 *::after {
@@ -24,7 +88,6 @@ html, body {
     padding: 5em;
     top: 4em;
     width: calc(100% - 16em);
-
     left: 16em;
 }
 
@@ -40,14 +103,37 @@ html, body {
     left: 16em;
 }
 
+.card-header-div {
+    position: relative;
+    
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1em;
+}
 
+.card-header-borda {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 75%;
+    border-radius: 0.5em;
+    border: 1px solid #dfe0e1;
+    padding: 1em;
+    background-color: #f8f8f9;
+}
 
 .table {
-    width: 80em;
+    min-width: 80em;
     height: 9em;
 
 }
 
+.inner-accordion .table {
+    margin-top: 1em;
+    min-width: 100%;
+    height: 5em;
+}
 
 
 
@@ -113,7 +199,6 @@ html, body {
     position: relative;
     width: 20%;
 bottom: 5em;
-left: 4em;
 padding: 1em;
     
     height: 10%;
@@ -127,7 +212,6 @@ padding: 1em;
     display: flex;
     flex-direction: column;
     align-items: center;
-    left: 5em;
     bottom: 5em;
     width: 90%;
     min-height: 80%;
@@ -544,7 +628,7 @@ width: 100%;
     min-width: 0;
     height: 4em;
     border-bottom: 2px solid #dbdfe6;
-    z-index: 10;
+    z-index: 20;
 
 }
 
