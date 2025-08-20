@@ -62,12 +62,18 @@ class Empresa {
        return $stmt->execute(); 
     }
 
-        public static function read($id = null, $email = null) {
+        public static function read($id = null, $email = null, $nome = null, $filtro_data_inicial = null, $filtro_data_final = null, $estado = null, $cidade = null, $bairro = null): array {
         $pdo = (new Database())->connect();
         $query = 'SELECT * FROM empresas';
         $conditions = [];
         if ($id != null) $conditions[] = 'id = :id';
         if ($email != null) $conditions[] = 'email = :email';
+        if ($nome != null) $conditions[] = 'nom_fant LIKE :nome';
+        if ($filtro_data_inicial != null) $conditions[] = 'data_r >= :data_inicial';
+        if ($filtro_data_final != null) $conditions[] = 'data_r <= :data_final';
+        if ($estado != null) $conditions[] = 'estado = :estado';
+        if ($cidade != null) $conditions[] = 'cidade = :cidade';
+        if ($bairro != null) $conditions[] = 'bairro = :bairro';
         
         
         if ($conditions) {
@@ -82,6 +88,24 @@ class Empresa {
         }
         if ($email != null) {
             $stmt->bindValue(':email', $email);
+        }
+        if ($nome != null) {
+            $stmt->bindValue(':nome', '%' . $nome . '%');
+        }
+        if ($filtro_data_inicial != null) {
+            $stmt->bindValue(':data_inicial', $filtro_data_inicial);
+        }
+        if ($filtro_data_final != null) {
+            $stmt->bindValue(':data_final', $filtro_data_final);
+        }
+        if ($estado != null) {
+            $stmt->bindValue(':estado', $estado);
+        }
+        if ($cidade != null) {
+            $stmt->bindValue(':cidade', $cidade);
+        }
+        if ($bairro != null) {
+            $stmt->bindValue(':bairro', $bairro);
         }
         $stmt->execute();
         
