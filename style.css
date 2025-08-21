@@ -212,8 +212,9 @@ padding: 1em;
     display: flex;
     flex-direction: column;
     align-items: center;
+    border-radius: 1em;
+    background-color: white;
     bottom: 5em;
-    width: 90%;
     min-height: 80%;
 }
 
@@ -230,21 +231,12 @@ padding: 1em;
     min-height: 100%;
 }
 
-.tabela-borda {
-    border: 1px solid #d5d6d6;
-    border-radius: 0.5em;
-        position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    background-color: white;
-    height: 90%;
-}
 
-.tabela p {
+.card p {
     color: #00000096;
 }
+
+
 
 
 .titulo-tabela {
@@ -335,6 +327,7 @@ padding: 1em;
 #userMenu a:hover {
     background: #f3f4f7;
 }
+
 @keyframes encolher-header {
       0% {
         left: 16em;

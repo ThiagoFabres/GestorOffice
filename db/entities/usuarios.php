@@ -49,7 +49,7 @@ public static function create($usuario) {
     return $stmt->execute();
 }
 
-    public static function read($id = null, $email = null, $idempresa = null, $cargo = null): array {
+    public static function read($id = null, $email = null, $idempresa = null, $cargo = null, $nome = null, $filtro_data_inicial = null, $filtro_data_final = null): array {
     $pdo = (new Database())->connect();
     $query = 'SELECT * FROM usuario';
     $conditions = [];
@@ -58,6 +58,10 @@ public static function create($usuario) {
     if ($email != null) $conditions[] = 'email = :email';
     if ($idempresa != null) $conditions[] = 'id_empresa = :id_empresa';
     if ($cargo != null) $conditions[] = 'cargo = :cargo';
+    if ($nome != null) $conditions[] = 'nome LIKE :nome';
+    if ($filtro_data_inicial != null) $conditions[] = 'data_criacao >= :data_inicial';
+    if ($filtro_data_final != null) $conditions[] = 'data_criacao <= :data_final';
+
 
     if ($conditions) {
         $query .= ' WHERE ' . implode(' AND ', $conditions);
@@ -73,6 +77,9 @@ public static function create($usuario) {
     if ($email != null) $stmt->bindValue(':email', $email);
     if ($idempresa != null) $stmt->bindValue(':id_empresa', $idempresa);
     if ($cargo != null) $stmt->bindValue(':cargo', $cargo);
+    if ($nome != null) $stmt->bindValue(':nome', '%' . $nome . '%');
+    if ($filtro_data_inicial != null) $stmt->bindValue(':data_inicial', $filtro_data_inicial);
+    if ($filtro_data_final != null) $stmt->bindValue(':data_final', $filtro_data_final);
 
     $stmt->execute();
 

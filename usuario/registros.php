@@ -267,7 +267,7 @@ $estadosLista = [
                 </div>
             </div>
 
-            <div class="card-body tab-content" id="relatorioTabsContent">
+            <div class="card-body tab-content" id="relatorioTabsContent" style="padding: 0;">
 
             <table class="table table-striped">
                 <thead>
@@ -286,8 +286,6 @@ $estadosLista = [
                             $bairro = Bairro::read($cadastro->id_bairro)[0];
                              ?>
 
-
-                            <tr data-id="<?= $cadastro->id ?>">
                                                             <tr data-id="<?= $cadastro->id ?>">
                                 <td>
                                                 <?=$cadastro->nom_fant?>
@@ -312,8 +310,6 @@ $estadosLista = [
                                             </td>
                                 
                             </tr>
-                                
-                            </tr>
                         <?php } ?>
                     <?php } else { ?>
                         <tr>
@@ -332,16 +328,15 @@ $estadosLista = [
         </div>
     </div>
 </div>
-<?php } else if(isset($_GET['registro']) && $_GET['registro'] == 'contas') 
+<?php } 
 
-                        $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
+else if(isset($_GET['registro']) && $_GET['registro'] == 'contas') {
+        $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
                         $subtitulos = Con02::read(null, $_SESSION['usuario']->id_empresa);
-{
-
             ?>
 
             
-                <div class="card mb-4">
+                <div class="card">
         <div class="card-header">
             <h3>Titulos</h3>
         </div>
@@ -391,7 +386,7 @@ $estadosLista = [
                 </div>
                 </div>
             </div>
-                    <div class="card-body tab-content" id="relatorioTabsContent">
+                    <div class="card-body tab-content" id="relatorioTabsContent" style="padding: 0;">
             <table class="table table-striped">
                 <thead>
                     <tr>

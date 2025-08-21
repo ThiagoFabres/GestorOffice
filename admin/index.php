@@ -266,18 +266,16 @@ if(!Empresa::read(null, $email) && !Usuario::read(null, $email)) {
 
     
     <div class="tabela">
-        
-
-      <div class="tabela-borda">
+    
 
       
         
             <div class="row">
-                <div class="col-md-12">
+                <div class="col-md-12" style="padding: 0;">
                     <?php $empresas = Empresa::read(); ?>
                 
 
-                    <div class="card mb-4">
+                    <div class="card"   >
                         <div class="card-header"><h3>Empresas</h3></div>
 
                         <div class="card-header-div">
@@ -464,7 +462,6 @@ if(!Empresa::read(null, $email) && !Usuario::read(null, $email)) {
                 </div>
     </div>
     </div> 
-    </div>
     </div>
 <?php } else if($_GET['acao'] == 'editar') { ?>
     

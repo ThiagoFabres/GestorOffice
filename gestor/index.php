@@ -11,6 +11,7 @@ session_start();
     
 if(!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 2) {
     header('Location: /');
+    exit();
 }
 
 if(isset($_POST['acao']) && $_POST['acao'] == 'editar') {
@@ -166,64 +167,108 @@ try {
         <?php if(!isset($_GET['acao']) || $_GET['acao'] !== 'editar') { ?>
             
             <div class="main" id="container">
+            
+                <div class="card mb-4">
+        <div class="card-header">
+            <h3>Usuarios</h3>
+        </div>
 
-                <div class="botao">
-        <a href="index.php?acao=adicionar" class="btn btn-primary btn-lg botao-adm-adicionar">Novo Usuario</a>
-    </div>
-
-    
-    <div class="tabela">
-
-      <div class="tabela-borda">
-        
-            <div class="row">
-                <div class="col-md-12">
+        <div class="card-header-div">
+        <div class="card-header-borda">
+            <div class="tab-pane fade show active" id="vendas" role="tabpanel" aria-labelledby="vendas-tab">
+                <h5 class="card-title">Filtros</h5>
                 
+                <form class="row g-3 align-items-end mb-3" method="get" action="registros.php">
+                    <input type="hidden" name="registro" value="cadastros">
+                    <div class="col-md-2" style="width: 20%;">
+                        <label for="nome" class="form-label">Nome:</label>
+                        <div class="input-group">
+                            <input name="nome" value="<?= $_GET['nome'] ?? "" ?>" type="text" class="form-control" id="dataInicio" placeholder="Nome">
+                            
+                        </div>
+                    </div>
+                    <div class="col-md-2" style="width: 20%;">
+                        <label for="dataInicio" class="form-label">Data inicial:</label>
+                        <div class="input-group">
+                            <input name="dataInicial" value="<?= $_GET['dataInicial'] ?? "" ?>" type="date" class="form-control" id="dataInicio" placeholder="dd/mm/aaaa">
+                            
+                        </div>
+                    </div>
+                    <div class="col-md-2" style="width: 20%;">
+                        <label for="dataFinal" class="form-label">Data final:</label>
+                        <div class="input-group">
+                            <input name="dataFinal"  value="<?= $_GET['dataFinal'] ?? "" ?>" type="date" class="form-control" id="dataFinal" placeholder="dd/mm/aaaa">
+                            
+                        </div>
+                    </div>
 
-                    <table class="table table-striped">
-                        <div class="titulo-tabela"><h4>Usuarios</h4></div>
-                        
-                        <thead>
-                            <tr>
-                                <th>Nome</th>
-                                <th>Modo</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            $usuarios = Usuario::read(false, false, $_SESSION['usuario']->id_empresa, 3);
-                            foreach ($usuarios as $usuario) {
-
-                                
-
-                                $status = ($usuario->status == 0) ? 'INATIVO' : 'ATIVO';
-                                 $link = 'index.php?acao=editar&&id=' . $usuario->id_usuario;
-                                ?>
-                                    
-                                        <tr class="tr-clientes" onclick="window.location.href='<?= $link ?>'" style="cursor: pointer;">
-                                            <td>
-                                                <?php if($status == 'INATIVO') echo($status . ' - ') ?> <?=$usuario->nome?>
-                                                <p>E-mail: <?=$usuario->email?></p>
-                                            </td>
-                                            <td>
-                                                <?php if($usuario->processar == 1) {echo 'PROCESSAR';} else {echo 'CONSULTAR';} ?>
-                                            </td>
-
-                                            <td>
-                                                <?=$status?>
-                                            </td>
-                                        </tr>
-
-                            <?php }
-                            ?>
-                        </tbody>
-                    </table>
+                    
+                    <div style="width: 10%;">
+                        <button type="submit" style="background-color: #5856d6; border: 0;" class="btn btn-primary w-100">Buscar</button>
+                    </div>
+                    <div style="width: 10%;">
+                        <a type="button" style="background-color: #5856d6; border: 0;" href="index.php" class="btn btn-secondary">Limpar Filtros</a>
+                    </div>
+                </form>
                 </div>
+                </div>
+            </div>
+
+            <div class="card-body tab-content" id="relatorioTabsContent" style=" padding: 0;">
+
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Modo</th>
+                        <th>Status</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+            <?php 
+            $cadastros_reg = Usuario::read(null, null, $_SESSION['usuario']->id_empresa, null, $_GET['nome'] ?? null, $_GET['dataInicial'] ?? null, $_GET['dataFinal'] ?? null);
+            if (!empty($cadastros_reg)) { ?>
+                        <?php foreach ($cadastros_reg as $cadastro) {?>
+
+
+                            <tr data-id="<?= $cadastro->id ?>">
+                                                            <tr data-id="<?= $cadastro->id ?>">
+                                <td>
+                                                <?=$cadastro->nome?>
+                                                <p>E-mail: <?=$cadastro->email?></p>
+                                            </td>
+
+                                            <td>
+                                                <?php if($cadastro->processar == 1) {echo 'PROCESSAR';} else {echo 'CONSULTAR';} ?>
+                                            </td>
+                                            <td>
+                                                <?php if($cadastro->status == 1) {echo 'ATIVO';} else {echo 'INATIVO';} ?>
+                                                <p>Data de registro: <?= date('d/m/Y', strtotime($cadastro->data_r)) ?></p>
+                                            </td>
+                                
+                            </tr>
+                                
+                            </tr>
+                        <?php } ?>
+                    <?php } else { ?>
+                        <tr>
+                            <td>Nenhum cliente encontrado</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+
+
+                        </tr>
+                    <?php } ?>
+            
+                </tbody>
+            </table>
+        </div>
     </div>
-    </div> 
-    </div>
-    </div>
+</div>
+
 <?php } else if($_GET['acao'] == 'editar') { ?>
     
     <?php 
@@ -238,6 +283,7 @@ try {
     <div class="card-body">
 
 <div id="card-sub">Edite os dados do usuario</div>
+
 <form action="index.php" method="post">
 
     <input type="hidden" name="id" value="<?=$usuario->id_usuario?>">
