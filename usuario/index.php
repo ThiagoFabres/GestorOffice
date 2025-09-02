@@ -2,8 +2,11 @@
 
 require_once __DIR__ . '/../db/entities/usuarios.php';
 require_once __DIR__ . '/../db/entities/contas.php';
-
+require_once __DIR__ . '/../db/entities/cadastro.php';
+require_once __DIR__ . '/../db/entities/recebimentos.php';
+require_once __DIR__ . '/../db/entities/pagamento.php';
 session_start();
+
 
 
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
@@ -11,8 +14,33 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     exit;
 }
 
-if(isset($_GET['view']) && $_GET['view'] == 'contas'){
+$view = filter_input(INPUT_GET, 'view');
+$target = filter_input(INPUT_GET, 'target');
+$con01 = filter_input(INPUT_GET, 'con01id');
+$acao = filter_input(INPUT_GET, 'acao');
+$get_opcao = filter_input(INPUT_GET, 'opcao');
+$get_id = filter_input(INPUT_GET, 'id');
+
+
+
+if(isset($view) && $view == 'contas'){
     $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
+ }
+
+ if(isset($get_id)) {
+    $rec02_target = Rec02::read($get_id)[0];
+    $recebimento = Rec01::read($rec02_target->id_rec01)[0];
+    $parcelas_pagas = false;
+    for($i = 1; $i < $recebimento->parcelas; $i++) {
+        $rec02 = Rec02::read(null, $_SESSION['usuario']->id_empresa, $recebimento->id, null, $i)[0];
+        if($parcelas_pagas == false && $rec02->valor_pag == $rec02->valor_par) {
+            $parcelas_pagas = true;
+            break;
+        } else {
+            continue;
+            
+        }
+    }
  }
 
 
@@ -69,33 +97,19 @@ if(isset($_GET['view']) && $_GET['view'] == 'contas'){
         <?php } ?>
 
         <div class="menu-item">
-            <a href="index.php?view=contas"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-journal-bookmark"></i></div> Plano de Contas </a>
+            <a href="contas.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-journal-bookmark"></i></div> Plano de Contas </a>
         </div>
 
         <div class="menu-item">
-            <a href="index.php?view=receber"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-wallet"></i></div> Contas a Receber </a>
+            <a href="receber.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-wallet"></i></div> Contas a Receber </a>
         </div>
 
         <div class="menu-item">
-            <a href="index.php?view=pagar"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-cash-stack"></i></div> Contas a Pagar </a>
+            <a href="pagar.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-cash-stack"></i></div> Contas a Pagar </a>
         </div>
 
-        <div class="menu-item accordion" >
-
-        <a class="nav-link text-white" data-bs-toggle="collapse" href="#registrosMenu" role="button" aria-expanded="false" aria-controls="cadastrosMenu">
-        <i class="bi bi-journal-bookmark"></i> Registros
-      </a>
-
-        <div class="collapse"  id="registrosMenu">
-            <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
-            <li><a href="registros.php?registro=cadastros" class="link-light text-decoration-none"><i class="bi bi-list-task"></i>Cadastros</a></li>
-            <li><a href="registros.php?registro=contas" class="link-light text-decoration-none"><i class="bi bi-journal-bookmark"></i>Plano de Contas</a></li>
-            <li><a href="registros.php?registro=receber" class="link-light text-decoration-none"><i class="bi bi-wallet"></i>Contas a Receber</a></li>
-            <li><a href="registros.php?registro=pagar" class="link-light text-decoration-none"><i class="bi bi-cash-stack"></i>Contas a Pagar</a></li>
-            <li><a href="registros.php?registro=dre" class="link-light text-decoration-none"><i class="bi bi-file-earmark-text"></i>DRE</a></li>
-            
-            </ul>
-        </div>
+        <div class="menu-item">
+            <a href="dre.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
         </div>
 
 
@@ -120,7 +134,7 @@ if(isset($_GET['view']) && $_GET['view'] == 'contas'){
     </div>
     <div class="conta-header" style="position:relative; float:right; margin-right:2em;">
         <button id="userBtn" type="button" style="background:none;border:none;font-size:1.2em;color:#181f2b;outline:none;cursor:pointer;">
-            <span style="color:#181f2b;"><?= $_SESSION['usuario']->nome ?> </span>
+            <span style="color:#181f2b;"><?= htmlspecialchars($_SESSION['usuario']->nome, ENT_QUOTES, 'UTF-8') ?> </span>
         </button>
         <div id="userMenu" style="right:0; z-index: 1000000;">
             <a href="/" class="dropdown-item">
@@ -133,61 +147,11 @@ if(isset($_GET['view']) && $_GET['view'] == 'contas'){
 
 
     
-<div class="main" id="container">
-            <?php if(isset($_GET['view']) && $_GET['view'] == 'contas') { ?>
-                
 
-                <div class="botao">
-        <a href="index.php?view=contas&target=titulo&acao=adicionar" class="btn btn-primary btn-sm botao-adm-adicionar">Adicionar titulo</a>
-    </div>
+            <?php if(isset($view) && $view == 'contas') { require_once 'contas.php'; } 
+            
+            else if ($view == 'receber' && (!isset($acao) || $acao == 'adicionar' || $acao == 'visualizar')) { require_once 'receber.php'; }?>
 
-        
-
-
-                        <div class="accordion custom-accordion" id="accordionExample">
-<?php foreach($titulos as $i => $titulo) { 
-    
-        $subtitulos = Con02::read(null, $_SESSION['usuario']->id_empresa, $titulo->id);
-
-    ?>
-    
-    <div class="accordion-item">
-        <h2 class="accordion-header" id="heading<?=$i?>">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<?=$i?>" aria-expanded="false" aria-controls="collapse<?=$i?>">
-                <span style="color: #303640; font-size:1.1em; font-weight:500;"> <?php echo $titulo->nome; ?> </span>
-            </button>
-        </h2>
-        <div id="collapse<?=$i?>" class="accordion-collapse collapse" aria-labelledby="heading<?=$i?>" data-bs-parent="#accordionExample">
-            <div class="accordion-body">
-                <div class="inner-accordion">
-                     <a href="index.php?view=contas&target=subtitulo&acao=adicionar&con01id=<?=$titulo->id?>" class="btn btn-primary btn-sm botao-adm-adicionar">Adicionar Subtitulo</a>
-
-                     <table class="table table-striped table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Nome</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        <?php foreach($subtitulos as $subtitulo) { ?>
-                            <tr>
-                                <td><?= $subtitulo->nome ?></td>
-                                
-                            </tr>
-                        <?php } ?>
-                        </tbody>
-                     </table>
-                </div>
-            </div>
-        </div>
-    </div>
-<?php } ?>
-</div>
-
-      <?php } ?>
-                
-                
-    </div>
 
     <!-- Modal -->
     <div class="modal fade" id="modal_titulo" tabindex="-1" role="dialog"
@@ -195,16 +159,16 @@ if(isset($_GET['view']) && $_GET['view'] == 'contas'){
         <div class=" modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <?php if(isset($_GET['target'] )&& $_GET['target'] == 'titulo') {
+                    <?php if(isset($target )&& $target == 'titulo') {
                         $titulo_modal = 'Título';
                         $target = 'titulo';
 
-                    } else if(isset($_GET['target']) && $_GET['target'] == 'subtitulo') {
+                    } else if(isset($target) && $target == 'subtitulo') {
                         $titulo_modal = 'Subtítulo';
                         $target = 'subtitulo';
                     } 
                      ?>
-                    <h5 class="modal-title" id="exampleModalLongTitle">Novo <?= $titulo_modal ?></h5>
+                    <h5 class="modal-title" id="exampleModalLongTitle">Novo <?= htmlspecialchars($titulo_modal, ENT_QUOTES, 'UTF-8') ?></h5>
                     <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                     </button>
                 </div>
@@ -213,8 +177,8 @@ if(isset($_GET['view']) && $_GET['view'] == 'contas'){
                     <form method="post" id="content" action="cadastros_manager.php">
                         <input type="hidden" name="view" value="conta">
                         <input type="hidden" name="id" value="">
-                        <input type="hidden" name="target" value="<?php echo $_GET['target'] ?? ''; ?>">
-                        <input type="hidden" name="con01id" value="<?php echo $_GET['con01id'] ?? ''; ?>">
+                        <input type="hidden" name="target" value="<?php echo htmlspecialchars($target, ENT_QUOTES, 'UTF-8') ?? ''; ?>">
+                        <input type="hidden" name="con01id" value="<?php echo htmlspecialchars($con01, ENT_QUOTES, 'UTF-8') ?? ''; ?>">
 
                         <div class="input-nome input-form-adm">
                             <!--Nome: -->
@@ -232,6 +196,199 @@ if(isset($_GET['view']) && $_GET['view'] == 'contas'){
                     <?php } ?>
 
 
+                        <div style="margin-bottom: 3em;" class="footer">
+
+                        <button name="acao" value="adicionar" class="btn btn-success" style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0;" href="consulta_cliente.php">Salvar</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Fechar</button>
+                            
+
+                    </form>
+
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+
+    <div class="modal fade" id="modal_visualizar" tabindex="-1" role="dialog"
+        aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class=" modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+
+                    <h5 class="modal-title" id="exampleModalLongTitle">Opções da conta</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    </button>
+                </div>
+                <div class="modal-body">
+                <?php if(!isset ($get_opcao)){ 
+                    $rec02 = Rec02::read($get_id)[0];
+                    ?>
+                    <form method="get" id="content" action="index.php">
+                        
+                        <input type="hidden" name="view" value="receber">
+                        <input type="hidden" name="acao" value="visualizar">
+                        <input type="hidden"  name="id" value="<?=$get_id?>">
+                        
+
+                        <div class="acoes">
+
+                        <button type="submit" class="btn-lg btn-primary btn" <?php if ($rec02->valor_pag == $rec02->valor_par) { ?> disabled <?php } ?>name="opcao" value="quitar">Quitar</button>
+                        <button type="button" class="btn-lg btn-primary btn" <?php if ($rec02->valor_pag == 0) { ?> disabled <?php } ?> name="opcao" onclick="window.location.href='cadastros_manager.php?view=receber&target=parcela&acao=estornar&id=<?=$get_id?>'" value="estornar">Estornar</button>
+                        <button type="button" class="btn-lg btn-primary btn" <?php if ($parcelas_pagas == true) { ?> disabled <?php } ?>onclick="window.location.href= 'index.php?view=receber&acao=editar&id=<?=$get_id?>'" name="opcao">Editar parcelas</button>
+                        
+                        </div>
+                        <div style="margin-bottom: 3em;" class="footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Fechar</button>
+                            
+
+                    </form>
+            <?php } else if(isset($get_opcao) && $get_opcao == 'quitar') {
+                $data_atual = new DateTime();
+                $parcela = Rec02::read($get_id)[0];
+                $valor_restante = $parcela->valor_par - $parcela->valor_pag;
+                $pagamentos = TipoPagamento::read(null, $_SESSION['usuario']->id_empresa);
+
+
+                ?> 
+                    
+                    <form method="post" id="content" action="cadastros_manager.php">
+                        
+                        <input type="hidden" name="view" value="receber">
+                        <input type="hidden" name="acao" value="quitar">
+                        <input type="hidden" name="target" value="parcela">
+                        <input type="hidden" name="id" value="<?=$get_id?>">
+
+                        
+                        <div class="valor-alvo"><p style="color: #00000096;">Valor restante da parcela: R$ <?=$valor_restante?></p></div>
+                        <label for="data">Data do pagamento</label>
+                        <input class="form-control" type="date" placeholder="dd/mm/aa" name="data" value="<?=$data_atual->format('Y-m-d')?>">
+                        <label for="valor">Valor pago</label>
+                        <input class="form-control" type="text" name="valor" placeholder="Valor pago">
+                        <label for="forma_pagamento">Forma de pagamento</label>
+                        <select class="form-control" name="forma_pagamento">
+                            <option value="">Selecione uma forma de pagamento</option>
+                            <?php foreach($pagamentos as $pagamento) {?>
+                                <option value="<?=$pagamento->id?>">
+                                    <?= $pagamento->nome?>
+                                </option>
+                            <?php } ?>
+                        </select>
+                        <div style="margin-bottom: 3em;" class="footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Fechar</button>
+                        <button type="submit" class="btn btn-primary">Pagar</button>
+
+                    </form>
+            <?php } ?>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+
+    
+
+        <div class="modal fade" id="modal_receber" tabindex="-1" role="dialog"
+        aria-labelledby="modal_receber_title" aria-hidden="true">
+        <div class=" modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+
+                    <h5 class="modal-title" id="modal_receber_long_title">Novo Lançamento</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    </button>
+                </div>
+                <div class="modal-body">
+
+                    <form method="post" id="content" action="index.php?view=receber&acao=editar">
+                        <input type="hidden" name="view" value="receber">
+
+                        
+
+                        <div class="input-documento input-form-adm">
+                            <!--Nome: -->
+                            <label for="documento">Documento:</label>
+                            <input type="text" onchange="checar()" name="documento" class="form-control" placeholder="Documento" value="" required>
+                        </div>
+
+                        <div class="input-cadastro input-form-adm">
+                            <!--Nome: -->
+                            <label for="cadastro">Cliente / Fornecedor:</label>
+                            <select name="cadastro" class="form-select" id="cadastro">
+                                <option value="">Selecione</option>
+                                <?php foreach (Cadastro::read(null, null, $_SESSION['usuario']->id_empresa) as $cadastro) { ?>
+                                    <option value="<?= $cadastro->id_cadastro?>"><?= htmlspecialchars($cadastro->nom_fant, ENT_QUOTES, 'UTF-8') ?></option>
+                                <?php } ?>
+                            </select>
+                        </div>
+
+                        <div class="input-valor input-form-adm">
+                            <!--Nome: -->
+                            <label for="valor">Valor:</label>
+                            <input type="text" onchange="checar()" name="valor" class="form-control" placeholder="Valor" value="" required>
+                        </div>
+
+                        <div class="input-parcelas input-form-adm">
+                            <!--Nome: -->
+                            <label for="parcelas">Parcelas:</label>
+                            <input type="number" onchange="checar()" name="parcelas" class="form-control" placeholder="Parcelas" value="" required>
+                        </div>
+
+                        <div class="input-descricao input-form-adm">
+                            <!--Nome: -->
+                            <label for="descricao">Descrição:</label>
+                            <input type="text" onchange="checar()" name="descricao" class="form-control" placeholder="Descrição" value="" required>
+                        </div>
+
+                        
+                        <div class="titulos-receber" style="display:flex; flex-direction: row;">
+
+                        <div class="input-titulo input-form-adm" style="width: 50%;" >
+                            <!--Nome: -->
+                            <label for="titulo">Titulo</label>
+                            <select name="titulo" class="form-select" id="titulo" style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
+                                <option value="">Selecione</option>
+                                
+                                <?php $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa); 
+                                foreach ($titulos as $titulo) { ?>
+                                    <option value="<?= $titulo->id ?>"><?= htmlspecialchars($titulo->nome, ENT_QUOTES, 'UTF-8') ?></option>
+                                <?php } ?>
+                            </select>
+                        </div>
+
+                        <div class="input-subtitulo input-form-adm" style="width: 50%;">
+                            <!--Nome: -->
+                            <label for="subtitulo">Sub-Titulo</label>
+                            <select id="subtitulo" name="subtitulo" class="form-control">
+                                <option value="">Selecione</option>
+                                <?php
+                                // Buscar todos os subtítulos da empresa
+                                $todosSubtitulos = Con02::read(null, $_SESSION['usuario']->id_empresa);
+                                foreach ($todosSubtitulos as $sub) { ?>
+                                    <option value="<?= $sub->id ?>" data-titulo-id="<?= $sub->id_con01 ?>">
+                                        <?= htmlspecialchars($sub->nome, ENT_QUOTES, 'UTF-8') ?>
+                                    </option>
+                                <?php } ?>
+                            </select>
+                        </div>
+                    </div>
+                            <div class="input-nome input-form-adm">
+                            <label for="obs">Observação:</label>
+                            <input type="text" onchange="checar()" name="obs" class="form-control" placeholder="Observação" value="" required>
+                        </div>
+                    
                         <div style="margin-bottom: 3em;" class="footer">
 
                         <button name="acao" value="adicionar" class="btn btn-success" style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0;" href="consulta_cliente.php">Salvar</button>
@@ -279,8 +436,64 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
 });
+document.getElementById('titulo').addEventListener('change', function() {
+    var tituloId = this.value;
+    var subtituloSelect = document.getElementById('subtitulo');
+    var options = subtituloSelect.querySelectorAll('option');
 
+    options.forEach(function(option) {
+        if (option.value === "") {
+            option.style.display = '';
+            return;
+        }
+        if (option.getAttribute('data-titulo-id') === tituloId) {
+            option.style.display = '';
+        } else {
+            option.style.display = 'none';
+        }
+    });
 
+    subtituloSelect.value = ""; // Reseta seleção
+});
+
+function atualizarTotalParcelas() {
+    let total = 0;
+    document.querySelectorAll('.valor-parcela').forEach(function(input) {
+        let val = parseFloat(input.value.replace(',', '.'));
+        if (!isNaN(val)) total += val;
+    });
+    document.getElementById('totalParcelas').textContent = total.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+    // Pega o valor total esperado do campo oculto ou célula da tabela
+    let valorTotal = document.querySelector('input[name="valor"]');
+    let valorEsperado = 0;
+    if (valorTotal) {
+        valorEsperado = parseFloat(valorTotal.value.replace(',', '.'));
+    } else {
+        // Alternativa: pega da célula da tabela
+        let celula = document.querySelector('td:last-child');
+        if (celula) {
+            valorEsperado = parseFloat(celula.textContent.replace(/[^0-9,\.]/g, '').replace(',', '.'));
+        }
+    }
+
+    let botao = document.getElementById('botao-editar-parcela');
+    if (botao) {
+        if (Math.abs(total - valorEsperado) > 0.01) {
+            botao.disabled = true;
+            botao.title = 'A soma das parcelas deve ser igual ao valor total';
+        } else {
+            botao.disabled = false;
+            botao.title = '';
+        }
+    }
+}
+
+document.querySelectorAll('.valor-parcela').forEach(function(input) {
+    input.addEventListener('input', atualizarTotalParcelas);
+});
+
+atualizarTotalParcelas();
 
 
         
@@ -359,14 +572,19 @@ if (barra.style.animationName === 'encolher') {
     }}
 </script>
 
-<?php if ( isset($_GET['acao']) && $_GET['acao'] == 'adicionar') { ?>
+<?php if ( isset($acao) && $acao == 'adicionar' || $acao == 'visualizar') 
+    
+    { ?>
+    
     <script>
         window.addEventListener('DOMContentLoaded', function () {
-            var modalEl = document.getElementById('modal_titulo');
+            var modalEl = document.getElementById(<?php if($view == 'contas') {?> 'modal_titulo' <? } 
+                                                     else if ($view == 'receber') { if($acao == 'adicionar'){?> 'modal_receber' <? } 
+                                                     else if($acao == 'visualizar'){ ?> 'modal_visualizar' <?php }}?>);
             var Modal = new bootstrap.Modal(modalEl);
             Modal.show();
             modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'index.php?view=<?= $_GET['view'] ?>';
+                window.location.href = 'index.php?view=<?= $view ?>';
             });
         });
 

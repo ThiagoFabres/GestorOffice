@@ -15,13 +15,23 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     header('Location: /');
     exit;
 }
+$get_registro = filter_input(INPUT_GET, 'registro');
 
-if(!empty($_GET) && isset($_GET['registro']) && $_GET['registro'] == 'cadastros') {
-    $cadastros_reg = Cadastro::read(null,null,$_SESSION['usuario']->id_empresa,$_GET['nome'] ??null, $_GET['dataInicial'] ?? null,$_GET['dataFinal'] ?? null,$_GET['estado'] ?? null,$_GET['cidade'] ?? null,$_GET['bairro'] ?? null);
+$get_nome = filter_input(INPUT_GET, 'nome');
+$get_data_inicial = filter_input(INPUT_GET, 'dataInicial');
+$get_data_final = filter_input(INPUT_GET, 'dataFinal');
+$get_estado = filter_input(INPUT_GET, 'estado');
+$get_cidade = filter_input(INPUT_GET, 'cidade');
+$get_bairro = filter_input(INPUT_GET, 'bairro');
+$get_titulo = filter_input(INPUT_GET, 'titulo');
+$get_acao = filter_input(INPUT_GET, 'acao');
+
+if(!empty($_GET) && isset($get_registro) && $get_registro == 'cadastros') {
+    $cadastros_reg = Cadastro::read(null,null,$_SESSION['usuario']->id_empresa,$get_nome ??null, $get_data_inicial ?? null,$get_data_final ?? null,$get_estado ?? null,$get_cidade ?? null,$get_bairro ?? null);
 }
 
-if(!empty($_GET) && isset($_GET['registro']) && $_GET['registro'] == 'contas') {
-    $subtitulos_reg = Con02::read(null, $_SESSION['usuario']->id_empresa,$_GET['titulo'] ?? null, $_GET['dataInicial'] ?? null, $_GET['dataFinal'] ?? null);
+if(!empty($_GET) && isset($get_registro) && $get_registro == 'contas') {
+    $subtitulos_reg = Con02::read(null, $_SESSION['usuario']->id_empresa,$get_titulo ?? null, $get_data_inicial ?? null, $get_data_final ?? null);
 }
 
 
@@ -177,7 +187,7 @@ $estadosLista = [
 <div class="main" id="container">
     
 
-        <?php if(isset($_GET['registro']) && $_GET['registro'] == 'cadastros') {
+        <?php if(isset($get_registro) && $get_registro == 'cadastros') {
             
             
             $bairros = Bairro::read(null, $_SESSION['usuario']->id_empresa);
@@ -201,21 +211,21 @@ $estadosLista = [
                     <div class="col-md-2" style="width: 15%;">
                         <label for="nome" class="form-label">Nome:</label>
                         <div class="input-group">
-                            <input name="nome" value="<?= $_GET['nome'] ?? "" ?>" type="text" class="form-control" id="dataInicio" placeholder="Nome">
+                            <input name="nome" value="<?= htmlspecialchars($get_nome, ENT_QUOTES, 'UTF-8') ?? "" ?>" type="text" class="form-control" id="dataInicio" placeholder="Nome">
                             
                         </div>
                     </div>
                     <div class="col-md-2" style="width: 12.5%;">
                         <label for="dataInicio" class="form-label">Data inicial:</label>
                         <div class="input-group">
-                            <input name="dataInicial" value="<?= $_GET['dataInicial'] ?? "" ?>" type="date" class="form-control" id="dataInicio" placeholder="dd/mm/aaaa">
+                            <input name="dataInicial" value="<?= htmlspecialchars($get_data_inicial, ENT_QUOTES, 'UTF-8') ?? "" ?>" type="date" class="form-control" id="dataInicio" placeholder="dd/mm/aaaa">
                             
                         </div>
                     </div>
                     <div class="col-md-2" style="width: 12.5%;">
                         <label for="dataFinal" class="form-label">Data final:</label>
                         <div class="input-group">
-                            <input name="dataFinal"  value="<?= $_GET['dataFinal'] ?? "" ?>" type="date" class="form-control" id="dataFinal" placeholder="dd/mm/aaaa">
+                            <input name="dataFinal"  value="<?= htmlspecialchars($get_data_final, ENT_QUOTES, 'UTF-8') ?? "" ?>" type="date" class="form-control" id="dataFinal" placeholder="dd/mm/aaaa">
                             
                         </div>
                     </div>
@@ -224,9 +234,9 @@ $estadosLista = [
                         <label for="estado" class="form-label">Estado:</label>
                         <select name="estado" class="form-select" id="estado">
                         
-                            <option value="" <?php if(!isset($_GET['estado'])) {?> selected <?php } ?> >Selecione uma Estado</option>
+                            <option value="" <?php if(!isset($get_estado)) {?> selected <?php } ?> >Selecione uma Estado</option>
                             <?php foreach ($estadosLista as $sigla => $estado) { ?>
-                                <option value="<?= $sigla ; ?>"  <?php if(isset($_GET['estado']) && $sigla == $_GET['estado']) {?> selected <?php } ?>  ><?= $estado ?></option>
+                                <option value="<?= $sigla ; ?>"  <?php if(isset($get_estado) && $sigla == $get_estado) {?> selected <?php } ?>  ><?= htmlspecialchars($estado, ENT_QUOTES, 'UTF-8') ?></option>
                             <?php }; ?>
                         </select>
                     </div>
@@ -235,10 +245,10 @@ $estadosLista = [
                         <label for="cidade" class="form-label">Cidade:</label>
                         <select name="cidade" class="form-select" id="cidade">
                         
-                            <option value="" <?php if(!isset($_GET['cidade'])) {?> selected <?php } ?> >Selecione uma cidade</option>
+                            <option value="" <?php if(!isset($get_cidade)) {?> selected <?php } ?> >Selecione uma cidade</option>
                         
                             <?php foreach ($cidades as $cidade) { ?>
-                                <option value="<?php echo $cidade->id; ?>"  <?php if(isset($_GET['cidade']) && $cidade->id == $_GET['cidade']) {?> selected <?php } ?>  ><?php echo $cidade->nome; ?></option>
+                                <option value="<?php echo $cidade->id; ?>"  <?php if(isset($get_cidade) && $cidade->id == $get_cidade) {?> selected <?php } ?>  ><?php echo htmlspecialchars($cidade->nome, ENT_QUOTES, 'UTF-8'); ?></option>
                             <?php }; ?>
                         </select>
                     </div>
@@ -247,10 +257,10 @@ $estadosLista = [
                         <label for="bairro" class="form-label">Bairro:</label>
                         <select name="bairro" class="form-select" id="bairro">
                         
-                            <option value="" <?php if(!isset($_GET['bairro'])) {?> selected <?php } ?> >Selecione um bairro</option>
+                            <option value="" <?php if(!isset($get_bairro)) {?> selected <?php } ?> >Selecione um bairro</option>
                         
                             <?php foreach ($bairros as $bairro) { ?>
-                                <option value="<?php echo $bairro->id; ?>"  <?php if(isset($_GET['bairro']) && $bairro->id == $_GET['bairro']) {?> selected <?php } ?>  ><?php echo $bairro->nome; ?></option>
+                                <option value="<?php echo $bairro->id; ?>"  <?php if(isset($get_bairro) && $bairro->id == $get_bairro) {?> selected <?php } ?>  ><?php echo htmlspecialchars($bairro->nome, ENT_QUOTES, 'UTF-8'); ?></option>
                             <?php }; ?>
                         </select>
                     </div>
@@ -288,25 +298,25 @@ $estadosLista = [
 
                                                             <tr data-id="<?= $cadastro->id ?>">
                                 <td>
-                                                <?=$cadastro->nom_fant?>
-                                                <p>Razao social: <?=$cadastro->razao_soc?></p>
+                                                <?= htmlspecialchars($cadastro->nom_fant, ENT_QUOTES, 'UTF-8')?>
+                                                <p>Razao social: <?= htmlspecialchars($cadastro->razao_soc, ENT_QUOTES, 'UTF-8')?></p>
                                             </td>
 
                                             <td>
                                                 <?=$cadastro->celular?>
-                                                <p> Fixo: <?=$cadastro->fixo?></p>
+                                                <p> Fixo: <?= htmlspecialchars($cadastro->fixo, ENT_QUOTES, 'UTF-8')?></p>
                                             </td>
 
                                             <td>
-                                                <?=$cadastro->estado . ' - ' . $cidade->nome ?>
-                                                <p>CEP: <?= $cadastro->cep ?></p>
+                                                <?= htmlspecialchars($cadastro->estado, ENT_QUOTES, 'UTF-8') . ' - ' . htmlspecialchars($cidade->nome, ENT_QUOTES, 'UTF-8') ?>
+                                                <p>CEP: <?= htmlspecialchars($cadastro->cep, ENT_QUOTES, 'UTF-8') ?></p>
                                             </td>
                                             <td>
                                                 <?= $bairro->nome ?>
-                                                <p>Rua: <?= $cadastro->rua ?></p>
+                                                <p>Rua: <?= htmlspecialchars($cadastro->rua, ENT_QUOTES, 'UTF-8') ?></p>
                                             </td>
                                             <td>
-                                                <?= date('d/m/Y', strtotime($cadastro->data_r)) ?>
+                                                <?= date('d/m/Y', strtotime(htmlspecialchars($cadastro->data_r, ENT_QUOTES, 'UTF-8'))) ?>
                                             </td>
                                 
                             </tr>
@@ -330,7 +340,7 @@ $estadosLista = [
 </div>
 <?php } 
 
-else if(isset($_GET['registro']) && $_GET['registro'] == 'contas') {
+else if(isset($get_registro) && $get_registro == 'contas') {
         $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
                         $subtitulos = Con02::read(null, $_SESSION['usuario']->id_empresa);
             ?>
@@ -353,14 +363,14 @@ else if(isset($_GET['registro']) && $_GET['registro'] == 'contas') {
                     <div class="col-md-3">
                         <label for="dataInicio" class="form-label">Data inicial:</label>
                         <div class="input-group">
-                            <input name="dataInicial" value="<?= $_GET['dataInicial'] ?? "" ?>" type="date" class="form-control" id="dataInicio" placeholder="dd/mm/aaaa">
+                            <input name="dataInicial" value="<?= htmlspecialchars($get_data_inicial, ENT_QUOTES, 'UTF-8') ?? "" ?>" type="date" class="form-control" id="dataInicio" placeholder="dd/mm/aaaa">
                             
                         </div>
                     </div>
                     <div class="col-md-3">
                         <label for="dataFinal" class="form-label">Data final:</label>
                         <div class="input-group">
-                            <input name="dataFinal"  value="<?= $_GET['dataFinal'] ?? "" ?>" type="date" class="form-control" id="dataFinal" placeholder="dd/mm/aaaa">
+                            <input name="dataFinal"  value="<?= htmlspecialchars($get_data_final, ENT_QUOTES, 'UTF-8') ?? "" ?>" type="date" class="form-control" id="dataFinal" placeholder="dd/mm/aaaa">
                             
                         </div>
                     </div>
@@ -369,9 +379,9 @@ else if(isset($_GET['registro']) && $_GET['registro'] == 'contas') {
                         <label for="titulo" class="form-label">Titulos:</label>
                         <select name="titulo" class="form-select" id="titulo">
                         
-                            <option value="" <?php if(!isset($_GET['titulo'])) {?> selected <?php } ?> >Selecione um Titulo</option>
+                            <option value="" <?php if(!isset($get_titulo)) {?> selected <?php } ?> >Selecione um Titulo</option>
                             <?php foreach ($titulos as $titulo) { ?>
-                                <option value="<?= $titulo->id ; ?>"  <?php if(isset($_GET['titulo']) && $titulo->id == $_GET['titulo']) {?> selected <?php } ?>  ><?= $titulo->nome ?></option>
+                                <option value="<?= $titulo->id ; ?>"  <?php if(isset($get_titulo) && $titulo->id == $get_titulo) {?> selected <?php } ?>  ><?= htmlspecialchars($titulo->nome, ENT_QUOTES, 'UTF-8') ?></option>
                             <?php }; ?>
                         </select>
                     </div>                
@@ -399,15 +409,16 @@ else if(isset($_GET['registro']) && $_GET['registro'] == 'contas') {
             <?php if (!empty($subtitulos_reg)) { ?>
                         <?php foreach ($subtitulos_reg as $subtitulo) 
                             
-                        {$titulo = Con01::read($subtitulo->id_con01)[0];
+                        {
+                            $titulo = Con01::read($subtitulo->id_con01)[0];
                             
                              ?>
 
 
-                            <tr data-id="<?= $subtitulo->id ?>">
-                                <td><?= $subtitulo->nome ?></td>
-                                <td><?= $titulo->nome?></td>
-                                <td><?= $subtitulo->data_r ?></td>
+                            <tr data-id="<?= htmlspecialchars($subtitulo->id, ENT_QUOTES, 'UTF-8') ?>">
+                                <td><?= htmlspecialchars($subtitulo->nome, ENT_QUOTES, 'UTF-8') ?></td>
+                                <td><?= htmlspecialchars($titulo->nome, ENT_QUOTES, 'UTF-8') ?></td>
+                                <td><?= htmlspecialchars($subtitulo->data_r, ENT_QUOTES, 'UTF-8') ?></td>
                                 
                             </tr>
                         <?php } ?>
@@ -537,7 +548,7 @@ if (barra.style.animationName === 'encolher') {
     }}
 </script>
 
-<?php if ( isset($_GET['acao']) && $_GET['acao'] == 'adicionar') { ?>
+<?php if ( isset($acao) && $acao == 'adicionar') { ?>
     <script>
         window.addEventListener('DOMContentLoaded', function () {
             var modalEl = document.getElementById('modal_empresa');
