@@ -82,10 +82,6 @@ class Cadastro {
         $query .= ' WHERE ' . implode(' AND ', $conditions);
     }
 
-    if ($email != null) {
-        $query .= ' LIMIT 1';
-    }
-
     if($filtro_data_inicial != null) {
         $query .= ' ORDER BY data_r desc';
     } else if($filtro_data_final != null) {

@@ -34,7 +34,7 @@ public static function create($tipo_pag) {
     $query = 'SELECT * FROM tipo_pag';
     $conditions = [];
 
-    if ($id != null) $conditions[] = 'id= :id';
+    if ($id != null) $conditions[] = 'id = :id';
     if ($idempresa != null) $conditions[] = 'id_empresa = :id_empresa';
     if ($nome != null) $conditions[] = 'nome = :nome';
 
@@ -52,7 +52,7 @@ public static function create($tipo_pag) {
 
     $stmt->execute();
 
-   $stmt->setFetchMode(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, Bairro::class);
+   $stmt->setFetchMode(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, TipoPagamento::class);
 return $stmt->fetchAll();
 }
 
