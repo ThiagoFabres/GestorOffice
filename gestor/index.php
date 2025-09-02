@@ -14,18 +14,30 @@ if(!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 2) {
     exit();
 }
 
-if(isset($_POST['acao']) && $_POST['acao'] == 'editar') {
+$post_acao = filter_input(INPUT_POST, 'acao');
 
+    $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+    $get_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+    $get_acao = filter_input(INPUT_GET, 'acao');
+    $get_nome = filter_input(INPUT_GET, 'nome');
+    $get_data_inicial = filter_input(INPUT_GET, 'dataInicial');
+    $get_data_final = filter_input(INPUT_GET, 'dataFinal');
 
+    $status_req = filter_input(INPUT_POST, 'status');
+    $consultar_req = filter_input(INPUT_POST, 'consultar');
+    $processar_req = filter_input(INPUT_POST, 'processar');
 
-    $nome = $_POST['nome'];
-    $email = $_POST['email'];
-    $status = isset($_POST['status']) ? 1 : 0;
-    $consultar = isset($_POST['consultar']) ? 1 : 0;
-    $processar = isset($_POST['processar']) ? 1 : 0;
+    $nome = filter_input(INPUT_POST, 'nome');
+    $email = filter_input(INPUT_POST, 'email');
+    $status = isset($status_req) ? 1 : 0;
+    $consultar = isset($consultar_req) ? 1 : 0;
+    $processar = isset($processar_req) ? 1 : 0;
+
+if(isset($post_acao) && $post_acao == 'editar') {
+
     
 $usuario = new Usuario(
-    $_POST['id'],
+    $id,
     $_SESSION['usuario']->id_empresa,
     $nome,
     $email,
@@ -39,12 +51,8 @@ $usuario = new Usuario(
     Usuario::update($usuario);
 }
 
-if (isset($_POST['acao']) && $_POST['acao'] == 'inserir_cliente') {
-    $nome = $_POST['nome'];
-    $email = $_POST['email'];
-    $status = $_POST['status'];
-    $consultar = $_POST['consultar'];
-    $processar = $_POST['processar'];
+if (isset($post_acao) && $post_acao == 'inserir_cliente') {
+
 
     function permissao() {
         // Exemplo: só permite se o usuário logado for admin
@@ -89,11 +97,15 @@ try {
 
 
     if(!Usuario::read(null,$email)) {
-        Usuario::create($usuario);
+        if(Usuario::create($usuario)) {
+            header('Location: index.php');
+    exit;
+        };
+        
     }
     
 
-    header('Location: index.php');
+    
 } else {
     $error = "Dados inválidos.";
 
@@ -164,9 +176,12 @@ try {
 
 
     
-        <?php if(!isset($_GET['acao']) || $_GET['acao'] !== 'editar') { ?>
+        <?php if(!isset($get_acao) || $get_acao !== 'editar') { ?>
             
             <div class="main" id="container">
+                 <div class="botao">
+        <a href="index.php?acao=adicionar" class="btn btn-primary btn-lg botao-adm-adicionar">Nova usuario</a>
+    </div>
             
                 <div class="card mb-4">
         <div class="card-header">
@@ -183,21 +198,21 @@ try {
                     <div class="col-md-2" style="width: 20%;">
                         <label for="nome" class="form-label">Nome:</label>
                         <div class="input-group">
-                            <input name="nome" value="<?= $_GET['nome'] ?? "" ?>" type="text" class="form-control" id="dataInicio" placeholder="Nome">
+                            <input name="nome" value="<?= htmlspecialchars($get_nome, ENT_QUOTES, 'UTF-8') ?? "" ?>" type="text" class="form-control" id="dataInicio" placeholder="Nome">
                             
                         </div>
                     </div>
                     <div class="col-md-2" style="width: 20%;">
                         <label for="dataInicio" class="form-label">Data inicial:</label>
                         <div class="input-group">
-                            <input name="dataInicial" value="<?= $_GET['dataInicial'] ?? "" ?>" type="date" class="form-control" id="dataInicio" placeholder="dd/mm/aaaa">
+                            <input name="dataInicial" value="<?= htmlspecialchars($get_data_inicial, ENT_QUOTES, 'UTF-8') ?? "" ?>" type="date" class="form-control" id="dataInicio" placeholder="dd/mm/aaaa">
                             
                         </div>
                     </div>
                     <div class="col-md-2" style="width: 20%;">
                         <label for="dataFinal" class="form-label">Data final:</label>
                         <div class="input-group">
-                            <input name="dataFinal"  value="<?= $_GET['dataFinal'] ?? "" ?>" type="date" class="form-control" id="dataFinal" placeholder="dd/mm/aaaa">
+                            <input name="dataFinal"  value="<?= htmlspecialchars($get_data_final, ENT_QUOTES, 'UTF-8') ?? "" ?>" type="date" class="form-control" id="dataFinal" placeholder="dd/mm/aaaa">
                             
                         </div>
                     </div>
@@ -227,16 +242,16 @@ try {
                 </thead>
                 <tbody>
             <?php 
-            $cadastros_reg = Usuario::read(null, null, $_SESSION['usuario']->id_empresa, null, $_GET['nome'] ?? null, $_GET['dataInicial'] ?? null, $_GET['dataFinal'] ?? null);
+            $cadastros_reg = Usuario::read(null, null, $_SESSION['usuario']->id_empresa, Cargo::USUARIO, $get_nome ?? null, $get_data_inicial ?? null, $get_data_final ?? null);
             if (!empty($cadastros_reg)) { ?>
                         <?php foreach ($cadastros_reg as $cadastro) {?>
 
 
-                            <tr data-id="<?= $cadastro->id ?>">
-                                                            <tr data-id="<?= $cadastro->id ?>">
+                            
+                                                            <tr onclick="window.location.href='index.php?acao=editar&id=<?=$cadastro->id_usuario?>'" data-id="<?= htmlspecialchars($cadastro->id, ENT_QUOTES, 'UTF-8') ?>" style="cursor: pointer;">
                                 <td>
-                                                <?=$cadastro->nome?>
-                                                <p>E-mail: <?=$cadastro->email?></p>
+                                                <?=htmlspecialchars($cadastro->nome, ENT_QUOTES, 'UTF-8')?>
+                                                <p>E-mail: <?=htmlspecialchars($cadastro->email, ENT_QUOTES, 'UTF-8')?></p>
                                             </td>
 
                                             <td>
@@ -244,10 +259,10 @@ try {
                                             </td>
                                             <td>
                                                 <?php if($cadastro->status == 1) {echo 'ATIVO';} else {echo 'INATIVO';} ?>
-                                                <p>Data de registro: <?= date('d/m/Y', strtotime($cadastro->data_r)) ?></p>
+                                                <p>Data de registro: <?= date('d/m/Y', strtotime(htmlspecialchars($cadastro->data_r, ENT_QUOTES, 'UTF-8'))) ?></p>
                                             </td>
                                 
-                            </tr>
+                            
                                 
                             </tr>
                         <?php } ?>
@@ -269,12 +284,12 @@ try {
     </div>
 </div>
 
-<?php } else if($_GET['acao'] == 'editar') { ?>
+<?php } else if($get_acao == 'editar') { ?>
     
     <?php 
-    $id = $_GET['id']; 
-    $usuario = Usuario::read($id);
-    $usuario = $usuario[0];
+    
+    $usuario = Usuario::read($get_id)[0];
+    
      ?>
     
     <div class="main-edit">
@@ -289,11 +304,11 @@ try {
     <input type="hidden" name="id" value="<?=$usuario->id_usuario?>">
  
     <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input type="text" class="form-control" id="input-nome" placeholder="Nome" name="nome" value="<?= $usuario->nome ?>" required>
+        <input type="text" class="form-control" id="input-nome" placeholder="Nome" name="nome" value="<?= htmlspecialchars($usuario->nome, ENT_QUOTES, 'UTF-8') ?>" required>
     </div>
 
     <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input type="text" class="form-control" id="input-email" placeholder="E-mail" name="email" value="<?= $usuario->email ?>" required>
+        <input type="text" class="form-control" id="input-email" placeholder="E-mail" name="email" value="<?= htmlspecialchars($usuario->email, ENT_QUOTES, 'UTF-8') ?>" required>
     </div>
 
     
@@ -453,7 +468,7 @@ if (!consultar.checked) {
 
 </script>
 
-<?php if (isset($_GET['acao']) && $_GET['acao'] == 'adicionar') { ?>
+<?php if (isset($get_acao) && $get_acao == 'adicionar') { ?>
     <script>
         window.addEventListener('DOMContentLoaded', function () {
             var modalEl = document.getElementById('modal_usuario');
