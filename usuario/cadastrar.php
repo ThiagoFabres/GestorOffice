@@ -248,7 +248,7 @@ $estadosLista = [
                         <div class="col-md-2" style="width: 15%;"   >
                         <label for="nome" class="form-label">Nome:</label>
                         <div class="input-group">
-                            <input name="nome" value="<?= $nome ?? "" ?>" type="Nome" class="form-control" id="nome" placeholder="Nome" style="border-radius: 0.25em;">
+                            <input name="nome" value="<?= $get_nome ?? "" ?>" type="Nome" class="form-control" id="nome" placeholder="Nome" style="border-radius: 0.25em;">
                             
                         </div>
                     </div>
@@ -274,7 +274,7 @@ $estadosLista = [
                         
                             <option value="" <?php if(!isset($get_estado)) {?> selected <?php } ?> >Selecione um Estado</option>
                             <?php
-                            $cadastrosl = Cadastro::read(null, null, $_SESSION['usuario']->id_empresa, $nome ?? null, $get_data_inicial ?? null, $get_data_final ?? null, $get_estado ?? null, $get_cidade ?? null, $get_bairro ?? null);
+                            $cadastrosl = Cadastro::read(null, null, $_SESSION['usuario']->id_empresa, $get_nome ?? null, $get_data_inicial ?? null, $get_data_final ?? null, $get_estado ?? null, $get_cidade ?? null, $get_bairro ?? null);
                             $cadastros = Cadastro::read(null, null, $_SESSION['usuario']->id_empresa);
 
                             $lista_estados = [];
@@ -375,7 +375,7 @@ $estadosLista = [
                 </div>
                 </div>
 </div>
-                        <table class="table table-striped">
+                        <table class="table table-striped table-cadastro ">
                 <thead>
                     <tr>
                         <th>Nome</th>
@@ -590,7 +590,7 @@ $estadosLista = [
                         <input type="hidden" name="id" value="">
                         <label>Informe os dados do Cliente ou Fornecedor</label>
 
-                        <div class="input-nome input-form-adm">
+                        <div class="input-nome input-form-adm" style="width:100%;">
                             <!-- Razão social / Nome: -->
                             <input type="text" onchange="checar()" name="nome" class="form-control" placeholder="Razão social / Nome"
                                 value="" required>
@@ -769,7 +769,7 @@ $estadosLista = [
                         <div class="card-header"><h3><?= ucfirst($get_cadastro) . 's' ?></h3></div>
                 
 
-                    <table class="table table-striped">
+                    <table class="table table-striped table-cadastro">
                         
                         <thead>
                             <tr>
