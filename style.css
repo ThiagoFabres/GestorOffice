@@ -23,6 +23,144 @@
     margin-bottom: 0.5em;
 }
 
+.view-dash {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    align-items: center;
+    justify-content: center;
+    
+    
+}
+#receber-hoje .card .card-header,
+#receber-semana .card .card-header,
+#receber-vencidos .card .card-header
+ {
+    display: flex;
+    flex-direction: row;
+}
+
+
+
+.dash-titulo-receber {
+    padding: 0;
+    width: 50%;
+    border-right: 1px solid #d2d2d2 ;
+}
+.dash-titulo-receber h3{
+    font-size: 1em;
+}
+
+.dash-categoria-receber {
+    padding: 0;
+    width: 50%;
+}
+.dash-categoria-receber h3{
+    font-size: 1em;
+    float: right;
+}
+
+.tr-clientes-dash td
+{
+    text-align: center;
+    font-size: 0.9em;
+} 
+.tr-clientes-dash th {
+    font-size: 0.8em;
+}
+
+
+
+#receber-group {
+    width: 100%;
+    height: 40%;
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 10em;
+    justify-content: space-evenly;
+}
+#pagar-group {
+    width: 100%;
+    height: 40%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+}
+
+
+
+#receber-hoje,
+#receber-vencidos,
+#receber-semana {
+    margin: 1px;
+    max-width: 32% ;
+    min-height: 30%;
+}
+
+#receber-hoje th, #receber-hoje td,
+#receber-vencidos th, #receber-vencidos td,
+#receber-semana th, #receber-semana td,
+#receber-hoje tr, #receber-vencidos tr, #receber-semana tr {
+     height: 1em;
+     width: calc(100%/7);
+     padding: 0.2em;
+}
+
+
+
+#receber-hoje table, #receber-vencidos table, #receber-semana table {
+     border: none;
+     padding: 0.2em;
+}
+
+
+.parcela_cor_azul td,
+.parcela_cor_azul td button,
+.parcela_cor_azul td button:disabled {
+  background-color: #287dfc7a !important; /* azul de exemplo */
+  color: black;
+}
+.parcela_cor_azul td button:hover {
+      background-color: #0066ffcb !important; /* azul de exemplo */
+  color: black;
+}
+
+.parcela_cor_amarela td,
+.parcela_cor_amarela td button,
+.parcela_cor_amarela td button:disabled {
+  background-color: #fbff127a !important;
+  color: black;
+}
+.parcela_cor_amarela td button:hover {
+      background-color: #eeff00 !important; /* azul de exemplo */
+  color: black;
+}
+
+.parcela_cor_vermelha td, 
+.parcela_cor_vermelha td button,
+.parcela_cor_vermelha td button:disabled {
+  background-color: #ff30307a !important; /* azul de exemplo */
+  color: black;
+}
+.parcela_cor_vermelha td button:hover {
+      background-color: #ff1212cb !important; /* azul de exemplo */
+  color: black;
+}
+
+.parcela_cor_verde td, 
+.parcela_cor_verde td button,
+.parcela_cor_verde td button:disabled {
+  background-color: #30ff3a7a !important; /* azul de exemplo */
+  color: black;
+}
+
+.parcela_cor_verde td button:hover {
+      background-color: #49ff12cb !important; /* azul de exemplo */
+  color: black;
+}
+
 /* Garantir que o card-footer ocupe toda a largura do card e alinhe o botão à direita */
 .card-footer {
     width: 100%;
@@ -36,8 +174,15 @@
 
 .card {
     position: relative;
-    min-width: 70em;
+    max-width: 100em;
 }
+
+
+
+.row {
+    min-width: 100%;
+}
+
 /* Centralizar accordion dentro de .main */
 .main {
     display: flex;
@@ -73,6 +218,11 @@
     min-height: 38px;
     padding: 0.4em 1em;
     font-size: 1em;
+}
+
+.view-dash {
+    width: 100%;
+    height: 100%;
 }
 
 .custom-accordion .accordion-button:not(.collapsed) {
@@ -164,14 +314,41 @@ html, body {
     background-color: #f8f8f9;
 }
 
+.input-documento-group {
+    display: flex;
+    flex-direction: row;
+}
+
+.input-documento {
+    width: 90%;
+}
+
+.input-documento .form-control {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    
+}
+
+.input-documento-generator {
+    width: 10%;
+}
+
+.input-documento-generator .form-control {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
 
 .table {
     margin-left: auto;
     margin-right: auto;
-    width: auto;
-    min-width: 70em;
     height: 9em;
 }
+.table-cadastro {
+    min-width: 70em;
+}
+
+
+
 
 .inner-accordion .table {
     margin-top: 1em;
@@ -262,6 +439,7 @@ html, body {
     background-color: white;
     bottom: 5em;
     min-height: 80%;
+    min-width: 100%;
 }
 
 .tabela-edit {
