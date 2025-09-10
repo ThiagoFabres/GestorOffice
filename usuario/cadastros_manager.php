@@ -290,7 +290,9 @@ exit;
 
 
 }
-header('Location: contas.php');
+
+if(isset($con01)) { $route = '?con01id='. $con01;};
+header('Location: contas.php' . $route );
 exit;
 } else if (isset($view) && $view == 'receber') {
     $cadastro = filter_input(INPUT_POST, 'cadastro');
@@ -300,6 +302,7 @@ exit;
     $descricao = filter_input(INPUT_POST, 'descricao');
     $valor = filter_input(INPUT_POST, 'valor');
     $parcelas_d = filter_input(INPUT_POST, 'parcelas_d');
+
     $parcela   = $_POST['parcela'] ?? [];
     $vencimento = $_POST['vencimento'] ?? [];
     $valor_par  = $_POST['valor_par'] ?? [];
@@ -332,17 +335,27 @@ exit;
             null,
             $_SESSION['usuario']->id_usuario,
         );
+        
         if($pagar) {
-            Pag01::create($recebimento);
+            if(!Pag01::read(null,null,null,$documento)) {
+                Pag01::create($recebimento);
+            } else {
+                header('Location:pagar.php?erro=repetido');
+            }
             $rec01 = Pag01::read(null, $_SESSION['usuario']->id_empresa, null, $documento)[0];
         }else {
-            Rec01::create($recebimento);
+            if(!Rec01::read(null,null,null,$documento)) {
+                Rec01::create($recebimento);
+            } else {
+                header('Location:receber.php?erro=repetido');
+            }
             $rec01 = Rec01::read(null, $_SESSION['usuario']->id_empresa, null, $documento)[0];
         }
         
         $parcelas = [];
         for($i = 1; $i < $parcelas_d + 1; $i++) {
-            $valor_parcela = $valor_par[$i];
+           $valor_parcela = str_replace(',', '.',  $valor_par[$i]);
+           $valor_parcela = floatval($valor_parcela);
             $vencimento_data = $vencimento[$i];
             $obs_parcela = $obs02[$i];
 
@@ -375,12 +388,10 @@ exit;
     );
     Rec02::create($parcelas[$i]);
 };
-        if($pagar) {
-            Pag02::create($parcelas[$i]);
-        } else {
-            Rec02::create($parcelas[$i]);
+
+        
         }
-        }
+        
         if($pagar) {
             header('Location: pagar.php');
             exit;
@@ -389,11 +400,14 @@ exit;
             exit;
         }
 } else if(isset($acao) && $acao == 'editar') {
+    
     if($pagar) {
+
             $rec01 = Pag01::read(null, $_SESSION['usuario']->id_empresa, null, $documento)[0];
         }else {
             $rec01 = Rec01::read(null, $_SESSION['usuario']->id_empresa, null, $documento)[0];
         }
+        $data_lanc = filter_input(INPUT_POST, 'data_lanc') ?? $rec01->data_lanc;
     $recebimento = new Rec01(
             $id_rec,
             $_SESSION['usuario']->id_empresa,
@@ -404,44 +418,111 @@ exit;
             $descricao,
             $valor,
             $parcelas_d,
-            $rec01->data_lanc,
+            $data_lanc,
             $_SESSION['usuario']->id_usuario,
         );
+
         if($pagar) {
-            Pag01::update($recebimento);
-        } else {
-            Rec01::update($recebimento);
+            if(!Pag01::read(null,null,null,$documento)) {
+                Pag01::update($recebimento);
+            } else {
+                header('Location:pagar.php?erro=repetido');
+                exit;
+            }
+            $rec01 = Pag01::read(null, $_SESSION['usuario']->id_empresa, null, $documento)[0];
+        }else {
+            if(!Rec01::read(null,null,null,$documento)) {
+                Rec01::update($recebimento);
+            } else {
+                header('Location:receber.php?erro=repetido');
+                exit;
+            }
+            $rec01 = Rec01::read(null, $_SESSION['usuario']->id_empresa, null, $documento)[0];
         }
          
 
     
+        // $parcelas = [];
+        // for($i = 1; $i < $parcelas_d + 1; $i++) {
+        //     $valor_parcela = $valor_par[$i];
+        //     $vencimento_data = $vencimento[$i];
+        //     $obs_parcela = $obs02[$i];
+        //     $id_parcela = $id[$i];
+
+        //     $parcelas[$i] = new Rec02(
+        //     $id_parcela,
+        //     $_SESSION['usuario']->id_empresa,
+        //     $rec01->id,
+        //     $valor_parcela,
+        //     $i,
+        //     $vencimento_data,
+        //     0,
+        //     null,
+        //     $obs_parcela,
+        //     null
+
+        // );
+        // if($pagar) {
+        //     $update = (Pag02::update($parcelas[$i]));
+        //     if(!$update) {
+        //         Pag02::create($parcelas[$i]);
+        //     }
+        // } else {
+        //     $update = Rec02::update($parcelas[$i]);
+        //     if(!$update) {
+        //         Rec02::create($parcelas[$i]);
+        //     }
+        // }
+             
+        // }
+        
+        if($pagar){
+             Pag02::deletebypag01($id_rec);
+        } else {
+            Rec02::deletebyrec01($id_rec);
+        }
+
+        
         $parcelas = [];
         for($i = 1; $i < $parcelas_d + 1; $i++) {
-            $valor_parcela = $valor_par[$i];
+            $valor_parcela = str_replace(',', '.',  $valor_par[$i]);
+            $valor_parcela = floatval($valor_parcela);
             $vencimento_data = $vencimento[$i];
             $obs_parcela = $obs02[$i];
-            $id_parcela = $id[$i];
 
-            $parcelas[$i] = new Rec02(
-            $id_parcela,
-            $_SESSION['usuario']->id_empresa,
-            $rec01->id,
-            $valor_parcela,
-            $i,
-            $vencimento_data,
-            0,
-            null,
-            $obs_parcela,
-            null
+            if ($pagar) {
+    $parcelas[$i] = new Pag02(
+        null,                           // id (PK da parcela)
+        $_SESSION['usuario']->id_empresa,
+        $id_rec,                     // id_pag01 (FK)
+        $valor_parcela,
+        $i,
+        $vencimento_data,
+        0,
+        null,
+        $obs_parcela,
+        null
+    );
+    Pag02::create($parcelas[$i]);
+} else {
+    $parcelas[$i] = new Rec02(
+        null,                           // id (PK da parcela)
+        $_SESSION['usuario']->id_empresa,
+        $id_rec,                     // id_rec01 (FK)
+        $valor_parcela,
+        $i,
+        $vencimento_data,
+        0,
+        null,
+        $obs_parcela,
+        null
+    );
+    Rec02::create($parcelas[$i]);
+};
 
-        );
-        if($pagar) {
-            Pag02::update($parcelas[$i]);
-        } else {
-            Rec02::update($parcelas[$i]);
+        
         }
-             
-        }
+
         if($pagar) {
             header('Location: pagar.php');
             exit;
@@ -451,6 +532,8 @@ exit;
         }
 
 } else if(isset($acao) && $acao == 'quitar') {
+            $valor_parcela = str_replace(',', '.',  $valor);
+            $valor_parcela = floatval($valor_parcela);
     if($target == 'parcela') {
         if($pagar) {
             $parcela_antiga = Pag02::read($id)[0];
@@ -465,7 +548,7 @@ exit;
             $parcela_antiga->valor_par,
             $parcela_antiga->parcela,
             $parcela_antiga->vencimento,
-            $valor + $parcela_antiga->valor_pag,
+            $valor_parcela + $parcela_antiga->valor_pag,
             $data_pag,
             $parcela_antiga->obs,
             $forma_pagamento
