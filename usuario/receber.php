@@ -22,6 +22,14 @@ $acao = filter_input(INPUT_GET, 'acao');
 $get_opcao = filter_input(INPUT_GET, 'opcao');
 $get_id = filter_input(INPUT_GET, 'id');
 
+$get_filtro_data_inicial = filter_input(INPUT_GET, 'filtro_data_inicial');
+$get_filtro_data_final = filter_input(INPUT_GET, 'filtro_data_final');
+$get_filtro_nome = filter_input(INPUT_GET, 'filtro_nome');
+$get_filtro_opcao = filter_input(INPUT_GET, 'opcao_filtro');
+$get_filtro_por = filter_input(INPUT_GET, 'filtro_por');
+$get_filtro_pagamento = filter_input(INPUT_GET, 'forma_pagamento');
+
+
 
 
 
@@ -154,23 +162,35 @@ $get_id = filter_input(INPUT_GET, 'id');
         <div class="card-header-borda">
             <div class="tab-pane fade show active" id="vendas" role="tabpanel" aria-labelledby="vendas-tab">
                 <h5 class="card-title">Filtros</h5>
-                <form method="get" action="index.php?view=receber">
+                <form method="get" action="receber.php">
                     <div class="row">
                         <div class="inputs-pagamento-text" style="display: flex; flex-direction: row; width: 40%;">
                         
-                        <div style="width: 33%;">
-                            <label for="filtro_data_inicial">Data Inicial:</label>
-                            <input type="date" id="filtro_data_inicial" name="filtro_data_inicial" class="form-control" style="border-top-right-radius: 0; border-bottom-right-radius: 0; border-top-left-radius: 0.25em; border-bottom-left-radius: 0.25em;">
+                        <div style="width: 30%;">
+                            <label for="filtro_data_inicial" style="font-size:0.85em;">Data Inicial:</label>
+                            <input type="date" id="filtro_data_inicial" name="filtro_data_inicial" value="<?=$get_filtro_data_inicial;?>" class="form-control" style="border-top-right-radius: 0; border-bottom-right-radius: 0; border-top-left-radius: 0.25em; border-bottom-left-radius: 0.25em;">
                         </div>
 
-                        <div style="width: 33%;">
-                            <label for="filtro_data_final">Data Final:</label>
-                            <input type="date" id="filtro_data_final" name="filtro_data_final" class="form-control" style="border-radius: 0;">
+                        <div style="width: 30%;">
+                            <label for="filtro_data_final" style="font-size:0.85em;">Data Final:</label>
+                            <input type="date" id="filtro_data_final" name="filtro_data_final" value="<?=$get_filtro_data_final;?>" class="form-control" style="border-radius: 0;">
                         </div>
 
-                        <div style="width: 33%;">
-                            <label for="filtro_nome">Nome:</label>
-                            <input type="text" id="filtro_nome" name="filtro_nome" class="form-control" placeholder="Nome">
+                        <div style="width: 20%;">
+                            <label for="filtro_nome" style="font-size:0.85em;">Nome:</label>
+                            <input type="text" id="filtro_nome" name="filtro_nome" class="form-control" value="<?=$get_filtro_nome;?>" placeholder="Nome">
+                        </div>
+
+                        <div style="width: 30%;">
+                            <label for="filtro_nome" style="font-size:0.80em;">Tipo de Pagamento:</label>
+                            <select class="form-control" name="forma_pagamento">
+                        <option value="">Selecione uma forma de pagamento</option>
+                        <?php foreach(TipoPagamento::read(null, $_SESSION['usuario']->id_empresa) as $pagamento) { ?>
+                            <option <?php if($get_filtro_pagamento == $pagamento->id) {?> selected <?php } ?> value="<?= $pagamento->id ?>">
+                                <?= $pagamento->nome ?>
+                            </option>
+                        <?php } ?>
+                    </select>
                         </div>
                         
                         
@@ -181,17 +201,17 @@ $get_id = filter_input(INPUT_GET, 'id');
                             <div style="margin-right: 1em;"><h5 style="font-size: 1em;">Opção:</h5></div>
                             <div class="form-check" style="margin-right: 1em;">
                                 
-                            <input class="form-check-input" type="radio" id="todos" name="opcao_filtro" value="" style="height: 65%;" checked>
+                            <input class="form-check-input" type="radio" id="todos" name="opcao_filtro" <?php if($get_filtro_opcao == 'lancamento' || empty($get_filtro_opcao)) {?> checked <? } ?> value="" style="height: 65%;" checked>
                             <label class="form-check-label"for="todos">Todos</label>
                             </div>
 
                             <div class="form-check" style="margin-right: 1em;">
-                            <input class="form-check-input" type="radio" id="abertos" name="opcao_filtro" value="abertos" style="height: 65%;">
+                            <input class="form-check-input" type="radio" id="abertos" name="opcao_filtro" <?php if($get_filtro_opcao == 'abertos' ) {?> checked <? } ?> value="abertos" style="height: 65%;">
                             <label class="form-check-label" for="abertos">Abertos</label>
                             </div>
                             
                             <div class="form-check" style="margin-right: 1em;">
-                            <input class="form-check-input"type="radio" id="quitados" name="opcao_filtro" value="quitados" style="height: 65%;"> 
+                            <input class="form-check-input"type="radio" id="quitados" name="opcao_filtro" <?php if($get_filtro_opcao == 'quitados' ) {?> checked <? } ?> value="quitados" style="height: 65%;"> 
                             <label class="form-check-label" for="quitados">Quitados</label>
                             </div>
                           
@@ -202,17 +222,17 @@ $get_id = filter_input(INPUT_GET, 'id');
                         <div class="radio-pagamento" style="width: 100%; max-height: 50%; display: flex; flex-direction: row;">
                             <div style="margin-right: 1em;"><h5 style="font-size: 1em;">Filtro por:</h5></div>
                             <div class="form-check"style="margin-right: 1em;">
-                            <input checked class="form-check-input" type="radio" id="lancamento" name="filtro_por" value="lancamento" style="height: 65%;">
+                            <input class="form-check-input" type="radio" id="lancamento" name="filtro_por" <?php if($get_filtro_por == 'lancamento' || empty($get_filtro_por)) {?> checked <? } ?> value="lancamento" style="height: 65%;">
                             <label class="form-check-label"for="lancamento">Lançamento</label>
                             </div>
 
                             <div class="form-check"style="margin-right: 1em;">
-                            <input class="form-check-input" type="radio" id="vencimento" name="filtro_por" value="vencimento" style="height: 65%;">
+                            <input class="form-check-input" type="radio" id="vencimento" name="filtro_por" <?php if($get_filtro_por == 'vencimento') {?> checked <? } ?> value="vencimento" style="height: 65%;">
                             <label class="form-check-label" for="vencimento">Vencimento</label>
                             </div>
                             
                             <div class="form-check"style="margin-right: 1em;">
-                            <input class="form-check-input"type="radio" id="pagamento" name="filtro_por" value="pagamento" style="height: 65%;"> 
+                            <input class="form-check-input"type="radio" id="pagamento" name="filtro_por" <?php if($get_filtro_por == 'pagamento') {?> checked <? } ?> value="pagamento" style="height: 65%;"> 
                             <label class="form-check-label" for="pagamento">Pagamento</label>
                             </div>
                           
@@ -224,8 +244,9 @@ $get_id = filter_input(INPUT_GET, 'id');
 
                     
                     
-                        <div style="width: 10%;">
-                            <button type="submit" class="btn btn-primary mt-4" style="background-color: #5856d6;">Filtrar</button>
+                        <div style="width: 10%; display: flex; flex-direction: column;">
+                            <button type="submit" class="btn btn-primary" style="background-color: #5856d6; height: 50%;">Filtrar</button>
+                            <a href="receber.php" class="btn btn-secondary"style="height: 50%;">Limpar</a>
                         </div>
                         
                     </div>
@@ -240,7 +261,7 @@ $get_id = filter_input(INPUT_GET, 'id');
                 <thead>
                     <tr>
                         <th>Documento</th>
-                        <th>Data</th>
+                        <th>Data de Lançamento</th>
                         <th>Nome</th>
                         <th>Descrição</th>
                         <th>Valor</th>
@@ -251,12 +272,14 @@ $get_id = filter_input(INPUT_GET, 'id');
                         <th>Data de Pagamento</th>
                         <th>Valor Pago</th>
                         <th>Tipo de Pagamento</th>
-                        <th>Ações</th>
+                        <th style="width: 20%;">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
             <?php
-            $parcelas = Rec02::read(null, $_SESSION['usuario']->id_empresa);
+            $parcelas = Rec02::read(null, $_SESSION['usuario']->id_empresa,null, null, null,
+            $get_filtro_data_inicial ?? null, $get_filtro_data_final ?? null, $get_filtro_nome ?? null,
+            $get_filtro_opcao ?? null, $get_filtro_por ?? null, $get_filtro_pagamento ?? null );
             if (!empty($parcelas)) {
                 $recebimentos_pagos = [];?>
                 
@@ -264,17 +287,25 @@ $get_id = filter_input(INPUT_GET, 'id');
                     $parcelas_pagas = false;
                                 if(!in_array($rec02->id_rec01, $recebimentos_pagos)){
                                 if($rec02->valor_pag != 0) {
-                                    $parcelas_pagas = true;
                                     $recebimentos_pagos[$rec02->id] = $rec02->id_rec01;
-                                } else {
-                                    $parcelas_pagas = false;
-                                }
-                            } else {
-                                $parcelas_pagas = true;
+                                } 
                             }
                 }?>
             
                         <?php foreach ($parcelas as $rec02) {
+
+                            $data_atual = new DateTime();
+                        $data_atual = $data_atual->format('Y-m-d');
+
+                        if(($rec02->vencimento == $data_atual) && $rec02->valor_pag != $rec02->valor_par) {
+                            $cor_parcela = 'parcela_cor_amarela';
+                        } else if(($rec02->vencimento < $data_atual) && $rec02->valor_pag != $rec02->valor_par) {
+                            $cor_parcela = 'parcela_cor_vermelha';
+                        } else if(($rec02->vencimento > $data_atual) && $rec02->valor_pag != $rec02->valor_par) {
+                            $cor_parcela = 'parcela_cor_azul';
+                        } else if($rec02->valor_pag == $rec02->valor_par) {
+                            $cor_parcela = 'parcela_cor_verde';
+                        }
                        
                         $rec01 = Rec01::read($rec02->id_rec01, $_SESSION['usuario']->id_empresa )[0];
 
@@ -300,7 +331,6 @@ $get_id = filter_input(INPUT_GET, 'id');
                                 if(!in_array($rec02->id_rec01, $recebimentos_pagos)){
                                 if($rec02->valor_pag != 0) {
                                     $parcelas_pagas = true;
-                                    $recebimentos_pagos[$rec02->id] = $rec02->id_rec01;
                                 } else {
                                     $parcelas_pagas = false;
                                 }
@@ -313,7 +343,7 @@ $get_id = filter_input(INPUT_GET, 'id');
                              ?>
                             <!-- style="<?php if($ultima_parcela) {?>border-bottom: 3px solid #5856d6;<?php } ?> border-inline: 1px solid #5856d6;" -->
 
-                            <tr class="tr-clientes" onclick="" 
+                            <tr class="tr-clientes <?=$cor_parcela?>" onclick="" 
                             
                              >
                                 <td><?=$rec01->documento;?> </td> 
@@ -329,9 +359,11 @@ $get_id = filter_input(INPUT_GET, 'id');
                                 <td><?php if($rec02->valor_pag == 0){echo '';} else {echo 'R$' . $valor_pago;}?></td>
                                 <td><?=$pagamento->nome ?? ''?></td>
                                 <td>
-                                    <button class="btn btn-primary" data-bs-toggle="modal" <?php if($rec02->valor_pag == $rec02->valor_par){ ?> disabled <?php } ?> data-bs-target="#modal_quitar" data-id="<?=$rec02->id?>" data-valor-restante="<?= $rec02->valor_par - $rec02->valor_pag ?>">Quitar</button>
+                                    <?php $valor_restante = number_format($rec02->valor_par - $rec02->valor_pag, 2 ,',', '') ?>
+
+                                    <button class="btn btn-primary" data-bs-toggle="modal" <?php if($rec02->valor_pag == $rec02->valor_par){ ?> disabled <?php } ?> data-bs-target="#modal_quitar" data-id="<?=$rec02->id?>" data-valor-restante="<?= $valor_restante ?>">Quitar</button>
                                     <button class="btn btn-primary" <?php if ($rec02->valor_pag == 0) { ?> disabled <?php } ?> onclick="window.location.href='cadastros_manager.php?view=receber&target=parcela&acao=estornar&id=<?=$rec02->id?>'">Estornar</button>
-                                    <a class="btn btn-primary" <?php if($parcelas_pagas == true){ ?> disabled <?php } ?> href="editar-receber.php?id=<?=$rec02->id?>">Editar</a>
+                                    <button class="btn btn-primary" <?php if($parcelas_pagas == true){ ?> disabled <?php } ?> onclick="window.location.href='editar-receber.php?id=<?=$rec01->id?>'">Editar</button>
                                 </td>
                             </tr>
                             
@@ -425,14 +457,18 @@ $get_id = filter_input(INPUT_GET, 'id');
                     <form method="post" id="content" action="editar-receber.php">
                         <input type="hidden" name="view" value="receber">
 
-                        
-
+                        <label for="documento">Documento:</label>
+                    <div class="input-documento-group">
                         <div class="input-documento input-form-adm">
                             <!--Nome: -->
-                            <label for="documento">Documento:</label>
-                            <input type="text" onchange="checar()" name="documento" class="form-control" placeholder="Documento" value="" required>
+                            
+                            <input type="text" onchange="checar()" name="documento" id="documento" class="form-control" placeholder="Documento" value="" required>
                         </div>
-
+                            
+                        <div class="input-documento-generator">
+                            <button type="button" class="form-control" id="btnBuscarDoc"><i class="bi bi-text-center"></i></button>
+                        </div>
+                    </div>
                         <div class="input-cadastro input-form-adm">
                             <!--Nome: -->
                             <label for="cadastro">Cliente / Fornecedor:</label>
@@ -655,27 +691,27 @@ if (barra.style.animationName === 'encolher') {
         document.getElementById('modal_quitar_valor_restante').textContent = "Valor restante da parcela: R$ " + valorRestante;
     });
 });
+
+
+
+document.getElementById("btnBuscarDoc").addEventListener("click", function() {
+    fetch("/../db/buscar_documento_rec.php")
+        .then(response => response.json())
+        .then(data => {
+            if (data.sucesso) {
+                document.getElementById("documento").value = data.numero;
+            } else {
+                alert("Nenhum documento disponível encontrado.");
+            }
+        })
+        .catch(err => console.error("Erro:", err));
+});
+
+
+
 </script>
 
-<?php if ( isset($acao) && $acao == 'adicionar' || $acao == 'visualizar') 
-    
-    { ?>
-    
-    <script>
-        window.addEventListener('DOMContentLoaded', function () {
-            var modalEl = document.getElementById(<?php if ($view == 'receber') { if($acao == 'adicionar'){?> 'modal_receber' <? } 
-                                                     else if($acao == 'visualizar'){ ?> 'modal_visualizar' <?php }}?>);
-            var Modal = new bootstrap.Modal(modalEl);
-            Modal.show();
-            modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'receber.php?view=<?= $view ?>';
-            });
-        });
 
-
-    </script>
-<?php }
-; ?>
 
 
 

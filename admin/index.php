@@ -259,7 +259,7 @@ if(!Empresa::read(null, $email) && !Usuario::read(null, $email)) {
             <div class="main" id="container">
 
                 <div class="botao">
-        <a href="index.php?acao=adicionar" class="btn btn-primary btn-lg botao-adm-adicionar">Nova Empresa</a>
+         <button data-bs-toggle="modal" data-bs-target="#modal_empresa" class="btn btn-primary btn-lg botao-adm-adicionar">Nova Empresa</button>
     </div>
 
     
