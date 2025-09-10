@@ -147,7 +147,7 @@ $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
                 <span style="color: #303640; font-size:1.1em; font-weight:500;"> <?php echo htmlspecialchars($titulo->nome, ENT_QUOTES, 'UTF-8'); ?> </span>
             </button>
         </h2>
-        <div id="collapse<?=$i?>" class="accordion-collapse collapse" aria-labelledby="heading<?=$i?>" data-bs-parent="#accordionExample">
+        <div id="collapse<?=$i?>" class="accordion-collapse <?php if(!isset($con01) || $con01 != $titulo->id ) {?>collapse<?php } ?>" aria-labelledby="heading<?=$i?>" data-bs-parent="#accordionExample">
             <div class="accordion-body">
                 <div class="inner-accordion">
                      <a href="contas.php?view=contas&target=subtitulo&acao=adicionar&con01id=<?=$titulo->id?>" class="btn btn-primary btn-sm botao-adm-adicionar">Adicionar Subtitulo</a>
@@ -378,7 +378,7 @@ if (barra.style.animationName === 'encolher') {
             var Modal = new bootstrap.Modal(modalEl);
             Modal.show();
             modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'contas.php';
+                window.location.href = 'contas.php?con01id=<?= $con01 ?>' ;
             });
         });
 

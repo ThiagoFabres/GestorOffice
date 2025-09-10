@@ -180,7 +180,7 @@ try {
             
             <div class="main" id="container">
                  <div class="botao">
-        <a href="index.php?acao=adicionar" class="btn btn-primary btn-lg botao-adm-adicionar">Nova usuario</a>
+         <button data-bs-toggle="modal" data-bs-target="#modal_usuario" class="btn btn-primary btn-lg botao-adm-adicionar">Novo Usuario</button>
     </div>
             
                 <div class="card mb-4">
