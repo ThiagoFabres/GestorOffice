@@ -20,7 +20,12 @@ $target = filter_input(INPUT_GET, 'target');
 $con01 = filter_input(INPUT_GET, 'con01id');
 $acao = filter_input(INPUT_GET, 'acao');
 $get_opcao = filter_input(INPUT_GET, 'opcao');
+
 $get_id = filter_input(INPUT_GET, 'id');
+if($get_id == null){
+    $get_id = filter_input(INPUT_POST, 'id');
+}
+$get_acao = filter_input(INPUT_GET, 'acao');
 
 
 
@@ -28,9 +33,8 @@ if(isset($view) && $view == 'contas'){
     $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
  }
 
-
-    $rec02_target = Rec02::read($get_id)[0];
-    $recebimento = Rec01::read($rec02_target->id_rec01)[0];
+    if(isset($get_id)) {
+    $recebimento = Rec01::read($get_id,$_SESSION['usuario']->id_empresa)[0];
     $parcelas_pagas = false;
     for($i = 1; $i < $recebimento->parcelas; $i++) {
         $rec02 = Rec02::read(null, $_SESSION['usuario']->id_empresa, $recebimento->id, null, $i)[0];
@@ -42,6 +46,7 @@ if(isset($view) && $view == 'contas'){
             
         }
     }
+}
  
 
 
@@ -143,17 +148,20 @@ if(isset($view) && $view == 'contas'){
         </a>
         </div>
     </div>
-    </div> 
+    </div>         
+        
+        
 
-<?php $post_cadastro = filter_input(INPUT_POST, 'cadastro');
-        $post_titulo = filter_input(INPUT_POST, 'titulo');
-        $post_subtitulo = filter_input(INPUT_POST, 'subtitulo');
-        $documento = filter_input(INPUT_POST, 'documento');
-        $descricao = filter_input(INPUT_POST, 'descricao');
-        $valor = filter_input(INPUT_POST, 'valor');
-        $parcelas_d = filter_input(INPUT_POST, 'parcelas');
-        $obs = filter_input(INPUT_POST, 'obs');
+<?php $post_cadastro = filter_input(INPUT_POST, 'cadastro') ?? $post_cadastro = Cadastro::read($recebimento->id_cadastro)[0]->id_cadastro;
+        $post_titulo = filter_input(INPUT_POST, 'titulo') ?? $post_titulo = Con01::read($recebimento->id_con01)[0]->id;
+        $post_subtitulo = filter_input(INPUT_POST, 'subtitulo') ?? $post_subtitulo = Con02::read($recebimento->id_con02)[0]->id;
+        $documento = filter_input(INPUT_POST, 'documento') ?? $recebimento->documento;
+        $valor = filter_input(INPUT_POST, 'valor') ?? $valor = $recebimento->valor;
         $valor = intval($valor);
+        $parcelas_d = filter_input(INPUT_POST, 'parcelas') ?? $parcelas_d = $recebimento->parcelas;
+        $parcelas_d = intval($parcelas_d);
+        $descricao = filter_input(INPUT_POST, 'descricao') ?? $descricao = $recebimento->descricao;
+        $data_lanc = filter_input(INPUT_POST, 'data_lanc') ?? $data_lanc = $recebimento->data_lanc;
 
         if(!isset($get_id)){
             
@@ -169,7 +177,6 @@ if(isset($view) && $view == 'contas'){
             $parcelas_d,
             null,
             $_SESSION['usuario']->id_usuario,
-            $obs
         );
 
         $parcelas = [];
@@ -182,7 +189,7 @@ if(isset($view) && $view == 'contas'){
                     null,
                     $_SESSION['usuario']->id_empresa,
                     null,
-                    $valor / $parcelas_d,
+                    round($valor / $parcelas_d, 2),
                     $parcela_n,
                     clone $data_vencimento,
                     0,
@@ -193,18 +200,43 @@ if(isset($view) && $view == 'contas'){
 
     } else if (isset($get_id)) {
 
-        $post_cadastro = Cadastro::read($recebimento->id_cadastro)[0]->id_cadastro;
-        $post_titulo = Con01::read($recebimento->id_con01)[0]->id;
-        $post_subtitulo = Con02::read($recebimento->id_con02)[0]->id;
-        $valor = number_format($recebimento->valor,2 , ',', '');
-        $parcelas_d = filter_input(INPUT_POST, 'parcelas') ?? $parcelas_d = $recebimento->parcelas;
-        $obs = $recebimento->obs;
-        $descricao = $recebimento->descricao;
-        $parcelas = Rec02::read(null,$_SESSION['usuario']->id_empresa, $recebimento->id);
-        
+
 
         
+        
+        
+        if(!empty($_GET['id']) && $_GET['id'] == $get_id) {
+            $parcelas = Rec02::read(null,$_SESSION['usuario']->id_empresa, $recebimento->id);
+        } else {
+            
+        $parcelas = [];
+        if ($parcelas_d && $valor) {
+            $data_vencimento = new DateTime();
+            $data_vencimento->modify('+1 month');
+            
+            for($parcela_n = 1; $parcela_n < $parcelas_d + 1; $parcela_n++, $data_vencimento = $data_vencimento->modify('+1 month')){
+                $parcelas[$parcela_n] = new Rec02(
+                    null,
+                    $_SESSION['usuario']->id_empresa,
+                    null,
+                    round($valor / $parcelas_d, 2),
+                    $parcela_n,
+                    clone $data_vencimento,
+                    0,
+                    null
+                );
+            }
+        }
+        }
+        ;
+        
+        
+        
     }
+    if($data_lanc == null) {
+            $data_lanc = new Datetime();
+            $data_lanc = $data_lanc->format('Y-m-d');
+        }
 ?>
         
         <div class="main-edit">
@@ -216,15 +248,14 @@ if(isset($view) && $view == 'contas'){
     
 
 
-
 <div class="card-header"><h3>Dados das parcelas</h3></div>
+
                         <div class="card-header-div">
         <div class="card-header-borda">
             <div class="tab-pane fade show active" id="vendas" role="tabpanel" aria-labelledby="vendas-tab">
                 <h5 class="card-title">Recebimento</h5>
                 <form method="post" action="editar-receber.php?view=receber&acao=editar">
                     <?php  if (isset($get_id)) { ?>
-                        
                         <input type="hidden" name="id" value="<?=$get_id?>">
                     <?php } ?>
                     <div class="row">
@@ -233,25 +264,24 @@ if(isset($view) && $view == 'contas'){
                         <div class="input-documento" style="width: 75%;">
                             <!--Nome: -->
                             <label for="documento">Documento:</label>
-                            <input type="text" onchange="checar()" name="documento" class="form-control" placeholder="Documento" value="<?=htmlspecialchars($recebimento->documento, ENT_QUOTES, 'UTF-8')?>" required>
+
+                            <input type="text" onchange="checar()" name="documento" class="form-control" placeholder="Documento" value="<?=htmlspecialchars($documento, ENT_QUOTES, 'UTF-8')?>" required>
                         </div>
                         <?php ?>
                         <div class="input-data-lanc" style="width: 25%;">
                             <label for="data_lanc">Data de lançamento:</label>
                             <input type="date" onchange="checar()" name="data_lanc" class="form-control" placeholder="Data de lançamento" 
-                            value="<?php if(!isset($get_id)) {echo $recebimento->data_lanc->format('Y-m-d');} else if(isset($get_id)) { echo $recebimento->data_lanc;} ?>" required>
+                            value="<?php echo $data_lanc?>" required>
                         </div>
                     </div>
                         <div class="input-cadastro" style="width: 50%;">
-                            <!--Nome: -->
+                            <!--Nome: --> 
                             <label for="cadastro">Cliente / Fornecedor:</label>
                             <select name="cadastro" class="form-select" id="cadastro">
                                 <option value="">Selecione</option>
                                     
                                 
                                 <?php 
-                                echo $post_cadastro;
-                                echo $recebimento->id_cadastro;
                                 
                                 $cadastros = Cadastro::read($id_passado, null, $_SESSION['usuario']->id_empresa);
                                 foreach ( $cadastros as $cadastro) { ?>
@@ -293,7 +323,6 @@ if(isset($view) && $view == 'contas'){
                     </div>
 
                     <div class="input-group-valores" style="display:flex; flex-direction: row;">
-
                         <div class="input-valor" style="width: 50%;">
                             <!--Nome: -->
                             <label for="valor">Valor:</label>
@@ -308,19 +337,19 @@ if(isset($view) && $view == 'contas'){
                     </div>
 
                     
-                        <div class="input-descricao" style="width: 50%;">
+                        <div class="input-descricao" style="width: 100%;">
                             <!--Nome: -->
                             <label for="descricao">Descrição:</label>
                             <input type="text" onchange="checar()" name="descricao" class="form-control" placeholder="Descrição" value="<?=htmlspecialchars($descricao, ENT_QUOTES, 'UTF-8')?>" required>
                         </div>
 
                         
-                            
+                        
                     
                     
                     
-                        <div style="width: 10%;">
-                            <button type="submit" class="btn btn-primary mt-4" style="background-color: #5856d6; border: 0;">Gerar parcelas</button>
+                        <div style="width: 100%;">
+                            <button type="submit" class="btn btn-primary mt-4" style="float:right; background-color: #5856d6; border: 0;">Gerar parcelas</button>
                         </div>
                         
                     </div>
@@ -342,7 +371,9 @@ if(isset($view) && $view == 'contas'){
     <input type="hidden" name="parcelas_d" value="<?=$parcelas_d?>">
     <input type="hidden" name="obs" value="<?=$obs?>">
     <input type="hidden" name="view" value="receber">
-    <input type="hidden" name="id_rec01" value="<?=$recebimento->id?>">
+    <input type="hidden" name="id_rec01" value="<?=$get_id?>">
+    <input type="hidden" name="data_lanc" value="<?=$data_lanc?>"
+
     
     
         <div class="tabelas-edit">      
@@ -357,13 +388,14 @@ if(isset($view) && $view == 'contas'){
                 </thead>
                 <tbody>
                 <?php foreach($parcelas as $parcela) { 
+                    $valor_parcela = number_format($parcela->valor_par,2 , ',', '');
                     ?>
-                <?php if(isset($get_id))  { ?> <input type="hidden" name="id[<?=$parcela->parcela?>]" value="<?= $parcela->id ?>"> <?php } ?>
+                <!-- <?php if(isset($get_id) && !empty($get_id))  { ?> <input type="hidden" name="id[<?=$parcela->parcela?>]" value="<?= $parcela->id ?>"> <?php } ?> -->
                 <input type="hidden" name="parcela[<?=$parcela->parcela?>]" value="<?=$parcela->parcela?>">
                     <tr>
                         <td><?= htmlspecialchars($parcela->parcela, ENT_QUOTES, 'UTF-8') ?></td>
-                        <td><input type="date" class="form-control" name="vencimento[<?=$parcela->parcela?>]" value="<?php if(!isset($get_id)){echo $parcela->vencimento->format('Y-m-d');} else echo $parcela->vencimento?>" placeholder="vencimento"></td>
-                        <td><input class="form-control valor-parcela vencimento" name="valor_par[<?=$parcela->parcela?>]" value ="<?=htmlspecialchars($parcela->valor_par, ENT_QUOTES, 'UTF-8');?>"></input></td>
+                        <td><input type="date" class="form-control" name="vencimento[<?=$parcela->parcela?>]" value="<?php if(!isset($get_id) || empty($_GET['id'])){echo $parcela->vencimento->format('Y-m-d');} else echo $parcela->vencimento?>" placeholder="vencimento"></td>
+                        <td><input class="form-control valor-parcela vencimento" name="valor_par[<?=$parcela->parcela?>]" value ="<?=$valor_parcela;?>"></input></td>
                         <td><input class="form-control" name="obs02[<?=$parcela->parcela?>]"></input></td>
                     </tr>
                      <?php } ?>
@@ -388,7 +420,7 @@ if(isset($view) && $view == 'contas'){
         </table>
         </div>
     <div class="card-footer" style="height: 20%;">
-        <button name="acao" value="<?php if(!isset($get_id)){?>adicionar<?php } else if(isset($get_id)) {?>editar<? } ?>" class="btn btn-primary" type="submit" id="botao-editar-parcela" style="background-color:#5856d6; padding-inline:1.5em; float:right; margin-bottom: 0.5em; border: 0;" >Salvar</button>
+        <button name="acao" value="<?php if(!isset($get_acao)){?>adicionar<?php } else if(isset($get_acao) && $get_acao == 'editar') {?>editar<? } ?>" class="btn btn-primary" type="submit" id="botao-editar-parcela" style="background-color:#5856d6; padding-inline:1.5em; float:right; margin-bottom: 0.5em; border: 0;" >Salvar</button>
     </div>
 </form>
 </div>
@@ -406,7 +438,7 @@ if(isset($view) && $view == 'contas'){
 
   inputs.forEach((input, index) => {
     input.addEventListener("change", function () {
-      const atual = this.value; // em <input type="date"> vem como YYYY-MM-DD
+      const atual = this.value; 
 
       // checa com anterior
       if (index > 0 && atual <= inputs[index - 1].value) {
