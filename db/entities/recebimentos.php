@@ -155,16 +155,97 @@ class Rec02 {
         return $stmt->execute();
     }
 
-    public static function read($id = null, $id_empresa = null, $id_rec01 = null, $data = null, $parcela = null): array {
+    public static function read($id = null, $id_empresa = null, $id_rec01 = null, $data = null, $parcela = null, 
+    $filtro_data_inicial = null,  $filtro_data_final = null, $filtro_nome = null, $filtro_opcao = null, $filtro_por = null, $filtro_pagamento = null,
+    $dash_quitado = false, $dash_tipo = null
+    ): array {
         $pdo = (new Database())->connect();
-        $query = 'SELECT * FROM rec02';
+        if(isset($filtro_nome)) {
+            $query = '
+                SELECT r2.*, r1.documento 
+                FROM rec02 r2
+                INNER JOIN rec01 r1 ON r2.id_rec01 = r1.id
+            ';
+        } else {
+            $query = 'SELECT * FROM rec02';
+        }
         $conditions = [];
+        if($filtro_opcao != null && $filtro_opcao != '') {
+            switch($filtro_opcao) {
+                case 'abertos':
+                    $conditions[] = 'valor_pag < valor_par';
+                    break;
+                case 'quitados':
+                    $conditions[] = 'valor_pag = valor_par';
+                    break;
+            }
+        }
+        if($filtro_por != null) {
+            switch($filtro_por) {
+            case 'lancamento':
+                if($filtro_nome != null) {
+                    $filtro_por_data = 'r2.data_lanc';
+                } else {
+                    $filtro_por_data = 'r2.data_lanc';
+                }
+                
+                break;
+            case 'vencimento':
+                if($filtro_nome != null) {
+                    $filtro_por_data = 'r2.vencimento';
+                } else {
+                    $filtro_por_data = 'r2.vencimento';
+                }
+                break;
+            case 'pagamento':
+                if($filtro_nome != null) {
+                    $filtro_por_data = 'r2.data_pag';
+                } else {
+                    $filtro_por_data = 'r2.data_pag';
+                }
+                break;
+            }
+
+            if($filtro_data_inicial != null) {
+                $conditions[] = $filtro_por_data . ' >= :filtro_data_inicial';
+            }
+            if($filtro_data_final != null) {
+                $conditions[] = $filtro_por_data . ' <= :filtro_data_final';
+            }
+            
+        }
+        if ($dash_tipo != null && $filtro_data_inicial != null) {
+        switch ($dash_tipo) {
+            case 'hoje':
+                $conditions[] = 'vencimento = :filtro_data_inicial';
+                break;
+            case 'semana':
+                $conditions[] = 'vencimento > :filtro_data_inicial';
+                $conditions[] = 'vencimento <= :filtro_data_final';
+                break;
+            case 'venceu':
+                $conditions[] = 'vencimento < :filtro_data_inicial';
+                break;
+        }
+    }
+        
 
         if ($id != null) $conditions[] = 'id = :id';
-        if ($id_empresa != null) $conditions[] = 'id_empresa = :id_empresa';
+        if(isset($filtro_nome)) {
+            if ($id_empresa != null) $conditions[] = 'r1.id_empresa = :id_empresa';
+        } else {
+            if ($id_empresa != null) $conditions[] = 'id_empresa = :id_empresa';
+        }
+        
         if ($id_rec01 != null) $conditions[] = 'id_rec01 = :id_rec01';
         if ($data != null) $conditions[] = 'MONTH(vencimento) = MONTH(:data) AND YEAR(vencimento) = YEAR(:data)';
         if ($parcela != null) $conditions[] = 'parcela = :parcela';
+        if ($filtro_pagamento != null) $conditions[] = 'id_pgto = :filtro_pagamento';
+        if ($dash_quitado == true) $conditions[] = 'valor_pag != valor_par';
+
+        
+        if ($filtro_nome != null) $conditions[] = 'r1.documento LIKE :filtro_nome';
+
         if ($conditions) {
             $query .= ' WHERE ' . implode(' AND ', $conditions);
         }
@@ -180,7 +261,11 @@ class Rec02 {
             $data = $data->format('Y-m-d'); // ou 'Y-m' se só quiser comparar mês
         }
         $stmt->bindValue(':data', $data);
-    }
+        }
+        if($filtro_data_inicial != null) $stmt->bindValue(':filtro_data_inicial', $filtro_data_inicial);
+        if($filtro_data_final != null) $stmt->bindValue(':filtro_data_final', $filtro_data_final);
+        if($filtro_nome != null) $stmt->bindValue(':filtro_nome', '%' . $filtro_nome . '%');
+        if($filtro_pagamento != null) $stmt->bindValue(':filtro_pagamento', $filtro_pagamento);
 
         $stmt->execute();
 
@@ -214,6 +299,14 @@ class Rec02 {
         $sql = 'DELETE FROM rec02 WHERE id = :id';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id', $id);
+}
+public static function deletebyrec01($id) {
+        $pdo = (new Database())->connect();
+        $sql = 'DELETE FROM rec02 WHERE id_rec01 = :id';
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindValue(':id', $id);
+
+        return $stmt->execute();
 }
 
 }

@@ -155,37 +155,129 @@ class Pag02 {
         return $stmt->execute();
     }
 
-    public static function read($id = null, $id_empresa = null, $id_pag01 = null, $data = null, $parcela = null): array {
-        $pdo = (new Database())->connect();
-        $query = 'SELECT * FROM pag02';
-        $conditions = [];
+public static function read(
+    $id = null, 
+    $id_empresa = null, 
+    $id_pag01 = null, 
+    $data = null, 
+    $parcela = null, 
+    $filtro_data_inicial = null,  
+    $filtro_data_final = null, 
+    $filtro_nome = null, 
+    $filtro_opcao = null, 
+    $filtro_por = null, 
+    $filtro_pagamento = null,
+    $dash_vencido = false, 
+    $dash_tipo = null
+): array {
+    $pdo = (new Database())->connect();
 
-        if ($id != null) $conditions[] = 'id = :id';
-        if ($id_empresa != null) $conditions[] = 'id_empresa = :id_empresa';
-        if ($id_pag01 != null) $conditions[] = 'id_pag01 = :id_pag01';
-        if ($data != null) $conditions[] = 'MONTH(vencimento) = MONTH(:data) AND YEAR(vencimento) = YEAR(:data)';
-        if ($parcela != null) $conditions[] = 'parcela = :parcela';
-        if ($conditions) {
-            $query .= ' WHERE ' . implode(' AND ', $conditions);
+    if (isset($filtro_nome)) {
+        $query = '
+            SELECT p2.*, p1.documento 
+            FROM pag02 p2
+            INNER JOIN pag01 p1 ON p2.id_pag01 = p1.id
+        ';
+    } else {
+        $query = 'SELECT * FROM pag02';
+    }
+
+    $conditions = [];
+
+    // filtro_opcao
+    if ($filtro_opcao != null && $filtro_opcao != '') {
+        switch ($filtro_opcao) {
+            case 'abertos':
+                $conditions[] = 'valor_pag < valor_par';
+                break;
+            case 'quitados':
+                $conditions[] = 'valor_pag = valor_par';
+                break;
+        }
+    }
+
+    // filtro_por + datas
+    if ($filtro_por != null) {
+        switch ($filtro_por) {
+            case 'lancamento':
+                $filtro_por_data = 'p1.data_lanc';
+                break;
+            case 'vencimento':
+                $filtro_por_data = 'p2.vencimento';
+                break;
+            case 'pagamento':
+                $filtro_por_data = 'p2.data_pag';
+                break;
         }
 
-        $stmt = $pdo->prepare($query);
+        if ($filtro_data_inicial != null) {
+            $conditions[] = $filtro_por_data . ' >= :filtro_data_inicial';
+        }
+        if ($filtro_data_final != null) {
+            $conditions[] = $filtro_por_data . ' <= :filtro_data_final';
+        }
+    }
 
-        if ($id != null) $stmt->bindValue(':id', $id);
-        if ($id_empresa != null) $stmt->bindValue(':id_empresa', $id_empresa);
-        if ($id_pag01 != null) $stmt->bindValue(':id_pag01', $id_pag01);
-        if ($parcela != null) $stmt->bindValue(':parcela', $parcela);
-        if ($data != null) {
+    // dash_tipo
+    if ($dash_tipo != null && $filtro_data_inicial != null) {
+        switch ($dash_tipo) {
+            case 'hoje':
+                $conditions[] = 'vencimento = :filtro_data_inicial';
+                break;
+            case 'semana':
+                $conditions[] = 'vencimento > :filtro_data_inicial';
+                $conditions[] = 'vencimento <= :filtro_data_final';
+                break;
+            case 'venceu':
+                $conditions[] = 'vencimento < :filtro_data_inicial';
+                break;
+        }
+    }
+
+    // outros filtros
+    if ($id != null) $conditions[] = 'id = :id';
+
+    if (isset($filtro_nome)) {
+        if ($id_empresa != null) $conditions[] = 'p1.id_empresa = :id_empresa';
+    } else {
+        if ($id_empresa != null) $conditions[] = 'id_empresa = :id_empresa';
+    }
+
+    if ($id_pag01 != null) $conditions[] = 'id_pag01 = :id_pag01';
+    if ($data != null) $conditions[] = 'MONTH(vencimento) = MONTH(:data) AND YEAR(vencimento) = YEAR(:data)';
+    if ($parcela != null) $conditions[] = 'parcela = :parcela';
+    if ($filtro_nome != null) $conditions[] = 'p1.documento LIKE :filtro_nome';
+    if ($filtro_pagamento != null) $conditions[] = 'id_pgto = :filtro_pagamento';
+    if ($dash_vencido == true) $conditions[] = 'valor_pag != valor_par';
+
+    if ($conditions) {
+        $query .= ' WHERE ' . implode(' AND ', $conditions);
+    }
+
+    $stmt = $pdo->prepare($query);
+
+    // binds
+    if ($id != null) $stmt->bindValue(':id', $id);
+    if ($id_empresa != null) $stmt->bindValue(':id_empresa', $id_empresa);
+    if ($id_pag01 != null) $stmt->bindValue(':id_pag01', $id_pag01);
+    if ($parcela != null) $stmt->bindValue(':parcela', $parcela);
+
+    if ($data != null) {
         if ($data instanceof DateTime) {
-            $data = $data->format('Y-m-d'); // ou 'Y-m' se só quiser comparar mês
+            $data = $data->format('Y-m-d');
         }
         $stmt->bindValue(':data', $data);
     }
 
-        $stmt->execute();
+    if ($filtro_data_inicial != null) $stmt->bindValue(':filtro_data_inicial', $filtro_data_inicial);
+    if ($filtro_data_final != null) $stmt->bindValue(':filtro_data_final', $filtro_data_final);
+    if ($filtro_nome != null) $stmt->bindValue(':filtro_nome', '%' . $filtro_nome . '%');
+    if ($filtro_pagamento != null) $stmt->bindValue(':filtro_pagamento', $filtro_pagamento);
 
-        return $stmt->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, self::class);
-    }
+    $stmt->execute();
+
+    return $stmt->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, self::class);
+}
 
     public static function update($pag02) {
         $pdo = (new Database())->connect();
@@ -203,6 +295,7 @@ class Pag02 {
         $stmt->bindValue(':data_pag', $pag02->data_pag ? $pag02->data_pag->format('Y-m-d') : null);
         $stmt->bindValue(':obs', $pag02->obs);
         $stmt->bindValue(':id_pgto', $pag02->id_pgto);
+        
 
         
 
@@ -214,6 +307,15 @@ class Pag02 {
         $sql = 'DELETE FROM pag02 WHERE id = :id';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id', $id);
+}
+
+    public static function deletebypag01($id) {
+        $pdo = (new Database())->connect();
+        $sql = 'DELETE FROM pag02 WHERE id_pag01 = :id';
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindValue(':id', $id);
+        
+        return $stmt->execute();
 }
 
 }

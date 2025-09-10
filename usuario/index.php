@@ -5,6 +5,7 @@ require_once __DIR__ . '/../db/entities/contas.php';
 require_once __DIR__ . '/../db/entities/cadastro.php';
 require_once __DIR__ . '/../db/entities/recebimentos.php';
 require_once __DIR__ . '/../db/entities/pagamento.php';
+require_once __DIR__ . '/../db/entities/pagar.php';
 session_start();
 
 
@@ -13,38 +14,24 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     header('Location: /');
     exit;
 }
+ 
+$data = new DateTime();
+$data_atual = $data->format('Y-m-d');
 
-$view = filter_input(INPUT_GET, 'view');
-$target = filter_input(INPUT_GET, 'target');
-$con01 = filter_input(INPUT_GET, 'con01id');
-$acao = filter_input(INPUT_GET, 'acao');
-$get_opcao = filter_input(INPUT_GET, 'opcao');
-$get_id = filter_input(INPUT_GET, 'id');
-
+$data_semana = $data->modify('+7 days');
+$data_semana = $data_semana->format('Y-m-d');
 
 
-if(isset($view) && $view == 'contas'){
-    $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
- }
+$pagamentos_venceu = Pag02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, null, null, null, null, null, true, 'venceu');
+$pagamentos_hoje = Pag02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, null, null, null, null, null, true, 'hoje');
+$pagamentos_semana = Pag02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, $data_semana, null, null, null, null, true, 'semana');
 
- if(isset($get_id)) {
-    $rec02_target = Rec02::read($get_id)[0];
-    $recebimento = Rec01::read($rec02_target->id_rec01)[0];
-    $parcelas_pagas = false;
-    for($i = 1; $i < $recebimento->parcelas; $i++) {
-        $rec02 = Rec02::read(null, $_SESSION['usuario']->id_empresa, $recebimento->id, null, $i)[0];
-        if($parcelas_pagas == false && $rec02->valor_pag == $rec02->valor_par) {
-            $parcelas_pagas = true;
-            break;
-        } else {
-            continue;
-            
-        }
-    }
- }
-
+$recebimentos_venceu = Rec02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, null, null, null, null, null, true, 'venceu');
+$recebimentos_hoje = Rec02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, null, null, null, null, null, true, 'hoje');
+$recebimentos_semana = Rec02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, $data_semana, null, null, null, null, true, 'semana');
 
 ?>
+
 
 <!DOCTYPE html>
 
@@ -146,271 +133,457 @@ if(isset($view) && $view == 'contas'){
 
 
 
+    <div class="main" id="container">
+        <div class="view-dash">
+            <h3>Contas a Receber</h3>
+            <div id="receber-group">
+                
+                
+                    <div id="receber-hoje">
     
 
-            <?php if(isset($view) && $view == 'contas') { require_once 'contas.php'; } 
-            
-            else if ($view == 'receber' && (!isset($acao) || $acao == 'adicionar' || $acao == 'visualizar')) { require_once 'receber.php'; }?>
+      
+        
+                
 
-
-    <!-- Modal -->
-    <div class="modal fade" id="modal_titulo" tabindex="-1" role="dialog"
-        aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-        <div class=" modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <?php if(isset($target )&& $target == 'titulo') {
-                        $titulo_modal = 'Título';
-                        $target = 'titulo';
-
-                    } else if(isset($target) && $target == 'subtitulo') {
-                        $titulo_modal = 'Subtítulo';
-                        $target = 'subtitulo';
-                    } 
-                     ?>
-                    <h5 class="modal-title" id="exampleModalLongTitle">Novo <?= htmlspecialchars($titulo_modal, ENT_QUOTES, 'UTF-8') ?></h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    </button>
-                </div>
-                <div class="modal-body">
-
-                    <form method="post" id="content" action="cadastros_manager.php">
-                        <input type="hidden" name="view" value="conta">
-                        <input type="hidden" name="id" value="">
-                        <input type="hidden" name="target" value="<?php echo htmlspecialchars($target, ENT_QUOTES, 'UTF-8') ?? ''; ?>">
-                        <input type="hidden" name="con01id" value="<?php echo htmlspecialchars($con01, ENT_QUOTES, 'UTF-8') ?? ''; ?>">
-
-                        <div class="input-nome input-form-adm">
-                            <!--Nome: -->
-                            <label for="nome">Nome:</label>
-                            <input type="text" onchange="checar()" name="nome" class="form-control" placeholder="Nome" value="" required>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="dash-titulo-receber"><h3>Contas a Receber</h3></div>
+                            <div class="dash-categoria-receber"><h3>Vence hoje</h3></div>
                         </div>
-                    <?php if(isset($target) && $target == 'titulo'){ ?>
-                        <div class="input-nome input-form-adm">
-                            <label for="nome">Tipo:</label>
-                            <select name="tipo" class="form-select" id="tipo">
-                                <option value="C">Crédito</option>
-                                <option value="D">Débito</option>
-                            </select>
-                        </div>
-                    <?php } ?>
 
 
-                        <div style="margin-bottom: 3em;" class="footer">
+                        <table class="table-bordered table-striped">
+                <thead>
+                    <tr class="tr-clientes-dash">
+                        <th>Documento</th>
+                        <th>Nome</th>
+                        <th>Valor</th>
+                        <th>Parcela Geral</th>
+                        <th>Parcela Atual</th>
+                        <th>Valor da Parcela</th>
+                        <th>Vencimento</th>
+                    </tr>
+                </thead>
+                <tbody>
+        <?php
+        if(!empty($recebimentos_hoje)) {
 
-                        <button name="acao" value="adicionar" class="btn btn-success" style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0;" href="consulta_cliente.php">Salvar</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Fechar</button>
-                            
+        
+            foreach($recebimentos_hoje as $rec02) {
+            $rec01 = Rec01::read($rec02->id_rec01)[0];
+            $cadastro = Cadastro::read($rec01->id_cadastro)[0];
+            $valor_total = number_format($rec01->valor,2 , ',', '');
+            $valor_parcela = number_format($rec02->valor_par,2 , ',', '');
+            $valor_rec = number_format($rec02->valor_pag,2 , ',', '');
+            $data_venc = new DateTime($rec02->vencimento);
+            $data_venc = $data_venc->format('d-m-Y');
+        ?>
 
-                    </form>
+                            <tr class="tr-clientes-dash parcela_cor_amarela" onclick="">
+                                <td><?=$rec01->documento?></td> 
+                                <td><?=$cadastro->razao_soc;?> </td>
+                                <td> <?=$valor_total?></td>
+                                <td><?=$rec01->parcelas?></td>
+                                <td><?=$rec02->parcela?></td>
+                                <td> <?=$valor_parcela?></td>
+                                <td><?=$data_venc ?></td>
+                            </tr>
 
+                        <!--  -->
+            <?php } } else {?>
+                        <tr>
+                            <td>Nenhum Lançamento encontrado</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
 
-                </div>
-
-            </div>
-        </div>
-    </div>
-    </div>
-    </div>
-    </div>
-    </div>
-    </div>
-
-    <div class="modal fade" id="modal_visualizar" tabindex="-1" role="dialog"
-        aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-        <div class=" modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-
-                    <h5 class="modal-title" id="exampleModalLongTitle">Opções da conta</h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    </button>
-                </div>
-                <div class="modal-body">
-                <?php if(!isset ($get_opcao)){ 
-                    $rec02 = Rec02::read($get_id)[0];
-                    ?>
-                    <form method="get" id="content" action="index.php">
-                        
-                        <input type="hidden" name="view" value="receber">
-                        <input type="hidden" name="acao" value="visualizar">
-                        <input type="hidden"  name="id" value="<?=$get_id?>">
-                        
-
-                        <div class="acoes">
-
-                        <button type="submit" class="btn-lg btn-primary btn" <?php if ($rec02->valor_pag == $rec02->valor_par) { ?> disabled <?php } ?>name="opcao" value="quitar">Quitar</button>
-                        <button type="button" class="btn-lg btn-primary btn" <?php if ($rec02->valor_pag == 0) { ?> disabled <?php } ?> name="opcao" onclick="window.location.href='cadastros_manager.php?view=receber&target=parcela&acao=estornar&id=<?=$get_id?>'" value="estornar">Estornar</button>
-                        <button type="button" class="btn-lg btn-primary btn" <?php if ($parcelas_pagas == true) { ?> disabled <?php } ?>onclick="window.location.href= 'index.php?view=receber&acao=editar&id=<?=$get_id?>'" name="opcao">Editar parcelas</button>
-                        
-                        </div>
-                        <div style="margin-bottom: 3em;" class="footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Fechar</button>
-                            
-
-                    </form>
-            <?php } else if(isset($get_opcao) && $get_opcao == 'quitar') {
-                $data_atual = new DateTime();
-                $parcela = Rec02::read($get_id)[0];
-                $valor_restante = $parcela->valor_par - $parcela->valor_pag;
-                $pagamentos = TipoPagamento::read(null, $_SESSION['usuario']->id_empresa);
-
-
-                ?> 
-                    
-                    <form method="post" id="content" action="cadastros_manager.php">
-                        
-                        <input type="hidden" name="view" value="receber">
-                        <input type="hidden" name="acao" value="quitar">
-                        <input type="hidden" name="target" value="parcela">
-                        <input type="hidden" name="id" value="<?=$get_id?>">
-
-                        
-                        <div class="valor-alvo"><p style="color: #00000096;">Valor restante da parcela: R$ <?=$valor_restante?></p></div>
-                        <label for="data">Data do pagamento</label>
-                        <input class="form-control" type="date" placeholder="dd/mm/aa" name="data" value="<?=$data_atual->format('Y-m-d')?>">
-                        <label for="valor">Valor pago</label>
-                        <input class="form-control" type="text" name="valor" placeholder="Valor pago">
-                        <label for="forma_pagamento">Forma de pagamento</label>
-                        <select class="form-control" name="forma_pagamento">
-                            <option value="">Selecione uma forma de pagamento</option>
-                            <?php foreach($pagamentos as $pagamento) {?>
-                                <option value="<?=$pagamento->id?>">
-                                    <?= $pagamento->nome?>
-                                </option>
-                            <?php } ?>
-                        </select>
-                        <div style="margin-bottom: 3em;" class="footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Fechar</button>
-                        <button type="submit" class="btn btn-primary">Pagar</button>
-
-                    </form>
             <?php } ?>
-
-                </div>
-
-            </div>
+                </tbody>
+                
+            
+                
+            </table>
+            <div class="card-footer"></div>
         </div>
     </div>
-    </div>
-    </div>
-    </div>
-    </div>
-    </div>
+       
+                
+                
+                
 
+                <div id="receber-semana">
+
+                <div class="card">
+                        <div class="card-header">
+                            <div class="dash-titulo-receber"><h3>Contas a Receber</h3></div>
+                            <div class="dash-categoria-receber"><h3>Vence essa semana</h3></div>
+                        </div>
+
+
+                        <table class="table-bordered table-striped">
+                <thead>
+                    <tr class="tr-clientes-dash">
+                        <th>Documento</th>
+                        <th>Nome</th>
+                        <th>Valor</th>
+                        <th>Parcela Geral</th>
+                        <th>Parcela Atual</th>
+                        <th>Valor da Parcela</th>
+                        <th>Vencimento</th>
+                    </tr>
+                </thead>
+                <tbody>
+        <?php
+        if(!empty($recebimentos_semana)) {
+
+        
+            foreach($recebimentos_semana as $rec02) {
+            $rec01 = Rec01::read($rec02->id_rec01)[0];
+            $cadastro = Cadastro::read($rec01->id_cadastro)[0];
+            $valor_total = number_format($rec01->valor,2 , ',', '');
+            $valor_parcela = number_format($rec02->valor_par,2 , ',', '');
+            $valor_rec = number_format($rec02->valor_pag,2 , ',', '');
+            $data_venc = new DateTime($rec02->vencimento);
+            $data_venc = $data_venc->format('d-m-Y');
+        ?>
+
+                            <tr class="tr-clientes-dash parcela_cor_azul" onclick="">
+                                <td><?=$rec01->documento?></td> 
+                                <td><?=$cadastro->razao_soc;?> </td>
+                                <td> <?=$valor_total?></td>
+                                <td><?=$rec01->parcelas?></td>
+                                <td><?=$rec02->parcela?></td>
+                                <td> <?=$valor_parcela?></td>
+                                <td><?=$data_venc ?></td>
+                            </tr>
+
+                        <!--  -->
+            <?php } } else {?>
+                        <tr>
+                            <td>Nenhum Lançamento encontrado</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+
+            <?php } ?>
+                </tbody>
+                
+            
+                
+            </table>
+            <div class="card-footer"></div>
+        </div>
+    </div>
+       
+                
+                    
+                
+                <div id="receber-vencidos">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="dash-titulo-receber"><h3>Contas a Receber</h3></div>
+                            <div class="dash-categoria-receber"><h3>Vencidas</h3></div>
+                        </div>
+
+
+                        <table class="table-bordered table-striped">
+                <thead>
+                    <tr class="tr-clientes-dash">
+                        <th>Documento</th>
+                        <th>Nome</th>
+                        <th>Valor</th>
+                        <th>Parcela Geral</th>
+                        <th>Parcela Atual</th>
+                        <th>Valor da Parcela</th>
+                        <th>Vencimento</th>
+                    </tr>
+                </thead>
+                <tbody>
+        <?php
+        if(!empty($recebimentos_venceu)) {
+
+        
+            foreach($recebimentos_venceu as $pag02) {
+            $rec01 = Rec01::read($pag02->id_rec01)[0];
+            $cadastro = Cadastro::read($rec01->id_cadastro)[0];
+            $valor_total = number_format($rec01->valor,2 , ',', '');
+            $valor_parcela = number_format($rec02->valor_par,2 , ',', '');
+            $valor_rec = number_format($rec02->valor_pag,2 , ',', '');
+            $data_venc = new DateTime($rec02->vencimento);
+            $data_venc = $data_venc->format('d-m-Y');
+        ?>
+
+                            <tr class="tr-clientes-dash parcela_cor_vermelha" onclick="">
+                                <td><?=$rec01->documento?></td> 
+                                <td><?=$cadastro->razao_soc;?> </td>
+                                <td> <?=$valor_total?></td>
+                                <td><?=$rec01->parcelas?></td>
+                                <td><?=$rec02->parcela?></td>
+                                <td> <?=$valor_parcela?></td>
+                                <td><?=$data_venc ?></td>
+                            </tr>
+
+                        <!--  -->
+            <?php } } else {?>
+                        <tr>
+                            <td>Nenhum Lançamento encontrado</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+
+            <?php } ?>
+                </tbody>
+                
+            
+                
+            </table>
+            <div class="card-footer"></div>
+        </div>
+                </div>
+            </div>
+
+
+
+
+                <h3>Contas a Pagar</h3>
+            <div id="pagar-group">
+                <div id="receber-hoje">
     
 
-        <div class="modal fade" id="modal_receber" tabindex="-1" role="dialog"
-        aria-labelledby="modal_receber_title" aria-hidden="true">
-        <div class=" modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
+      
+        
+                
 
-                    <h5 class="modal-title" id="modal_receber_long_title">Novo Lançamento</h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    </button>
-                </div>
-                <div class="modal-body">
-
-                    <form method="post" id="content" action="index.php?view=receber&acao=editar">
-                        <input type="hidden" name="view" value="receber">
-
-                        
-
-                        <div class="input-documento input-form-adm">
-                            <!--Nome: -->
-                            <label for="documento">Documento:</label>
-                            <input type="text" onchange="checar()" name="documento" class="form-control" placeholder="Documento" value="" required>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="dash-titulo-receber"><h3>Contas a Pagar</h3></div>
+                            <div class="dash-categoria-receber"><h3>Vence hoje</h3></div>
                         </div>
 
-                        <div class="input-cadastro input-form-adm">
-                            <!--Nome: -->
-                            <label for="cadastro">Cliente / Fornecedor:</label>
-                            <select name="cadastro" class="form-select" id="cadastro">
-                                <option value="">Selecione</option>
-                                <?php foreach (Cadastro::read(null, null, $_SESSION['usuario']->id_empresa) as $cadastro) { ?>
-                                    <option value="<?= $cadastro->id_cadastro?>"><?= htmlspecialchars($cadastro->nom_fant, ENT_QUOTES, 'UTF-8') ?></option>
-                                <?php } ?>
-                            </select>
+
+                        <table class="table-bordered table-striped">
+                <thead>
+                    <tr class="tr-clientes-dash">
+                        <th>Documento</th>
+                        <th>Nome</th>
+                        <th>Valor</th>
+                        <th>Parcela Geral</th>
+                        <th>Parcela Atual</th>
+                        <th>Valor da Parcela</th>
+                        <th>Vencimento</th>
+                    </tr>
+                </thead>
+                <tbody>
+        <?php
+        if(!empty($pagamentos_hoje)) {
+
+        
+            foreach($pagamentos_hoje as $pag02) {
+            $pag01 = Pag01::read($pag02->id_pag01)[0];
+            $cadastro = Cadastro::read($pag01->id_cadastro)[0];
+            $valor_total = number_format($pag01->valor,2 , ',', '');
+            $valor_parcela = number_format($pag02->valor_par,2 , ',', '');
+            $valor_pago = number_format($pag02->valor_pag,2 , ',', '');
+            $data_venc = new DateTime($pag02->vencimento);
+            $data_venc = $data_venc->format('d-m-Y');
+        ?>
+
+                            <tr class="tr-clientes-dash parcela_cor_amarela" onclick="">
+                                <td><?=$pag01->documento?></td> 
+                                <td><?=$cadastro->razao_soc;?> </td>
+                                <td> <?=$valor_total?></td>
+                                <td><?=$pag01->parcelas?></td>
+                                <td><?=$pag02->parcela?></td>
+                                <td> <?=$valor_parcela?></td>
+                                <td><?=$data_venc ?></td>
+                            </tr>
+
+                        <!--  -->
+            <?php } } else {?>
+                        <tr>
+                            <td>Nenhum Lançamento encontrado</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+
+            <?php } ?>
+                </tbody>
+                
+            
+                
+            </table>
+            <div class="card-footer"></div>
+        </div>
+    </div>
+       
+                
+                
+                
+
+                <div id="receber-semana">
+
+                <div class="card">
+                        <div class="card-header">
+                            <div class="dash-titulo-receber"><h3>Contas a Pagar</h3></div>
+                            <div class="dash-categoria-receber"><h3>Vence essa semana</h3></div>
                         </div>
 
-                        <div class="input-valor input-form-adm">
-                            <!--Nome: -->
-                            <label for="valor">Valor:</label>
-                            <input type="text" onchange="checar()" name="valor" class="form-control" placeholder="Valor" value="" required>
-                        </div>
 
-                        <div class="input-parcelas input-form-adm">
-                            <!--Nome: -->
-                            <label for="parcelas">Parcelas:</label>
-                            <input type="number" onchange="checar()" name="parcelas" class="form-control" placeholder="Parcelas" value="" required>
-                        </div>
+                        <table class="table-bordered table-striped">
+                <thead>
+                    <tr class="tr-clientes-dash">
+                        <th>Documento</th>
+                        <th>Nome</th>
+                        <th>Valor</th>
+                        <th>Parcela Geral</th>
+                        <th>Parcela Atual</th>
+                        <th>Valor da Parcela</th>
+                        <th>Vencimento</th>
+                    </tr>
+                </thead>
+                <tbody>
+        <?php
+        if(!empty($pagamentos_semana)) {
 
-                        <div class="input-descricao input-form-adm">
-                            <!--Nome: -->
-                            <label for="descricao">Descrição:</label>
-                            <input type="text" onchange="checar()" name="descricao" class="form-control" placeholder="Descrição" value="" required>
-                        </div>
+        
+            foreach($pagamentos_semana as $pag02) {
+            $pag01 = Pag01::read($pag02->id_pag01)[0];
+            $cadastro = Cadastro::read($pag01->id_cadastro)[0];
+            $valor_total = number_format($pag01->valor,2 , ',', '');
+            $valor_parcela = number_format($pag02->valor_par,2 , ',', '');
+            $valor_pago = number_format($pag02->valor_pag,2 , ',', '');
+            $data_venc = new DateTime($pag02->vencimento);
+            $data_venc = $data_venc->format('d-m-Y');
+        ?>
 
-                        
-                        <div class="titulos-receber" style="display:flex; flex-direction: row;">
+                            <tr class="tr-clientes-dash parcela_cor_azul" onclick="">
+                                <td><?=$pag01->documento?></td> 
+                                <td><?=$cadastro->razao_soc;?> </td>
+                                <td> <?=$valor_total?></td>
+                                <td><?=$pag01->parcelas?></td>
+                                <td><?=$pag02->parcela?></td>
+                                <td> <?=$valor_parcela?></td>
+                                <td><?=$data_venc ?></td>
+                            </tr>
 
-                        <div class="input-titulo input-form-adm" style="width: 50%;" >
-                            <!--Nome: -->
-                            <label for="titulo">Titulo</label>
-                            <select name="titulo" class="form-select" id="titulo" style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
-                                <option value="">Selecione</option>
-                                
-                                <?php $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa); 
-                                foreach ($titulos as $titulo) { ?>
-                                    <option value="<?= $titulo->id ?>"><?= htmlspecialchars($titulo->nome, ENT_QUOTES, 'UTF-8') ?></option>
-                                <?php } ?>
-                            </select>
-                        </div>
+                        <!--  -->
+            <?php } } else {?>
+                        <tr>
+                            <td>Nenhum Lançamento encontrado</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
 
-                        <div class="input-subtitulo input-form-adm" style="width: 50%;">
-                            <!--Nome: -->
-                            <label for="subtitulo">Sub-Titulo</label>
-                            <select id="subtitulo" name="subtitulo" class="form-control">
-                                <option value="">Selecione</option>
-                                <?php
-                                // Buscar todos os subtítulos da empresa
-                                $todosSubtitulos = Con02::read(null, $_SESSION['usuario']->id_empresa);
-                                foreach ($todosSubtitulos as $sub) { ?>
-                                    <option value="<?= $sub->id ?>" data-titulo-id="<?= $sub->id_con01 ?>">
-                                        <?= htmlspecialchars($sub->nome, ENT_QUOTES, 'UTF-8') ?>
-                                    </option>
-                                <?php } ?>
-                            </select>
-                        </div>
-                    </div>
-                            <div class="input-nome input-form-adm">
-                            <label for="obs">Observação:</label>
-                            <input type="text" onchange="checar()" name="obs" class="form-control" placeholder="Observação" value="" required>
-                        </div>
+            <?php } ?>
+                </tbody>
+                
+            
+                
+            </table>
+            <div class="card-footer"></div>
+        </div>
+    </div>
+       
+                
                     
-                        <div style="margin-bottom: 3em;" class="footer">
+                
+                <div id="receber-vencidos">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="dash-titulo-receber"><h3>Contas a Pagar</h3></div>
+                            <div class="dash-categoria-receber"><h3>Vencidas</h3></div>
+                        </div>
 
-                        <button name="acao" value="adicionar" class="btn btn-success" style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0;" href="consulta_cliente.php">Salvar</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Fechar</button>
-                            
 
-                    </form>
+                        <table class="table-bordered table-striped">
+                <thead>
+                    <tr class="tr-clientes-dash">
+                        <th>Documento</th>
+                        <th>Nome</th>
+                        <th>Valor</th>
+                        <th>Parcela Geral</th>
+                        <th>Parcela Atual</th>
+                        <th>Valor da Parcela</th>
+                        <th>Vencimento</th>
+                    </tr>
+                </thead>
+                <tbody>
+        <?php
+        if(!empty($pagamentos_venceu)) {
 
+        
+            foreach($pagamentos_venceu as $pag02) {
+            $pag01 = Pag01::read($pag02->id_pag01)[0];
+            $cadastro = Cadastro::read($pag01->id_cadastro)[0];
+            $valor_total = number_format($pag01->valor,2 , ',', '');
+            $valor_parcela = number_format($pag02->valor_par,2 , ',', '');
+            $valor_pago = number_format($pag02->valor_pag,2 , ',', '');
+            $data_venc = new DateTime($pag02->vencimento);
+            $data_venc = $data_venc->format('d-m-Y');
+        ?>
 
+                            <tr class="tr-clientes-dash parcela_cor_vermelha" onclick="">
+                                <td><?=$pag01->documento?></td> 
+                                <td><?=$cadastro->razao_soc;?> </td>
+                                <td> <?=$valor_total?></td>
+                                <td><?=$pag01->parcelas?></td>
+                                <td><?=$pag02->parcela?></td>
+                                <td> <?=$valor_parcela?></td>
+                                <td><?=$data_venc ?></td>
+                            </tr>
+
+                        <!--  -->
+            <?php } } else {?>
+                        <tr>
+                            <td>Nenhum Lançamento encontrado</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+
+            <?php } ?>
+                </tbody>
+                
+            
+                
+            </table>
+            <div class="card-footer"></div>
+        </div>
                 </div>
-
+            </div>
+</div>
+</div>
+</div>
             </div>
         </div>
     </div>
-    </div>
-    </div>
-    </div>
-    </div>
-    </div>
-
-
-
+</div>
+</div>
+</div>
 </body>
 
 <script>
@@ -572,29 +745,10 @@ if (barra.style.animationName === 'encolher') {
     }}
 </script>
 
-<?php if ( isset($acao) && $acao == 'adicionar' || $acao == 'visualizar') 
-    
-    { ?>
-    
-    <script>
-        window.addEventListener('DOMContentLoaded', function () {
-            var modalEl = document.getElementById(<?php if($view == 'contas') {?> 'modal_titulo' <? } 
-                                                     else if ($view == 'receber') { if($acao == 'adicionar'){?> 'modal_receber' <? } 
-                                                     else if($acao == 'visualizar'){ ?> 'modal_visualizar' <?php }}?>);
-            var Modal = new bootstrap.Modal(modalEl);
-            Modal.show();
-            modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'index.php?view=<?= $view ?>';
-            });
-        });
-
-
-    </script>
-<?php }
-; ?>
 
 
 
-</html>0
+
+</html>
 
 
