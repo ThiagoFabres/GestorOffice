@@ -14,6 +14,72 @@
     margin-bottom: 0.5em;
     border: none;
 }
+
+.relatorios-botoes {
+    display: flex;
+    gap: 1em;
+    margin-top: 1em;
+}
+
+.card-header .btn-primary {
+    background-color: transparent;
+    border-radius: 0;
+    align-items: center;
+    align-items: center;
+    box-shadow: none;
+}
+
+.card-header .btn-primary:hover,
+.card-header #btn-analitico,
+.card-header #btn-demonstrativo {
+        border-bottom: 2px solid #5856d6;
+}
+
+.card-header {
+    gap: 0;
+}
+
+.card-header .btn-primary h3 {
+    color: black;
+    font-size: 1.25em;
+    margin: 0;
+    padding: 0;
+}
+
+.inputs-dre-text {
+    display: flex;
+    flex-direction: row;
+    width: calc(30% + 1em);
+    gap: 1em;
+    align-items: center;
+}
+
+.inputs-dre-btn {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width:calc(70% - 1em);
+    align-items: end;
+}
+
+.relatorios-botoes #botao-gerar-pdf {
+    background-color: rgba(223, 0, 0);
+    box-shadow: none;
+    border-radius: none;
+}
+.relatorios-botoes #botao-gerar-pdf:hover {
+    background-color: rgba(190, 0, 0);
+}
+
+.relatorios-botoes #botao-gerar-excel {
+    background-color: rgba(9, 118, 64);
+    box-shadow: none;
+    border-radius: none;
+}
+.relatorios-botoes #botao-gerar-excel:hover {
+    background-color: rgb(7, 94, 50);
+}
+
 .tabela-edit {
     width: 100%;
     max-width: 100%;
@@ -34,6 +100,41 @@
     
     
 }
+.td-acoes {
+    width: 3%;
+}
+.tr-clientes-header th {
+    font-size: 0.8em;
+}
+
+.tr-clientes-header th a {
+  text-decoration: none;
+  color: black;
+}
+
+.card-footer {
+    display: flex;
+    flex-direction: row;
+}
+
+.card-select-pagina form {
+    display: flex;
+    float: left;
+    flex-direction: row;
+}
+
+.card-select-pagina {
+    float: left;
+   
+}
+
+
+
+.card-select-numero {
+    float: right;
+   
+}
+    
 #receber-hoje .card .card-header,
 #receber-semana .card .card-header,
 #receber-vencidos .card .card-header
@@ -69,6 +170,12 @@
 } 
 .tr-clientes-dash th {
     font-size: 0.8em;
+}
+
+.botoes-contas {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
 }
 
 
@@ -165,11 +272,11 @@
 .card-footer {
     width: 100%;
     display: flex;
-    justify-content: flex-end;
     align-items: center;
     box-shadow: none;
     padding: 1em 1.5em 1em 1.5em;
     min-height: 3em;
+    justify-content: space-between;
 }
 
 .card {
@@ -180,6 +287,8 @@
 
 
 .row {
+    display: flex;
+    flex-direction: row;
     min-width: 100%;
 }
 
@@ -353,7 +462,6 @@ html, body {
 .inner-accordion .table {
     margin-top: 1em;
     min-width: 100%;
-    min-height: 5em;
 }
 
 
@@ -483,6 +591,7 @@ html, body {
     border: none;
     align-items: center;
     height: 2.4em;
+    box-shadow: none;
 }
 
 
@@ -915,7 +1024,8 @@ min-height: 3em;
 }
 
 
-.menu-item:hover {
+.menu-item:hover,
+.menu-item-atual {
     animation-name: forwards;
     animation-fill-mode: forwards;
     animation-duration: 0.5s;
