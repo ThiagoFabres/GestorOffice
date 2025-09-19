@@ -1,6 +1,6 @@
 <?php
 
-require_once '../db/base.php';
+require_once __DIR__ . '/../base.php';
 
 class Pag01 {
     public $id;
@@ -50,7 +50,7 @@ class Pag01 {
         return $stmt->execute();
     }
 
-    public static function read($id = null, $id_empresa = null, $id_cadastro = null, $documento = null): array {
+    public static function read($id = null, $id_empresa = null, $id_cadastro = null, $documento = null, $con01 = null, $con02 = null): array {
         $pdo = (new Database())->connect();
         $query = 'SELECT * FROM pag01';
         $conditions = [];
@@ -59,6 +59,8 @@ class Pag01 {
         if ($id_empresa != null) $conditions[] = 'id_empresa = :id_empresa';
         if ($id_cadastro != null) $conditions[] = 'id_cadastro = :id_cadastro';
         if ($documento != null) $conditions[] = 'documento = :documento';
+        if ($con01 != null) $conditions[] = 'id_con01 = :con01';
+        if ($con02 != null) $conditions[] = 'id_con02 = :con02';
 
         if ($conditions) {
             $query .= ' WHERE ' . implode(' AND ', $conditions);
@@ -70,6 +72,8 @@ class Pag01 {
         if ($id_empresa != null) $stmt->bindValue(':id_empresa', $id_empresa);
         if ($id_cadastro != null) $stmt->bindValue(':id_cadastro', $id_cadastro);
         if ($documento != null) $stmt->bindValue(':documento', $documento);
+        if ($con01 != null) $stmt->bindValue(':con01', $con01);
+        if ($con02 != null) $stmt->bindValue(':con02', $con02);
 
         $stmt->execute();
 
@@ -155,129 +159,195 @@ class Pag02 {
         return $stmt->execute();
     }
 
-public static function read(
-    $id = null, 
-    $id_empresa = null, 
-    $id_pag01 = null, 
-    $data = null, 
-    $parcela = null, 
-    $filtro_data_inicial = null,  
-    $filtro_data_final = null, 
-    $filtro_nome = null, 
-    $filtro_opcao = null, 
-    $filtro_por = null, 
-    $filtro_pagamento = null,
-    $dash_vencido = false, 
-    $dash_tipo = null
-): array {
-    $pdo = (new Database())->connect();
+    public static function read($id = null, $id_empresa = null, $id_pag01 = null, $data = null, $parcela = null, 
+    $filtro_data_inicial = null,  $filtro_data_final = null, $filtro_nome = null, $filtro_opcao = null, $filtro_por = null, $filtro_pagamento = null,
+    $dash_quitado = false, $dash_tipo = null, $numero_exibir = null,
+        $read_paginas = null,
+        $numero_pagina = null,
+        $ordenar_por = null,
+        $direcao = 'asc'
+    ) {
+        $pdo = (new Database())->connect();
 
-    if (isset($filtro_nome)) {
-        $query = '
-            SELECT p2.*, p1.documento 
-            FROM pag02 p2
-            INNER JOIN pag01 p1 ON p2.id_pag01 = p1.id
-        ';
-    } else {
-        $query = 'SELECT * FROM pag02';
-    }
+        if(isset($read_paginas) && $read_paginas) {
+            $query = 'SELECT COUNT(*) 
+                FROM pag02 p2
+                INNER JOIN pag01 p1 ON p2.id_pag01 = p1.id
+            ';
+        
+        } else if($ordenar_por === 'nome') {
+               $query = 'SELECT p2.*, p1.documento, c.razao_soc FROM pag02 p2 INNER JOIN pag01 p1 ON p2.id_pag01 = p1.id INNER JOIN cadastro c ON p1.id_cadastro = c.id_cadastro';
+            
+            } else {
+                $query = 'SELECT p2.*, p1.documento 
+                FROM pag02 p2
+                INNER JOIN pag01 p1 ON p2.id_pag01 = p1.id
+            ';
+            }
+        
+        
+        
 
-    $conditions = [];
-
-    // filtro_opcao
-    if ($filtro_opcao != null && $filtro_opcao != '') {
-        switch ($filtro_opcao) {
-            case 'abertos':
-                $conditions[] = 'valor_pag < valor_par';
-                break;
-            case 'quitados':
-                $conditions[] = 'valor_pag = valor_par';
-                break;
+        
+        $conditions = [];
+        if($filtro_opcao != null && $filtro_opcao != '') {
+            switch($filtro_opcao) {
+                case 'abertos':
+                    $conditions[] = 'p2.valor_pag < valor_par';
+                    break;
+                case 'quitados':
+                    $conditions[] = 'p2.valor_pag = valor_par';
+                    break;
+            }
         }
-    }
-
-    // filtro_por + datas
-    if ($filtro_por != null) {
-        switch ($filtro_por) {
+        if($filtro_por != null) {
+            switch($filtro_por) {
             case 'lancamento':
-                $filtro_por_data = 'p1.data_lanc';
+                    $filtro_por_data = 'p2.data_lanc';
                 break;
             case 'vencimento':
-                $filtro_por_data = 'p2.vencimento';
+                    $filtro_por_data = 'p2.vencimento';
                 break;
             case 'pagamento':
-                $filtro_por_data = 'p2.data_pag';
+                    $filtro_por_data = 'p2.data_pag';
                 break;
-        }
+            }
 
-        if ($filtro_data_inicial != null) {
-            $conditions[] = $filtro_por_data . ' >= :filtro_data_inicial';
+            if($filtro_data_inicial != null) {
+                $conditions[] = $filtro_por_data . ' >= :filtro_data_inicial';
+            }
+            if($filtro_data_final != null) {
+                $conditions[] = $filtro_por_data . ' <= :filtro_data_final';
+            }
+            
         }
-        if ($filtro_data_final != null) {
-            $conditions[] = $filtro_por_data . ' <= :filtro_data_final';
-        }
-    }
-
-    // dash_tipo
-    if ($dash_tipo != null && $filtro_data_inicial != null) {
+        if ($dash_tipo != null && $filtro_data_inicial != null) {
         switch ($dash_tipo) {
             case 'hoje':
-                $conditions[] = 'vencimento = :filtro_data_inicial';
+                $conditions[] = 'p2.vencimento = :filtro_data_inicial';
                 break;
             case 'semana':
-                $conditions[] = 'vencimento > :filtro_data_inicial';
-                $conditions[] = 'vencimento <= :filtro_data_final';
+                $conditions[] = 'p2.vencimento > :filtro_data_inicial';
+                $conditions[] = 'p2.vencimento <= :filtro_data_final';
                 break;
             case 'venceu':
-                $conditions[] = 'vencimento < :filtro_data_inicial';
+                $conditions[] = 'p2.vencimento < :filtro_data_inicial';
                 break;
         }
     }
+        
 
-    // outros filtros
-    if ($id != null) $conditions[] = 'id = :id';
-
-    if (isset($filtro_nome)) {
-        if ($id_empresa != null) $conditions[] = 'p1.id_empresa = :id_empresa';
+        if ($id != null) $conditions[] = 'p2.id = :id';
+        if ($id_empresa != null) {
+    if (strpos($query, 'pag01') !== false) {
+        $conditions[] = 'p1.id_empresa = :id_empresa';
     } else {
-        if ($id_empresa != null) $conditions[] = 'id_empresa = :id_empresa';
+        $conditions[] = 'p2.id_empresa = :id_empresa';
     }
+}
 
-    if ($id_pag01 != null) $conditions[] = 'id_pag01 = :id_pag01';
-    if ($data != null) $conditions[] = 'MONTH(vencimento) = MONTH(:data) AND YEAR(vencimento) = YEAR(:data)';
-    if ($parcela != null) $conditions[] = 'parcela = :parcela';
-    if ($filtro_nome != null) $conditions[] = 'p1.documento LIKE :filtro_nome';
-    if ($filtro_pagamento != null) $conditions[] = 'id_pgto = :filtro_pagamento';
-    if ($dash_vencido == true) $conditions[] = 'valor_pag != valor_par';
 
-    if ($conditions) {
-        $query .= ' WHERE ' . implode(' AND ', $conditions);
+        
+        if ($id_pag01 != null) $conditions[] = 'p2.id_pag01 = :id_pag01';
+        if ($data != null) $conditions[] = 'MONTH(p2.vencimento) = MONTH(:data) AND YEAR(p2.vencimento) = YEAR(:data)';
+        if ($parcela != null) $conditions[] = 'p2.parcela = :parcela';
+        if ($filtro_pagamento != null) $conditions[] = 'p2.id_pgto = :filtro_pagamento';
+        if ($dash_quitado == true) $conditions[] = 'p2.valor_pag != p2.valor_par';
+
+        
+        if ($filtro_nome != null) $conditions[] = 'p1.documento LIKE :filtro_nome';
+
+
+
+        if ($conditions) {
+            $query .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+switch($ordenar_por) {
+    case 'documento':
+        if (strpos($query, 'pag01') === false) {
+            $query = str_replace(
+                'FROM pag02',
+                'FROM pag02 p2 INNER JOIN pag01 p1 ON p2.id_pag01 = p1.id',
+                $query
+            );
+        }
+        $query .= ' ORDER BY p1.documento '. $direcao . ', p1.data_lanc desc';
+        break;
+
+    case 'data_lancamento':   
+        $query .= ' ORDER BY p1.data_lanc '. $direcao . ', p1.data_lanc desc';
+        break;
+
+    case 'nome':
+        $query .= ' ORDER BY c.razao_soc '. $direcao . ', p1.data_lanc desc';
+        break;
+    case 'valor':
+        $query .= ' ORDER BY p1.valor '. $direcao . ', p1.data_lanc desc';
+        break;
+    case 'valor_parcela':
+        $query .= ' ORDER BY p2.valor_par '. $direcao . ', p1.data_lanc desc';
+        break;
+
+    case 'data_vencimento':
+        $query .= ' ORDER BY p2.vencimento '. $direcao . ', p1.data_lanc desc';
+        break;
+
+    case 'data_pagamento':
+        $query .= ' ORDER BY p2.data_pag '. $direcao . ', p1.data_lanc desc';
+        break;
+
+    case 'valor_pagamento':
+        $query .= ' ORDER BY p2.valor_pag '. $direcao . ', p1.data_lanc desc';
+        break;
+    case 'tipo_pagamento':
+
+        break;
+    default:
+        $query .= ' ORDER BY p1.data_lanc desc';
+        break;
     }
+    
 
-    $stmt = $pdo->prepare($query);
+        if($numero_exibir != null) {
+            $query .= ' LIMIT ' . $numero_exibir;
+        }
+        if($numero_pagina > 1) {
+            $query .= ' OFFSET ' . $numero_exibir *( $numero_pagina - 1);
+        }
+        
+        
 
-    // binds
-    if ($id != null) $stmt->bindValue(':id', $id);
-    if ($id_empresa != null) $stmt->bindValue(':id_empresa', $id_empresa);
-    if ($id_pag01 != null) $stmt->bindValue(':id_pag01', $id_pag01);
-    if ($parcela != null) $stmt->bindValue(':parcela', $parcela);
 
-    if ($data != null) {
+        // if(!$read_paginas){
+        // echo $query;
+        // exit;
+        // }
+        $stmt = $pdo->prepare($query);
+
+        if ($id != null) $stmt->bindValue(':id', $id);
+        if ($id_empresa != null) $stmt->bindValue(':id_empresa', $id_empresa);
+        if ($id_pag01 != null) $stmt->bindValue(':id_pag01', $id_pag01);
+        if ($parcela != null) $stmt->bindValue(':parcela', $parcela);
+        if ($data != null) {
         if ($data instanceof DateTime) {
-            $data = $data->format('Y-m-d');
+            $data = $data->format('Y-m-d'); // ou 'Y-m' se só quiser comparar mês
         }
         $stmt->bindValue(':data', $data);
+        }
+        if($filtro_data_inicial != null) $stmt->bindValue(':filtro_data_inicial', $filtro_data_inicial);
+        if($filtro_data_final != null) $stmt->bindValue(':filtro_data_final', $filtro_data_final);
+        if($filtro_nome != null) $stmt->bindValue(':filtro_nome', '%' . $filtro_nome . '%');
+        if($filtro_pagamento != null) $stmt->bindValue(':filtro_pagamento', $filtro_pagamento);
+
+        $stmt->execute();
+
+        if(isset($read_paginas)) {
+            return $stmt->fetchColumn();
+        } else {
+            return $stmt->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, self::class);
+        }
     }
-
-    if ($filtro_data_inicial != null) $stmt->bindValue(':filtro_data_inicial', $filtro_data_inicial);
-    if ($filtro_data_final != null) $stmt->bindValue(':filtro_data_final', $filtro_data_final);
-    if ($filtro_nome != null) $stmt->bindValue(':filtro_nome', '%' . $filtro_nome . '%');
-    if ($filtro_pagamento != null) $stmt->bindValue(':filtro_pagamento', $filtro_pagamento);
-
-    $stmt->execute();
-
-    return $stmt->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, self::class);
-}
 
     public static function update($pag02) {
         $pdo = (new Database())->connect();
@@ -318,5 +388,15 @@ public static function read(
         return $stmt->execute();
 }
 
+public static function readPagos() {
+        $pdo = (new Database())->connect();
+        $stmt = $pdo->query("SELECT DISTINCT id_pag01 FROM pag02 WHERE valor_pag > 0");
+        $ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        return $ids;
+
 }
+
+}
+
+
 ?>
