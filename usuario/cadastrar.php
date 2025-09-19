@@ -25,6 +25,7 @@ $get_nome = filter_input(INPUT_GET, 'nome');
 $get_estado = filter_input(INPUT_GET, 'estado');
 $get_data_inicial = filter_input(INPUT_GET, 'data_inicial');
 $get_data_final = filter_input(INPUT_GET, 'data_final');
+$erro = filter_input(INPUT_GET, 'erro');
 
 if($get_cadastro != 'cliente' && $get_cadastro != 'pagamento' && $get_cadastro != 'categoria' && $get_cadastro != 'bairro' && $get_cadastro != 'cidade') {
     header('Location: index.php');
@@ -140,7 +141,7 @@ $estadosLista = [
             <a href="index.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-layers"></i></div> Dashboard </a>
         </div>
     
-        <div class="menu-item accordion" >
+        <div class="menu-item menu-item-atual accordion" >
 
 <a class="nav-link text-white" data-bs-toggle="collapse" href="#cadastrosMenu" role="button" aria-expanded="false" aria-controls="cadastrosMenu">
         <i class="bi bi-person"></i> Cadastros
@@ -170,7 +171,7 @@ $estadosLista = [
         </div>
 
         <div class="menu-item">
-            <a href="dre.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
+            <a href="dre/demonstrativo.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
         </div>
 
 
@@ -219,7 +220,7 @@ $estadosLista = [
 <div class="main" id="container">
 
                 <div class="botao">
-        <a href="cadastrar.php?cadastro=cliente&acao=adicionar" class="btn btn-primary btn-lg botao-adm-adicionar">Nova Empresa</a>
+        <button data-bs-toggle="modal" data-bs-target="#modal_empresa" class="btn btn-primary btn-lg botao-adm-adicionar">Novo Cadastro</button>
     </div>
 
     
@@ -636,34 +637,34 @@ $estadosLista = [
 
                         <div class="input-form-adm-group input-form-adm">
                                 <div class="input-bairro">
-                    <select id="bairro" name="bairro" class="form-control"  style="border-bottom-right-radius:0; border-top-right-radius:0;" required>
+                                    <select id="bairro" name="bairro" class="form-control"  style="border-bottom-right-radius:0; border-top-right-radius:0;" required>
 
 
-                            <option value="" >Selecione um bairro</option>
+                                        <option value="" >Selecione um bairro</option>
 
-                            <?php foreach ($bairros as $bairro) { ?>
-                                <option value="<?= $bairro->id ?>">
-                            <?= htmlspecialchars($bairro->nome, ENT_QUOTES, 'UTF-8') ?>
-                            </option>
-                            <?php } ?>
-                        </select>
-                                </div>
+                                        <?php foreach ($bairros as $bairro) { ?>
+                                            <option value="<?= $bairro->id ?>">
+                                        <?= htmlspecialchars($bairro->nome, ENT_QUOTES, 'UTF-8') ?>
+                                        </option>
+                                        <?php } ?>
+                                    </select>
+                                            </div>
 
-                                
+                                            
 
-                                <div class="input-cidade">
-                        <select id="cidade" name="cidade" class="form-control"  style="border-radius:0;" required>
+                                            <div class="input-cidade">
+                                    <select id="cidade" name="cidade" class="form-control"  style="border-radius:0;" required>
 
-                            <option value="" >Selecione uma cidade</option>
-                            <?php foreach ($cidades as $cidade) { ?>
+                                    <option value="" >Selecione uma cidade</option>
+                                    <?php foreach ($cidades as $cidade) { ?>
 
 
-                                <option value="<?= $cidade->id ?>">
-                            <?=htmlspecialchars( $cidade->nome , ENT_QUOTES, 'UTF-8')?>
-                            </option>
-                            <?php } ?>
+                                        <option value="<?= $cidade->id ?>">
+                                    <?=htmlspecialchars( $cidade->nome , ENT_QUOTES, 'UTF-8')?>
+                                    </option>
+                                    <?php } ?>
 
-                        </select>
+                                    </select>
                                 </div>
 
                                 
@@ -1057,6 +1058,14 @@ if (barra.style.animationName === 'encolher') {
     </script>
 <?php }
 ; ?>
+
+<?php if (isset($erro) && $erro == 'repetido') { ?>
+    <script>
+        alert('Não é possível adicionar esse Cadastro, pois já existe um cadastro com esse e-mail');
+        window.location.href = 'cadastrar.php?cadastro=<?= $get_cadastro ?>';
+    </script>
+   
+<?php } ?>
 
 
 
