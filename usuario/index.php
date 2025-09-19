@@ -61,7 +61,7 @@ $recebimentos_semana = Rec02::read(null, $_SESSION['usuario']->id_empresa, null,
             <img width="220px" height="220px" src="/gestor-office.png" alt="Logo" class="logo">
         </div>
     <div id="itens-menu">
-                        <div class="menu-item">
+                        <div class="menu-item menu-item-atual">
             <a href="index.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-layers"></i></div> Dashboard </a>
         </div>
     <?php if($_SESSION['usuario']->processar == 1) { ?>
@@ -96,7 +96,7 @@ $recebimentos_semana = Rec02::read(null, $_SESSION['usuario']->id_empresa, null,
         </div>
 
         <div class="menu-item">
-            <a href="dre.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
+            <a href="dre/demonstrativo.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
         </div>
 
 
@@ -312,8 +312,8 @@ $recebimentos_semana = Rec02::read(null, $_SESSION['usuario']->id_empresa, null,
         if(!empty($recebimentos_venceu)) {
 
         
-            foreach($recebimentos_venceu as $pag02) {
-            $rec01 = Rec01::read($pag02->id_rec01)[0];
+            foreach($recebimentos_venceu as $rec02) {
+            $rec01 = Rec01::read($rec02->id_rec01)[0];
             $cadastro = Cadastro::read($rec01->id_cadastro)[0];
             $valor_total = number_format($rec01->valor,2 , ',', '');
             $valor_parcela = number_format($rec02->valor_par,2 , ',', '');
