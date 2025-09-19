@@ -14,11 +14,20 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     exit;
 }
 
+
 $con01 = filter_input(INPUT_GET, 'con01id');
+$con02 = filter_input(INPUT_GET, 'con02id');
+$erro = filter_input(INPUT_GET, 'erro');
 $acao = $_GET['acao'] ?? null;
 $target = $_GET['target'] ?? null;
 
+if($target != 'titulo' && $target != 'subtitulo' && $target != null) {
+    header('Location: contas.php');
+    exit;
+}
+
 $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
+
  
 
 
@@ -74,7 +83,7 @@ $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
         </div>
         <?php } ?>
 
-        <div class="menu-item">
+        <div class="menu-item menu-item-atual">
             <a href="contas.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-journal-bookmark"></i></div> Plano de Contas </a>
         </div>
 
@@ -87,7 +96,7 @@ $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
         </div>
 
         <div class="menu-item">
-            <a href="dre.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
+            <a href="dre/demonstrativo.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
         </div>
 
 
@@ -133,7 +142,7 @@ $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
 
         
 
-
+<?php if(!empty($titulos)){ ?>
                         <div class="accordion custom-accordion" id="accordionExample">
 <?php foreach($titulos as $i => $titulo) { 
     
@@ -150,7 +159,11 @@ $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
         <div id="collapse<?=$i?>" class="accordion-collapse <?php if(!isset($con01) || $con01 != $titulo->id ) {?>collapse<?php } ?>" aria-labelledby="heading<?=$i?>" data-bs-parent="#accordionExample">
             <div class="accordion-body">
                 <div class="inner-accordion">
-                     <a href="contas.php?view=contas&target=subtitulo&acao=adicionar&con01id=<?=$titulo->id?>" class="btn btn-primary btn-sm botao-adm-adicionar">Adicionar Subtitulo</a>
+                    <div class="botoes-contas">
+                        <a href="contas.php?target=subtitulo&acao=adicionar&con01id=<?=$titulo->id?>" class="btn btn-primary btn-sm botao-adm-adicionar">Adicionar Subtitulo</a>
+                        <a href="contas.php?target=titulo&acao=editar&con01id=<?=$titulo->id?>" class="btn btn-primary btn-sm botao-adm-adicionar">Editar Titulo</a>
+                    </div>
+                     
 
                      <table class="table table-striped table-bordered">
                         <thead>
@@ -161,7 +174,7 @@ $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
                         <tbody>
                         <?php foreach($subtitulos as $subtitulo) { ?>
                             
-                            <tr>
+                            <tr onclick="window.location='contas.php?target=subtitulo&acao=editar&con01id=<?=$titulo->id?>&con02id=<?=$subtitulo->id?>'">
                                 <td><?= htmlspecialchars($subtitulo->nome, ENT_QUOTES, 'UTF-8') ?></td>
                                 
                             </tr>
@@ -174,7 +187,7 @@ $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
     </div>
 <?php } ?>
 </div>
-
+<?php } ?>
     <!-- Modal -->
     <div class="modal fade" id="modal_titulo" tabindex="-1" role="dialog"
         aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
@@ -182,15 +195,27 @@ $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
             <div class="modal-content">
                 <div class="modal-header">
                     <?php if(isset($target )&& $target == 'titulo') {
-                        $titulo_modal = 'Título';
+                        $titulo_modal = 'Novo título';
                         $target = 'titulo';
 
                     } else if(isset($target) && $target == 'subtitulo') {
-                        $titulo_modal = 'Subtítulo';
+                        $titulo_modal = 'Novo subtítulo';
                         $target = 'subtitulo';
-                    } 
+                    }
+
+                     if($acao == 'editar') {
+                        if($target == 'titulo') {
+                            $conta_modal = Con01::read($con01, $_SESSION['usuario']->id_empresa)[0];
+                        $titulo_modal = 'Editar titulo: ' .$conta_modal->nome;
+                        $target = 'titulo'; 
+                        } else if($target == 'subtitulo') {
+                            $conta_modal = Con02::read($con02, $_SESSION['usuario']->id_empresa)[0];
+                            $titulo_modal = 'Editar subtítulo: ' .$conta_modal->nome;
+                            $target = 'subtitulo';
+                        }  
+                    }
                      ?>
-                    <h5 class="modal-title" id="exampleModalLongTitle">Novo <?= htmlspecialchars($titulo_modal, ENT_QUOTES, 'UTF-8') ?></h5>
+                    <h5 class="modal-title" id="exampleModalLongTitle"><?= htmlspecialchars($titulo_modal, ENT_QUOTES, 'UTF-8') ?></h5>
                     <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                     </button>
                 </div>
@@ -201,18 +226,20 @@ $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
                         <input type="hidden" name="id" value="">
                         <input type="hidden" name="target" value="<?php echo htmlspecialchars($target, ENT_QUOTES, 'UTF-8') ?? ''; ?>">
                         <input type="hidden" name="con01id" value="<?php echo htmlspecialchars($con01, ENT_QUOTES, 'UTF-8') ?? ''; ?>">
+                        <input type="hidden" name="con02id" value="<?php echo htmlspecialchars($con02, ENT_QUOTES, 'UTF-8') ?? ''; ?>">
+                        <input type="hidden" name="acao" value="<?=$acao?>">
 
                         <div class="input-nome input-form-adm">
                             <!--Nome: -->
                             <label for="nome">Nome:</label>
-                            <input type="text" onchange="checar()" name="nome" class="form-control" placeholder="Nome" value="" required>
+                            <input type="text" onchange="checar()" name="nome" class="form-control" placeholder="Nome" value="<?php if($acao == 'editar'){ echo $conta_modal->nome ;}?>" required>
                         </div>
                     <?php if(isset($target) && $target == 'titulo'){ ?>
                         <div class="input-nome input-form-adm">
                             <label for="nome">Tipo:</label>
                             <select name="tipo" class="form-select" id="tipo">
-                                <option value="C">Crédito</option>
-                                <option value="D">Débito</option>
+                                <option <?php if (($acao == 'editar') && $conta_modal->tipo == 'C') {?> selected <?php } ?> value="C">Crédito</option>
+                                <option <?php if (($acao == 'editar') && $conta_modal->tipo == 'D') {?> selected <?php } ?>value="D">Débito</option>
                             </select>
                         </div>
                     <?php } ?>
@@ -220,8 +247,10 @@ $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
 
                         <div style="margin-bottom: 3em;" class="footer">
 
-                        <button name="acao" value="adicionar" class="btn btn-success" style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0;" href="consulta_cliente.php">Salvar</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Fechar</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0;">Fechar</button>
+                        <button class="btn btn-success" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Salvar</button>
+                        
+                        <?php if($acao == 'editar'){ ?><button name="acao" value="excluir" style="float: right;" class="btn btn-danger" >Excluir</button> <?php } ?> 
                             
 
                     </form>
@@ -368,7 +397,7 @@ if (barra.style.animationName === 'encolher') {
     }}
 </script>
 
-<?php if ( isset($acao) && $acao == 'adicionar') 
+<?php if ( isset($acao) && ($acao == 'adicionar' || $acao == 'editar')) 
     
     { ?>
     
@@ -387,8 +416,18 @@ if (barra.style.animationName === 'encolher') {
 <?php }
 ; ?>
 
+<?php if (isset($erro) && $erro == 'usado') { ?>
+    <script>
+        alert('Não é possível editar ou excluir este subtitulo", pois ela está vinculada a um recebimento ou pagamento.');
+        window.location.href = 'contas.php?con01id=<?= $con01 ?>';
+    </script>
+<?php } else if(isset($erro) && $erro == 'usado_sub') {?>
+    <script>
+        alert('Não é possível editar ou excluir este titulo, pois ela está vinculada a subtitulo.');
+        window.location.href = 'contas.php?con01id=<?= $con01 ?>';
+    </script>
+<?php } ?>
 
-
-</html>0
+</html>
 
 
