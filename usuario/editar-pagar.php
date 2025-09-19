@@ -37,7 +37,7 @@ if(isset($view) && $view == 'contas'){
     $recebimento = Pag01::read($get_id,$_SESSION['usuario']->id_empresa)[0];
     $parcelas_pagas = false;
     for($i = 1; $i < $recebimento->parcelas; $i++) {
-        $pag02 = Pag02::read(null, $_SESSION['usuario']->id_empresa, $recebimento->id, null, $i)[0];
+        $pag02 = Pag02::read(null, $_SESSION['usuario']->id_empresa, $recebimento->id, null, $i,)[0];
         if($parcelas_pagas == false && $pag02->valor_pag == $pag02->valor_par) {
             $parcelas_pagas = true;
             break;
@@ -115,7 +115,7 @@ if(isset($view) && $view == 'contas'){
         </div>
 
         <div class="menu-item">
-            <a href="dre.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
+            <a href="dre/demonstrativo.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
         </div>
 
 
@@ -163,7 +163,8 @@ if(isset($view) && $view == 'contas'){
         $parcelas_d = filter_input(INPUT_POST, 'parcelas') ?? $parcelas_d = $recebimento->parcelas;
         $parcelas_d = intval($parcelas_d);
         $descricao = filter_input(INPUT_POST, 'descricao') ?? $descricao = $recebimento->descricao;
-        $data_lanc = filter_input(INPUT_POST, 'data_lanc') ?? $data_lanc = $recebimento->data_lanc;
+        $data_lanc = $recebimento->data_lanc ?? $data_lanc = filter_input(INPUT_POST, 'data_lanc') ??$data_lanc = (new DateTime())->format('Y-m-d');
+        
 
         if(!isset($get_id)){
             
@@ -257,7 +258,7 @@ if(isset($view) && $view == 'contas'){
         <div class="card-header-borda">
             <div class="tab-pane fade show active" id="vendas" role="tabpanel" aria-labelledby="vendas-tab">
                 <h5 class="card-title">Recebimento</h5>
-                <form method="post" action="editar-pagar.php?view=receber&acao=editar">
+                <form method="post" action="editar-pagar.php?view=receber&acao=editar" onkeydown="return event.key != 'Enter';">
                     <?php  if (isset($get_id)) { ?>
                         <input type="hidden" name="id" value="<?=$get_id?>">
                     <?php } ?>
@@ -301,7 +302,7 @@ if(isset($view) && $view == 'contas'){
                             <select name="titulo" class="form-select" id="titulo" style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
                                 <option value="">Selecione</option>
                                 
-                                <?php $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa); 
+                                <?php $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa, 'D'); 
                                 foreach ($titulos as $titulo) { ?>
                                     <option value="<?= $titulo->id ?>" <?php if($titulo->id == $post_titulo){ ?> selected <?php } ?> ><?= htmlspecialchars($titulo->nome, ENT_QUOTES, 'UTF-8') ?></option>
                                 <?php } ?>
@@ -364,7 +365,7 @@ if(isset($view) && $view == 'contas'){
                 </div>
 </div>
 
-<form action="cadastros_manager.php" method="post">
+<form action="cadastros_manager.php" method="post" onkeydown="return event.key != 'Enter';"> 
     <input type="hidden" name="cadastro" value="<?=$post_cadastro?>">
     <input type="hidden" name="titulo" value="<?=$post_titulo?>">
     <input type="hidden" name="subtitulo" value="<?=$post_subtitulo?>">
@@ -423,7 +424,7 @@ if(isset($view) && $view == 'contas'){
             </table>
         </table>
         </div>
-    <div class="card-footer" style="height: 20%;">
+    <div class="card-footer">
         <button name="acao" value="<?php if(!isset($get_acao)){?>adicionar<?php } else if(isset($get_acao) && $get_acao == 'editar') {?>editar<? } ?>" class="btn btn-primary" type="submit" id="botao-editar-parcela" style="background-color:#5856d6; padding-inline:1.5em; float:right; margin-bottom: 0.5em; border: 0;" >Salvar</button>
     </div>
 </form>
