@@ -1,6 +1,6 @@
 <?php
 
-require_once '../db/base.php';
+require_once __DIR__ . '/../base.php';
 
 class Rec01 {
     public $id;
@@ -50,7 +50,7 @@ class Rec01 {
         return $stmt->execute();
     }
 
-    public static function read($id = null, $id_empresa = null, $id_cadastro = null, $documento = null): array {
+    public static function read($id = null, $id_empresa = null, $id_cadastro = null, $documento = null, $con01 = null, $con02 = null): array {
         $pdo = (new Database())->connect();
         $query = 'SELECT * FROM rec01';
         $conditions = [];
@@ -59,6 +59,9 @@ class Rec01 {
         if ($id_empresa != null) $conditions[] = 'id_empresa = :id_empresa';
         if ($id_cadastro != null) $conditions[] = 'id_cadastro = :id_cadastro';
         if ($documento != null) $conditions[] = 'documento = :documento';
+        if ($con01 != null) $conditions[] = 'id_con01 = :con01';
+        if ($con02 != null) $conditions[] = 'id_con02 = :con02';
+
 
         if ($conditions) {
             $query .= ' WHERE ' . implode(' AND ', $conditions);
@@ -70,6 +73,8 @@ class Rec01 {
         if ($id_empresa != null) $stmt->bindValue(':id_empresa', $id_empresa);
         if ($id_cadastro != null) $stmt->bindValue(':id_cadastro', $id_cadastro);
         if ($documento != null) $stmt->bindValue(':documento', $documento);
+        if ($con01 != null) $stmt->bindValue(':con01', $con01);
+        if ($con02 != null) $stmt->bindValue(':con02', $con02);
 
         $stmt->execute();
 
@@ -157,52 +162,55 @@ class Rec02 {
 
     public static function read($id = null, $id_empresa = null, $id_rec01 = null, $data = null, $parcela = null, 
     $filtro_data_inicial = null,  $filtro_data_final = null, $filtro_nome = null, $filtro_opcao = null, $filtro_por = null, $filtro_pagamento = null,
-    $dash_quitado = false, $dash_tipo = null
-    ): array {
+    $dash_quitado = false, $dash_tipo = null, $numero_exibir = null,
+        $read_paginas = null,
+        $numero_pagina = null,
+        $ordenar_por = null,
+        $direcao = 'asc'
+    ) {
         $pdo = (new Database())->connect();
-        if(isset($filtro_nome)) {
-            $query = '
-                SELECT r2.*, r1.documento 
+
+        if(isset($read_paginas) && $read_paginas) {
+            $query = 'SELECT COUNT(*) 
                 FROM rec02 r2
                 INNER JOIN rec01 r1 ON r2.id_rec01 = r1.id
             ';
-        } else {
-            $query = 'SELECT * FROM rec02';
-        }
+        
+        } else if($ordenar_por === 'nome') {
+               $query = 'SELECT r2.*, r1.documento, c.razao_soc FROM rec02 r2 INNER JOIN rec01 r1 ON r2.id_rec01 = r1.id INNER JOIN cadastro c ON r1.id_cadastro = c.id_cadastro';
+            
+            } else {
+                $query = 'SELECT r2.*, r1.documento 
+                FROM rec02 r2
+                INNER JOIN rec01 r1 ON r2.id_rec01 = r1.id
+            ';
+            }
+        
+        
+        
+
+        
         $conditions = [];
         if($filtro_opcao != null && $filtro_opcao != '') {
             switch($filtro_opcao) {
                 case 'abertos':
-                    $conditions[] = 'valor_pag < valor_par';
+                    $conditions[] = 'r2.valor_pag < valor_par';
                     break;
                 case 'quitados':
-                    $conditions[] = 'valor_pag = valor_par';
+                    $conditions[] = 'r2.valor_pag = valor_par';
                     break;
             }
         }
         if($filtro_por != null) {
             switch($filtro_por) {
             case 'lancamento':
-                if($filtro_nome != null) {
                     $filtro_por_data = 'r2.data_lanc';
-                } else {
-                    $filtro_por_data = 'r2.data_lanc';
-                }
-                
                 break;
             case 'vencimento':
-                if($filtro_nome != null) {
                     $filtro_por_data = 'r2.vencimento';
-                } else {
-                    $filtro_por_data = 'r2.vencimento';
-                }
                 break;
             case 'pagamento':
-                if($filtro_nome != null) {
                     $filtro_por_data = 'r2.data_pag';
-                } else {
-                    $filtro_por_data = 'r2.data_pag';
-                }
                 break;
             }
 
@@ -217,39 +225,105 @@ class Rec02 {
         if ($dash_tipo != null && $filtro_data_inicial != null) {
         switch ($dash_tipo) {
             case 'hoje':
-                $conditions[] = 'vencimento = :filtro_data_inicial';
+                $conditions[] = 'r2.vencimento = :filtro_data_inicial';
                 break;
             case 'semana':
-                $conditions[] = 'vencimento > :filtro_data_inicial';
-                $conditions[] = 'vencimento <= :filtro_data_final';
+                $conditions[] = 'r2.vencimento > :filtro_data_inicial';
+                $conditions[] = 'r2.vencimento <= :filtro_data_final';
                 break;
             case 'venceu':
-                $conditions[] = 'vencimento < :filtro_data_inicial';
+                $conditions[] = 'r2.vencimento < :filtro_data_inicial';
                 break;
         }
     }
         
 
-        if ($id != null) $conditions[] = 'id = :id';
-        if(isset($filtro_nome)) {
-            if ($id_empresa != null) $conditions[] = 'r1.id_empresa = :id_empresa';
-        } else {
-            if ($id_empresa != null) $conditions[] = 'id_empresa = :id_empresa';
-        }
+        if ($id != null) $conditions[] = 'r2.id = :id';
+        if ($id_empresa != null) {
+    if (strpos($query, 'rec01') !== false) {
+        $conditions[] = 'r1.id_empresa = :id_empresa';
+    } else {
+        $conditions[] = 'r2.id_empresa = :id_empresa';
+    }
+}
+
+
         
-        if ($id_rec01 != null) $conditions[] = 'id_rec01 = :id_rec01';
-        if ($data != null) $conditions[] = 'MONTH(vencimento) = MONTH(:data) AND YEAR(vencimento) = YEAR(:data)';
-        if ($parcela != null) $conditions[] = 'parcela = :parcela';
-        if ($filtro_pagamento != null) $conditions[] = 'id_pgto = :filtro_pagamento';
-        if ($dash_quitado == true) $conditions[] = 'valor_pag != valor_par';
+        if ($id_rec01 != null) $conditions[] = 'r2.id_rec01 = :id_rec01';
+        if ($data != null) $conditions[] = 'MONTH(r2.vencimento) = MONTH(:data) AND YEAR(r2.vencimento) = YEAR(:data)';
+        if ($parcela != null) $conditions[] = 'r2.parcela = :parcela';
+        if ($filtro_pagamento != null) $conditions[] = 'r2.id_pgto = :filtro_pagamento';
+        if ($dash_quitado == true) $conditions[] = 'r2.valor_pag != r2.valor_par';
 
         
         if ($filtro_nome != null) $conditions[] = 'r1.documento LIKE :filtro_nome';
+
+
 
         if ($conditions) {
             $query .= ' WHERE ' . implode(' AND ', $conditions);
         }
 
+switch($ordenar_por) {
+    case 'documento':
+        if (strpos($query, 'rec01') === false) {
+            $query = str_replace(
+                'FROM rec02',
+                'FROM rec02 r2 INNER JOIN rec01 r1 ON r2.id_rec01 = r1.id',
+                $query
+            );
+        }
+        $query .= ' ORDER BY r1.documento '. $direcao . ', r1.data_lanc desc';
+        break;
+
+    case 'data_lancamento':   
+        $query .= ' ORDER BY r1.data_lanc '. $direcao . ', r1.data_lanc desc';
+        break;
+
+    case 'nome':
+        $query .= ' ORDER BY c.razao_soc '. $direcao . ', r1.data_lanc desc';
+        break;
+    case 'valor':
+        $query .= ' ORDER BY r1.valor '. $direcao . ', r1.data_lanc desc';
+        break;
+    case 'valor_parcela':
+        $query .= ' ORDER BY r2.valor_par '. $direcao . ', r1.data_lanc desc';
+        break;
+
+    case 'data_vencimento':
+        $query .= ' ORDER BY r2.vencimento '. $direcao . ', r1.data_lanc desc';
+        break;
+
+    case 'data_pagamento':
+        $query .= ' ORDER BY r2.data_pag '. $direcao . ', r1.data_lanc desc';
+        break;
+
+    case 'valor_pagamento':
+        $query .= ' ORDER BY r2.valor_pag '. $direcao . ', r1.data_lanc desc';
+        break;
+    case 'tipo_pagamento':
+
+        break;
+    default:
+        $query .= ' ORDER BY r1.data_lanc desc';
+        break;
+    }
+    
+
+        if($numero_exibir != null) {
+            $query .= ' LIMIT ' . $numero_exibir;
+        }
+        if($numero_pagina > 1) {
+            $query .= ' OFFSET ' . $numero_exibir *( $numero_pagina - 1);
+        }
+        
+        
+
+
+        // if(!$read_paginas){
+        // echo $query;
+        // exit;
+        // }
         $stmt = $pdo->prepare($query);
 
         if ($id != null) $stmt->bindValue(':id', $id);
@@ -269,7 +343,11 @@ class Rec02 {
 
         $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, self::class);
+        if(isset($read_paginas)) {
+            return $stmt->fetchColumn();
+        } else {
+            return $stmt->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, self::class);
+        }
     }
 
     public static function update($rec02) {
@@ -308,6 +386,12 @@ public static function deletebyrec01($id) {
 
         return $stmt->execute();
 }
+public static function readPagos() {
+        $pdo = (new Database())->connect();
+        $stmt = $pdo->query("SELECT DISTINCT id_rec01 FROM rec02 WHERE valor_pag > 0");
+        $ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        return $ids;
 
+}
 }
 ?>

@@ -27,13 +27,14 @@ Class Con01 {
         return $stmt->execute();
     }
 
-    public static function read($id = null, $idempresa = null): array {
+    public static function read($id = null, $idempresa = null, $tipo = null): array {
         $pdo = (new Database())->connect();
         $query = 'SELECT * FROM con01';
         $conditions = [];
 
         if ($id != null) $conditions[] = 'id = :id';
         if ($idempresa != null) $conditions[] = 'id_empresa = :id_empresa';
+        if ($tipo != null) $conditions[] = 'tipo = :tipo';
 
         if ($conditions) {
             $query .= ' WHERE ' . implode(' AND ', $conditions);
@@ -41,6 +42,7 @@ Class Con01 {
         $stmt = $pdo->prepare($query);
         if ($id != null) $stmt->bindValue(':id', $id);
         if ($idempresa != null) $stmt->bindValue(':id_empresa', $idempresa);
+        if ($tipo != null) $stmt->bindValue(':tipo', $tipo);
         $stmt->execute();
         $stmt->setFetchMode(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, Con01::class);
         return $stmt->fetchAll();
