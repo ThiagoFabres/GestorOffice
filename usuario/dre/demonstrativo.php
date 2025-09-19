@@ -1,34 +1,23 @@
 <?php
 
-require_once __DIR__ . '/../db/entities/usuarios.php';
-require_once __DIR__ . '/../db/entities/contas.php';
-require_once __DIR__ . '/../db/entities/cadastro.php';
-require_once __DIR__ . '/../db/entities/recebimentos.php';
-require_once __DIR__ . '/../db/entities/pagamento.php';
-require_once __DIR__ . '/../db/entities/pagar.php';
+require_once __DIR__ . '/../../db/entities/usuarios.php';
+require_once __DIR__ . '/../../db/entities/contas.php';
+require_once __DIR__ . '/../../db/entities/cadastro.php';
+require_once __DIR__ . '/../../db/entities/recebimentos.php';
+require_once __DIR__ . '/../../db/entities/pagamento.php';
+require_once __DIR__ . '/../../db/entities/pagar.php';
 session_start();
-
-
-
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     header('Location: /');
     exit;
 }
- 
-$data = new DateTime();
-$data_atual = $data->format('Y-m-d');
 
-$data_semana = $data->modify('+7 days');
-$data_semana = $data_semana->format('Y-m-d');
+$get_data_final = filter_input(INPUT_GET, 'data_final', FILTER_SANITIZE_SPECIAL_CHARS);
+$get_data_inicial = filter_input(INPUT_GET, 'data_inicial', FILTER_SANITIZE_SPECIAL_CHARS);
 
+if($get_data_final != '' || $get_data_inicial !='') {
 
-$pagamentos_venceu = Pag02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, null, null, null, null, null, true, 'venceu');
-$pagamentos_hoje = Pag02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, null, null, null, null, null, true, 'hoje');
-$pagamentos_semana = Pag02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, $data_semana, null, null, null, null, true, 'semana');
-
-$recebimentos_venceu = Rec02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, null, null, null, null, null, true, 'venceu');
-$recebimentos_hoje = Rec02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, null, null, null, null, null, true, 'hoje');
-$recebimentos_semana = Rec02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, $data_semana, null, null, null, null, true, 'semana');
+}
 
 ?>
 
@@ -62,7 +51,7 @@ $recebimentos_semana = Rec02::read(null, $_SESSION['usuario']->id_empresa, null,
         </div>
     <div id="itens-menu">
                         <div class="menu-item">
-            <a href="index.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-layers"></i></div> Dashboard </a>
+            <a href="../index.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-layers"></i></div> Dashboard </a>
         </div>
     <?php if($_SESSION['usuario']->processar == 1) { ?>
         <div class="menu-item accordion" >
@@ -72,11 +61,11 @@ $recebimentos_semana = Rec02::read(null, $_SESSION['usuario']->id_empresa, null,
       </a>
       <div class="collapse" id="cadastrosMenu">
         <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
-          <li><a href="cadastrar.php?cadastro=cliente" class="link-light text-decoration-none"><i class="bi bi-person"></i>Cliente/Fornecedor</a></li>
-          <li><a href="cadastrar.php?cadastro=bairro" class="link-light text-decoration-none"><i class="bi bi-houses"></i>Bairro</a></li>
-          <li><a href="cadastrar.php?cadastro=cidade" class="link-light text-decoration-none"><i class="bi bi-buildings"></i>Cidade</a></li>
-          <li><a href="cadastrar.php?cadastro=pagamento" class="link-light text-decoration-none"><i class="bi bi-cash-coin"></i>Tipo Pagamento</a></li>
-          <li><a href="cadastrar.php?cadastro=categoria" class="link-light text-decoration-none"><i class="bi bi-tag"></i>Categoria</a></li>
+          <li><a href="../cadastrar.php?cadastro=cliente" class="link-light text-decoration-none"><i class="bi bi-person"></i>Cliente/Fornecedor</a></li>
+          <li><a href="../cadastrar.php?cadastro=bairro" class="link-light text-decoration-none"><i class="bi bi-houses"></i>Bairro</a></li>
+          <li><a href="../cadastrar.php?cadastro=cidade" class="link-light text-decoration-none"><i class="bi bi-buildings"></i>Cidade</a></li>
+          <li><a href="../cadastrar.php?cadastro=pagamento" class="link-light text-decoration-none"><i class="bi bi-cash-coin"></i>Tipo Pagamento</a></li>
+          <li><a href="../cadastrar.php?cadastro=categoria" class="link-light text-decoration-none"><i class="bi bi-tag"></i>Categoria</a></li>
           
         </ul>
       </div>
@@ -84,19 +73,19 @@ $recebimentos_semana = Rec02::read(null, $_SESSION['usuario']->id_empresa, null,
         <?php } ?>
 
         <div class="menu-item">
-            <a href="contas.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-journal-bookmark"></i></div> Plano de Contas </a>
+            <a href="../contas.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-journal-bookmark"></i></div> Plano de Contas </a>
         </div>
 
         <div class="menu-item">
-            <a href="receber.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-wallet"></i></div> Contas a Receber </a>
+            <a href="../receber.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-wallet"></i></div> Contas a Receber </a>
         </div>
 
         <div class="menu-item">
-            <a href="pagar.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-cash-stack"></i></div> Contas a Pagar </a>
+            <a href="../pagar.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-cash-stack"></i></div> Contas a Pagar </a>
         </div>
 
-        <div class="menu-item">
-            <a href="dre.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
+        <div class="menu-item menu-item-atual">
+            <a href="demonstrativo.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
         </div>
 
 
@@ -130,6 +119,57 @@ $recebimentos_semana = Rec02::read(null, $_SESSION['usuario']->id_empresa, null,
         </div>
     </div>
     </div>
+    <div class="main" id="container">        
+            <div class="row">
+                <div class="col-md-12" style="padding: 0;">
+                
+
+                    <div class="card">
+                        <div class="card-header">
+                        <button class="btn btn-primary" id="btn-demonstrativo"><h3>DRE - Demonstrativo</h3></button><!--
+    --><button class="btn btn-primary" onclick="window.location.href='analitico.php'"><h3>DRE - Analitico</h3></button>
+                        </div>
+
+                        <div class="card-header-div">
+        <div class="card-header-borda">
+            <div class="tab-pane fade show active" id="vendas" role="tabpanel" aria-labelledby="vendas-tab">
+                <h5 class="card-title">Filtros</h5>
+                <form method="get" action="dre.php">
+                    <div class="row">
+                        <div class="inputs-dre-text">
+                            
+                        <div>
+                                <label for="data_inicial" style="font-size:0.85em;">Data Inicial:</label>
+                                <input type="date" id="data_inicial" name="data_inicial" value="<?=$get_data_inicial?>" class="form-control" style="border-top-right-radius: 0; border-bottom-right-radius: 0; border-top-left-radius: 0.25em; border-bottom-left-radius: 0.25em;">
+                        </div>
+
+                        <div>
+                                <label for="data_final" style="font-size:0.85em;">Data Final:</label>
+                                <input type="date" id="data_final" name="data_final" value="<?=$get_data_final?>" class="form-control" style="border-radius: 0;">
+                        </div>
+
+                            
+                        </div>
+                            <div class="inputs-dre-btn">
+                                <button type="submit" class="btn btn-primary" style="background-color: #5856d6; height: 50%;">Filtrar</button>
+                                <a href="dre.php" class="btn btn-secondary"style="height: 50%;">Limpar</a>
+                            </div>
+                            
+                    </div>
+                </form>
+                
+
+                    
+                </div>
+                </div>
+                
+                </tbody>
+            
+                </div></table>
+                <div class="card-footer">
+            </div> 
+    </div>
+        </div>
 
 
 </body>
@@ -157,64 +197,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
 });
-document.getElementById('titulo').addEventListener('change', function() {
-    var tituloId = this.value;
-    var subtituloSelect = document.getElementById('subtitulo');
-    var options = subtituloSelect.querySelectorAll('option');
 
-    options.forEach(function(option) {
-        if (option.value === "") {
-            option.style.display = '';
-            return;
-        }
-        if (option.getAttribute('data-titulo-id') === tituloId) {
-            option.style.display = '';
-        } else {
-            option.style.display = 'none';
-        }
-    });
-
-    subtituloSelect.value = ""; // Reseta seleção
-});
-
-function atualizarTotalParcelas() {
-    let total = 0;
-    document.querySelectorAll('.valor-parcela').forEach(function(input) {
-        let val = parseFloat(input.value.replace(',', '.'));
-        if (!isNaN(val)) total += val;
-    });
-    document.getElementById('totalParcelas').textContent = total.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-
-    // Pega o valor total esperado do campo oculto ou célula da tabela
-    let valorTotal = document.querySelector('input[name="valor"]');
-    let valorEsperado = 0;
-    if (valorTotal) {
-        valorEsperado = parseFloat(valorTotal.value.replace(',', '.'));
-    } else {
-        // Alternativa: pega da célula da tabela
-        let celula = document.querySelector('td:last-child');
-        if (celula) {
-            valorEsperado = parseFloat(celula.textContent.replace(/[^0-9,\.]/g, '').replace(',', '.'));
-        }
-    }
-
-    let botao = document.getElementById('botao-editar-parcela');
-    if (botao) {
-        if (Math.abs(total - valorEsperado) > 0.01) {
-            botao.disabled = true;
-            botao.title = 'A soma das parcelas deve ser igual ao valor total';
-        } else {
-            botao.disabled = false;
-            botao.title = '';
-        }
-    }
-}
-
-document.querySelectorAll('.valor-parcela').forEach(function(input) {
-    input.addEventListener('input', atualizarTotalParcelas);
-});
-
-atualizarTotalParcelas();
 
 
         
@@ -290,6 +273,7 @@ if (barra.style.animationName === 'encolher') {
         body.style.animationName = 'encolher'
         body.style.animationDuration = '0.5s';
         body.style.animationFillMode = 'forwards';
+        
     }}
 </script>
 
