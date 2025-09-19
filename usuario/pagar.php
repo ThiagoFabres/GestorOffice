@@ -6,6 +6,7 @@ require_once __DIR__ . '/../db/entities/contas.php';
 require_once __DIR__ . '/../db/entities/cadastro.php';
 require_once __DIR__ . '/../db/entities/pagar.php';
 require_once __DIR__ . '/../db/entities/pagamento.php';
+
 session_start();
 
 
@@ -15,27 +16,65 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     exit;
 }
 
+$recebimentos_pagos = Pag02::readPagos();
+
+$ordenar_por = filter_input(INPUT_GET, 'ordenar');
+$direcao = filter_input(INPUT_GET, 'direcao');
+
 $view = filter_input(INPUT_GET, 'view');
 $target = filter_input(INPUT_GET, 'target');
 $con01 = filter_input(INPUT_GET, 'con01id');
 $acao = filter_input(INPUT_GET, 'acao');
 $get_opcao = filter_input(INPUT_GET, 'opcao');
 $get_id = filter_input(INPUT_GET, 'id');
-
-$get_filtro_data_inicial = filter_input(INPUT_GET, 'filtro_data_inicial');
-$get_filtro_data_final = filter_input(INPUT_GET, 'filtro_data_final');
-$get_filtro_nome = filter_input(INPUT_GET, 'filtro_nome');
-$get_filtro_opcao = filter_input(INPUT_GET, 'opcao_filtro');
-$get_filtro_por = filter_input(INPUT_GET, 'filtro_por');
-$get_filtro_pagamento = filter_input(INPUT_GET, 'filtro_pagamento');
-
-
-
-
-
+$numero_exibir = filter_input(INPUT_POST, 'numero_exibido') ?? filter_input(INPUT_GET, 'numero_exibido') ?? 10;
+$numero_pagina = filter_input(INPUT_POST, 'pagina') ?? filter_input(INPUT_GET, 'pagina') ?? 1;
+$numero_pagina = intval($numero_pagina);
+$direcao_var = $direcao;
+$get_filtro_data_inicial = filter_input(INPUT_GET, 'filtro_data_inicial') ?? null;
+$get_filtro_data_final = filter_input(INPUT_GET, 'filtro_data_final')?? null;
+$get_filtro_nome = filter_input(INPUT_GET, 'filtro_nome') ?? null;
+$get_filtro_opcao = filter_input(INPUT_GET, 'opcao_filtro')?? null;
+$get_filtro_por = filter_input(INPUT_GET, 'filtro_por') ?? null;
+$get_filtro_pagamento = filter_input(INPUT_GET, 'forma_pagamento') ?? null;
 
 
+$parcela_paginas = Pag02::read(null, $_SESSION['usuario']->id_empresa,null, null, null,
+            $get_filtro_data_inicial ?? null, $get_filtro_data_final ?? null, $get_filtro_nome ?? null,
+            $get_filtro_opcao ?? null, $get_filtro_por ?? null, $get_filtro_pagamento ?? null,
+             null,null,null, true);
+
+
+
+$total_paginas = ceil($parcela_paginas / $numero_exibir);
+
+
+
+
+
+
+
+                        
+$filtros = [];
+if($get_filtro_data_inicial != '') $filtros[] = 'filtro_data_inicial='.$get_filtro_data_inicial;
+if($get_filtro_data_final != '') $filtros[] = 'filtro_data_final='.$get_filtro_data_final;     
+if($get_filtro_nome != '') $filtros[] = 'filtro_nome='.$get_filtro_nome;
+if($get_filtro_opcao != '') $filtros[] = 'opcao_filtro='.$get_filtro_opcao;
+if($get_filtro_por!= '' && $get_filtro_por != 'lancamento') $filtros[] = 'filtro_por='.$get_filtro_por;
+if($get_filtro_pagamento != '') $filtros[] = 'forma_pagamento='.$get_filtro_pagamento;
+
+if($filtros != []) {
+    $caminho = 'pagar.php?' . implode('&', $filtros);
+    $caminho_get = urlencode('pagar.php?' . implode('&', $filtros));
+} else {
+    $caminho = 'pagar.php';
+    $caminho_get = urlencode('pagar.php');
+}
+
+
+                        
 ?>
+
 
 <!DOCTYPE html>
 
@@ -43,7 +82,11 @@ $get_filtro_pagamento = filter_input(INPUT_GET, 'filtro_pagamento');
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.3/html2pdf.bundle.min.js" integrity="sha512-yu5WG6ewBNKx8svICzUA01vozhmiQCVfzjzW40eCHJdsDRaOifh9hPlWBDex5b32gWCzawTp1F3FJz60ps6TnQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+        integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
             <script src=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js "></script>
     <link href=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css " rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
@@ -91,12 +134,12 @@ $get_filtro_pagamento = filter_input(INPUT_GET, 'filtro_pagamento');
             <a href="receber.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-wallet"></i></div> Contas a Receber </a>
         </div>
 
-        <div class="menu-item">
+        <div class="menu-item menu-item-atual">
             <a href="pagar.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-cash-stack"></i></div> Contas a Pagar </a>
         </div>
 
         <div class="menu-item">
-            <a href="dre.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
+            <a href="dre/demonstrativo.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
         </div>
 
 
@@ -140,7 +183,6 @@ $get_filtro_pagamento = filter_input(INPUT_GET, 'filtro_pagamento');
     
 
     
-    <div class="tabela">
     
 
       
@@ -157,8 +199,9 @@ $get_filtro_pagamento = filter_input(INPUT_GET, 'filtro_pagamento');
             <div class="tab-pane fade show active" id="vendas" role="tabpanel" aria-labelledby="vendas-tab">
                 <h5 class="card-title">Filtros</h5>
                 <form method="get" action="pagar.php">
+                    <?php if($numero_exibir != 10){ ?> <input type="hidden" value="<?=$numero_exibir?>" name="numero_exibido"/> <?php } ?>
                     <div class="row">
-                        <div class="inputs-pagamento-text" style="display: flex; flex-direction: row; width: 40%;">
+                        <div class="inputs-pagamento-text" style="display: flex; flex-direction: row; width: 50%;">
                         
                         <div style="width: 30%;">
                             <label for="filtro_data_inicial" style="font-size:0.85em;">Data Inicial:</label>
@@ -171,13 +214,14 @@ $get_filtro_pagamento = filter_input(INPUT_GET, 'filtro_pagamento');
                         </div>
 
                         <div style="width: 20%;">
-                            <label for="filtro_nome" style="font-size:0.85em;">Nome:</label>
-                            <input type="text" id="filtro_nome" name="filtro_nome" class="form-control" value="<?=$get_filtro_nome;?>" placeholder="Nome">
+                            <label for="filtro_nome" style="font-size:0.85em;">Documento:</label>
+                            <input type="text" id="filtro_nome" name="filtro_nome" class="form-control" value="<?=$get_filtro_nome;?>" placeholder="Documento" style="border-radius: 0;">
                         </div>
 
-                        <div style="width: 30%;">
-                            <label for="filtro_nome" style="font-size:0.85em;">Tipo de Pagamento:</label>
-                            <select class="form-control" name="filtro_pagamento">
+                        <div style="width: 20%;">
+                            <label for="forma_pagamento" style="font-size:0.85em;">Tipo de Pagamento:</label>
+                            <select class="form-control" name="forma_pagamento" style="border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0.25em; border-bottom-right-radius: 0.25em;">
+                        </div>
                         <option value="">Selecione uma forma de pagamento</option>
                         <?php foreach(TipoPagamento::read(null, $_SESSION['usuario']->id_empresa) as $pagamento) { ?>
                             <option <?php if($get_filtro_pagamento == $pagamento->id) {?> selected <?php } ?> value="<?= $pagamento->id ?>">
@@ -190,12 +234,12 @@ $get_filtro_pagamento = filter_input(INPUT_GET, 'filtro_pagamento');
                         
                     </div>
 
-                    <div class="selects-pagamento" style="width:50%; display: flex; flex-direction: column; justify-content: space-between;">
-                        <div class="radio-pagamento" style="width: 100%; max-height: 50%; display: flex; flex-direction: row;">
+                    <div class="selects-pagamento" style="width:40%; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div class="radio-pagamento" style="width: 100%; max-height: 40%; display: flex; flex-direction: row;">
                             <div style="margin-right: 1em;"><h5 style="font-size: 1em;">Opção:</h5></div>
                             <div class="form-check" style="margin-right: 1em;">
                                 
-                            <input class="form-check-input" type="radio" id="todos" name="opcao_filtro" <?php if($get_filtro_opcao == '' || empty($get_filtro_opcao)) {?> checked <? } ?> value="" style="height: 65%;" checked>
+                            <input class="form-check-input" type="radio" id="todos" name="opcao_filtro" <?php if($get_filtro_opcao == 'lancamento' || empty($get_filtro_opcao)) {?> checked <? } ?> value="" style="height: 65%;" checked>
                             <label class="form-check-label"for="todos">Todos</label>
                             </div>
 
@@ -208,7 +252,6 @@ $get_filtro_pagamento = filter_input(INPUT_GET, 'filtro_pagamento');
                             <input class="form-check-input"type="radio" id="quitados" name="opcao_filtro" <?php if($get_filtro_opcao == 'quitados' ) {?> checked <? } ?> value="quitados" style="height: 65%;"> 
                             <label class="form-check-label" for="quitados">Quitados</label>
                             </div>
-                            
                           
                         </div>
 
@@ -253,55 +296,58 @@ $get_filtro_pagamento = filter_input(INPUT_GET, 'filtro_pagamento');
                 </div>
 </div>
                         <table class="table table-striped">
-                <thead>
-                    <tr class="tr-clientes">
-                        <th>Documento</th>
-                        <th>Data de Lançamento</th>
-                        <th>Nome</th>
-                        <th>Descrição</th>
-                        <th>Valor</th>
-                        <th>Parcela Geral</th>
-                        <th>Parcela Atual</th>
-                        <th>Valor da Parcela</th>
-                        <th>Vencimento</th>
-                        <th>Data de Pagamento</th>
-                        <th>Valor Pago</th>
-                        <th>Tipo de Pagamento</th>
-                        <th style="width: 20%;">Ações</th>
-                    </tr>
-                </thead>
+                    <thead>
+                        <?php
+                        if($direcao == 'ASC') {
+                            $seta = '▲';
+                        } else if($direcao == 'DESC') {
+                            $seta = '▼';
+                        } else {
+                            $seta = '';
+                        }
+                        ?>
+                        <tr class="tr-clientes-header">
+    <th><a href="<?=$caminho?>?ordenar=documento&direcao=<?php echo ($ordenar_por === 'documento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Documento</a><?php if($ordenar_por == 'documento'){ echo $seta; } ?></th>
+    <th><a href="<?=$caminho?>?ordenar=data_lancamento&direcao=<?php echo ($ordenar_por === 'data_lancamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Data de Lançamento</a><?php if($ordenar_por == 'data_lancamento'){ echo $seta; } ?></th>
+    <th><a href="<?=$caminho?>?ordenar=nome&direcao=<?php echo ($ordenar_por === 'nome' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Nome</a><?php if($ordenar_por == 'nome'){ echo $seta; } ?></th>
+    <th><a>Descrição</a></th>
+    <th><a href="<?=$caminho?>?ordenar=valor&direcao=<?php echo ($ordenar_por === 'valor' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Valor</a><?php if($ordenar_por == 'valor'){ echo $seta; } ?></th>
+    <th><a>Parcela Geral</a></th>
+    <th><a>Parcela Atual</a></th>
+    <th><a href="<?=$caminho?>?ordenar=valor_parcela&direcao=<?php echo ($ordenar_por === 'valor_parcela' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Valor da Parcela</a><?php if($ordenar_por == 'valor_parcela'){ echo $seta; } ?></th>
+    <th><a href="<?=$caminho?>?ordenar=data_vencimento&direcao=<?php echo ($ordenar_por === 'data_vencimento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Vencimento</a><?php if($ordenar_por == 'data_vencimento'){ echo $seta; } ?></th>
+    <th><a href="<?=$caminho?>?ordenar=data_pagamento&direcao=<?php echo ($ordenar_por === 'data_pagamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Data de Pagamento</a><?php if($ordenar_por == 'data_pagamento'){ echo $seta; } ?></th>
+    <th><a href="<?=$caminho?>?ordenar=valor_pagamento&direcao=<?php echo ($ordenar_por === 'valor_pagamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Valor Pago</a><?php if($ordenar_por == 'valor_pagamento'){ echo $seta; } ?></th>
+    <th><a href="<?=$caminho?>?ordenar=tipo_pagamento&direcao=<?php echo ($ordenar_por === 'tipo_pagamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Tipo de Pagamento</a><?php if($ordenar_por == 'tipo_pagamento'){ echo $seta; } ?></th>
+    <th>Quitar</th>
+    <th>Estornar</th>
+    <th>Editar</th>
+</tr>
+                    </thead>
                 <tbody>
             <?php
-                        $parcelas = Pag02::read(null, $_SESSION['usuario']->id_empresa,null, null, null,
+            $parcelas = Pag02::read(null, $_SESSION['usuario']->id_empresa,null, null, null,
             $get_filtro_data_inicial ?? null, $get_filtro_data_final ?? null, $get_filtro_nome ?? null,
-            $get_filtro_opcao ?? null, $get_filtro_por ?? null, $get_filtro_pagamento ?? null );
+            $get_filtro_opcao ?? null, $get_filtro_por ?? null, $get_filtro_pagamento ?? null,
+             null,null, $numero_exibir, null, $numero_pagina, $ordenar_por, $direcao);
             if (!empty($parcelas)) {
-                $recebimentos_pagos = [];?>
-                
-                <?php foreach ($parcelas as $pag02 ){
-                    $parcelas_pagas = false;
-                                if(!in_array($pag02->id_pag01, $recebimentos_pagos)){
-                                if($pag02->valor_pag != 0) {
-                                    $recebimentos_pagos[$pag02->id] = $pag02->id_pag01;
-                                } 
-                            }
-                }?>
+                if(empty($recebimentos_pagos) || $recebimentos_pagos === null) $recebimentos_pagos = [];?>
             
                         <?php foreach ($parcelas as $pag02) {
 
-                        $data_atual = new DateTime();
+                            $data_atual = new DateTime();
                         $data_atual = $data_atual->format('Y-m-d');
 
                         if(($pag02->vencimento == $data_atual) && $pag02->valor_pag != $pag02->valor_par) {
                             $cor_parcela = 'parcela_cor_amarela';
                         } else if(($pag02->vencimento < $data_atual) && $pag02->valor_pag != $pag02->valor_par) {
                             $cor_parcela = 'parcela_cor_vermelha';
-                        } else if(($pag02->vencimento > $data_atual) && $pag02->valor_pag != $pag02->valor_par) {
+                        } else if(($pag02->vencimento > $data_atual) && $pag02->valor_pag < $pag02->valor_par) {
                             $cor_parcela = 'parcela_cor_azul';
-                        } else if($pag02->valor_pag == $pag02->valor_par) {
+                        } else if($pag02->valor_pag > 0) {
                             $cor_parcela = 'parcela_cor_verde';
                         }
-
+                       
                         $pag01 = Pag01::read($pag02->id_pag01, $_SESSION['usuario']->id_empresa )[0];
 
                             if($pag02->id_pgto != null){ 
@@ -316,35 +362,24 @@ $get_filtro_pagamento = filter_input(INPUT_GET, 'filtro_pagamento');
                             $data_venc = new DateTime($pag02->vencimento);
                             $data_venc = $data_venc->format('d-m-Y');
 
+                            $data_lanc = new DateTime($pag01->data_lanc);
+                            $data_lanc = $data_lanc->format('d-m-Y');
+
                             $cadastro = Cadastro::read($pag01->id_cadastro)[0];
                             $valor_total = number_format($pag01->valor,2 , ',', '');
                             $valor_parcela = number_format($pag02->valor_par,2 , ',', '');
                             $valor_pago = number_format($pag02->valor_pag,2 , ',', '');
-                            $link = 'receber.php?view=receber&acao=visualizar&id=' . $pag02->id;
+                            $link = 'pagar.php?view=pagar&acao=visualizar&id=' . $pag02->id;
                             
-                                $parcelas_pagas = false;
-                                if(!in_array($pag02->id_pag01, $recebimentos_pagos)){
-                                if($pag02->valor_pag != 0) {
-                                    $parcelas_pagas = true;
-                                    
-                                } else {
-                                    $parcelas_pagas = false;
-                                }
-                            } else {
-                                $parcelas_pagas = true;
-                            }
-                           
                             $ultima_parcela = null;
                             if($pag02->parcela == $pag01->parcelas) $ultima_parcela = true;
                             
                              ?>
                             <!-- style="<?php if($ultima_parcela) {?>border-bottom: 3px solid #5856d6;<?php } ?> border-inline: 1px solid #5856d6;" -->
-
-                            <tr class="tr-clientes <?=$cor_parcela?>" onclick="" 
-                            
-                             >
+                            <!-- style="<?php if($ultima_parcela) {?>border-bottom: 2px solid #5856d6;<?php } else if($pag02->parcela == 1 ){ ?> border-top: 3px solid #5856d6; <?php } ?> border-inline: 2px solid #5856d6;" -->
+                            <tr class="tr-clientes <?=$cor_parcela?>"   onclick="">
                                 <td><?=$pag01->documento;?> </td> 
-                                <td><?=$pag01->data_lanc;?> </td>
+                                <td><?=$data_lanc;?> </td>
                                 <td><?=$cadastro->razao_soc;?> </td>
                                 <td><?=$pag01->descricao;?></td>
                                 <td>R$ <?=$valor_total?></td>
@@ -355,15 +390,14 @@ $get_filtro_pagamento = filter_input(INPUT_GET, 'filtro_pagamento');
                                 <td><?php if($pag02->valor_pag == 0){echo 'Não foi pago';} else {echo $data_pag ?? 'Não foi pago';}?></td>
                                 <td><?php if($pag02->valor_pag == 0){echo '';} else {echo 'R$' . $valor_pago;}?></td>
                                 <td><?=$pagamento->nome ?? ''?></td>
-                                <td>
-
-                                 <?php $valor_restante = number_format($pag02->valor_par - $pag02->valor_pag, 2 ,',', '') ?>
-
-
-                                    <button class="btn btn-primary" data-bs-toggle="modal" <?php if($pag02->valor_pag == $pag02->valor_par){ ?> disabled <?php } ?> data-bs-target="#modal_quitar" data-id="<?=$pag02->id?>"  data-valor-restante="<?= $valor_restante ?>">Quitar</button>
-                                    <button class="btn btn-primary" <?php if ($pag02->valor_pag == 0) { ?> disabled <?php } ?> onclick="window.location.href='cadastros_manager.php?view=receber&target=parcela&acao=estornar&pagar=1&id=<?=$pag02->id?>'">Estornar</button>
-                                    <button class="btn btn-primary" <?php if($parcelas_pagas == true){ ?> disabled <?php } ?> onclick="window.location.href='editar-pagar.php?acao=editar&id=<?=$pag01->id?>'">Editar</button>
-                                    
+                                <td class="td-acoes">
+                                    <?php $valor_restante = number_format($pag02->valor_par - $pag02->valor_pag, 2 ,',', '') ?>
+                                    <button class="btn btn-primary" data-bs-toggle="modal" <?php if($pag02->valor_pag == $pag02->valor_par){ ?> disabled <?php } ?> data-bs-target="#modal_quitar" data-id="<?=$pag02->id?>" data-valor-restante="<?= $valor_restante ?>"><i class="bi bi-cash-stack"></i></button>
+                                <td class="td-acoes">
+                                    <button class="btn btn-primary" <?php if ($pag02->valor_pag == 0) { ?> disabled <?php } ?> onclick="window.location.href='cadastros_manager.php?view=pagar&pagar=1&target=parcela&acao=estornar&id=<?=$pag02->id?>&caminho=<?=$caminho_get?>'"><i class="bi bi-wallet2"></i></button>
+                                </td>
+                                <td class="td-acoes">
+                                    <button class="btn btn-primary" <?php if(in_array($pag02->id_pag01, $recebimentos_pagos)){ ?> disabled <?php } ?> onclick="window.location.href='editar-pagar.php?id=<?=$pag01->id?>'"><i class="bi bi-pen-fill"></i></button>
                                 </td>
                             </tr>
                             
@@ -388,18 +422,68 @@ $get_filtro_pagamento = filter_input(INPUT_GET, 'filtro_pagamento');
                             <td></td>
                             <td></td>
 
-
                         </tr>
                     <?php } ?>
             
                 </tbody>
             
                 </div></table>
-    </div>
-    </div> 
-    </div>
+                <div class="card-footer">
+                    <div class="card-select-pagina">
+                        <?php
+                        ?>
+                        <form method="post" action="<?= $caminho ?>">
+                            <?php if($ordenar_por != ''){ ?> <input type="hidden" value="<?=$ordenar_por?>" name="ordenar"/><?php } ?>
+                            <?php if($numero_exibir != 10){ ?> <input type="hidden" value="<?=$numero_exibir?>" name="numero_exibido"/> <?php } ?>
+                            <?php if($direcao != ''){ ?> <input type="hidden" value="<?=$direcao?>" name="direcao"/><?php } ?>
+
+                            <?php if(!empty($recebimentos_pagos)) {
+                                foreach ($recebimentos_pagos as  $i => $id_pag01) {?>
+                                
+                                    <input type="hidden" name="recebimentos_pagos[<?=$i?>]" value="<?=$id_pag01?>">
+                            <?php } }?>
+
+                            <?php for($i = 1; $i <= $total_paginas; $i++){ 
+                                if((($i == ($numero_pagina + 4) || $i == ($numero_pagina - 4)) && $i != 1) && $i != $total_paginas) { ?>
+                                    ...
+                                    
+                                <?php continue; }
+                                if((($i > ($numero_pagina + 4) || $i < ($numero_pagina - 4))  && $i < $total_paginas) && $i != 1) {
+                                    continue;
+                                }
+                                ?>
+                                
+                                <button type="submit" name="pagina" class="form-control" <?php if($numero_pagina == $i){?> disabled <?php } ?> value="<?=$i?>"><?=$i?></button>
+                            <?php } ?>
+                        </form>
+                    </div> 
+                    
+                    <div class="card-select-numero">
+                        <div>
+                        <form method="post" action="<?=$caminho?>">
+                            <?php if($ordenar_por != ''){ ?> <input type="hidden" value="<?=$ordenar_por?>" name="ordenar"/><?php } ?>
+                            <?php if($direcao != ''){ ?> <input type="hidden" value="<?=$direcao?>" name="direcao"/><?php } ?>
+                            
+                            <select class="form-control" onchange="this.form.submit()" name="numero_exibido">
+                                    <option <?php if($numero_exibir == 5){ ?> selected  <?php } ?> value="5">5</option>
+                                    <option <?php if($numero_exibir == 10){ ?> selected <?php } ?> value="10">10</option>
+                                    <option <?php if($numero_exibir == 20){ ?> selected <?php } ?> value="20">20</option>
+                                    <option <?php if($numero_exibir == 30){ ?> selected <?php } ?> value="30">30</option>
+                                    <option <?php if($numero_exibir == 40){ ?> selected <?php } ?> value="40">40</option>
+                                    <option <?php if($numero_exibir == 50){ ?> selected <?php } ?> value="50">50</option>
+                            </select>
+                        </form>
+                        </div>
+                    </div>
+            </div> 
     </div>
         </div>
+
+        <div class="relatorios-botoes">
+            <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="gerarpdf('pagar')">Gerar PDF</button>
+            <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="gerarexcel('pagar')">Gerar Excel</button>
+        </div>
+        
 
 <div class="modal fade" id="modal_quitar" tabindex="-1" role="dialog"
     aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
@@ -410,18 +494,19 @@ $get_filtro_pagamento = filter_input(INPUT_GET, 'filtro_pagamento');
                 <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form method="post" id="content" action="cadastros_manager.php">
-                    <input type="hidden" name="view" value="receber">
+                <form method="post" id="content" action="cadastros_manager.php" onkeydown="return event.key != 'Enter';">
+                    <input type="hidden" name="view" value="pagar">
                     <input type="hidden" name="acao" value="quitar">
                     <input type="hidden" name="target" value="parcela">
-                    <input type="hidden" name="pagar" value="1">
                     <input type="hidden" name="id" id="modal_quitar_id" value="">
+                    <input type="hidden" name="caminho" value="<?=$caminho?>">
+                    <input type="hidden" name="pagar" value="1">
+
                     <div class="valor-alvo">
-                       
                         <p id="modal_quitar_valor_restante" style="color: #00000096;"></p>
                     </div>
                     <label for="data">Data do pagamento</label>
-                    <input class="form-control" type="date" placeholder="dd/mm/aaaa" name="data" value="<?= (new DateTime())->format('Y-m-d') ?>">
+                    <input class="form-control" type="date" placeholder="dd/mm/aa" name="data" value="<?= (new DateTime())->format('Y-m-d') ?>">
                     <label for="valor">Valor pago</label>
                     <input class="form-control" type="text" name="valor" placeholder="Valor pago">
                     <label for="forma_pagamento">Forma de pagamento</label>
@@ -434,8 +519,8 @@ $get_filtro_pagamento = filter_input(INPUT_GET, 'filtro_pagamento');
                         <?php } ?>
                     </select>
                     <div style="margin-bottom: 3em;" class="footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                        <button type="submit" class="btn btn-primary" style="float:right;">Pagar</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Fechar</button>
+                        <button type="submit" class="btn btn-primary">Pagar</button>
                     </div>
                 </form>
             </div>
@@ -457,13 +542,9 @@ $get_filtro_pagamento = filter_input(INPUT_GET, 'filtro_pagamento');
                 </div>
                 <div class="modal-body">
 
-                    <form method="post" id="content" action="editar-pagar.php">
-                        <?php $data_lanc = new DateTime();
-                        $data_lanc = $data_lanc->format('Y-m-d');?>
-                        <input type="hidden" name="view" value="receber">
-                        <input type="hidden" name="data_lanc" value="<?= $data_lanc ; ?>">
-
-                        
+                    <form method="post" id="content" action="editar-pagar.php" onkeydown="return event.key != 'Enter';">
+                        <input type="hidden" name="view" value="pagar">
+                        <input type="hidden" name="pagar" value="1">
 
                         <label for="documento">Documento:</label>
                     <div class="input-documento-group">
@@ -477,7 +558,6 @@ $get_filtro_pagamento = filter_input(INPUT_GET, 'filtro_pagamento');
                             <button type="button" class="form-control" id="btnBuscarDoc"><i class="bi bi-text-center"></i></button>
                         </div>
                     </div>
-
                         <div class="input-cadastro input-form-adm">
                             <!--Nome: -->
                             <label for="cadastro">Cliente / Fornecedor:</label>
@@ -519,7 +599,7 @@ $get_filtro_pagamento = filter_input(INPUT_GET, 'filtro_pagamento');
                             <select name="titulo" class="form-select" id="titulo" style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
                                 <option value="">Selecione</option>
                                 
-                                <?php $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa); 
+                                <?php $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa, 'D'); 
                                 foreach ($titulos as $titulo) { ?>
                                     <option value="<?= $titulo->id ?>"><?= htmlspecialchars($titulo->nome, ENT_QUOTES, 'UTF-8') ?></option>
                                 <?php } ?>
@@ -545,8 +625,9 @@ $get_filtro_pagamento = filter_input(INPUT_GET, 'filtro_pagamento');
                     
                         <div style="margin-bottom: 3em;" class="footer">
 
+                        
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >Fechar</button>
-                        <button name="acao" value="adicionar" class="btn btn-success" style="float:right; background-color: #5856d6; border: #5856d6;" href="consulta_cliente.php">Salvar</button>                       
+                        <button name="acao" value="adicionar" class="btn btn-success" style="float:right; background-color: #5856d6; border: #5856d6;" href="consulta_cliente.php">Salvar</button>    
 
                     </form>
 
@@ -611,7 +692,21 @@ document.getElementById('titulo').addEventListener('change', function() {
 
 
 
+var posicao = localStorage.getItem('posicaoScroll');
 
+/* Se existir uma opção salva seta o scroll nela */
+if(posicao) {
+    /* Timeout necessário para funcionar no Chrome */
+    setTimeout(function() {
+        window.scrollTo(0, posicao);
+    }, 1);
+}
+
+/* Verifica mudanças no Scroll e salva no localStorage a posição */
+window.onscroll = function (e) {
+    posicao = window.scrollY;
+    localStorage.setItem('posicaoScroll', JSON.stringify(posicao));
+}
 
         
 
@@ -700,10 +795,14 @@ if (barra.style.animationName === 'encolher') {
     });
 });
 
+
+
 document.getElementById("btnBuscarDoc").addEventListener("click", function() {
-    fetch("/../db/buscar_documento_pag.php")
+    document.getElementById("documento").placeholder = 'Buscando...';
+    fetch("/../db/buscar_documento_rec.php")
         .then(response => response.json())
         .then(data => {
+            
             if (data.sucesso) {
                 document.getElementById("documento").value = data.numero;
             } else {
@@ -712,7 +811,14 @@ document.getElementById("btnBuscarDoc").addEventListener("click", function() {
         })
         .catch(err => console.error("Erro:", err));
 });
+
+
+
 </script>
+<script src="gerar.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
 
 
 
