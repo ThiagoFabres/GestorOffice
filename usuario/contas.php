@@ -96,7 +96,7 @@ $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
         </div>
 
         <div class="menu-item">
-            <a href="dre/demonstrativo.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
+            <a href="dre/sintetico.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
         </div>
 
 
@@ -156,7 +156,7 @@ $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
                 <span style="color: #303640; font-size:1.1em; font-weight:500;"> <?php echo htmlspecialchars($titulo->nome, ENT_QUOTES, 'UTF-8'); ?> </span>
             </button>
         </h2>
-        <div id="collapse<?=$i?>" class="accordion-collapse <?php if(!isset($con01) || $con01 != $titulo->id ) {?>collapse<?php } ?>" aria-labelledby="heading<?=$i?>" data-bs-parent="#accordionExample">
+        <div id="collapse<?=$i?>" class="accordion-collapse <?php if(!isset($con01) || $con01 != $titulo->id ) {?>collapse<?php } else { ?>show<?php } ?>" aria-labelledby="heading<?=$i?>">
             <div class="accordion-body">
                 <div class="inner-accordion">
                     <div class="botoes-contas">

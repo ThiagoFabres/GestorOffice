@@ -26,6 +26,7 @@ $pagamentos_venceu = Pag02::read(null, $_SESSION['usuario']->id_empresa, null, n
 $pagamentos_hoje = Pag02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, null, null, null, null, null, true, 'hoje');
 $pagamentos_semana = Pag02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, $data_semana, null, null, null, null, true, 'semana');
 
+
 $recebimentos_venceu = Rec02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, null, null, null, null, null, true, 'venceu');
 $recebimentos_hoje = Rec02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, null, null, null, null, null, true, 'hoje');
 $recebimentos_semana = Rec02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, $data_semana, null, null, null, null, true, 'semana');
@@ -96,7 +97,7 @@ $recebimentos_semana = Rec02::read(null, $_SESSION['usuario']->id_empresa, null,
         </div>
 
         <div class="menu-item">
-            <a href="dre/demonstrativo.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
+            <a href="dre/sintetico.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
         </div>
 
 

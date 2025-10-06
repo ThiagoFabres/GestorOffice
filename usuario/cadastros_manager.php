@@ -74,7 +74,7 @@ if (isset($view) && $view == 'cadastro') {
     $nome = filter_input(INPUT_POST, 'nome');
     $tipo = filter_input(INPUT_POST, 'tipo');
 
-
+    $insta = filter_input(INPUT_POST, 'insta') ?? null;
 
     if ($acao == 'adicionar') {
         switch ($target) {
@@ -251,9 +251,9 @@ if (isset($view) && $view == 'cadastro') {
                 break;
         }
     }
-
-
-    header('Location: cadastrar.php?cadastro=' . $target);
+    if($insta == 'pagar') header('Location: pagar.php?acao=adicionar');
+    if($insta == 'receber') header('Location: receber.php?acao=adicionar');
+    if(!isset($insta) || $insta == null) header('Location: cadastrar.php?cadastro=' . $target);
     exit;
 
 
@@ -373,17 +373,39 @@ if (isset($view) && $view == 'cadastro') {
     // $data_pag = new DateTime($data_pag);
     // $data_pag = $data_pag->format('d-m-Y');
     $forma_pagamento = filter_input(INPUT_POST, 'forma_pagamento');
+    if($caminho != null || $caminho != '')$numero_pagina = filter_input(INPUT_POST, 'pagina') ?? filter_input(INPUT_GET, 'pagina');
+    if($caminho == null || $caminho == '')$numero_pagina = filter_input(INPUT_POST, 'pagina') ?? str_replace('?', '&', filter_input(INPUT_GET, 'pagina'));
 
-    $numero_pagina = filter_input(INPUT_POST, 'pagina') ?? filter_input(INPUT_GET, 'pagina');
-    $numero_exibir = filter_input(INPUT_POST, 'numero_exibido') ?? '&'.filter_input(INPUT_GET, 'numero_exibido');
-
-
+    if($caminho != null || $caminho != '')$numero_exibir = filter_input(INPUT_POST, 'numero_exibido') ?? filter_input(INPUT_GET, 'numero_exibido');
+    if($caminho == null || $caminho == '')$numero_exibir = filter_input(INPUT_POST, 'numero_exibido') ?? str_replace('k', '&', filter_input(INPUT_GET, 'numero_exibido'));
+    $numero_exibir = str_replace('k', '&', $numero_exibir);
+    
     if ($_POST['pagar'] == 1 || $_GET['pagar'] == 1) {
         $pagar = true;
     } else {
         $pagar = false;
     }
 
+    if($id_rec != null && $acao == 'editar') {
+        if($pagar) {
+        if(!Pag01::read($id_rec)) {
+            $acao = 'adicionar';
+        };
+    }else {
+        if(!Rec01::read(id: $id_rec)) {
+            $acao = 'adicionar';
+        };
+    }
+    }
+
+
+    if(($id_rec == null || $id_rec == '' )&& $acao == 'editar') {
+        $acao  = 'adicionar';
+    }
+
+    
+
+    
 
 
     if (isset($acao) && $acao == 'adicionar') {
@@ -403,14 +425,14 @@ if (isset($view) && $view == 'cadastro') {
         );
 
         if ($pagar) {
-            if (!Pag01::read(null, null, null, $documento)) {
+            if (!Pag01::read(null, $_SESSION['usuario']->id_empresa, null, $documento)) {
                 Pag01::create($recebimento);
             } else {
                 header('Location:pagar.php?erro=repetido');
             }
             $rec01 = Pag01::read(null, $_SESSION['usuario']->id_empresa, null, $documento)[0];
         } else {
-            if (!Rec01::read(null, null, null, $documento)) {
+            if (!Rec01::read(null, $_SESSION['usuario']->id_empresa, null, $documento)) {
                 Rec01::create($recebimento);
             } else {
                 header('Location:receber.php?erro=repetido');
@@ -458,6 +480,7 @@ if (isset($view) && $view == 'cadastro') {
 
 
         }
+        
 
         if ($pagar) {
             header('Location: pagar.php');
@@ -490,7 +513,7 @@ if (isset($view) && $view == 'cadastro') {
         );
 
         if ($pagar) {
-            if ($rec01->documento == $recebimento->documento || !Pag01::read($_SESSION['usuario']->id_empresa, $documento)[0]) {
+            if ($rec01->documento == $recebimento->documento || !Pag01::read(null, $_SESSION['usuario']->id_empresa, $documento)[0]) {
                 Pag01::update($recebimento);
             } else {
                 header('Location:pagar.php?erro=repetido');
@@ -498,7 +521,7 @@ if (isset($view) && $view == 'cadastro') {
             }
             $rec01 = Pag01::read(null, $_SESSION['usuario']->id_empresa, null, $documento)[0];
         } else {
-            if ($rec01->documento == $recebimento->documento || !Rec01::read(null, null, null, $documento)) {
+            if ($rec01->documento == $recebimento->documento || !Rec01::read(null, $_SESSION['usuario']->id_empresa, null, $documento)) {
                 Rec01::update($recebimento);
             } else {
                 header('Location:receber.php?erro=repetido');
@@ -556,8 +579,7 @@ if (isset($view) && $view == 'cadastro') {
             $valor_parcela = floatval($valor_parcela);
             $vencimento_data = $vencimento[$i];
             $obs_parcela = $obs02[$i];
-
-
+            
             if ($pagar) {
                 $parcelas[$i] = new Pag02(
                     null,                           // id (PK da parcela)
@@ -571,8 +593,10 @@ if (isset($view) && $view == 'cadastro') {
                     $obs_parcela,
                     null
                 );
+                
                 Pag02::create($parcelas[$i]);
-            } else {
+            } 
+            else {
                 $parcelas[$i] = new Rec02(
                     null,                           // id (PK da parcela)
                     $_SESSION['usuario']->id_empresa,
@@ -589,9 +613,7 @@ if (isset($view) && $view == 'cadastro') {
             }
             ;
 
-
         }
-
         if ($pagar) {
             header('Location: pagar.php');
             exit;
@@ -639,24 +661,28 @@ if (isset($view) && $view == 'cadastro') {
         if ($id == null) {
             $id = filter_input(INPUT_GET, 'id');
         }
+
+        if($caminho != 'receber.php' && $caminho != 'pagar.php') {
+            $numero_pagina = str_replace('?', '&', $numero_pagina);
+        }
+       
         if ($target == 'parcela') {
             if ($pagar) {
                 $parcela_antiga = Pag02::read($id)[0];
             } else {
                 $parcela_antiga = Rec02::read($id)[0];
             }
+            
             $parcela = new Rec02(
-                $id,
-                null,
-                null,
-                $parcela_antiga->valor_par,
-                $parcela_antiga->parcela,
-                $parcela_antiga->vencimento,
-                0,
-                $parcela_antiga->data_pag,
-                $parcela_antiga->obs,
-                null
+                id: $id,
+                valor_par: $parcela_antiga->valor_par,
+                parcela: $parcela_antiga->parcela,
+                vencimento: $parcela_antiga->vencimento,
+                valor_pag: 0,
+                data_pag: $parcela_antiga->data_pag,
+                obs: $parcela_antiga->obs,
             );
+            
             if ($pagar) {
                 Pag02::update($parcela);
                 header('Location:' . $caminho.$numero_pagina.$numero_exibir);

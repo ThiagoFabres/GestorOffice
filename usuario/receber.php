@@ -6,6 +6,10 @@ require_once __DIR__ . '/../db/entities/contas.php';
 require_once __DIR__ . '/../db/entities/cadastro.php';
 require_once __DIR__ . '/../db/entities/recebimentos.php';
 require_once __DIR__ . '/../db/entities/pagamento.php';
+require_once __DIR__ . '/../db/entities/cidade.php';
+require_once __DIR__ . '/../db/entities/bairro.php';
+require_once __DIR__ . '/../db/entities/estados.php';
+require_once __DIR__ . '/../db/entities/categoria.php';
 
 session_start();
 
@@ -15,25 +19,32 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     header('Location: /');
     exit;
 }
+
 $recebimentos_pagos = Rec02::readPagos();
+
 $ordenar_por = filter_input(INPUT_GET, 'ordenar');
 $direcao = filter_input(INPUT_GET, 'direcao');
+
 $view = filter_input(INPUT_GET, 'view');
 $target = filter_input(INPUT_GET, 'target');
 $con01 = filter_input(INPUT_GET, 'con01id');
 $acao = filter_input(INPUT_GET, 'acao');
 $get_opcao = filter_input(INPUT_GET, 'opcao');
 $get_id = filter_input(INPUT_GET, 'id');
-$numero_exibir = filter_input(INPUT_GET, 'numero_exibido') ?? filter_input(INPUT_POST, 'numero_exibido') ?? 10;
-$numero_pagina = filter_input(INPUT_GET, 'pagina') ?? filter_input(INPUT_POST, 'pagina') ?? 1;
+$numero_exibir = filter_input(INPUT_POST, 'numero_exibido') ?? filter_input(INPUT_GET, 'numero_exibido') ?? 10;
+$numero_pagina = filter_input(INPUT_POST, 'pagina') ?? filter_input(INPUT_GET, 'pagina') ?? 1;
 $numero_pagina = intval($numero_pagina);
-
+$direcao_var = $direcao;
 $get_filtro_data_inicial = filter_input(INPUT_GET, 'filtro_data_inicial') ?? null;
 $get_filtro_data_final = filter_input(INPUT_GET, 'filtro_data_final')?? null;
 $get_filtro_nome = filter_input(INPUT_GET, 'filtro_nome') ?? null;
 $get_filtro_opcao = filter_input(INPUT_GET, 'opcao_filtro')?? null;
 $get_filtro_por = filter_input(INPUT_GET, 'filtro_por') ?? null;
 $get_filtro_pagamento = filter_input(INPUT_GET, 'forma_pagamento') ?? null;
+$get_filtro_cadastro = filter_input(INPUT_GET, 'filtro_cadastro') ?? null;
+$get_filtro_titulo = filter_input(INPUT_GET, 'filtro_titulo') ?? null;
+$get_filtro_subtitulo = filter_input(INPUT_GET, 'filtro_subtitulo') ?? null;
+
 
 
 $parcela_paginas = Rec02::read(null, $_SESSION['usuario']->id_empresa,null, null, null,
@@ -44,6 +55,13 @@ $parcela_paginas = Rec02::read(null, $_SESSION['usuario']->id_empresa,null, null
 
 
 $total_paginas = ceil($parcela_paginas / $numero_exibir);
+
+
+
+
+
+
+
                         
 $filtros = [];
 if($get_filtro_data_inicial != '') $filtros[] = 'filtro_data_inicial='.$get_filtro_data_inicial;
@@ -52,10 +70,8 @@ if($get_filtro_nome != '') $filtros[] = 'filtro_nome='.$get_filtro_nome;
 if($get_filtro_opcao != '') $filtros[] = 'opcao_filtro='.$get_filtro_opcao;
 if($get_filtro_por!= '' && $get_filtro_por != 'lancamento') $filtros[] = 'filtro_por='.$get_filtro_por;
 if($get_filtro_pagamento != '') $filtros[] = 'forma_pagamento='.$get_filtro_pagamento;
-if($ordenar_por != '') $filtros[] = 'ordenar='.$ordenar_por;
-if($direcao != '') $filtros[] = 'direcao='.$direcao;  
-
-
+if($get_filtro_titulo != '') $filtros[] = 'filtro_titulo='.$get_filtro_titulo;
+if($get_filtro_subtitulo != '') $filtros[] = 'filtro_subtitulo='.$get_filtro_subtitulo;
 
 if($filtros != []) {
     $caminho = 'receber.php?' . implode('&', $filtros);
@@ -85,6 +101,7 @@ if($filtros != []) {
     <link href=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css " rel="stylesheet">
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="../choices/choices.css"></link>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
@@ -129,12 +146,12 @@ if($filtros != []) {
             <a href="receber.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-wallet"></i></div> Contas a Receber </a>
         </div>
 
-        <div class="menu-item">
+        <div class="menu-item" >
             <a href="pagar.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-cash-stack"></i></div> Contas a Pagar </a>
         </div>
 
         <div class="menu-item">
-            <a href="dre/demonstrativo.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
+            <a href="dre/sintetico.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
         </div>
 
 
@@ -174,14 +191,6 @@ if($filtros != []) {
                 <div class="botao">
         <button data-bs-toggle="modal" data-bs-target="#modal_receber" class="btn btn-primary btn-lg botao-adm-adicionar">Novo Lançamento</button>
     </div>
-
-    
-
-    
-    
-
-      
-        
             <div class="row">
                 <div class="col-md-12" style="padding: 0;">
                 
@@ -190,105 +199,198 @@ if($filtros != []) {
                         <div class="card-header"><h3>Contas a Receber</h3></div>
 
                         <div class="card-header-div">
+
         <div class="card-header-borda">
             <div class="tab-pane fade show active" id="vendas" role="tabpanel" aria-labelledby="vendas-tab">
                 <h5 class="card-title">Filtros</h5>
-                <form method="get" action="<?=$caminho?>">
-                    <div class="row">
-                        <div class="inputs-pagamento-text" style="display: flex; flex-direction: row; width: 50%;">
-                        
-                        <div style="width: 30%;">
-                            <label for="filtro_data_inicial" style="font-size:0.85em;">Data Inicial:</label>
-                            <input type="date" id="filtro_data_inicial" name="filtro_data_inicial" value="<?=$get_filtro_data_inicial;?>" class="form-control" style="border-top-right-radius: 0; border-bottom-right-radius: 0; border-top-left-radius: 0.25em; border-bottom-left-radius: 0.25em;">
-                        </div>
+                <form method="get" action="receber.php">
+                    <?php if($numero_exibir != 10){ ?> <input type="hidden" value="<?=$numero_exibir?>" name="numero_exibido"/> <?php } ?>
+                    <div class="form-pagamento">
+                    <div class="inputs-pagamento-group">
+    <div class="row">
+        <div class="inputs-pagamento-text">
 
-                        <div style="width: 30%;">
-                            <label for="filtro_data_final" style="font-size:0.85em;">Data Final:</label>
-                            <input type="date" id="filtro_data_final" name="filtro_data_final" value="<?=$get_filtro_data_final;?>" class="form-control" style="border-radius: 0;">
-                        </div>
+            <!-- Data inicial -->
+            <div style="width: 25%;">
+                <label for="filtro_data_inicial" style="font-size:0.85em;">Data Inicial:</label>
+                <input type="date"
+                       id="filtro_data_inicial"
+                       name="filtro_data_inicial"
+                       value="<?= $get_filtro_data_inicial; ?>"
+                       class="form-control"
+                       style="border-top-right-radius: 0;">
+            </div>
 
-                        <div style="width: 20%;">
-                            <label for="filtro_nome" style="font-size:0.85em;">Documento:</label>
-                            <input type="text" id="filtro_nome" name="filtro_nome" class="form-control" value="<?=$get_filtro_nome;?>" placeholder="Documento" style="border-radius: 0;">
-                        </div>
+            <!-- Data final -->
+            <div style="width: 25%;">
+                <label for="filtro_data_final" style="font-size:0.85em;">Data Final:</label>
+                <input type="date"
+                       id="filtro_data_final"
+                       name="filtro_data_final"
+                       value="<?= $get_filtro_data_final; ?>"
+                       class="form-control"
+                       style="border-radius: 0;">
+            </div>
 
-                        <div style="width: 20%;">
-                            <label for="forma_pagamento" style="font-size:0.85em;">Tipo de Pagamento:</label>
-                            <select class="form-control" name="forma_pagamento" style="border-top-left-radius: 0; border-bottom-left-radius: 0; border-top-right-radius: 0.25em; border-bottom-right-radius: 0.25em;">
-                        </div>
-                        <option value="">Selecione uma forma de pagamento</option>
-                        <?php foreach(TipoPagamento::read(null, $_SESSION['usuario']->id_empresa) as $pagamento) { ?>
-                            <option <?php if($get_filtro_pagamento == $pagamento->id) {?> selected <?php } ?> value="<?= $pagamento->id ?>">
-                                <?= $pagamento->nome ?>
-                            </option>
-                        <?php } ?>
-                    </select>
-                        </div>
-                        
-                        
-                    </div>
+            <!-- Documento -->
+            <div style="width: 20%;">
+                <label for="filtro_nome" style="font-size:0.85em;">Documento:</label>
+                <input type="text"
+                       id="filtro_nome"
+                       name="filtro_nome"
+                       class="form-control"
+                       value="<?= $get_filtro_nome; ?>"
+                       placeholder="Documento"
+                       style="border-radius: 0;">
+            </div>
 
-                    <div class="selects-pagamento" style="width:40%; display: flex; flex-direction: column; justify-content: space-between;">
-                        <div class="radio-pagamento" style="width: 100%; max-height: 40%; display: flex; flex-direction: row;">
-                            <div style="margin-right: 1em;"><h5 style="font-size: 1em;">Opção:</h5></div>
-                            <div class="form-check" style="margin-right: 1em;">
-                                
-                            <input class="form-check-input" type="radio" id="todos" name="opcao_filtro" <?php if($get_filtro_opcao == 'lancamento' || empty($get_filtro_opcao)) {?> checked <? } ?> value="" style="height: 65%;" checked>
-                            <label class="form-check-label"for="todos">Todos</label>
-                            </div>
+            <!-- Tipo de pagamento -->
+            <div style="width: 20%;">
+                <label for="forma_pagamento" style="font-size:0.85em;">Tipo de Pagamento:</label>
+                <select class="form-control"
+                        name="forma_pagamento"
+                        style="border-top-left-radius: 0; border-bottom-left-radius: 0;
+                               border-top-right-radius: 0.25em; border-bottom-right-radius: 0.25em;">
 
-                            <div class="form-check" style="margin-right: 1em;">
-                            <input class="form-check-input" type="radio" id="abertos" name="opcao_filtro" <?php if($get_filtro_opcao == 'abertos' ) {?> checked <? } ?> value="abertos" style="height: 65%;">
-                            <label class="form-check-label" for="abertos">Abertos</label>
-                            </div>
-                            
-                            <div class="form-check" style="margin-right: 1em;">
-                            <input class="form-check-input"type="radio" id="quitados" name="opcao_filtro" <?php if($get_filtro_opcao == 'quitados' ) {?> checked <? } ?> value="quitados" style="height: 65%;"> 
-                            <label class="form-check-label" for="quitados">Quitados</label>
-                            </div>
-                          
-                        </div>
+                    <option value="">Selecione uma forma de pagamento</option>
+
+                    <?php foreach (TipoPagamento::read(null, $_SESSION['usuario']->id_empresa) as $pagamento) { ?>
+                        <option value="<?= $pagamento->id ?>"
+                            <?php if ($get_filtro_pagamento == $pagamento->id) { ?> selected <?php } ?>>
+                            <?= $pagamento->nome ?>
+                        </option>
+                    <?php } ?>
+
+                </select>
+            </div>
+
+        </div> <!-- fecha inputs-pagamento-text -->
+        <div class="inputs-pagamento-text inputs-pagamento-select input-select-geral ">
+
+            <div style="display:flex; flex-direction: column">
+            <label for="forma_pagamento" style="font-size:0.85em;">Cliente / Fornecedor:</label>
+            <select class="form-control" name="filtro_cadastro">
+                <option value="">Selecione um Cliente / Fornecedor</option>
+                <?php
+                foreach(Cadastro::read(null, null,$_SESSION['usuario']->id_empresa) as $cadastro) { ?>
+                    <option value="<?=$cadastro->id_cadastro?>"
+                        <?php if ($get_filtro_cadastro == $cadastro->id_cadastro) { ?> selected <?php } ?>>
+                        <?=$cadastro->nom_fant?>
+                    </option>
+                <?php } ?>
+            </select>
+            </div>
+
+            <div id="titulo-filtro-div" style="display:flex; flex-direction: column;">
+            <label for="forma_pagamento" style="font-size:0.85em;">Titulo:</label>
+            <select id="titulo-filtro" class="input-select-geral" name="filtro_titulo" data-manual-init="true">
+                    <option value="">Selecione um Título</option>
+                    <?php
+                    $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa, 'D');
+                    foreach ($titulos as $titulo) { ?>
+                        <option value="<?= $titulo->id ?>" 
+                                data-titulo-id="<?= $titulo->id_con01 ?>"
+                                <?php if ($get_filtro_titulo == $titulo->id) { ?> selected <?php } ?>>
+                            <?= htmlspecialchars($titulo->nome, ENT_QUOTES, 'UTF-8') ?>
+                        </option>
+                    <?php } ?>
+                </select>
+            </div>
+
+            <div id="subtitulo-filtro-div" style="display:flex; flex-direction: column;">
+            <label for="forma_pagamento" style="font-size:0.85em;">Subtitulo:</label>
+                <select id="subtitulo-filtro" class="input-select-geral" name="filtro_subtitulo" data-manual-init="true">
+                    <option value="">Selecione um Subtítulo</option>
+                    <?php
+                    $todosSubtitulos = Con02::read(null, $_SESSION['usuario']->id_empresa);
+                    foreach ($todosSubtitulos as $sub) { ?>
+                        <option value="<?= $sub->id ?>" 
+                                data-titulo-id="<?= $sub->id_con01 ?>"
+                                <?php if ($get_filtro_subtitulo == $sub->id) { ?> selected <?php } ?>>
+                            <?= htmlspecialchars($sub->nome, ENT_QUOTES, 'UTF-8') ?>
+                        </option>
+                    <?php } ?>
+                </select>
+            </div>
+        </div>
+    </div> <!-- fecha row -->
+</div> <!-- fecha inputs-pagamento-group -->
+
+                    <div class="selects-pagamento">
+
+    <!-- Primeira linha de radios (opção) -->
+    <div class="radio-pagamento">
+        <div style="margin-right: 1em;">
+            <h5 style="font-size: 1em;">Opção:</h5>
+        </div>
+
+        <div class="form-check" style="margin-right: 1em;">
+            <input class="form-check-input" type="radio" id="todos" name="opcao_filtro" value=""
+                   <?php if ($get_filtro_opcao == '' || empty($get_filtro_opcao)) { ?> checked <?php } ?>>
+            <label class="form-check-label" for="">Todos</label>
+        </div>
+
+        <div class="form-check" style="margin-right: 1em;">
+            <input class="form-check-input" type="radio" id="abertos" name="opcao_filtro" value="abertos"
+                   <?php if ($get_filtro_opcao == 'abertos') { ?> checked <?php } ?> value="abertos">
+            <label class="form-check-label" for="abertos">Abertos</label>
+        </div>
+
+        <div class="form-check" style="margin-right: 1em;">
+            <input class="form-check-input" type="radio" id="quitados" name="opcao_filtro" value="quitados"
+                   <?php if ($get_filtro_opcao == 'quitados') { ?> checked <?php } ?> value="quitados">
+            <label class="form-check-label" for="quitados">Quitados</label>
+        </div>
+    </div>
 
 
-                        
-                        <div class="radio-pagamento" style="width: 100%; max-height: 50%; display: flex; flex-direction: row;">
-                            <div style="margin-right: 1em;"><h5 style="font-size: 1em;">Filtro por:</h5></div>
-                            <div class="form-check"style="margin-right: 1em;">
-                            <input class="form-check-input" type="radio" id="lancamento" name="filtro_por" <?php if($get_filtro_por == 'lancamento' || empty($get_filtro_por)) {?> checked <? } ?> value="lancamento" style="height: 65%;">
-                            <label class="form-check-label"for="lancamento">Lançamento</label>
-                            </div>
+    <!-- Segunda linha de radios (filtro por) -->
+    <div class="radio-pagamento" style="...">
+        <div style="margin-right: 1em;">
+            <h5 style="font-size: 1em;">Filtro por:</h5>
+        </div>
 
-                            <div class="form-check"style="margin-right: 1em;">
-                            <input class="form-check-input" type="radio" id="vencimento" name="filtro_por" <?php if($get_filtro_por == 'vencimento') {?> checked <? } ?> value="vencimento" style="height: 65%;">
-                            <label class="form-check-label" for="vencimento">Vencimento</label>
-                            </div>
-                            
-                            <div class="form-check"style="margin-right: 1em;">
-                            <input class="form-check-input"type="radio" id="pagamento" name="filtro_por" <?php if($get_filtro_por == 'pagamento') {?> checked <? } ?> value="pagamento" style="height: 65%;"> 
-                            <label class="form-check-label" for="pagamento">Pagamento</label>
-                            </div>
-                          
-                        
-                    </div>
+        <div class="form-check" style="margin-right: 1em;">
+            <input class="form-check-input" type="radio" id="lancamento" name="filtro_por"
+                   <?php if ($get_filtro_por == 'lancamento' || empty($get_filtro_por)) { ?> checked <?php } ?>
+                   value="lancamento">
+            <label class="form-check-label" for="lancamento">Lançamento</label>
+        </div>
+
+        <div class="form-check" style="margin-right: 1em;">
+            <input class="form-check-input" type="radio" id="vencimento" name="filtro_por"
+                   <?php if ($get_filtro_por == 'vencimento') { ?> checked <?php } ?>
+                   value="vencimento">
+            <label class="form-check-label" for="vencimento">Vencimento</label>
+        </div>
+
+        <div class="form-check" style="margin-right: 1em;">
+            <input class="form-check-input" type="radio" id="pagamento" name="filtro_por"
+                   <?php if ($get_filtro_por == 'pagamento') { ?> checked <?php } ?>
+                   value="pagamento">
+            <label class="form-check-label" for="pagamento">Pagamento</label>
+        </div>
+    </div>
+
+</div> <!-- fecha selects-pagamento -->
                 
-                
-                    </div>
+    
 
                     
                     
-                        <div style="width: 10%; display: flex; flex-direction: column;">
-                            <button type="submit" class="btn btn-primary" style="background-color: #5856d6; height: 50%;">Filtrar</button>
-                            <a href="receber.php" class="btn btn-secondary"style="height: 50%;">Limpar</a>
+                        <div style="width: 10%; display: flex; flex-direction: column; justify-content: space-evenly;">
+                            <button type="submit" class="btn btn-primary" style="background-color: #5856d6;">Filtrar</button>
+                            <a href="receber.php" class="btn btn-secondary">Limpar</a>
                         </div>
                         
                     </div>
+                    </div>
+                </div>
                 </form>
                 
 
                     
                 </div>
-                </div>
-</div>
                         <table class="table table-striped">
                     <thead>
                         <?php
@@ -320,13 +422,23 @@ if($filtros != []) {
                     </thead>
                 <tbody>
             <?php
-            $parcelas = Rec02::read(null, $_SESSION['usuario']->id_empresa,null, null, null,
-            $get_filtro_data_inicial ?? null, $get_filtro_data_final ?? null, $get_filtro_nome ?? null,
-            $get_filtro_opcao ?? null, $get_filtro_por ?? null, $get_filtro_pagamento ?? null,
-             null,null, $numero_exibir, null, $numero_pagina, $ordenar_por, $direcao);
-            if (!empty($parcelas)) {?>
-                
-                
+            $parcelas = Rec02::read( 
+            id_empresa: $_SESSION['usuario']->id_empresa,
+            filtro_data_inicial: $get_filtro_data_inicial, 
+            filtro_data_final: $get_filtro_data_final, 
+            filtro_documento: $get_filtro_nome,
+            filtro_opcao: $get_filtro_opcao, 
+            filtro_por: $get_filtro_por , 
+            filtro_pagamento: $get_filtro_pagamento,
+            filtro_cadastro:$get_filtro_cadastro,
+            filtro_con01:$get_filtro_titulo,
+            filtro_con02:$get_filtro_subtitulo,
+            numero_exibir: $numero_exibir, 
+            numero_pagina: $numero_pagina, 
+            ordenar_por: $ordenar_por, 
+            direcao: $direcao);
+            if (!empty($parcelas)) {
+                if(empty($recebimentos_pagos) || $recebimentos_pagos === null) $recebimentos_pagos = [];?>
             
                         <?php foreach ($parcelas as $rec02) {
 
@@ -337,7 +449,7 @@ if($filtros != []) {
                             $cor_parcela = 'parcela_cor_amarela';
                         } else if(($rec02->vencimento < $data_atual) && $rec02->valor_pag != $rec02->valor_par) {
                             $cor_parcela = 'parcela_cor_vermelha';
-                        } else if(($rec02->vencimento > $data_atual) && $rec02->valor_pag < $rec02->valor_par) {
+                        } else if(($rec02->vencimento > $data_atual) && $rec02->valor_pag == 0) {
                             $cor_parcela = 'parcela_cor_azul';
                         } else if($rec02->valor_pag > 0) {
                             $cor_parcela = 'parcela_cor_verde';
@@ -366,7 +478,6 @@ if($filtros != []) {
                             $valor_pago = number_format($rec02->valor_pag,2 , ',', '');
                             $link = 'receber.php?view=receber&acao=visualizar&id=' . $rec02->id;
                             
-                                
                             $ultima_parcela = null;
                             if($rec02->parcela == $rec01->parcelas) $ultima_parcela = true;
                             
@@ -388,12 +499,12 @@ if($filtros != []) {
                                 <td><?=$pagamento->nome ?? ''?></td>
                                 <td class="td-acoes">
                                     <?php $valor_restante = number_format($rec02->valor_par - $rec02->valor_pag, 2 ,',', '') ?>
-                                    <button class="btn btn-primary" data-bs-toggle="modal" <?php if($rec02->valor_pag == $rec02->valor_par){ ?> disabled <?php } ?> data-bs-target="#modal_quitar" data-id="<?=$rec02->id?>" data-valor-restante="<?= $valor_restante ?>"><i class="bi bi-cash-stack"></i></button>
+                                    <button class="btn btn-primary" data-bs-toggle="modal" <?php if($rec02->valor_pag > 0){ ?> disabled <?php } ?> data-bs-target="#modal_quitar" data-id="<?=$rec02->id?>" data-valor-restante="<?= $valor_restante ?>"><i class="bi bi-cash-stack"></i></button>
                                 <td class="td-acoes">
-                                    <button class="btn btn-primary" <?php if ($rec02->valor_pag == 0) { ?> disabled <?php } ?> onclick="window.location.href='cadastros_manager.php?view=receber&target=parcela&acao=estornar&id=<?=$rec02->id?>&caminho=<?=$caminho_get?>&pagina=<?php if(empty($filtros)){echo'?pagina='.$numero_pagina;} else{echo '&pagina='.$numero_pagina;}?>  &numero_exibido=<?='numero_exibido='.$numero_exibir?>'"><i class="bi bi-wallet2"></i></button>
+                                    <button class="btn btn-primary" <?php if ($rec02->valor_pag == 0) { ?> disabled <?php } ?> onclick="window.location.href='cadastros_manager.php?view=receber&target=parcela&acao=estornar&id=<?=$rec02->id?>&caminho=<?=$caminho_get?>&pagina=<?php if(empty($filtros)){echo'?pagina='.$numero_pagina;} else{echo '?pagina='.$numero_pagina;}?>&numero_exibido=<?='knumero_exibido='.$numero_exibir?>'"><i class="bi bi-wallet2"></i></button>
                                 </td>
                                 <td class="td-acoes">
-                                    <button class="btn btn-primary" <?php if(in_array($rec02->id_rec01, $recebimentos_pagos)){ ?> disabled <?php } ?> onclick="window.location.href='editar-receber.php?id=<?=$rec01->id?>'"><i class="bi bi-pen-fill"></i></button>
+                                    <button class="btn btn-primary" <?php if(in_array($rec02->id_rec01, $recebimentos_pagos)){ ?> disabled <?php } ?> onclick="window.location.href='editar-receber.php?id=<?=$rec01->id?>&acao=editar'"><i class="bi bi-pen-fill"></i></button>
                                 </td>
                             </tr>
                             
@@ -405,6 +516,8 @@ if($filtros != []) {
                     <?php } else { ?>
                         <tr>
                             <td>Nenhum Lançamento encontrado</td>
+                            <td></td>
+                            <td></td>
                             <td></td>
                             <td></td>
                             <td></td>
@@ -434,10 +547,11 @@ if($filtros != []) {
                             <?php if($direcao != ''){ ?> <input type="hidden" value="<?=$direcao?>" name="direcao"/><?php } ?>
 
                             <?php if(!empty($recebimentos_pagos)) {
-                                foreach ($recebimentos_pagos as  $i => $id_pag01) {?>
-                                    <input type="hidden" name="recebimentos_pagos[<?=$i?>]" value="<?=$id_pag01?>">
+                                foreach ($recebimentos_pagos as  $i => $id_rec01) {?>
+                                
+                                    <input type="hidden" name="recebimentos_pagos[<?=$i?>]" value="<?=$id_rec01?>">
                             <?php } }?>
-                            
+
                             <?php for($i = 1; $i <= $total_paginas; $i++){ 
                                 if((($i == ($numero_pagina + 4) || $i == ($numero_pagina - 4)) && $i != 1) && $i != $total_paginas) { ?>
                                     ...
@@ -453,34 +567,31 @@ if($filtros != []) {
                         </form>
                     </div> 
                     
-                        <div class="card-select-numero">
-                            <div>
-                            <form method="post" action="<?=$caminho?>">
-                                <?php if($ordenar_por != ''){ ?> <input type="hidden" value="<?=$ordenar_por?>" name="ordenar"/><?php } ?>
-                                <?php if($direcao != ''){ ?> <input type="hidden" value="<?=$direcao?>" name="direcao"/><?php } ?>
-                                <select class="form-control" onchange="this.form.submit()" name="numero_exibido">
-                                        <option <?php if($numero_exibir == 5){ ?> selected  <?php } ?> value="5">5</option>
-                                        <option <?php if($numero_exibir == 10){ ?> selected <?php } ?> value="10">10</option>
-                                        <option <?php if($numero_exibir == 20){ ?> selected <?php } ?> value="20">20</option>
-                                        <option <?php if($numero_exibir == 30){ ?> selected <?php } ?> value="30">30</option>
-                                        <option <?php if($numero_exibir == 40){ ?> selected <?php } ?> value="40">40</option>
-                                        <option <?php if($numero_exibir == 50){ ?> selected <?php } ?> value="50">50</option>
-                                </select>
-                            </form>
-                            </div>
+                    <div class="card-select-numero">
+                        <div>
+                        <form method="post" action="<?=$caminho?>">
+                            <?php if($ordenar_por != ''){ ?> <input type="hidden" value="<?=$ordenar_por?>" name="ordenar"/><?php } ?>
+                            <?php if($direcao != ''){ ?> <input type="hidden" value="<?=$direcao?>" name="direcao"/><?php } ?>
+                            
+                            <select class="form-control" onchange="this.form.submit()" name="numero_exibido">
+                                    <option <?php if($numero_exibir == 5){ ?> selected  <?php } ?> value="5">5</option>
+                                    <option <?php if($numero_exibir == 10){ ?> selected <?php } ?> value="10">10</option>
+                                    <option <?php if($numero_exibir == 20){ ?> selected <?php } ?> value="20">20</option>
+                                    <option <?php if($numero_exibir == 30){ ?> selected <?php } ?> value="30">30</option>
+                                    <option <?php if($numero_exibir == 40){ ?> selected <?php } ?> value="40">40</option>
+                                    <option <?php if($numero_exibir == 50){ ?> selected <?php } ?> value="50">50</option>
+                            </select>
+                        </form>
                         </div>
-                </div> 
-            </div>
-        
-        
-        
-
+                    </div>
+            </div> 
     </div>
+        </div>
+
         <div class="relatorios-botoes">
             <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="gerarpdf('receber')">Gerar PDF</button>
             <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="gerarexcel('receber')">Gerar Excel</button>
         </div>
-        
         
 
 <div class="modal fade" id="modal_quitar" tabindex="-1" role="dialog"
@@ -489,6 +600,7 @@ if($filtros != []) {
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="exampleModalLongTitle">Opções da conta</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form method="post" id="content" action="cadastros_manager.php" onkeydown="return event.key != 'Enter';">
@@ -523,7 +635,7 @@ if($filtros != []) {
                     </select>
                     <div style="margin-bottom: 3em;" class="footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Fechar</button>
-                        <button type="submit" class="btn btn-primary">Pagar</button>
+                        <button type="submit" class="btn btn-primary">Quitar</button>
                     </div>
                 </form>
             </div>
@@ -540,7 +652,8 @@ if($filtros != []) {
                 <div class="modal-header">
 
                     <h5 class="modal-title" id="modal_receber_long_title">Novo Lançamento</h5>
-                    
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    </button>
                 </div>
                 <div class="modal-body">
 
@@ -559,10 +672,12 @@ if($filtros != []) {
                             <button type="button" class="form-control" id="btnBuscarDoc"><i class="bi bi-text-center"></i></button>
                         </div>
                     </div>
-                        <div class="input-cadastro input-form-adm">
+                    <label for="cadastro">Cliente / Fornecedor:</label>
+                    <div class="input-documento-group">
+                        <div class="input-documento input-form-adm">
                             <!--Nome: -->
-                            <label for="cadastro">Cliente / Fornecedor:</label>
-                            <select name="cadastro" class="form-select" id="cadastro">
+                            
+                            <select name="cadastro" class="form-select" id="cadastro" style="border-top-right-radius:0; border-bottom-right-radius:0;">
                                 <option value="">Selecione</option>
                                 
                                 <?php 
@@ -572,6 +687,11 @@ if($filtros != []) {
                                 <?php } ?>
                             </select>
                         </div>
+                        <div class="input-documento-generator">
+                            <button data-bs-toggle="modal" data-bs-target="#modal_cadastro" type="button" class="form-control" id="btnModalCadastro"><i class="bi bi-plus-lg"></i></button>
+                        </div>
+                    </div>
+                        
 
                         <div class="input-valor input-form-adm">
                             <!--Nome: -->
@@ -597,7 +717,7 @@ if($filtros != []) {
                         <div class="input-titulo input-form-adm" style="width: 50%;" >
                             <!--Nome: -->
                             <label for="titulo">Titulo</label>
-                            <select name="titulo" class="form-select" id="titulo" style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
+                            <select name="titulo" class="form-select" id="titulo" style="border-top-right-radius: 0; border-bottom-right-radius: 0;" data-manual-init="true">
                                 <option value="">Selecione</option>
                                 
                                 <?php $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa, 'C'); 
@@ -610,7 +730,7 @@ if($filtros != []) {
                         <div class="input-subtitulo input-form-adm" style="width: 50%;">
                             <!--Nome: -->
                             <label for="subtitulo">Sub-Titulo</label>
-                            <select id="subtitulo" name="subtitulo" class="form-control">
+                            <select id="subtitulo" name="subtitulo" class="form-control" data-manual-init="true">
                                 <option value="">Selecione</option>
                                 <?php
                                 // Buscar todos os subtítulos da empresa
@@ -628,7 +748,179 @@ if($filtros != []) {
 
                         
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >Fechar</button>
-                        <button name="acao" value="adicionar" class="btn btn-success" style="float:right; background-color: #5856d6; border: #5856d6;" href="consulta_cliente.php">Salvar</button>    
+                        <button name="acao" value="adicionar" class="btn btn-success" style="float:right; background-color: #5856d6; border: #5856d6; " href="consulta_cliente.php">Salvar</button>    
+
+                    </form>
+
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+
+    <div class="modal fade" id="modal_cadastro" tabindex="-1" role="dialog"
+        aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class=" modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">Cadastrar</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    </button>
+                </div>
+                <div class="modal-body">
+
+                    <form method="post" id="content" action="cadastros_manager.php">
+                        <input type="hidden" name="view" value="cadastro">
+                        <input type="hidden" name="insta" value="receber">
+                        <input type="hidden" name="target" value="cliente">
+                        <input type="hidden" name="id" value="">
+                        <label>Informe os dados do Cliente ou Fornecedor</label>
+
+                        <div class="input-nome input-form-adm" style="width:100%;">
+                            <!-- Razão social / Nome: -->
+                            <input type="text" onchange="checar()" name="nome" class="form-control" placeholder="Razão social / Nome"
+                                value="" required>
+                        </div>
+
+                        
+
+                        <div class="input-fantasia input-form-adm">
+                            <!--Nome fantasia-->
+                            <input type="text" onchange="checar()" name="fantasia"
+                                class="form-control" placeholder="Nome fantasia" value="" required>
+                        </div>
+
+                        
+
+                        <div class="input-cpf input-form-adm">
+                            <!--CPF-->
+                            <input type="text" onchange="checar()" name="cpf" class="form-control"
+                                placeholder="CPF" value="" required>
+                        </div>
+
+                        
+
+                        <div class="input-cnpj input-form-adm">
+                            <!--cnpj-->
+                            <input type="text" onchange="checar()" name="cnpj" class="form-control"
+                                placeholder="CNPJ" value="" required>
+                        </div>
+
+                        
+                        
+                        <div class="input-cep input-form-adm">
+                            <input type="text" onchange="checar()" name="cep"
+                                class="form-control" placeholder="CEP" value="" required>
+                        </div>
+                        
+                        
+
+                        <div class="input-endereco input-form-adm">
+                            <input type="text" onchange="checar()" name="endereco" class="form-control"
+                                placeholder="Endereço" value="" required>
+                        </div>
+
+                        <div class="input-form-adm-group input-form-adm">
+                                <div class="input-bairro input-select-geral ">
+                                    <select id="bairro" name="bairro" class="form-control"  style="border-bottom-right-radius:0; border-top-right-radius:0;" required>
+
+
+                                        <option value="" >Bairro</option>
+
+                                        <?php foreach (Bairro::read(null, $_SESSION['usuario']->id_empresa) as $bairro) { ?>
+                                            <option value="<?= $bairro->id ?>">
+                                        <?= htmlspecialchars($bairro->nome, ENT_QUOTES, 'UTF-8') ?>
+                                        </option>
+                                        <?php } ?>
+                                    </select>
+                                            </div>
+
+                                            
+
+                                            <div class="input-cidade input-select-geral ">
+                                    <select id="cidade" name="cidade" class="form-control"  style="border-radius:0;" required>
+
+                                    <option value="" >Cidade</option>
+                                    <?php foreach (Cidade::read(null, $_SESSION['usuario']->id_empresa) as $cidade) { ?>
+
+
+                                        <option value="<?= $cidade->id ?>">
+                                    <?=htmlspecialchars( $cidade->nome , ENT_QUOTES, 'UTF-8')?>
+                                    </option>
+                                    <?php } ?>
+
+                                    </select>
+                                </div>
+
+                                
+
+                                <div class="input-estado input-select-geral ">
+                            <select id="estado" name="estado" class="form-control"  style="border-bottom-left-radius:0; border-top-left-radius:0;" required>
+
+                            <option value="" >Estado</option>
+                            <?php foreach ($estadosLista as $sigla => $estado) { ?>
+                                <option value="<?= $sigla ?>">
+                            <?= htmlspecialchars($estado, ENT_QUOTES, 'UTF-8') ?>
+                            </option>
+                            <?php } ?>
+                            
+                        </select>
+                                </div>
+                        </div>
+                        
+
+                        <div class="input-form-contato-adm-group input-form-adm">
+
+                        
+
+                        <div class="input-celular">
+                            <input type="text" onchange="checar()" name="celular" class="form-control" style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
+                                placeholder="Celular" value="" required>
+                        </div>
+
+                        
+
+                        <div class="input-telefone">
+                            <input type="text" onchange="checar()" name="fixo" class="form-control" style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
+                                placeholder="Telefone Fixo" value="" required>
+                        </div>
+                        
+                        </div>
+
+                        <div class="input-email input-form-adm">
+                            <input type="text" onchange="checar()" name="email" class="form-control"
+                                placeholder="E-mail" value="" required>
+                        </div>
+
+
+
+                        <div class="input-categoria" style="margin-bottom:1em;" >
+                        <select id="cidade" name="categoria" class="form-control" required>
+
+                            <option value="" >Selecione uma categoria</option>
+                            <?php foreach (Categoria::read(null, $_SESSION['usuario']->id_empresa) as $categoria) { ?>
+                                <option value="<?= $categoria->id ?>">
+                            <?= htmlspecialchars($categoria->nome, ENT_QUOTES, 'UTF-8')?>
+                            </option>
+                            <?php } ?>
+
+                        </select>
+                                </div>
+
+
+                        
+
+                        <div style="margin-bottom: 3em;" class="footer">
+
+                        <button name="acao" value="adicionar" class="btn btn-success" style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0;" href="consulta_cliente.php">Salvar</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Fechar</button>
+                            
 
                     </form>
 
@@ -640,53 +932,31 @@ if($filtros != []) {
     </div>
 
 
-
 </body>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var userBtn = document.getElementById('userBtn');
-    var userMenu = document.getElementById('userMenu');
-    if (userBtn && userMenu) {
-        userBtn.onclick = function(e) {
-            e.stopPropagation();
-            if (userMenu.style.display === 'block') {
-                userMenu.style.display = 'none';
-            } else {
-                userMenu.style.display = 'block';
-            }
-        };
-        document.addEventListener('click', function(e) {
-            if (userMenu.style.display === 'block') {
-                userMenu.style.display = 'none';
-            }
-        });
-        userMenu.onclick = function(e) {
-            e.stopPropagation();
-        };
-    }
-});
-document.getElementById('titulo').addEventListener('change', function() {
-    var tituloId = this.value;
-    var subtituloSelect = document.getElementById('subtitulo');
-    var options = subtituloSelect.querySelectorAll('option');
-
-    options.forEach(function(option) {
-        if (option.value === "") {
-            option.style.display = '';
-            return;
-        }
-        if (option.getAttribute('data-titulo-id') === tituloId) {
-            option.style.display = '';
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- <script>
+$(document).ready(function(){
+    $('#titulo-filtro-filtro').change(function(){
+        var titulo_id = $(this).val();
+        
+        if(titulo_id){
+            $.getJSON('/../db/get_subtitulos.php', {titulo_id: titulo_id}, function(data){
+                var options = '<option value="">Selecione um Subtítulo</option>';
+                $.each(data, function(i, subtitulo){
+                    options += '<option value="'+subtitulo.sub01_id+'">'+subtitulo.sub01_nome+'</option>';
+                });
+                $('#subtitulo-filtro').html(options);
+            });
         } else {
-            option.style.display = 'none';
+            $('#subtitulo-filtro').html('<option value="">Selecione um Subtítulo</option>');
         }
     });
-
-    subtituloSelect.value = ""; // Reseta seleção
 });
+</script> -->
 
 
+<script>
 
 var posicao = localStorage.getItem('posicaoScroll');
 
@@ -795,7 +1065,7 @@ if (barra.style.animationName === 'encolher') {
 
 document.getElementById("btnBuscarDoc").addEventListener("click", function() {
     document.getElementById("documento").placeholder = 'Buscando...';
-    fetch("/../db/buscar_documento_rec.php")
+    fetch("../db/buscar_documento_rec.php")
         .then(response => response.json())
         .then(data => {
             
@@ -812,8 +1082,240 @@ document.getElementById("btnBuscarDoc").addEventListener("click", function() {
 
 </script>
 <script src="gerar.js"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script src="../choices/choices.js"></script> 
+
+
+<script>
+// Script para inicializar Choices.js e filtros em receber.php
+// Script para inicializar Choices.js e filtros em receber.php
+document.addEventListener('DOMContentLoaded', function () {
+    setTimeout(function() {
+        // ========== INICIALIZAÇÃO DO CHOICES.JS ==========
+        const tituloFiltroElement = document.querySelector('#titulo-filtro');
+        const subtituloFiltroElement = document.querySelector('#subtitulo-filtro');
+        const tituloModalElement = document.querySelector('#titulo');
+        const subtituloModalElement = document.querySelector('#subtitulo');
+
+        // IMPORTANTE: Guarda os subtítulos ANTES de inicializar Choices.js
+        const todosSubtitulos = subtituloFiltroElement ? 
+            Array.from(subtituloFiltroElement.querySelectorAll('option')).map(opt => ({
+                value: opt.value,
+                label: opt.textContent.trim(),
+                tituloId: opt.getAttribute('data-titulo-id')
+            })) : [];
+
+        const todosSubtitulosModal = subtituloModalElement ?
+            Array.from(subtituloModalElement.querySelectorAll('option')).map(opt => ({
+                value: opt.value,
+                label: opt.textContent.trim(),
+                tituloId: opt.getAttribute('data-titulo-id')
+            })) : [];
+
+        // Inicializa Choices.js nos elementos de filtro
+        let tituloFiltroChoice = null;
+        let subtituloFiltroChoice = null;
+        
+        if (tituloFiltroElement && typeof Choices !== 'undefined') {
+            tituloFiltroChoice = new Choices(tituloFiltroElement, {
+                searchEnabled: true,
+                searchPlaceholderValue: 'Digite para buscar...',
+                noResultsText: 'Nenhum resultado encontrado',
+                itemSelectText: '',
+                removeItemButton: false,
+            });
+        }
+
+        if (subtituloFiltroElement && typeof Choices !== 'undefined') {
+            subtituloFiltroChoice = new Choices(subtituloFiltroElement, {
+                searchEnabled: true,
+                searchPlaceholderValue: 'Digite para buscar...',
+                noResultsText: 'Nenhum resultado encontrado',
+                itemSelectText: '',
+                removeItemButton: false,
+            });
+            
+            // LIMPA IMEDIATAMENTE após inicializar
+            subtituloFiltroChoice.clearChoices();
+            subtituloFiltroChoice.setChoices(
+                [{ value: '', label: 'Selecione um Subtítulo', disabled: false }],
+                'value',
+                'label',
+                true
+            );
+            subtituloFiltroChoice.setChoiceByValue('');
+        }
+
+        // Inicializa Choices.js nos elementos do modal
+        let tituloModalChoice = null;
+        let subtituloModalChoice = null;
+        
+        if (tituloModalElement && typeof Choices !== 'undefined') {
+            tituloModalChoice = new Choices(tituloModalElement, {
+                searchEnabled: true,
+                searchPlaceholderValue: 'Digite para buscar...',
+                noResultsText: 'Nenhum resultado encontrado',
+                itemSelectText: '',
+                removeItemButton: false,
+            });
+        }
+
+        if (subtituloModalElement && typeof Choices !== 'undefined') {
+            subtituloModalChoice = new Choices(subtituloModalElement, {
+                searchEnabled: true,
+                searchPlaceholderValue: 'Digite para buscar...',
+                noResultsText: 'Nenhum resultado encontrado',
+                itemSelectText: '',
+                removeItemButton: false,
+            });
+            
+            // LIMPA IMEDIATAMENTE após inicializar
+            subtituloModalChoice.clearChoices();
+            subtituloModalChoice.setChoices(
+                [{ value: '', label: 'Selecione', disabled: false }],
+                'value',
+                'label',
+                true
+            );
+            subtituloModalChoice.setChoiceByValue('');
+        }
+
+        console.log('Choices.js inicializado em receber.php:', {
+            tituloFiltro: !!tituloFiltroChoice,
+            subtituloFiltro: !!subtituloFiltroChoice,
+            tituloModal: !!tituloModalChoice,
+            subtituloModal: !!subtituloModalChoice
+        });
+
+        // ========== FILTRO DE SUBTÍTULOS (FILTROS) ==========
+        if (tituloFiltroElement && subtituloFiltroElement) {
+            function carregarSubtitulosFiltro(tituloId, manterSelecao = false) {
+                const valorAtual = subtituloFiltroElement.value;
+
+                if (subtituloFiltroChoice) {
+                    subtituloFiltroChoice.clearChoices();
+                    subtituloFiltroChoice.setChoices(
+                        [{ value: '', label: 'Selecione um Subtítulo', disabled: false }],
+                        'value',
+                        'label',
+                        true
+                    );
+
+                    if (!tituloId) {
+                        subtituloFiltroChoice.setChoiceByValue('');
+                        return;
+                    }
+
+                    const subtitulosFiltrados = todosSubtitulos.filter(sub => sub.tituloId === tituloId);
+                    if (subtitulosFiltrados.length > 0) {
+                        subtituloFiltroChoice.setChoices(subtitulosFiltrados, 'value', 'label', false);
+                    }
+
+                    if (manterSelecao && valorAtual && subtitulosFiltrados.some(sub => sub.value === valorAtual)) {
+                        setTimeout(() => {
+                            subtituloFiltroChoice.setChoiceByValue(valorAtual);
+                        }, 50);
+                    } else {
+                        subtituloFiltroChoice.setChoiceByValue('');
+                    }
+                } else {
+                    subtituloFiltroElement.innerHTML = '<option value="">Selecione um Subtítulo</option>';
+                    
+                    if (!tituloId) return;
+
+                    todosSubtitulos
+                        .filter(sub => sub.tituloId === tituloId)
+                        .forEach(sub => {
+                            const option = document.createElement('option');
+                            option.value = sub.value;
+                            option.textContent = sub.label;
+                            option.setAttribute('data-titulo-id', sub.tituloId);
+                            subtituloFiltroElement.appendChild(option);
+                        });
+
+                    if (manterSelecao && valorAtual) {
+                        subtituloFiltroElement.value = valorAtual;
+                    } else {
+                        subtituloFiltroElement.value = '';
+                    }
+                }
+            }
+
+            tituloFiltroElement.addEventListener('change', function(e) {
+                const valor = e.detail ? e.detail.value : e.target.value;
+                carregarSubtitulosFiltro(valor, false);
+            });
+
+            const tituloInicial = tituloFiltroElement.value;
+            if (tituloInicial) {
+                carregarSubtitulosFiltro(tituloInicial, true);
+            }
+        }
+
+        // ========== FILTRO DE SUBTÍTULOS (MODAL) ==========
+        if (tituloModalElement && subtituloModalElement) {
+            function carregarSubtitulosModal(tituloId) {
+                if (subtituloModalChoice) {
+                    subtituloModalChoice.clearChoices();
+                    subtituloModalChoice.setChoices(
+                        [{ value: '', label: 'Selecione', disabled: false }],
+                        'value',
+                        'label',
+                        true
+                    );
+
+                    if (!tituloId) {
+                        subtituloModalChoice.setChoiceByValue('');
+                        return;
+                    }
+
+                    const subtitulosFiltrados = todosSubtitulosModal.filter(sub => sub.tituloId === tituloId);
+                    if (subtitulosFiltrados.length > 0) {
+                        subtituloModalChoice.setChoices(subtitulosFiltrados, 'value', 'label', false);
+                    }
+                    
+                    subtituloModalChoice.setChoiceByValue('');
+                } else {
+                    subtituloModalElement.innerHTML = '<option value="">Selecione</option>';
+                    
+                    if (!tituloId) return;
+
+                    todosSubtitulosModal
+                        .filter(sub => sub.tituloId === tituloId)
+                        .forEach(sub => {
+                            const option = document.createElement('option');
+                            option.value = sub.value;
+                            option.textContent = sub.label;
+                            option.setAttribute('data-titulo-id', sub.tituloId);
+                            subtituloModalElement.appendChild(option);
+                        });
+                    
+                    subtituloModalElement.value = '';
+                }
+            }
+
+            tituloModalElement.addEventListener('change', function(e) {
+                const valor = e.detail ? e.detail.value : e.target.value;
+                carregarSubtitulosModal(valor);
+            });
+
+            const tituloInicialModal = tituloModalElement.value;
+            if (tituloInicialModal) {
+                carregarSubtitulosModal(tituloInicialModal);
+            }
+        }
+
+        console.log('Filtros de título/subtítulo configurados em receber.php');
+    }, 100);
+});
+</script>
+
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
 
 
 

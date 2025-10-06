@@ -122,7 +122,10 @@ $estadosLista = [
 
             <script src=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js "></script>
     <link href=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css " rel="stylesheet">
+    
     <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="../choices/choices.css"></link>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
@@ -171,7 +174,7 @@ $estadosLista = [
         </div>
 
         <div class="menu-item">
-            <a href="dre/demonstrativo.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
+            <a href="dre/sintetico.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
         </div>
 
 
@@ -636,7 +639,7 @@ $estadosLista = [
                         </div>
 
                         <div class="input-form-adm-group input-form-adm">
-                                <div class="input-bairro">
+                                <div class="input-bairro input-select-geral ">
                                     <select id="bairro" name="bairro" class="form-control"  style="border-bottom-right-radius:0; border-top-right-radius:0;" required>
 
 
@@ -652,7 +655,7 @@ $estadosLista = [
 
                                             
 
-                                            <div class="input-cidade">
+                                            <div class="input-cidade input-select-geral ">
                                     <select id="cidade" name="cidade" class="form-control"  style="border-radius:0;" required>
 
                                     <option value="" >Selecione uma cidade</option>
@@ -669,7 +672,7 @@ $estadosLista = [
 
                                 
 
-                                <div class="input-estado">
+                                <div class="input-estado input-select-geral ">
                             <select id="estado" name="estado" class="form-control"  style="border-bottom-left-radius:0; border-top-left-radius:0;" required>
 
                             <option value="" >Selecione um estado</option>
@@ -951,41 +954,34 @@ document.addEventListener('DOMContentLoaded', function() {
 
     
 
-    // function checar() {
-    //     let nome = document.querySelector('.input-nome input').value;
-    //     let fantasia = document.querySelector('.input-fantasia input').value;
-    //     let cpf = document.querySelector('.input-cpf input').value;
-    //     let cnpj = document.querySelector('.input-cnpj input').value;
-    //     let cep = document.querySelector('.input-cep input').value;
-    //     let endereco = document.querySelector('.input-endereco input').value;
-    //     let bairro = document.querySelector('.input-bairro input').value;
-    //     let cidade = document.querySelector('.input-cidade input').value;
-    //     let estado = document.querySelector('.input-estado input').value;
-    //     let celular = document.querySelector('.input-celular input').value;
-    //     let telefone = document.querySelector('.input-telefone input').value;
-    //     let email = document.querySelector('.input-email input').value;
-    //     let botao = document.querySelector('button[name="acao"]')
+    function checar() {
+        let nome = document.querySelector('.input-nome input').value;
+        let fantasia = document.querySelector('.input-fantasia input').value;
+        let cpf = document.querySelector('.input-cpf input').value;
+        let cnpj = document.querySelector('.input-cnpj input').value;
+        let cep = document.querySelector('.input-cep input').value;
+        let endereco = document.querySelector('.input-endereco input').value;
+        let bairro = document.querySelector('.input-bairro input').value;
+        let cidade = document.querySelector('.input-cidade input').value;
+        let estado = document.querySelector('.input-estado input').value;
+        let celular = document.querySelector('.input-celular input').value;
+        let telefone = document.querySelector('.input-telefone input').value;
+        let email = document.querySelector('.input-email input').value;
+        let botao = document.querySelector('button[name="acao"]')
 
 
 
-    //     switch($get_cadastro) {
-    //         case 'cliente':
-    //                 if (nome !== '' && fantasia !== '' && cpf !== '' && cnpj !== '' && cep !== '' && endereco !== '' && bairro !== '' && cidade !== '' && estado !== '' && celular !== '' && telefone !== '' && email !== '') {
-    //                 botao.disabled = false;
-    //             } else {
-    //                 botao.disabled = true;
-    //                 }
-    //             break;
-    //         case 'bairro':
-    //             if(nome !== '') {
-    //                 botao.disabled = false
-    //                 } else {
-    //                 botao.disabled = true;
-    //                 }
-    //         break;
-    //     }
+        switch($get_cadastro) {
+            case 'cliente':
+                    if (nome !== '' && fantasia !== '' && cpf !== '' && cnpj !== '' && cep !== '' && endereco !== '' && bairro !== '' && cidade !== '' && estado !== '' && celular !== '' && telefone !== '' && email !== '') {
+                    botao.disabled = false;
+                } else {
+                    botao.disabled = true;
+                    }
+                break;
+        }
         
-    // }
+    }
 
 
     function encolher() {
@@ -1067,7 +1063,9 @@ if (barra.style.animationName === 'encolher') {
    
 <?php } ?>
 
-
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script src="../choices/choices.js"></script>
 
 </html>
 
