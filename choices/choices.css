@@ -1,0 +1,116 @@
+.choices__inner {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 3em;
+    background-color: white;
+}
+
+.choices[data-type*="select-one"]::after {
+  display: none;
+}
+
+.choices[data-type*="select-multiple"]::after {
+  display: none;
+}
+
+
+/* container do select */
+.input-select-titulo .choices__inner,
+#subtitulo-dre .choices__inner {
+    display: flex;
+    align-items: center;
+    padding: 0 0.75em;
+    height: 2.5em;
+}
+
+/* item selecionado ou placeholder */
+.input-select-titulo .choices__list--single .choices__item {
+    margin-top: 1.5em;
+    line-height: 1.2em;
+    display: flex;
+    align-items: center;
+}
+
+.choices div{
+    background-color: white;
+}
+
+#subtitulo-dre .choices__list--single .choices__item  {
+    margin-top: 1em;
+    line-height: 1.2em;
+    display: flex;
+    align-items: center;
+}
+
+div input[type="text"],
+div input[type="date"]{
+    height: 2.75em;
+}
+
+.choices__input {
+    background-color: white;
+}
+
+.input-documento .choices,
+.input-documento .choices__inner{
+    height: 3em;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.inputs-pagamento-select div{
+    width: calc(75%/3);
+}
+
+.input-documento .choices div {
+    border-top-left-radius: 0.5em;
+    border-bottom-left-radius: 0.5em;
+}
+
+.input-select-titulo .choices div,
+#subtitulo-dre .choices div {
+    margin-bottom: 0.5em;
+    margin-top: 0.1em;
+}
+
+.choices__placeholder {
+    background-color: white;
+    display: flex;
+    justify-content: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+}
+
+.input-select-geral .choices,
+.input-select-geral .choices__inner,
+.input-select-geral .choices__inner select,
+.input-select-geral .choices__inner select option,
+.input-select-geral .choices__list,
+.input-select-geral .choices__list div,
+.input-select-geral .choices__inner .choises_list .choices__placeholder {
+    width: 100%;
+}
+
+/* CORREÇÃO: Dropdown aberto - permite texto em múltiplas linhas */
+.choices__list--dropdown {
+    white-space: normal !important;
+    overflow-y: hidden !important;
+    overflow-x: hidden !important;
+}
+
+.choices__list--dropdown .choices__item {
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+    padding: 10px 12px !important;
+    line-height: 1.4 !important;
+}
+
+/* Específico para título e subtítulo */
+.choices__list--dropdown .choices__item--selectable {
+    white-space: normal !important;
+    padding-right: 12px !important;
+}
