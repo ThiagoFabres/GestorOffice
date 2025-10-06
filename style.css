@@ -29,9 +29,13 @@
     box-shadow: none;
 }
 
+.inputs-dre-text-analitico div input {
+    border-radius: 0;
+}
+
 .card-header .btn-primary:hover,
 .card-header #btn-analitico,
-.card-header #btn-demonstrativo {
+.card-header #btn-sintetico {
         border-bottom: 2px solid #5856d6;
 }
 
@@ -39,17 +43,72 @@
     gap: 0;
 }
 
+
 .card-header .btn-primary h3 {
     color: black;
     font-size: 1.25em;
     margin: 0;
     padding: 0;
 }
+.form-check-input[type="radio"] {
+    width: 1em;
+    height: 1em;
+    box-shadow: none;
+    border-radius: 50%;
+}
+
+.form-check-input[type="radio"]:checked {
+    background-color: #5856d6;
+}
+
+.form-pagamento {
+    display: flex;
+    flex-direction: row;
+}
+
+.inputs-pagamento-group {
+    width: 50%;
+    height: 100%;
+}
+.selects-pagamento{
+    width: 40%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    flex-direction: column;
+}
+
+.radio-pagamento {
+    display: flex;
+    flex-direction: row;
+}
+
+.inputs-pagamento-text {
+    display: flex; 
+    flex-direction: row; 
+    justify-content: center;
+    height: 50%;
+    width: 100%;
+}
+.inputs-pagamento-select {
+    display: flex; 
+    flex-direction: row; 
+    height: 50%;
+    width: 100%;
+}
 
 .inputs-dre-text {
     display: flex;
     flex-direction: row;
     width: calc(30% + 1em);
+    gap: 1em;
+    align-items: center;
+}
+
+.inputs-dre-text-analitico {
+    display: flex;
+    flex-direction: row;
+    width: calc(45% + 1em);
     gap: 1em;
     align-items: center;
 }
@@ -62,21 +121,45 @@
     align-items: end;
 }
 
-.relatorios-botoes #botao-gerar-pdf {
+.inputs-dre-btn-analitico {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width:calc(55% - 1em);
+    align-items: end;
+}
+
+#div-registro-vazio-dre {
+    border-top: 1px solid #d2d2d2;
+    padding-top: 0.5em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#div-registro-vazio-dre h3{
+    text-align: center;
+    color:rgba(53, 53, 53);
+}
+
+
+
+#botao-gerar-pdf {
     background-color: rgba(223, 0, 0);
+    color: white;
     box-shadow: none;
     border-radius: none;
 }
-.relatorios-botoes #botao-gerar-pdf:hover {
+#botao-gerar-pdf:hover {
     background-color: rgba(190, 0, 0);
 }
 
-.relatorios-botoes #botao-gerar-excel {
+#botao-gerar-excel {
     background-color: rgba(9, 118, 64);
+    color: white;
     box-shadow: none;
     border-radius: none;
 }
-.relatorios-botoes #botao-gerar-excel:hover {
+#botao-gerar-excel:hover {
     background-color: rgb(7, 94, 50);
 }
 
@@ -112,10 +195,6 @@
   color: black;
 }
 
-.card-footer {
-    display: flex;
-    flex-direction: row;
-}
 
 .card-select-pagina form {
     display: flex;
@@ -272,6 +351,8 @@
 .card-footer {
     width: 100%;
     display: flex;
+    flex-direction: row;
+    border: none;
     align-items: center;
     box-shadow: none;
     padding: 1em 1.5em 1em 1.5em;
@@ -302,7 +383,8 @@
 }
 
 .custom-accordion {
-    width: 75%;
+    border: 0;
+    min-width: 75%;
     border: 1px solid #d3d4d4;
 }
 /* Accordions customizados */
@@ -312,6 +394,7 @@
     background: #fff;
     border: 1px solid #dbdfe6;
     box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    border-radius: 0;
     min-height: 38px;
 }
 
@@ -356,7 +439,6 @@
 .inner-accordion {
 
     padding: 1em;
-    background: #f8f9fa;
     border-radius: 8px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
@@ -432,6 +514,16 @@ html, body {
     width: 90%;
 }
 
+.input-documento input,
+.input-valor input,
+.input-parcelas input {
+    height: 2.75em;
+}
+
+.subtitulo-dre select {
+    border-radius: 0;
+}
+
 .input-documento .form-control {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
@@ -440,6 +532,12 @@ html, body {
 
 .input-documento-generator {
     width: 10%;
+    height: 3em;
+}
+
+.input-documento-generator button {
+    text-align: center;
+    height: 2.75em;
 }
 
 .input-documento-generator .form-control {
@@ -450,7 +548,6 @@ html, body {
 .table {
     margin-left: auto;
     margin-right: auto;
-    height: 9em;
 }
 .table-cadastro {
     min-width: 70em;
