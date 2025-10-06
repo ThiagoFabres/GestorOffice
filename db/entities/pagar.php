@@ -159,13 +159,29 @@ class Pag02 {
         return $stmt->execute();
     }
 
-    public static function read($id = null, $id_empresa = null, $id_pag01 = null, $data = null, $parcela = null, 
-    $filtro_data_inicial = null,  $filtro_data_final = null, $filtro_nome = null, $filtro_opcao = null, $filtro_por = null, $filtro_pagamento = null,
-    $dash_quitado = false, $dash_tipo = null, $numero_exibir = null,
+    public static function read(
+        $id = null, 
+        $id_empresa = null, 
+        $id_pag01 = null, 
+        $data = null, 
+        $parcela = null, 
+        $filtro_data_inicial = null,  
+        $filtro_data_final = null, 
+        $filtro_documento= null, 
+        $filtro_opcao = null, 
+        $filtro_por = null, 
+        $filtro_pagamento = null,
+        $dash_quitado = false, 
+        $dash_tipo = null, 
+        $numero_exibir = null,
         $read_paginas = null,
         $numero_pagina = null,
         $ordenar_por = null,
-        $direcao = 'asc'
+        $direcao = 'asc',
+        $filtro_con01 = null,
+        $filtro_con02 = null,
+        $filtro_cadastro = null
+
     ) {
         $pdo = (new Database())->connect();
 
@@ -176,10 +192,10 @@ class Pag02 {
             ';
         
         } else if($ordenar_por === 'nome') {
-               $query = 'SELECT p2.*, p1.documento, c.razao_soc FROM pag02 p2 INNER JOIN pag01 p1 ON p2.id_pag01 = p1.id INNER JOIN cadastro c ON p1.id_cadastro = c.id_cadastro';
+               $query = 'SELECT p2.*, p1.documento, p1.id_con02, c.razao_soc FROM pag02 p2 INNER JOIN pag01 p1 ON p2.id_pag01 = p1.id INNER JOIN cadastro c ON p1.id_cadastro = c.id_cadastro';
             
             } else {
-                $query = 'SELECT p2.*, p1.documento 
+                $query = 'SELECT p2.*, p1.documento, p1.id_con02 
                 FROM pag02 p2
                 INNER JOIN pag01 p1 ON p2.id_pag01 = p1.id
             ';
@@ -193,17 +209,17 @@ class Pag02 {
         if($filtro_opcao != null && $filtro_opcao != '') {
             switch($filtro_opcao) {
                 case 'abertos':
-                    $conditions[] = 'p2.valor_pag < valor_par';
+                    $conditions[] = 'p2.valor_pag = 0';
                     break;
                 case 'quitados':
-                    $conditions[] = 'p2.valor_pag = valor_par';
+                    $conditions[] = 'p2.valor_pag > 0';
                     break;
             }
         }
         if($filtro_por != null) {
             switch($filtro_por) {
             case 'lancamento':
-                    $filtro_por_data = 'p2.data_lanc';
+                    $filtro_por_data = 'p1.data_lanc';
                 break;
             case 'vencimento':
                     $filtro_por_data = 'p2.vencimento';
@@ -235,6 +251,14 @@ class Pag02 {
                 break;
         }
     }
+
+    if($filtro_con01 != null) {
+        $conditions[] = 'p1.id_con01 = :filtro_con01';
+    }
+    
+    if($filtro_con02 != null) {
+        $conditions[] = 'p1.id_con02 = :filtro_con02';
+    }
         
 
         if ($id != null) $conditions[] = 'p2.id = :id';
@@ -255,7 +279,8 @@ class Pag02 {
         if ($dash_quitado == true) $conditions[] = 'p2.valor_pag != p2.valor_par';
 
         
-        if ($filtro_nome != null) $conditions[] = 'p1.documento LIKE :filtro_nome';
+        if ($filtro_documento != null) $conditions[] = 'p1.documento LIKE :filtro_documento';
+        if ($filtro_cadastro != null) $conditions[] = 'p1.id_cadastro LIKE :filtro_cadastro';
 
 
 
@@ -303,6 +328,9 @@ switch($ordenar_por) {
     case 'tipo_pagamento':
 
         break;
+    case 'parcela':
+        $query .= ' ORDER BY p2.parcela asc, p1.data_lanc asc';
+        break;
     default:
         $query .= ' ORDER BY p1.data_lanc desc';
         break;
@@ -337,8 +365,11 @@ switch($ordenar_por) {
         }
         if($filtro_data_inicial != null) $stmt->bindValue(':filtro_data_inicial', $filtro_data_inicial);
         if($filtro_data_final != null) $stmt->bindValue(':filtro_data_final', $filtro_data_final);
-        if($filtro_nome != null) $stmt->bindValue(':filtro_nome', '%' . $filtro_nome . '%');
+        if($filtro_documento != null) $stmt->bindValue(':filtro_documento', '%' . $filtro_documento . '%');
+        if($filtro_cadastro != null) $stmt->bindValue(':filtro_cadastro',$filtro_cadastro);        
         if($filtro_pagamento != null) $stmt->bindValue(':filtro_pagamento', $filtro_pagamento);
+        if($filtro_con01 != null) $stmt->bindValue(':filtro_con01', $filtro_con01);
+        if($filtro_con02 != null) $stmt->bindValue(':filtro_con02', $filtro_con02);
 
         $stmt->execute();
 
@@ -364,8 +395,7 @@ switch($ordenar_por) {
         $stmt->bindValue(':valor_pag', $pag02->valor_pag);
         $stmt->bindValue(':data_pag', $pag02->data_pag ? $pag02->data_pag->format('Y-m-d') : null);
         $stmt->bindValue(':obs', $pag02->obs);
-        $stmt->bindValue(':id_pgto', $pag02->id_pgto);
-        
+        $stmt->bindValue(':id_pgto', $pag02->id_pgto); 
 
         
 

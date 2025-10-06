@@ -27,7 +27,7 @@ Class Con01 {
         return $stmt->execute();
     }
 
-    public static function read($id = null, $idempresa = null, $tipo = null): array {
+    public static function read($id = null, $idempresa = null, $tipo = null, $ordenar_por = null) : array {
         $pdo = (new Database())->connect();
         $query = 'SELECT * FROM con01';
         $conditions = [];
@@ -38,6 +38,14 @@ Class Con01 {
 
         if ($conditions) {
             $query .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+        if($ordenar_por != null) {
+            if($ordenar_por == 'tipo') {
+                
+                $query .= ' ORDER BY tipo asc ';
+            }
+            
         }
         $stmt = $pdo->prepare($query);
         if ($id != null) $stmt->bindValue(':id', $id);

@@ -63,14 +63,14 @@ class Cadastro {
        return $stmt->execute(); 
     }
 
-            public static function read($id = null, $email = null, $idempresa = null, $nome = null, $filtro_data_inicial = null, $filtro_data_final = null,$filto_estado = null, $filtro_cidade = null, $filtro_bairro = null): array {
+            public static function read($id = null, $email = null, $id_empresa = null, $nome = null, $filtro_data_inicial = null, $filtro_data_final = null,$filto_estado = null, $filtro_cidade = null, $filtro_bairro = null): array {
     $pdo = (new Database())->connect();
     $query = 'SELECT * FROM cadastro';
     $conditions = [];
 
     if ($id != null) $conditions[] = 'id_cadastro = :id_cadastro';
     if ($email != null) $conditions[] = 'email = :email';
-    if ($idempresa != null) $conditions[] = 'id_empresa = :id_empresa';
+    if ($id_empresa != null) $conditions[] = 'id_empresa = :id_empresa';
     if ($nome != null) $conditions[] = 'nom_fant LIKE :nome';
     if ($filtro_data_inicial != null) $conditions[] = 'data_r >= :data_inicial';
     if ($filtro_data_final != null) $conditions[] = 'data_r <= :data_final';
@@ -95,7 +95,7 @@ class Cadastro {
 
     if ($id != null) $stmt->bindValue(':id_cadastro', $id);
     if ($email != null) $stmt->bindValue(':email', $email);
-    if ($idempresa != null) $stmt->bindValue(':id_empresa', $idempresa);
+    if ($id_empresa != null) $stmt->bindValue(':id_empresa', $id_empresa);
     if ($nome != null) $stmt->bindValue(':nome', '%' . $nome . '%');
     if ($filtro_data_inicial != null) $stmt->bindValue(':data_inicial', $filtro_data_inicial);
     if ($filtro_data_final != null) $stmt->bindValue(':data_final', $filtro_data_final);

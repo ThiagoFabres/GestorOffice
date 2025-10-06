@@ -52,7 +52,7 @@ public static function create($categoria) {
 
     $stmt->execute();
 
-   $stmt->setFetchMode(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, Bairro::class);
+   $stmt->setFetchMode(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, Categoria::class);
 return $stmt->fetchAll();
 }
 
