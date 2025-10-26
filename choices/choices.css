@@ -44,7 +44,8 @@
 }
 
 div input[type="text"],
-div input[type="date"]{
+div input[type="date"],
+div input[type="number"]{
     height: 2.75em;
 }
 
@@ -83,7 +84,13 @@ div input[type="date"]{
     text-overflow: ellipsis;
     display: block;
 }
-
+.inputs-pagamento-text .choices,
+.inputs-pagamento-text .choices__inner,
+.inputs-pagamento-text .choices__inner select,
+.inputs-pagamento-text .choices__inner select option,
+.inputs-pagamento-text .choices__list,
+.inputs-pagamento-text .choices__list div,
+.inputs-pagamento-text .choices__inner .choises_list .choices__placeholder,
 .input-select-geral .choices,
 .input-select-geral .choices__inner,
 .input-select-geral .choices__inner select,
@@ -92,6 +99,8 @@ div input[type="date"]{
 .input-select-geral .choices__list div,
 .input-select-geral .choices__inner .choises_list .choices__placeholder {
     width: 100%;
+    font-size:95%;
+    text-overflow: clip;
 }
 
 /* CORREÇÃO: Dropdown aberto - permite texto em múltiplas linhas */
