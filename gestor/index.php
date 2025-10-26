@@ -193,7 +193,7 @@ try {
             <div class="tab-pane fade show active" id="vendas" role="tabpanel" aria-labelledby="vendas-tab">
                 <h5 class="card-title">Filtros</h5>
                 
-                <form class="row g-3 align-items-end mb-3" method="get" action="registros.php">
+                <form class="row g-3 align-items-end mb-3" method="get" action="index.php">
                     <input type="hidden" name="registro" value="cadastros">
                     <div class="col-md-2" style="width: 20%;">
                         <label for="nome" class="form-label">Nome:</label>
@@ -217,13 +217,16 @@ try {
                         </div>
                     </div>
 
+                    <div class="botoes-gestor">
+                        <div>
+                            <button type="submit" style="background-color: #5856d6; border: 0;" class="btn btn-primary">Filtrar</button>
+                        </div>
+
+                        <div>
+                            <a type="button" style="background-color: #5856d6; border: 0;" href="index.php" class="btn btn-secondary">Limpar</a>
+                        </div>
+                    </div>
                     
-                    <div style="width: 10%;">
-                        <button type="submit" style="background-color: #5856d6; border: 0;" class="btn btn-primary w-100">Buscar</button>
-                    </div>
-                    <div style="width: 10%;">
-                        <a type="button" style="background-color: #5856d6; border: 0;" href="index.php" class="btn btn-secondary">Limpar Filtros</a>
-                    </div>
                 </form>
                 </div>
                 </div>
@@ -242,7 +245,14 @@ try {
                 </thead>
                 <tbody>
             <?php 
-            $cadastros_reg = Usuario::read(null, null, $_SESSION['usuario']->id_empresa, Cargo::USUARIO, $get_nome ?? null, $get_data_inicial ?? null, $get_data_final ?? null);
+            $cadastros_reg = Usuario::read(null,
+            null,
+            $_SESSION['usuario']->id_empresa,
+            Cargo::USUARIO,
+            $get_nome,
+            $get_data_inicial,
+            $get_data_final);
+
             if (!empty($cadastros_reg)) { ?>
                         <?php foreach ($cadastros_reg as $cadastro) {?>
 
@@ -413,6 +423,8 @@ try {
 
 
 </body>
+
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

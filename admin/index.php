@@ -185,7 +185,10 @@ if(!Empresa::read(null, $email) && !Usuario::read(null, $email)) {
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
             <script src=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js "></script>
     <link href=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css " rel="stylesheet">
+
     <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="../choices/choices.css">
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
@@ -263,20 +266,17 @@ if(!Empresa::read(null, $email) && !Usuario::read(null, $email)) {
     </div>
 
     
-
-    
-    <div class="tabela">
-    
-
-      
         
-            <div class="row">
+
                 <div class="col-md-12" style="padding: 0;">
+                        <div class="row">
                     <?php $empresas = Empresa::read(); ?>
                 
 
-                    <div class="card"   >
-                        <div class="card-header"><h3>Empresas</h3></div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Empresas</h3>
+                        </div>
 
                         <div class="card-header-div">
         <div class="card-header-borda">
@@ -313,7 +313,7 @@ if(!Empresa::read(null, $email) && !Usuario::read(null, $email)) {
                         <select name="estado" class="form-select" id="estado">
 
                         
-                            <option value="" <?php if(!isset($_GET['estado'])) {?> selected <?php } ?> >Selecione um Estado</option>
+                            <option value="" <?php if(!isset($_GET['estado'])) {?> selected <?php } ?> >Selecione</option>
                             <?php
 
                             $lista_estados = [];
@@ -348,7 +348,7 @@ if(!Empresa::read(null, $email) && !Usuario::read(null, $email)) {
                         <label for="cidade" class="form-label">Cidade:</label>
                         <select name="cidade" class="form-select" id="cidade">
                         
-                            <option value="" <?php if(!isset($_GET['cidade'])) {?> selected <?php } ?> >Selecione uma cidade</option>
+                            <option value="" <?php if(!isset($_GET['cidade'])) {?> selected <?php } ?> >Selecione</option>
 
                             <?php
                             
@@ -375,7 +375,7 @@ if(!Empresa::read(null, $email) && !Usuario::read(null, $email)) {
                         <label for="bairro" class="form-label">Bairro:</label>
                         <select name="bairro" class="form-select" id="bairro">
                         
-                            <option value="" <?php if(!isset($_GET['bairro'])) {?> selected <?php } ?> >Selecione um bairro</option>
+                            <option value="" <?php if(!isset($_GET['bairro'])) {?> selected <?php } ?> >Selecione</option>
 
                             <?php
 
@@ -404,17 +404,20 @@ if(!Empresa::read(null, $email) && !Usuario::read(null, $email)) {
                         </select>
                     </div>
 
+                    <div class="botoes-admin">
+                        <div>
+                            <button type="submit" style="background-color: #5856d6; border: 0;" class="btn btn-primary">Buscar</button>
+                        </div>
+                        <div>
+                            <a type="button" style="background-color: #5856d6; border: 0;" href="index.php?registro=cadastros" class="btn btn-secondary">Limpar</a>
+                        </div>
+                    </div>
                     
-                    <div style="width: 10%; height: 2.5em;">
-                        <button type="submit" style="background-color: #5856d6; border: 0;" class="btn btn-primary w-100">Buscar</button>
-                    </div>
-                    <div style="width: 10%; height: 2.5em;">
-                        <a type="button" style="background-color: #5856d6; border: 0;" href="index.php?registro=cadastros" class="btn btn-secondary">Limpar Filtros</a>
-                    </div>
                 </form>
                 </div>
                 </div>
 </div>
+                    <div class="tabela-lancamento">
                         <table style="margin-top:1em;" class="table table-striped">
 
                         
@@ -433,7 +436,7 @@ if(!Empresa::read(null, $email) && !Usuario::read(null, $email)) {
                             $empresas = Empresa::read(null, null, $_GET['nome'] ?? null, $_GET['dataInicial'] ?? null, $_GET['dataFinal'] ?? null, $_GET['estado'] ?? null, $_GET['cidade'] ?? null, $_GET['bairro'] ?? null);
                             foreach ($empresas as $empresa) {
                                 $status = ($empresa->status == 0) ? 'INATIVO' : 'ATIVO';
-                                 $link = 'index.php?acao=editar&&id=' . $empresa->id;
+                                 $link = 'index.php?acao=editar&id=' . $empresa->id;
                                 ?>
                                     
                                         <tr class="tr-clientes" onclick="window.location.href='<?= $link ?>'" style="cursor: pointer;">
@@ -460,9 +463,9 @@ if(!Empresa::read(null, $email) && !Usuario::read(null, $email)) {
                         </tbody>
                     </table>
                 </div>
+                </div>
     </div>
     </div> 
-    </div>
 <?php } else if($_GET['acao'] == 'editar') { ?>
     
     <?php 
@@ -692,6 +695,10 @@ if(!Empresa::read(null, $email) && !Usuario::read(null, $email)) {
 
 
 </body>
+
+<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script> -->
+<script src="../choices/choices.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
