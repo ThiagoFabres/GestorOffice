@@ -244,9 +244,8 @@ class Rec02 {
             case 'hoje':
                 $conditions[] = 'r2.vencimento = :filtro_data_inicial';
                 break;
-            case 'semana':
+            case 'a_vencer':
                 $conditions[] = 'r2.vencimento > :filtro_data_inicial';
-                $conditions[] = 'r2.vencimento <= :filtro_data_final';
                 break;
             case 'venceu':
                 $conditions[] = 'r2.vencimento < :filtro_data_inicial';

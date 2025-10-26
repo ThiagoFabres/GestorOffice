@@ -27,8 +27,8 @@ class Cadastro {
         $this->nom_fant = $nom_fant;
         $this->cep = $cep;
         $this->rua = $rua;
-        $this->id_bairro = $id_bairro;
-        $this->id_cidade = $id_cidade;
+        $this->id_bairro = !empty($id_bairro) ? $id_bairro : null;
+        $this->id_cidade = !empty($id_cidade) ? $id_cidade : null;
         $this->estado = $estado;
         $this->cpf = $cpf;
         $this->cnpj = $cnpj;
@@ -63,7 +63,11 @@ class Cadastro {
        return $stmt->execute(); 
     }
 
-            public static function read($id = null, $email = null, $id_empresa = null, $nome = null, $filtro_data_inicial = null, $filtro_data_final = null,$filto_estado = null, $filtro_cidade = null, $filtro_bairro = null): array {
+            public static function read(
+            $id = null, 
+            $email = null, 
+            $id_empresa = null,
+             $nome = null, $filtro_data_inicial = null, $filtro_data_final = null,$filto_estado = null, $filtro_cidade = null, $filtro_bairro = null, $filtro_categoria = null): array {
     $pdo = (new Database())->connect();
     $query = 'SELECT * FROM cadastro';
     $conditions = [];
@@ -77,6 +81,7 @@ class Cadastro {
     if ($filto_estado != null) $conditions[] = 'estado = :estado';
     if ($filtro_cidade != null) $conditions[] = 'id_cidade = :cidade';
     if ($filtro_bairro != null) $conditions[] = 'id_bairro = :bairro';
+    if ($filtro_categoria != null) $conditions[] = 'id_categoria = :categoria';
 
     if ($conditions) {
         $query .= ' WHERE ' . implode(' AND ', $conditions);
@@ -102,6 +107,7 @@ class Cadastro {
     if ($filto_estado != null) $stmt->bindValue(':estado', $filto_estado);
     if ($filtro_cidade != null) $stmt->bindValue(':cidade', $filtro_cidade);
     if ($filtro_bairro != null) $stmt->bindValue(':bairro', $filtro_bairro);
+    if ($filtro_categoria != null) $stmt->bindValue(':categoria', $filtro_categoria);
 
     $stmt->execute();
 

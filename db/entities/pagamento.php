@@ -74,7 +74,7 @@ return $stmt->fetchAll();
 }
         public static function delete($id) {
         $pdo = (new Database())->connect();
-        $sql = 'DELETE FROM pagamento WHERE id = :id';
+        $sql = 'DELETE FROM tipo_pag WHERE id = :id';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id', $id);
         return $stmt->execute();

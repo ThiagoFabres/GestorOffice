@@ -240,14 +240,13 @@ class Pag02 {
         if ($dash_tipo != null && $filtro_data_inicial != null) {
         switch ($dash_tipo) {
             case 'hoje':
-                $conditions[] = 'p2.vencimento = :filtro_data_inicial';
+                $conditions[] = 'p2.vencimento = :filtro_data_inicial AND p2.valor_pag = 0';
                 break;
-            case 'semana':
-                $conditions[] = 'p2.vencimento > :filtro_data_inicial';
-                $conditions[] = 'p2.vencimento <= :filtro_data_final';
+            case 'a_vencer':
+                $conditions[] = 'p2.vencimento > :filtro_data_inicial AND p2.valor_pag = 0';
                 break;
             case 'venceu':
-                $conditions[] = 'p2.vencimento < :filtro_data_inicial';
+                $conditions[] = 'p2.vencimento < :filtro_data_inicial AND p2.valor_pag = 0';
                 break;
         }
     }
