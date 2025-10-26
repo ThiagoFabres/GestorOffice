@@ -1,0 +1,157 @@
+.card table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    white-space: nowrap;
+}
+
+.card td {
+    font-size: 75%;
+}
+
+.card th {
+    font-size: 70%;
+}
+
+
+.card-body {
+    overflow-x: auto;
+    max-width: 100%;
+    /* allow the card-body to shrink when inside a flex container so overflow works */
+    min-height: 0;
+}
+
+.card table {
+    overflow: auto;
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto;
+    max-height: 100%;
+}
+
+.card th,
+.card td {
+    overflow: hidden;
+    text-align: center;
+    padding: 0.4em;
+    white-space: nowrap;  
+    text-overflow: ellipsis;
+    max-width: 120px;    
+    font-size: 90%;
+    vertical-align: middle;
+}
+
+.card-body {
+    overflow: auto;
+    
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+.card {
+    /* Keep the card visually compact and let its inner area scroll instead of growing the layout */
+    overflow: auto;
+    scrollbar-color: #53535365 #fff;
+    scrollbar-width: thin;
+    position: relative;
+    max-width: 100%;
+    height: 360px; /* reasonable limit so multiple cards don't create large vertical gaps */
+    display: flex;
+    flex-direction: column;
+}
+
+
+.card-header-dash{
+    display: flex;
+    flex-direction: row;
+    padding: 2%;
+    border-top-left-radius: 0.3em;
+    border-top-right-radius: 0.3em;
+    width: 100%;
+    background-color: #f8f8f8;
+    border-inline: 1px solid #d2d2d2;
+    border-top: 1px solid #d2d2d2;
+    position: sticky;  
+    justify-content: space-between;
+}
+
+.view-dash {
+    width: 100%;
+    height: 40em;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+}
+
+#receber-group, #pagar-group {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+    height: 20%;
+}
+
+
+
+#receber-hoje,
+#receber-vencidos,
+#receber-semana {
+    margin: 1px;
+    max-width: 32%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 5%;
+}
+
+#receber-hoje th, #receber-hoje td,
+#receber-vencidos th, #receber-vencidos td,
+#receber-semana th, #receber-semana td,
+#receber-hoje tr, #receber-vencidos tr, #receber-semana tr {
+     height: 1em;
+     width: calc(100%/7);
+     padding: 0.2em;
+}
+
+
+
+#receber-hoje table, #receber-vencidos table, #receber-semana table {
+     border: none;
+     padding: 0.2em;
+}
+
+.dashboard-group {
+    width: 50%;
+    text-align: center;
+    align-items: center;
+}
+
+.dashboard-group table {
+    width: 100%;
+    cursor: pointer;
+}
+
+.tr-clientes-dash td {
+    overflow: scroll;
+    text-overflow: clip;
+    min-width: none;
+    white-space: nowrap;
+    text-align: center;
+    font-size: 150%;
+    width: 100%;
+    
+} 
+.tr-clientes-dash th {
+    overflow: scroll;
+    text-overflow: clip;
+    min-width: none;
+    white-space: nowrap;
+    text-align: center;
+    font-size: 175%;
+    width: 100%;
+    color: black;
+    font-weight: normal;
+}
