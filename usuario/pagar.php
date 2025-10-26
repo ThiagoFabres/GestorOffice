@@ -19,15 +19,35 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     exit;
 }
 
+$total_vencido = [];
+    $total_vence_hoje = [];
+    $total_a_vencer = [];
+    $parcelas_totais = Pag02::read(id_empresa: $_SESSION['usuario']->id_empresa);
+    
+    foreach ($parcelas_totais as $pt) {
+        if (($pt->vencimento < date('Y-m-d')) && $pt->valor_pag == 0) {
+            $total_vencido[] = $pt->valor_par;
+        } else if($pt->vencimento == date('Y-m-d') && $pt->valor_pag == 0){
+            $total_vence_hoje[] = $pt->valor_par;
+        } else if(($pt->vencimento > date('Y-m-d')) && $pt->valor_pag == 0){
+            $total_a_vencer[] = $pt->valor_par;
+        }
+    }
+
 $recebimentos_pagos = Pag02::readPagos();
 
-$ordenar_por = filter_input(INPUT_GET, 'ordenar');
-$direcao = filter_input(INPUT_GET, 'direcao');
+$ordenar_por = filter_input(INPUT_GET, 'ordenar') ?? filter_input(INPUT_POST, 'ordenar');
+$direcao = filter_input(INPUT_GET, 'direcao') ?? filter_input(INPUT_POST, 'direcao');
 
 $view = filter_input(INPUT_GET, 'view');
 $target = filter_input(INPUT_GET, 'target');
+
+$modal_quitar_id = filter_input(INPUT_GET, 'quitar_id');
+
 $con01 = filter_input(INPUT_GET, 'con01id');
+
 $acao = filter_input(INPUT_GET, 'acao');
+
 $get_opcao = filter_input(INPUT_GET, 'opcao');
 $get_id = filter_input(INPUT_GET, 'id');
 $numero_exibir = filter_input(INPUT_POST, 'numero_exibido') ?? filter_input(INPUT_GET, 'numero_exibido') ?? 10;
@@ -114,8 +134,6 @@ if ($filtros != []) {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.3/html2pdf.bundle.min.js"
     integrity="sha512-yu5WG6ewBNKx8svICzUA01vozhmiQCVfzjzW40eCHJdsDRaOifh9hPlWBDex5b32gWCzawTp1F3FJz60ps6TnQ=="
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
-    integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
@@ -124,12 +142,16 @@ if ($filtros != []) {
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dragscroll/0.0.8/dragscroll.min.js"></script>
+
 <script type="module" src="node_modules/smart-webcomponents/source/modules/smart.combobox.js"></script>
 <link rel="stylesheet" type="text/css" href="node_modules/smart-webcomponents/source/styles/smart.default.css" />
 
 
 
 <link rel="stylesheet" href="/style.css">
+\\\\\
+
 <link rel="stylesheet" href="../choices/choices.css"></link>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -169,6 +191,7 @@ if ($filtros != []) {
                                         class="bi bi-cash-coin"></i>Tipo Pagamento</a></li>
                             <li><a href="cadastrar.php?cadastro=categoria" class="link-light text-decoration-none"><i
                                         class="bi bi-tag"></i>Categoria</a></li>
+                            <li><a href="cadastrar.php?cadastro=custo" class="link-light text-decoration-none"><i class="bi bi-bank"></i>Centro de custos</a></li>
 
                         </ul>
                     </div>
@@ -238,17 +261,22 @@ if ($filtros != []) {
 
     <div class="main" id="container">
 
-        <div class="botao">
-            <button data-bs-toggle="modal" data-bs-target="#modal_receber"
-                class="btn btn-primary btn-lg botao-adm-adicionar">Novo Lançamento</button>
-        </div>
+            
         <div class="row">
             <div class="col-md-12" style="padding: 0;">
 
 
                 <div class="card">
                     <div class="card-header">
+                        <div class="card-header-lancamento">
                         <h3>Contas a Pagar</h3>
+
+                    <div>
+                        <button data-bs-toggle="modal" data-bs-target="#modal_receber"
+                        class="btn btn-primary btn-lg">Novo Lançamento</button>
+                    </div>
+                        
+                        </div>
                     </div>
 
                     <div class="card-header-div">
@@ -267,7 +295,7 @@ if ($filtros != []) {
 
                                                     <!-- Data inicial -->
                                                     <div style="width: 25%; height: 3em;">
-                                                        <label for="filtro_data_inicial" style="font-size:0.85em;">Data
+                                                        <label for="filtro_data_inicial">Data
                                                             Inicial:</label>
                                                         <input type="date" id="filtro_data_inicial"
                                                             name="filtro_data_inicial"
@@ -277,7 +305,7 @@ if ($filtros != []) {
 
                                                     <!-- Data final -->
                                                     <div style="width: 25%; height: 3em;">
-                                                        <label for="filtro_data_final" style="font-size:0.85em;">Data
+                                                        <label for="filtro_data_final">Data
                                                             Final:</label>
                                                         <input type="date" id="filtro_data_final"
                                                             name="filtro_data_final"
@@ -288,19 +316,20 @@ if ($filtros != []) {
                                                     <!-- Documento -->
                                                     <div style="width: 20%;">
                                                         <label for="filtro_nome"
-                                                            style="font-size:0.85em;">Documento:</label>
+                                                        >Documento:</label>
                                                         <input type="text" id="filtro_nome" name="filtro_nome"
                                                             class="form-control" value="<?= $get_filtro_nome; ?>"
                                                             placeholder="Documento" style="border-radius: 0;">
                                                     </div>
 
                                                     <!-- Tipo de pagamento -->
+                                                
                                                     <div style="width: 20%;">
-                                                        <label for="forma_pagamento" style="font-size:0.85em;">Pagamento:</label>
+                                                        <label for="forma_pagamento">Pagamento:</label>
                                                         <select class="form-control" name="forma_pagamento" style="border-top-left-radius: 0; border-bottom-left-radius: 0;
                                                         border-top-right-radius: 0.25em; border-bottom-right-radius: 0.25em;">
 
-                                                            <option value="">Selecione uma forma de pagamento</option>
+                                                            <option value="">Selecione</option>
 
                                                             <?php foreach (TipoPagamento::read(null, $_SESSION['usuario']->id_empresa) as $pagamento) { ?>
                                                                 <option value="<?= $pagamento->id ?>" <?php if ($get_filtro_pagamento == $pagamento->id) { ?> selected
@@ -316,10 +345,10 @@ if ($filtros != []) {
                                                 <div class="inputs-pagamento-text inputs-pagamento-select input-select-geral ">
 
                                                     <div style="display:flex; flex-direction: column;">
-                                                        <label for="forma_pagamento" style="font-size:0.85em;">Cliente /
+                                                        <label for="forma_pagamento">Cliente /
                                                             Fornecedor:</label>
                                                         <select class="form-control" name="filtro_cadastro">
-                                                            <option value="">Selecione um Cliente / Fornecedor</option>
+                                                            <option value="">Selecione</option>
                                                             <?php
                                                             foreach (Cadastro::read(null, null, $_SESSION['usuario']->id_empresa) as $cadastro) { ?>
                                                                 <option value="<?= $cadastro->id_cadastro ?>" <?php if ($get_filtro_cadastro == $cadastro->id_cadastro) { ?>
@@ -335,10 +364,10 @@ if ($filtros != []) {
                                                     <div
                                                         style="display:flex; flex-direction: column;">
                                                         <label for="forma_pagamento"
-                                                            style="font-size:0.85em;">Titulo:</label>
+                                                        >Titulo:</label>
                                                         <select class="form-control" name="filtro_titulo"
                                                             id="titulo-filtro" onchange="filtroSubtitulo(true)">
-                                                            <option value="">Selecione um Titulo</option>
+                                                            <option value="">Selecione</option>
                                                             <?php
                                                             foreach (Con01::read(null, $_SESSION['usuario']->id_empresa, 'D') as $titulo) { ?>
                                                                 <option value="<?= $titulo->id ?>" <?php if ($get_filtro_titulo == $titulo->id) { ?> selected <?php } ?>>
@@ -351,10 +380,9 @@ if ($filtros != []) {
                                                     <div
                                                         style="display:flex; flex-direction: column;">
                                                         <label for="forma_pagamento"
-                                                            style="font-size:0.85em;">Subtitulo:</label>
+                                                        >Subtitulo:</label>
                                                         <select class="form-control" name="filtro_subtitulo"
                                                             id="subtitulo-filtro">
-                                                            <option value="">Selecione um Subtitulo</option>
                                                             <?php
                                                             // Buscar todos os subtítulos da empresa
                                                             $todosSubtitulos = Con02::read(null, $_SESSION['usuario']->id_empresa);
@@ -374,57 +402,63 @@ if ($filtros != []) {
 
                                             <!-- Primeira linha de radios (opção) -->
                                             <div class="radio-pagamento">
-                                                <div style="margin-right: 1em;">
+                                                <div>
                                                     <h5 style="font-size: 1em;">Opção:</h5>
                                                 </div>
 
-                                                <div class="form-check" style="margin-right: 1em;">
+                                                <div class="form-check">
+                                                    <label class="form-check-label" for="">Todos</label>
                                                     <input class="form-check-input" type="radio" id="todos"
                                                         name="opcao_filtro" value="" <?php if ($get_filtro_opcao == '' || empty($get_filtro_opcao)) { ?> checked <?php } ?>>
-                                                    <label class="form-check-label" for="">Todos</label>
+                                                    
                                                 </div>
 
-                                                <div class="form-check" style="margin-right: 1em;">
+                                                <div class="form-check">
+                                                    <label class="form-check-label" for="abertos">Abertos</label>
                                                     <input class="form-check-input" type="radio" id="abertos"
                                                         name="opcao_filtro" value="abertos" <?php if ($get_filtro_opcao == 'abertos') { ?> checked <?php } ?>
                                                         value="abertos">
-                                                    <label class="form-check-label" for="abertos">Abertos</label>
+                                                    
                                                 </div>
 
-                                                <div class="form-check" style="margin-right: 1em;">
+                                                <div class="form-check">
+                                                    <label class="form-check-label" for="quitados">Quitados</label>
                                                     <input class="form-check-input" type="radio" id="quitados"
                                                         name="opcao_filtro" value="quitados" <?php if ($get_filtro_opcao == 'quitados') { ?> checked <?php } ?>
                                                         value="quitados">
-                                                    <label class="form-check-label" for="quitados">Quitados</label>
+                                                    
                                                 </div>
                                             </div>
 
 
                                             <!-- Segunda linha de radios (filtro por) -->
                                             <div class="radio-pagamento" style="...">
-                                                <div style="margin-right: 1em;">
-                                                    <h5 style="font-size: 1em;">Filtro por:</h5>
+                                                <div>
+                                                    <h5 style="font-size: 1em;">Filtro <br> por:</h5>
                                                 </div>
 
-                                                <div class="form-check" style="margin-right: 1em;">
+                                                <div class="form-check">
+                                                    <label class="form-check-label" for="lancamento">Lançamento</label>
                                                     <input class="form-check-input" type="radio" id="lancamento"
                                                         name="filtro_por" <?php if ($get_filtro_por == 'lancamento' || empty($get_filtro_por)) { ?> checked <?php } ?>
                                                         value="lancamento">
-                                                    <label class="form-check-label" for="lancamento">Lançamento</label>
+                                                    
                                                 </div>
 
-                                                <div class="form-check" style="margin-right: 1em;">
+                                                <div class="form-check">
+                                                    <label class="form-check-label" for="vencimento">Vencimento</label>
                                                     <input class="form-check-input" type="radio" id="vencimento"
                                                         name="filtro_por" <?php if ($get_filtro_por == 'vencimento') { ?>
                                                             checked <?php } ?> value="vencimento">
-                                                    <label class="form-check-label" for="vencimento">Vencimento</label>
+                                                    
                                                 </div>
 
-                                                <div class="form-check" style="margin-right: 1em;">
+                                                <div class="form-check">
+                                                    <label class="form-check-label" for="pagamento">Pagamento</label>
                                                     <input class="form-check-input" type="radio" id="pagamento"
                                                         name="filtro_por" <?php if ($get_filtro_por == 'pagamento') { ?>
                                                             checked <?php } ?> value="pagamento">
-                                                    <label class="form-check-label" for="pagamento">Pagamento</label>
+                                                    
                                                 </div>
                                             </div>
 
@@ -434,8 +468,7 @@ if ($filtros != []) {
 
 
 
-                                        <div
-                                            style="width: 10%; display: flex; flex-direction: column; justify-content: space-evenly;">
+                                        <div class="btn-filtro">
                                             <button type="submit" class="btn btn-primary"
                                                 style="background-color: #5856d6;">Filtrar</button>
                                             <a href="pagar.php" class="btn btn-secondary">Limpar</a>
@@ -449,6 +482,7 @@ if ($filtros != []) {
 
 
                     </div>
+                <div class="tabela-lancamento dragscroll">
                     <table class="table table-striped">
                         <thead>
                             <?php
@@ -479,39 +513,40 @@ if ($filtros != []) {
                                 </th>
                                 <th><a>Descrição</a></th>
                                 <th><a
-                                        href="<?= $caminho ?>?ordenar=valor&direcao=<?php echo ($ordenar_por === 'valor' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Valor</a><?php if ($ordenar_por == 'valor') {
+                                        href="<?= $caminho ?>?ordenar=valor&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'valor' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Valor</a><?php if ($ordenar_por == 'valor') {
                                                          echo $seta;
                                                      } ?>
                                 </th>
                                 <th><a>Parcela Geral</a></th>
                                 <th><a>Parcela Atual</a></th>
                                 <th><a
-                                        href="<?= $caminho ?>?ordenar=valor_parcela&direcao=<?php echo ($ordenar_por === 'valor_parcela' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Valor
+                                        href="<?= $caminho ?>?ordenar=valor_parcela&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'valor_parcela' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Valor
                                         da Parcela</a><?php if ($ordenar_por == 'valor_parcela') {
                                             echo $seta;
                                         } ?></th>
                                 <th><a
-                                        href="<?= $caminho ?>?ordenar=data_vencimento&direcao=<?php echo ($ordenar_por === 'data_vencimento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Vencimento</a><?php if ($ordenar_por == 'data_vencimento') {
+                                        href="<?= $caminho ?>?ordenar=data_vencimento&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'data_vencimento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Vencimento</a><?php if ($ordenar_por == 'data_vencimento') {
                                                          echo $seta;
                                                      } ?>
                                 </th>
                                 <th><a
-                                        href="<?= $caminho ?>?ordenar=data_pagamento&direcao=<?php echo ($ordenar_por === 'data_pagamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Data
+                                        href="<?= $caminho ?>?ordenar=data_pagamento&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'data_pagamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Data
                                         de Pagamento</a><?php if ($ordenar_por == 'data_pagamento') {
                                             echo $seta;
                                         } ?>
                                 </th>
                                 <th><a
-                                        href="<?= $caminho ?>?ordenar=valor_pagamento&direcao=<?php echo ($ordenar_por === 'valor_pagamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Valor
+                                        href="<?= $caminho ?>?ordenar=valor_pagamento&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'valor_pagamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Valor
                                         Pago</a><?php if ($ordenar_por == 'valor_pagamento') {
                                             echo $seta;
                                         } ?></th>
                                 <th><a
-                                        href="<?= $caminho ?>?ordenar=tipo_pagamento&direcao=<?php echo ($ordenar_por === 'tipo_pagamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Tipo
+                                        href="<?= $caminho ?>?ordenar=tipo_pagamento&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'tipo_pagamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Tipo
                                         de Pagamento</a><?php if ($ordenar_por == 'tipo_pagamento') {
                                             echo $seta;
                                         } ?>
                                 </th>
+                                <!-- <th>OBS</th> -->
                                 <th>Quitar</th>
                                 <th>Estornar</th>
                                 <th>Editar</th>
@@ -536,6 +571,8 @@ if ($filtros != []) {
                                 direcao: $direcao
                             );
                             if (!empty($parcelas)) {
+                                
+                                
                                 if (empty($recebimentos_pagos) || $recebimentos_pagos === null)
                                     $recebimentos_pagos = []; ?>
 
@@ -544,9 +581,9 @@ if ($filtros != []) {
                                     $data_atual = new DateTime();
                                     $data_atual = $data_atual->format('Y-m-d');
 
-                                    if (($pag02->vencimento == $data_atual) && $pag02->valor_pag != $pag02->valor_par) {
+                                    if (($pag02->vencimento == $data_atual) && $pag02->valor_pag == 0) {
                                         $cor_parcela = 'parcela_cor_amarela';
-                                    } else if (($pag02->vencimento < $data_atual) && $pag02->valor_pag != $pag02->valor_par) {
+                                    } else if (($pag02->vencimento < $data_atual) && $pag02->valor_pag == 0) {
                                         $cor_parcela = 'parcela_cor_vermelha';
                                     } else if (($pag02->vencimento > $data_atual) && $pag02->valor_pag == 0) {
                                         $cor_parcela = 'parcela_cor_azul';
@@ -573,9 +610,9 @@ if ($filtros != []) {
                                     $data_lanc = $data_lanc->format('d-m-Y');
 
                                     $cadastro = Cadastro::read($pag01->id_cadastro)[0];
-                                    $valor_total = number_format($pag01->valor, 2, ',', '');
-                                    $valor_parcela = number_format($pag02->valor_par, 2, ',', '');
-                                    $valor_pago = number_format($pag02->valor_pag, 2, ',', '');
+                                    $valor_total = number_format($pag01->valor, 2, ',', '.');
+                                    $valor_parcela = number_format($pag02->valor_par, 2, ',', '.');
+                                    $valor_pago = number_format($pag02->valor_pag, 2, ',', '.');
                                     $link = 'pagar.php?view=pagar&acao=visualizar&id=' . $pag02->id;
 
                                     $ultima_parcela = null;
@@ -604,9 +641,10 @@ if ($filtros != []) {
                                         <td><?php if ($pag02->valor_pag == 0) {
                                             echo '';
                                         } else {
-                                            echo 'R$' . $valor_pago;
+                                            echo 'R$ ' . $valor_pago;
                                         } ?></td>
                                         <td><?= $pagamento->nome ?? '' ?></td>
+                                        <!-- <td><?= $pag02->obs ?></td> -->
                                         <td class="td-acoes">
                                             <?php $valor_restante = number_format($pag02->valor_par - $pag02->valor_pag, 2, ',', '') ?>
                                             <button class="btn btn-primary" data-bs-toggle="modal" <?php if ($pag02->valor_pag > 0) { ?> disabled <?php } ?> data-bs-target="#modal_quitar"
@@ -632,8 +670,7 @@ if ($filtros != []) {
 
 
 
-                                <?php } ?>
-                            <?php } else { ?>
+                                <?php } } else { ?>
                                 <tr>
                                     <td>Nenhum Lançamento encontrado</td>
                                     <td></td>
@@ -658,6 +695,7 @@ if ($filtros != []) {
 
                 </div>
                 </table>
+            </div>
                 <div class="card-footer">
                     <div class="card-select-pagina">
                         <?php
@@ -694,6 +732,20 @@ if ($filtros != []) {
                         </form>
                     </div>
 
+
+                            <?php
+                            $total_vencido = array_sum($total_vencido);
+                            $total_vence_hoje = array_sum($total_vence_hoje);
+                            $total_a_vencer = array_sum($total_a_vencer);
+                            ?>
+                            <div id="total-vencido">Total vencido: R$
+                                <?= number_format($total_vencido, 2, ',', '.') ?> </div>
+                            <div id="total-vence-hoje">Total que vence hoje: R$
+                                <?= number_format($total_vence_hoje, 2, ',', '.') ?> </div>
+                            <div id="total-a-vencer">Total a vencer: R$
+                                <?= number_format($total_a_vencer, 2, ',', '.') ?> </div>
+
+
                     <div class="card-select-numero">
                         <div>
                             <form method="post" action="<?= $caminho ?>">
@@ -723,374 +775,52 @@ if ($filtros != []) {
                 Excel</button>
         </div>
 
-
-        <div class="modal fade" id="modal_quitar" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
-            aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLongTitle">Opções da conta</h5>
-                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form method="post" id="content" action="cadastros_manager.php"
-                            onkeydown="return event.key != 'Enter';">
-                            <input type="hidden" name="view" value="pagar">
-                            <input type="hidden" name="acao" value="quitar">
-                            <input type="hidden" name="target" value="parcela">
-                            <input type="hidden" name="id" id="modal_quitar_id" value="">
-                            <input type="hidden" name="caminho" value="<?= $caminho ?>">
-                            <input type="hidden" name="pagar" value="1">
-                            <?php if (!empty($filtros)) { ?>
-                                <input type="hidden" name="pagina" value="&pagina=<?= $numero_pagina ?>">
-                                <input type="hidden" name="numero_exibido" value="&numero_exibido=<?= $numero_exibir ?>">
-                            <?php } else { ?>
-                                <input type="hidden" name="pagina" value="?pagina=<?= $numero_pagina ?>">
-                                <input type="hidden" name="numero_exibido" value="&numero_exibido=<?= $numero_exibir ?>">
-                            <?php } ?>
-
-                            <div class="valor-alvo">
-                                <p id="modal_quitar_valor_restante" style="color: #00000096;"></p>
-                            </div>
-                            <label for="data">Data do pagamento</label>
-                            <input class="form-control" type="date" placeholder="dd/mm/aa" name="data"
-                                value="<?= (new DateTime())->format('Y-m-d') ?>">
-                            <label for="valor">Valor pago</label>
-                            <input class="form-control" type="text" name="valor" placeholder="Valor pago">
-                            <label for="forma_pagamento">Forma de pagamento</label>
-                            <select class="form-control" name="forma_pagamento">
-                                <option value="">Selecione uma forma de pagamento</option>
-                                <?php foreach (TipoPagamento::read(null, $_SESSION['usuario']->id_empresa) as $pagamento) { ?>
-                                    <option value="<?= $pagamento->id ?>">
-                                        <?= $pagamento->nome ?>
-                                    </option>
-                                <?php } ?>
-                            </select>
-                            <div style="margin-bottom: 3em;" class="footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                                    style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Fechar</button>
-                                <button type="submit" class="btn btn-primary">Pagar</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
+        
 
 
-
-        <div class="modal fade" id="modal_receber" tabindex="-1" role="dialog" aria-labelledby="modal_receber_title"
-            aria-hidden="true">
-            <div class=" modal-dialog modal-dialog-centered" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-
-                        <h5 class="modal-title" id="modal_receber_long_title">Novo Lançamento</h5>
-                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                        </button>
-                    </div>
-                    <div class="modal-body">
-
-                        <form method="post" id="content" action="editar-pagar.php"
-                            onkeydown="return event.key != 'Enter';">
-                            <input type="hidden" name="view" value="pagar">
-                            <input type="hidden" name="pagar" value="1">
-
-                            <label for="documento">Documento:</label>
-                            <div class="input-documento-group">
-                                <div class="input-documento input-form-adm">
-                                    <!--Nome: -->
-
-                                    <input type="text"  onchange="checar()" name="documento" id="documento"
-                                        class="form-control" placeholder="Documento" value="" required>
-                                </div>
-
-                                <div class="input-documento-generator">
-                                    <button type="button" class="form-control" id="btnBuscarDoc"><i
-                                            class="bi bi-text-center"></i></button>
-                                </div>
-                            </div>
-                            <label for="cadastro">Cliente / Fornecedor:</label>
-                            <div class="input-documento-group">
-                                <div class="input-documento input-form-adm">
-                                    <!--Nome: -->
-
-                                    <select name="cadastro" class="form-select" id="cadastro"
-                                        style="border-top-right-radius:0; border-bottom-right-radius:0;">
-                                        <option value="">Selecione</option>
-
-                                        <?php
-                                        $cadastros = Cadastro::read(null, null, $_SESSION['usuario']->id_empresa);
-                                        foreach ($cadastros as $cadastro) { ?>
-                                            <option value="<?= $cadastro->id_cadastro ?>">
-                                                <?= htmlspecialchars($cadastro->nom_fant, ENT_QUOTES, 'UTF-8') ?></option>
-                                        <?php } ?>
-                                    </select>
-                                </div>
-                                <div class="input-documento-generator">
-                                    <button data-bs-toggle="modal" data-bs-target="#modal_cadastro" type="button"
-                                        class="form-control" id="btnModalCadastro"><i
-                                            class="bi bi-plus-lg"></i></button>
-                                </div>
-                            </div>
-
-
-                            <div class="input-valor input-form-adm">
-                                <!--Nome: -->
-                                <label for="valor">Valor:</label>
-                                <input type="text" onchange="checar()" name="valor" class="form-control"
-                                    placeholder="Valor" value="" required>
-                            </div>
-
-                            <div class="input-parcelas input-form-adm">
-                                <!--Nome: -->
-                                <label for="parcelas">Parcelas:</label>
-                                <input type="number" onchange="checar()" name="parcelas" class="form-control"
-                                    placeholder="Parcelas" value="" required>
-                            </div>
-
-                            <div class="input-descricao input-form-adm">
-                                <!--Nome: -->
-                                <label for="descricao">Descrição:</label>
-                                <input type="text" onchange="checar()" name="descricao" class="form-control"
-                                    placeholder="Descrição" value="" required>
-                            </div>
-
-
-                            <div class="titulos-receber" style="display:flex; flex-direction: row;">
-
-                                <div class="input-titulo input-form-adm" style="width: 50%;">
-                                    <!--Nome: -->
-                                    <label for="titulo">Titulo</label>
-                                    <select name="titulo" class="form-select" id="titulo"
-                                        style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
-                                        <option value="">Selecione</option>
-
-                                        <?php $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa, 'D');
-                                        foreach ($titulos as $titulo) { ?>
-                                            <option value="<?= $titulo->id ?>">
-                                                <?= htmlspecialchars($titulo->nome, ENT_QUOTES, 'UTF-8') ?></option>
-                                        <?php } ?>
-                                    </select>
-                                </div>
-
-                                <div class="input-subtitulo input-form-adm" style="width: 50%;">
-                                    <!--Nome: -->
-                                    <label for="subtitulo">Sub-Titulo</label>
-                                    <select id="subtitulo" name="subtitulo" class="form-control">
-                                        <option value="">Selecione</option>
-                                        <?php
-                                        // Buscar todos os subtítulos da empresa
-                                        $todosSubtitulos = Con02::read(null, $_SESSION['usuario']->id_empresa);
-                                        foreach ($todosSubtitulos as $sub) { ?>
-                                            <option value="<?= $sub->id ?>" data-titulo-id="<?= $sub->id_con01 ?>">
-                                                <?= htmlspecialchars($sub->nome, ENT_QUOTES, 'UTF-8') ?>
-                                            </option>
-                                        <?php } ?>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div style="margin-bottom: 3em;" class="footer">
-
-
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                                <button name="acao" value="adicionar" class="btn btn-success"
-                                    style="float:right; background-color: #5856d6; border: #5856d6; "
-                                    href="consulta_cliente.php">Salvar</button>
-
-                        </form>
-
-
-                    </div>
-
-                </div>
-            </div>
-        </div>
-    </div>
-    </div>
-    </div>
-    </div>
+    <?php require_once __DIR__ . '/../modais/lancamentos/pagar/modal_quitar.php'; ?>
     </div>
 
-    <div class="modal fade" id="modal_cadastro" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
-        aria-hidden="true">
-        <div class=" modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLongTitle">Cadastrar</h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    </button>
-                </div>
-                <div class="modal-body">
-
-                    <form method="post" id="content" action="cadastros_manager.php">
-                        <input type="hidden" name="view" value="cadastro">
-                        <input type="hidden" name="insta" value="pagar">
-                        <input type="hidden" name="target" value="cliente">
-                        <input type="hidden" name="id" value="">
-                        <label>Informe os dados do Cliente ou Fornecedor</label>
-
-                        <div class="input-nome input-form-adm" style="width:100%;">
-                            <!-- Razão social / Nome: -->
-                            <input type="text" onchange="checar()" name="nome" class="form-control"
-                                placeholder="Razão social / Nome" value="" required>
-                        </div>
-
-
-
-                        <div class="input-fantasia input-form-adm">
-                            <!--Nome fantasia-->
-                            <input type="text" onchange="checar()" name="fantasia" class="form-control"
-                                placeholder="Nome fantasia" value="" required>
-                        </div>
-
-
-
-                        <div class="input-cpf input-form-adm">
-                            <!--CPF-->
-                            <input type="text" onchange="checar()" name="cpf" class="form-control" placeholder="CPF"
-                                value="" required>
-                        </div>
-
-
-
-                        <div class="input-cnpj input-form-adm">
-                            <!--cnpj-->
-                            <input type="text" onchange="checar()" name="cnpj" class="form-control" placeholder="CNPJ"
-                                value="" required>
-                        </div>
-
-
-
-                        <div class="input-cep input-form-adm">
-                            <input type="text" onchange="checar()" name="cep" class="form-control" placeholder="CEP"
-                                value="" required>
-                        </div>
-
-
-
-                        <div class="input-endereco input-form-adm">
-                            <input type="text" onchange="checar()" name="endereco" class="form-control"
-                                placeholder="Endereço" value="" required>
-                        </div>
-
-                        <div class="input-form-adm-group input-form-adm">
-                            <div class="input-bairro input-select-geral ">
-                                <select id="bairro" name="bairro" class="form-control"
-                                    style="border-bottom-right-radius:0; border-top-right-radius:0;" required>
-
-
-                                    <option value="">Selecione um bairro</option>
-
-                                    <?php foreach (Bairro::read(null, $_SESSION['usuario']->id_empresa) as $bairro) { ?>
-                                        <option value="<?= $bairro->id ?>">
-                                            <?= htmlspecialchars($bairro->nome, ENT_QUOTES, 'UTF-8') ?>
-                                        </option>
-                                    <?php } ?>
-                                </select>
-                            </div>
-
-
-
-                            <div class="input-cidade input-select-geral ">
-                                <select id="cidade" name="cidade" class="form-control" style="border-radius:0;"
-                                    required>
-
-                                    <option value="">Selecione uma cidade</option>
-                                    <?php foreach (Cidade::read(null, $_SESSION['usuario']->id_empresa) as $cidade) { ?>
-
-
-                                        <option value="<?= $cidade->id ?>">
-                                            <?= htmlspecialchars($cidade->nome, ENT_QUOTES, 'UTF-8') ?>
-                                        </option>
-                                    <?php } ?>
-
-                                </select>
-                            </div>
-
-
-
-                            <div class="input-estado input-select-geral ">
-                                <select id="estado" name="estado" class="form-control"
-                                    style="border-bottom-left-radius:0; border-top-left-radius:0;" required>
-
-                                    <option value="">Selecione um estado</option>
-                                    <?php foreach ($estadosLista as $sigla => $estado) { ?>
-                                        <option value="<?= $sigla ?>">
-                                            <?= htmlspecialchars($estado, ENT_QUOTES, 'UTF-8') ?>
-                                        </option>
-                                    <?php } ?>
-
-                                </select>
-                            </div>
-                        </div>
-
-
-                        <div class="input-form-contato-adm-group input-form-adm">
-
-
-
-                            <div class="input-celular">
-                                <input type="text" onchange="checar()" name="celular" class="form-control"
-                                    style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
-                                    placeholder="Celular" value="" required>
-                            </div>
-
-
-
-                            <div class="input-telefone">
-                                <input type="text" onchange="checar()" name="fixo" class="form-control"
-                                    style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
-                                    placeholder="Telefone Fixo" value="" required>
-                            </div>
-
-                        </div>
-
-                        <div class="input-email input-form-adm">
-                            <input type="text" onchange="checar()" name="email" class="form-control"
-                                placeholder="E-mail" value="" required>
-                        </div>
-
-
-
-                        <div class="input-categoria" style="margin-bottom:1em;">
-                            <select id="cidade" name="categoria" class="form-control" required>
-
-                                <option value="">Selecione uma categoria</option>
-                                <?php foreach (Categoria::read(null, $_SESSION['usuario']->id_empresa) as $categoria) { ?>
-                                    <option value="<?= $categoria->id ?>">
-                                        <?= htmlspecialchars($categoria->nome, ENT_QUOTES, 'UTF-8') ?>
-                                    </option>
-                                <?php } ?>
-
-                            </select>
-                        </div>
-
-
-
-
-                        <div style="margin-bottom: 3em;" class="footer">
-
-                            <button name="acao" value="adicionar" class="btn btn-success"
-                                style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0;"
-                                href="consulta_cliente.php">Salvar</button>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                                style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Fechar</button>
-
-
-                    </form>
-
-
-                </div>
-
-            </div>
-        </div>
+    <?php require_once __DIR__ . '/../modais/lancamentos/pagar/modal_receber.php'; ?>
     </div>
 
+    <?php require_once __DIR__ . '/../modais/lancamentos/pagar/modal_cadastro.php'; ?>
+    </div>
+
+    <?php require_once __DIR__ . '/../modais/lancamentos/pagar/modal_cadastro_bairro.php'; ?>
+     </div>                              
+            <!-- Modal Cadastro Cidade -->
+    <?php require_once __DIR__ . '/../modais/lancamentos/pagar/modal_cadastro_cidade.php'; ?>
+    </div>
+    
+    <?php require_once __DIR__ . '/../modais/lancamentos/pagar/modal_cadastro_categoria.php'; ?>
+     </div>
+
+    <?php require_once __DIR__ . '/../modais/lancamentos/pagar/modal_cadastro_pagamento.php'; ?>
 
 </body>
 
+<?php if(isset($modal_quitar_id)){
+    // try to load the parcela to compute the remaining value so modal shows it when opened via GET
+    $parcela_for_modal = null;
+    try {
+        $parcela_for_modal = Pag02::read($modal_quitar_id, $_SESSION['usuario']->id_empresa)[0] ?? Pag02::read($modal_quitar_id)[0] ?? null;
+    } catch (Exception $e) {
+        $parcela_for_modal = Pag02::read($modal_quitar_id)[0] ?? null;
+    }
+    $valor_restante_js = '';
+    if ($parcela_for_modal) {
+        $valor_restante_js = number_format($parcela_for_modal->valor_par - $parcela_for_modal->valor_pag, 2, ',', '');
+    }
+?>
+    <script>
+        // set the modal id and the displayed remaining value when the page was opened with ?quitar_id=
+        var modalQInput = document.getElementById('modal_quitar_id');
+        if (modalQInput) modalQInput.value = <?= $modal_quitar_id ?>;
+        var vrEl = document.getElementById('modal_quitar_valor_restante');
+        if (vrEl) vrEl.textContent = "Valor restante da parcela: R$ <?= $valor_restante_js ?>";
+    </script>
+<?php }?>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         var userBtn = document.getElementById('userBtn');
@@ -1265,6 +995,8 @@ if ($filtros != []) {
         });
     });
 
+    
+
 
 
     document.getElementById("btnBuscarDoc").addEventListener("click", function () {
@@ -1284,21 +1016,10 @@ if ($filtros != []) {
 
     
     
-<?php if (isset($acao) && $acao == 'adicionar') { ?>
-    <script>
-        window.addEventListener('DOMContentLoaded', function () {
-            var modalEl = document.getElementById('modal_receber');
-            var Modal = new bootstrap.Modal(modalEl);
-            Modal.show();
-            modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = '<?=$caminho_get?>';
-            });
-        });
-    </script>
-<?php }
-; ?>
+
 
 </script>
+
 <script src="gerar.js"></script>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
@@ -1359,11 +1080,12 @@ document.addEventListener('DOMContentLoaded', function () {
             });
             
             // LIMPA IMEDIATAMENTE após inicializar
+            subtituloFiltroChoice.clearStore();
             subtituloFiltroChoice.clearChoices();
             subtituloFiltroChoice.setChoices(
-                [{ value: '', label: 'Selecione um Subtítulo', disabled: false }],
+                [{ value: '', placeholder: 'Selecione', disabled: false }],
                 'value',
-                'label',
+                'placeholder',
                 true
             );
             subtituloFiltroChoice.setChoiceByValue('');
@@ -1394,13 +1116,9 @@ document.addEventListener('DOMContentLoaded', function () {
             
             // LIMPA IMEDIATAMENTE após inicializar
             subtituloModalChoice.clearChoices();
-            subtituloModalChoice.setChoices(
-                [{ value: '', label: 'Selecione', disabled: false }],
-                'value',
-                'label',
-                true
-            );
+            subtituloModalChoice.clearStore();
             subtituloModalChoice.setChoiceByValue('');
+
         }
 
         console.log('Choices.js inicializado em receber.php:', {
@@ -1416,11 +1134,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 const valorAtual = subtituloFiltroElement.value;
 
                 if (subtituloFiltroChoice) {
+                    subtituloFiltroChoice.clearStore();
                     subtituloFiltroChoice.clearChoices();
                     subtituloFiltroChoice.setChoices(
-                        [{ value: '', label: 'Selecione um Subtítulo', disabled: false }],
+                        [{ value: '', placeholder: 'Selecione', disabled: false }],
                         'value',
-                        'label',
+                        'placeholder',
                         true
                     );
 
@@ -1439,10 +1158,10 @@ document.addEventListener('DOMContentLoaded', function () {
                             subtituloFiltroChoice.setChoiceByValue(valorAtual);
                         }, 50);
                     } else {
-                        subtituloFiltroChoice.setChoiceByValue('');
+                        subtituloFiltroChoice.setChoiceByValue('<?= $get_filtro_subtitulo; ?>');
                     }
                 } else {
-                    subtituloFiltroElement.innerHTML = '<option value="">Selecione um Subtítulo</option>';
+                    subtituloFiltroElement.innerHTML = '<option value="">Selecione</option>';
                     
                     if (!tituloId) return;
 
@@ -1462,6 +1181,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         subtituloFiltroElement.value = '';
                     }
                 }
+
             }
 
             tituloFiltroElement.addEventListener('change', function(e) {
@@ -1479,10 +1199,11 @@ document.addEventListener('DOMContentLoaded', function () {
         if (tituloModalElement && subtituloModalElement) {
             function carregarSubtitulosModal(tituloId) {
                 if (subtituloModalChoice) {
+                    subtituloModalChoice.clearStore();
                     subtituloModalChoice.clearChoices();
                     subtituloModalChoice.setChoices(
-                        [{ value: '', label: 'Selecione', disabled: false }],
-                        'value',
+                        [{ value: '', placeholder: 'Selecione', disabled: false }],
+                        'placeholder',
                         'label',
                         true
                     );
@@ -1527,9 +1248,51 @@ document.addEventListener('DOMContentLoaded', function () {
                 carregarSubtitulosModal(tituloInicialModal);
             }
         }
+    
+    
+    ;}, 100);
+});
+</script>
 
-        console.log('Filtros de título/subtítulo configurados em receber.php');
-    }, 100);
-});</script>
+
+
+<?php if (isset($acao) && $acao == 'adicionar') { 
+    if(!isset($target) || $target == 'cadastro') {?>
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('modal_receber');
+            var Modal = new bootstrap.Modal(modalEl);
+            Modal.show();
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                window.location.href = 'pagar.php';
+            });
+        });
+    </script>
+    <?php } else if($target == 'quitar') { ?>
+        <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('modal_quitar');
+            var Modal = new bootstrap.Modal(modalEl);
+            Modal.show();
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                window.location.href = 'pagar.php';
+            });
+        });
+    </script>
+    <?php } else if (isset($target) && $target != 'cadastro' && $target != 'quitar'){ ?>
+    <script>
+        console.log('a');
+        window.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('modal_cadastro');
+            var Modal = new bootstrap.Modal(modalEl);
+            Modal.show();
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                window.location.href = 'pagar.php';
+            });
+        });
+    </script>
+<?php }}?>
+
+
 
 </html>
