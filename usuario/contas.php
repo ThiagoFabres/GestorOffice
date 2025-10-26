@@ -77,6 +77,7 @@ $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
           <li><a href="cadastrar.php?cadastro=cidade" class="link-light text-decoration-none"><i class="bi bi-buildings"></i>Cidade</a></li>
           <li><a href="cadastrar.php?cadastro=pagamento" class="link-light text-decoration-none"><i class="bi bi-cash-coin"></i>Tipo Pagamento</a></li>
           <li><a href="cadastrar.php?cadastro=categoria" class="link-light text-decoration-none"><i class="bi bi-tag"></i>Categoria</a></li>
+          <li><a href="cadastrar.php?cadastro=custo" class="link-light text-decoration-none"><i class="bi bi-bank"></i>Centro de custos</a></li>
           
         </ul>
       </div>
@@ -239,7 +240,7 @@ $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
                             <label for="nome">Tipo:</label>
                             <select name="tipo" class="form-select" id="tipo">
                                 <option <?php if (($acao == 'editar') && $conta_modal->tipo == 'C') {?> selected <?php } ?> value="C">Crédito</option>
-                                <option <?php if (($acao == 'editar') && $conta_modal->tipo == 'D') {?> selected <?php } ?>value="D">Débito</option>
+                                <option <?php if (($acao == 'editar') && $conta_modal->tipo == 'D') {?> selected <?php } ?> value="D">Débito</option>
                             </select>
                         </div>
                     <?php } ?>
