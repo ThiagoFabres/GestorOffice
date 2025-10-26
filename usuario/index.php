@@ -18,18 +18,55 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
 $data = new DateTime();
 $data_atual = $data->format('Y-m-d');
 
-$data_semana = $data->modify('+7 days');
-$data_semana = $data_semana->format('Y-m-d');
+$data_ontem = $data->modify('-1 days');
+$data_ontem = $data_ontem->format('Y-m-d');
+
+$data_amanha = $data->modify('+2 days');
+$data_amanha = $data_amanha->format('Y-m-d');
+
 
 
 $pagamentos_venceu = Pag02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, null, null, null, null, null, true, 'venceu');
-$pagamentos_hoje = Pag02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, null, null, null, null, null, true, 'hoje');
-$pagamentos_semana = Pag02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, $data_semana, null, null, null, null, true, 'semana');
+$total_pag_venceu = 0;
+foreach($pagamentos_venceu as $pag02) {
+    $total_pag_venceu += $pag02->valor_par;
+}
+$total_pag_venceu = number_format($total_pag_venceu, 2, ',', '.');
 
+$pagamentos_hoje = Pag02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, null, null, null, null, null, true, 'hoje');
+$total_pag_hoje = 0;
+foreach($pagamentos_hoje as $pag02) {
+    $total_pag_hoje += $pag02->valor_par;
+}
+$total_pag_hoje = number_format($total_pag_hoje, 2, ',', '.');
+
+$pagamentos_a_vencer = Pag02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, null, null, null, null, null, true, 'a_vencer');
+$total_pag_a_vencer = 0;
+foreach($pagamentos_a_vencer as $pag02) {
+    $total_pag_a_vencer += $pag02->valor_par;
+}
+$total_pag_a_vencer = number_format($total_pag_a_vencer, 2, ',', '.');
 
 $recebimentos_venceu = Rec02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, null, null, null, null, null, true, 'venceu');
+$total_rec_venceu = 0;
+foreach($recebimentos_venceu as $rec02) {
+    $total_rec_venceu += $rec02->valor_par;
+}
+$total_rec_venceu = number_format($total_rec_venceu, 2, ',', '.');
+
 $recebimentos_hoje = Rec02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, null, null, null, null, null, true, 'hoje');
-$recebimentos_semana = Rec02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, $data_semana, null, null, null, null, true, 'semana');
+$total_rec_hoje = 0;
+foreach($recebimentos_hoje as $rec02) {
+    $total_rec_hoje += $rec02->valor_par;
+}
+$total_rec_hoje = number_format($total_rec_hoje, 2, ',', '.');
+
+$recebimentos_a_vencer = Rec02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, null, null, null, null, null, true, 'a_vencer');
+$total_rec_a_vencer = 0;
+foreach($recebimentos_a_vencer as $rec02) {
+    $total_rec_a_vencer += $rec02->valor_par;
+}
+$total_rec_a_vencer = number_format($total_rec_a_vencer, 2, ',', '.');
 
 ?>
 
@@ -48,9 +85,12 @@ $recebimentos_semana = Rec02::read(null, $_SESSION['usuario']->id_empresa, null,
             <script src=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js "></script>
     <link href=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css " rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="style/dash.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dragscroll/0.0.8/dragscroll.min.js"></script>
+
     <title>Gestor Office Control</title>
 </head>
 
@@ -78,6 +118,7 @@ $recebimentos_semana = Rec02::read(null, $_SESSION['usuario']->id_empresa, null,
           <li><a href="cadastrar.php?cadastro=cidade" class="link-light text-decoration-none"><i class="bi bi-buildings"></i>Cidade</a></li>
           <li><a href="cadastrar.php?cadastro=pagamento" class="link-light text-decoration-none"><i class="bi bi-cash-coin"></i>Tipo Pagamento</a></li>
           <li><a href="cadastrar.php?cadastro=categoria" class="link-light text-decoration-none"><i class="bi bi-tag"></i>Categoria</a></li>
+          <li><a href="cadastrar.php?cadastro=custo" class="link-light text-decoration-none"><i class="bi bi-bank"></i>Centro de custos</a></li>
           
         </ul>
       </div>
@@ -136,445 +177,122 @@ $recebimentos_semana = Rec02::read(null, $_SESSION['usuario']->id_empresa, null,
 
     <div class="main" id="container">
         <div class="view-dash">
-            <h3>Contas a Receber</h3>
-            <div id="receber-group">
-                
-                
-                    <div id="receber-hoje">
-    
-
-      
-        
-                
-
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="dash-titulo-receber"><h3>Contas a Receber</h3></div>
-                            <div class="dash-categoria-receber"><h3>Vence hoje</h3></div>
-                        </div>
-
-
-                        <table class="table-bordered table-striped">
-                <thead>
-                    <tr class="tr-clientes-dash">
-                        <th>Documento</th>
-                        <th>Nome</th>
-                        <th>Valor</th>
-                        <th>Parcela Geral</th>
-                        <th>Parcela Atual</th>
-                        <th>Valor da Parcela</th>
-                        <th>Vencimento</th>
-                    </tr>
-                </thead>
-                <tbody>
-        <?php
-        if(!empty($recebimentos_hoje)) {
-
-        
-            foreach($recebimentos_hoje as $rec02) {
-            $rec01 = Rec01::read($rec02->id_rec01)[0];
-            $cadastro = Cadastro::read($rec01->id_cadastro)[0];
-            $valor_total = number_format($rec01->valor,2 , ',', '');
-            $valor_parcela = number_format($rec02->valor_par,2 , ',', '');
-            $valor_rec = number_format($rec02->valor_pag,2 , ',', '');
-            $data_venc = new DateTime($rec02->vencimento);
-            $data_venc = $data_venc->format('d-m-Y');
-        ?>
-
-                            <tr class="tr-clientes-dash parcela_cor_amarela" onclick="">
-                                <td><?=$rec01->documento?></td> 
-                                <td><?=$cadastro->razao_soc;?> </td>
-                                <td> <?=$valor_total?></td>
-                                <td><?=$rec01->parcelas?></td>
-                                <td><?=$rec02->parcela?></td>
-                                <td> <?=$valor_parcela?></td>
-                                <td><?=$data_venc ?></td>
-                            </tr>
-
-                        <!--  -->
-            <?php } } else {?>
-                        <tr>
-                            <td>Nenhum Lançamento encontrado</td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
+            <div class="dashboard-group">
+                <table class="table-bordered">
+                    <thead>
+                        <tr class="tr-clientes-dash">
+                            <h1>Contas a receber</h1>
                         </tr>
-
-            <?php } ?>
-                </tbody>
-                
-            
-                
-            </table>
-            <div class="card-footer"></div>
-        </div>
-    </div>
-       
-                
-                
-                
-
-                <div id="receber-semana">
-
-                <div class="card">
-                        <div class="card-header">
-                            <div class="dash-titulo-receber"><h3>Contas a Receber</h3></div>
-                            <div class="dash-categoria-receber"><h3>Vence essa semana</h3></div>
-                        </div>
-
-
-                        <table class="table-bordered table-striped">
-                <thead>
-                    <tr class="tr-clientes-dash">
-                        <th>Documento</th>
-                        <th>Nome</th>
-                        <th>Valor</th>
-                        <th>Parcela Geral</th>
-                        <th>Parcela Atual</th>
-                        <th>Valor da Parcela</th>
-                        <th>Vencimento</th>
-                    </tr>
-                </thead>
-                <tbody>
-        <?php
-        if(!empty($recebimentos_semana)) {
-
-        
-            foreach($recebimentos_semana as $rec02) {
-            $rec01 = Rec01::read($rec02->id_rec01)[0];
-            $cadastro = Cadastro::read($rec01->id_cadastro)[0];
-            $valor_total = number_format($rec01->valor,2 , ',', '');
-            $valor_parcela = number_format($rec02->valor_par,2 , ',', '');
-            $valor_rec = number_format($rec02->valor_pag,2 , ',', '');
-            $data_venc = new DateTime($rec02->vencimento);
-            $data_venc = $data_venc->format('d-m-Y');
-        ?>
-
-                            <tr class="tr-clientes-dash parcela_cor_azul" onclick="">
-                                <td><?=$rec01->documento?></td> 
-                                <td><?=$cadastro->razao_soc;?> </td>
-                                <td> <?=$valor_total?></td>
-                                <td><?=$rec01->parcelas?></td>
-                                <td><?=$rec02->parcela?></td>
-                                <td> <?=$valor_parcela?></td>
-                                <td><?=$data_venc ?></td>
-                            </tr>
-
-                        <!--  -->
-            <?php } } else {?>
+                    </thead>
+                    <tbody>
+                        
                         <tr>
-                            <td>Nenhum Lançamento encontrado</td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
+                            <td>
+                                <table class="table-bordered" onclick="window.location.href='receber.php?&filtro_data_final=<?= $data_ontem ?>&filtro_por=vencimento&opcao_filtro=abertos'">
+                                    <thead>
+                                        <tr class="tr-clientes-dash parcela_cor_vermelha" >
+                                            <th>Vencidos</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="tr-clientes-dash">
+                                            <td>R$ <?=$total_rec_venceu?></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+
+                            <td>
+                                <table class="table-bordered" onclick="window.location.href='receber.php?filtro_data_inicial=<?= $data_atual ?>&filtro_data_final=<?= $data_atual ?>&filtro_por=vencimento&opcao_filtro=abertos'">
+                                    <thead>
+                                        <tr class="tr-clientes-dash parcela_cor_amarela">
+                                            <th>Vence hoje</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="tr-clientes-dash">
+                                            <td>R$ <?=$total_rec_hoje?></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+
+                            <td>
+                                <table class="table-bordered" onclick="window.location.href='receber.php?&filtro_data_inicial=<?= $data_amanha ?>&filtro_por=vencimento&opcao_filtro=abertos'">
+                                    <thead>
+                                        <tr class="tr-clientes-dash parcela_cor_azul">
+                                            <th>A vencer</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="tr-clientes-dash">
+                                            <td>R$ <?=$total_rec_a_vencer?></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
                         </tr>
-
-            <?php } ?>
-                </tbody>
-                
-            
-                
-            </table>
-            <div class="card-footer"></div>
-        </div>
-    </div>
-       
-                
-                    
-                
-                <div id="receber-vencidos">
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="dash-titulo-receber"><h3>Contas a Receber</h3></div>
-                            <div class="dash-categoria-receber"><h3>Vencidas</h3></div>
-                        </div>
-
-
-                        <table class="table-bordered table-striped">
-                <thead>
-                    <tr class="tr-clientes-dash">
-                        <th>Documento</th>
-                        <th>Nome</th>
-                        <th>Valor</th>
-                        <th>Parcela Geral</th>
-                        <th>Parcela Atual</th>
-                        <th>Valor da Parcela</th>
-                        <th>Vencimento</th>
-                    </tr>
-                </thead>
-                <tbody>
-        <?php
-        if(!empty($recebimentos_venceu)) {
-
-        
-            foreach($recebimentos_venceu as $rec02) {
-            $rec01 = Rec01::read($rec02->id_rec01)[0];
-            $cadastro = Cadastro::read($rec01->id_cadastro)[0];
-            $valor_total = number_format($rec01->valor,2 , ',', '');
-            $valor_parcela = number_format($rec02->valor_par,2 , ',', '');
-            $valor_rec = number_format($rec02->valor_pag,2 , ',', '');
-            $data_venc = new DateTime($rec02->vencimento);
-            $data_venc = $data_venc->format('d-m-Y');
-        ?>
-
-                            <tr class="tr-clientes-dash parcela_cor_vermelha" onclick="">
-                                <td><?=$rec01->documento?></td> 
-                                <td><?=$cadastro->razao_soc;?> </td>
-                                <td> <?=$valor_total?></td>
-                                <td><?=$rec01->parcelas?></td>
-                                <td><?=$rec02->parcela?></td>
-                                <td> <?=$valor_parcela?></td>
-                                <td><?=$data_venc ?></td>
-                            </tr>
-
-                        <!--  -->
-            <?php } } else {?>
-                        <tr>
-                            <td>Nenhum Lançamento encontrado</td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                        </tr>
-
-            <?php } ?>
-                </tbody>
-                
-            
-                
-            </table>
-            <div class="card-footer"></div>
-        </div>
-                </div>
+                    </tbody>
+                </table>
             </div>
 
-
-
-
-                <h3>Contas a Pagar</h3>
-            <div id="pagar-group">
-                <div id="receber-hoje">
-    
-
-      
-        
-                
-
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="dash-titulo-receber"><h3>Contas a Pagar</h3></div>
-                            <div class="dash-categoria-receber"><h3>Vence hoje</h3></div>
-                        </div>
-
-
-                        <table class="table-bordered table-striped">
-                <thead>
-                    <tr class="tr-clientes-dash">
-                        <th>Documento</th>
-                        <th>Nome</th>
-                        <th>Valor</th>
-                        <th>Parcela Geral</th>
-                        <th>Parcela Atual</th>
-                        <th>Valor da Parcela</th>
-                        <th>Vencimento</th>
-                    </tr>
-                </thead>
-                <tbody>
-        <?php
-        if(!empty($pagamentos_hoje)) {
-
-        
-            foreach($pagamentos_hoje as $pag02) {
-            $pag01 = Pag01::read($pag02->id_pag01)[0];
-            $cadastro = Cadastro::read($pag01->id_cadastro)[0];
-            $valor_total = number_format($pag01->valor,2 , ',', '');
-            $valor_parcela = number_format($pag02->valor_par,2 , ',', '');
-            $valor_pago = number_format($pag02->valor_pag,2 , ',', '');
-            $data_venc = new DateTime($pag02->vencimento);
-            $data_venc = $data_venc->format('d-m-Y');
-        ?>
-
-                            <tr class="tr-clientes-dash parcela_cor_amarela" onclick="">
-                                <td><?=$pag01->documento?></td> 
-                                <td><?=$cadastro->razao_soc;?> </td>
-                                <td> <?=$valor_total?></td>
-                                <td><?=$pag01->parcelas?></td>
-                                <td><?=$pag02->parcela?></td>
-                                <td> <?=$valor_parcela?></td>
-                                <td><?=$data_venc ?></td>
-                            </tr>
-
-                        <!--  -->
-            <?php } } else {?>
+            <div class="dashboard-group">
+                <table class="table-bordered">
+                    <thead>
                         <tr>
-                            <td>Nenhum Lançamento encontrado</td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
+                            <h1>Contas a pagar</h1>
                         </tr>
-
-            <?php } ?>
-                </tbody>
-                
-            
-                
-            </table>
-            <div class="card-footer"></div>
-        </div>
-    </div>
-       
-                
-                
-                
-
-                <div id="receber-semana">
-
-                <div class="card">
-                        <div class="card-header">
-                            <div class="dash-titulo-receber"><h3>Contas a Pagar</h3></div>
-                            <div class="dash-categoria-receber"><h3>Vence essa semana</h3></div>
-                        </div>
-
-
-                        <table class="table-bordered table-striped">
-                <thead>
-                    <tr class="tr-clientes-dash">
-                        <th>Documento</th>
-                        <th>Nome</th>
-                        <th>Valor</th>
-                        <th>Parcela Geral</th>
-                        <th>Parcela Atual</th>
-                        <th>Valor da Parcela</th>
-                        <th>Vencimento</th>
-                    </tr>
-                </thead>
-                <tbody>
-        <?php
-        if(!empty($pagamentos_semana)) {
-
-        
-            foreach($pagamentos_semana as $pag02) {
-            $pag01 = Pag01::read($pag02->id_pag01)[0];
-            $cadastro = Cadastro::read($pag01->id_cadastro)[0];
-            $valor_total = number_format($pag01->valor,2 , ',', '');
-            $valor_parcela = number_format($pag02->valor_par,2 , ',', '');
-            $valor_pago = number_format($pag02->valor_pag,2 , ',', '');
-            $data_venc = new DateTime($pag02->vencimento);
-            $data_venc = $data_venc->format('d-m-Y');
-        ?>
-
-                            <tr class="tr-clientes-dash parcela_cor_azul" onclick="">
-                                <td><?=$pag01->documento?></td> 
-                                <td><?=$cadastro->razao_soc;?> </td>
-                                <td> <?=$valor_total?></td>
-                                <td><?=$pag01->parcelas?></td>
-                                <td><?=$pag02->parcela?></td>
-                                <td> <?=$valor_parcela?></td>
-                                <td><?=$data_venc ?></td>
-                            </tr>
-
-                        <!--  -->
-            <?php } } else {?>
+                    </thead>
+                    <tbody>
+                        
                         <tr>
-                            <td>Nenhum Lançamento encontrado</td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
+                            <td>
+                                <table class="table-bordered" onclick="window.location.href='pagar.php?&filtro_data_final=<?= $data_ontem ?>&filtro_por=vencimento&opcao_filtro=abertos'">
+                                    <thead>
+                                        <tr class="tr-clientes-dash parcela_cor_vermelha">
+                                            <th>Vencidos</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="tr-clientes-dash">
+                                            <td>R$ <?=$total_pag_venceu?></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+
+                            <td>
+                                <table class="table-bordered" onclick="window.location.href='pagar.php?filtro_data_inicial=<?= $data_atual ?>&filtro_data_final=<?= $data_atual ?>&filtro_por=vencimento&opcao_filtro=abertos'">
+                                    <thead>
+                                        <tr class="tr-clientes-dash parcela_cor_amarela">
+                                            <th>Vence hoje</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="tr-clientes-dash">
+                                            <td>R$ <?=$total_pag_hoje?></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+
+                            <td>
+                                <table class="table-bordered" onclick="window.location.href='pagar.php?&filtro_data_inicial=<?= $data_amanha ?>&filtro_por=vencimento&opcao_filtro=abertos'">
+                                    <thead>
+                                        <tr class="tr-clientes-dash parcela_cor_azul">
+                                            <th>A vencer</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="tr-clientes-dash">
+                                            <td>R$ <?=$total_pag_a_vencer?></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
                         </tr>
-
-            <?php } ?>
-                </tbody>
-                
-            
-                
-            </table>
-            <div class="card-footer"></div>
-        </div>
-    </div>
-       
-                
-                    
-                
-                <div id="receber-vencidos">
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="dash-titulo-receber"><h3>Contas a Pagar</h3></div>
-                            <div class="dash-categoria-receber"><h3>Vencidas</h3></div>
-                        </div>
-
-
-                        <table class="table-bordered table-striped">
-                <thead>
-                    <tr class="tr-clientes-dash">
-                        <th>Documento</th>
-                        <th>Nome</th>
-                        <th>Valor</th>
-                        <th>Parcela Geral</th>
-                        <th>Parcela Atual</th>
-                        <th>Valor da Parcela</th>
-                        <th>Vencimento</th>
-                    </tr>
-                </thead>
-                <tbody>
-        <?php
-        if(!empty($pagamentos_venceu)) {
-
-        
-            foreach($pagamentos_venceu as $pag02) {
-            $pag01 = Pag01::read($pag02->id_pag01)[0];
-            $cadastro = Cadastro::read($pag01->id_cadastro)[0];
-            $valor_total = number_format($pag01->valor,2 , ',', '');
-            $valor_parcela = number_format($pag02->valor_par,2 , ',', '');
-            $valor_pago = number_format($pag02->valor_pag,2 , ',', '');
-            $data_venc = new DateTime($pag02->vencimento);
-            $data_venc = $data_venc->format('d-m-Y');
-        ?>
-
-                            <tr class="tr-clientes-dash parcela_cor_vermelha" onclick="">
-                                <td><?=$pag01->documento?></td> 
-                                <td><?=$cadastro->razao_soc;?> </td>
-                                <td> <?=$valor_total?></td>
-                                <td><?=$pag01->parcelas?></td>
-                                <td><?=$pag02->parcela?></td>
-                                <td> <?=$valor_parcela?></td>
-                                <td><?=$data_venc ?></td>
-                            </tr>
-
-                        <!--  -->
-            <?php } } else {?>
-                        <tr>
-                            <td>Nenhum Lançamento encontrado</td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                        </tr>
-
-            <?php } ?>
-                </tbody>
-                
-            
-                
-            </table>
-            <div class="card-footer"></div>
-        </div>
-                </div>
+                    </tbody>
+                </table>
             </div>
 </div>
 </div>
@@ -588,6 +306,7 @@ $recebimentos_semana = Rec02::read(null, $_SESSION['usuario']->id_empresa, null,
 </body>
 
 <script>
+
 document.addEventListener('DOMContentLoaded', function() {
     var userBtn = document.getElementById('userBtn');
     var userMenu = document.getElementById('userMenu');
@@ -708,6 +427,8 @@ atualizarTotalParcelas();
 
 
 
+
+
 if (barra.style.animationName === 'encolher') {
 
             superior.style.animationName = 'expandir-header'
@@ -744,6 +465,8 @@ if (barra.style.animationName === 'encolher') {
         body.style.animationDuration = '0.5s';
         body.style.animationFillMode = 'forwards';
     }}
+    
+
 </script>
 
 
