@@ -1,3 +1,4 @@
+
 /* Centralizar botões dentro do corpo dos modais de opções */
 .acoes .btn-lg {
     display: block;
@@ -21,7 +22,23 @@
     margin-top: 1em;
 }
 
-.card-header .btn-primary {
+.card-header-lancamento {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header-lancamento div,
+.card-header-lancamento div button {
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.card-header #btn-analitico,
+.card-header #btn-sintetico {
     background-color: transparent;
     border-radius: 0;
     align-items: center;
@@ -33,11 +50,12 @@
     border-radius: 0;
 }
 
-.card-header .btn-primary:hover,
-.card-header #btn-analitico,
-.card-header #btn-sintetico {
+.card-header #btn-analitico:hover,
+.card-header #btn-sintetico:hover,
+.btn-dre-selecionado {
         border-bottom: 2px solid #5856d6;
 }
+
 
 .card-header {
     gap: 0;
@@ -64,69 +82,151 @@
 .form-pagamento {
     display: flex;
     flex-direction: row;
+    justify-content: space-evenly;
 }
 
 .inputs-pagamento-group {
-    width: 50%;
+    width: 45%;
     height: 100%;
 }
 .selects-pagamento{
-    width: 40%;
+    width: 45%;
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
-    flex-direction: column;
 }
 
 .radio-pagamento {
     display: flex;
     flex-direction: row;
 }
+.radio-pagamento div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+.radio-pagamento label {
+    font-size: 90%;
+}
 
 .inputs-pagamento-text {
     display: flex; 
     flex-direction: row; 
     justify-content: center;
-    height: 50%;
+    height: 25%;
     width: 100%;
 }
 .inputs-pagamento-select {
     display: flex; 
     flex-direction: row; 
-    height: 50%;
+    height: 40%;
     width: 100%;
+}
+
+.btn-filtro {
+    width: 10%; 
+    display: flex;
+    flex-direction: column; 
+    justify-content: space-evenly;
+}
+
+.btn-filtro button,
+.btn-filtro a {
+    width: 100%;
+    text-align: center;
+    font-size:90%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.inputs-dre {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    gap: 1em;
+    justify-content: space-between;
 }
 
 .inputs-dre-text {
     display: flex;
     flex-direction: row;
-    width: calc(30% + 1em);
-    gap: 1em;
-    align-items: center;
+    gap: 1%;
+    width: calc(75% + 1%);
+    justify-content: space-between;
 }
 
-.inputs-dre-text-analitico {
+
+
+.data-dre {
     display: flex;
     flex-direction: row;
-    width: calc(45% + 1em);
-    gap: 1em;
-    align-items: center;
+    width: 45%;
 }
+
+.titulos-dre {
+    display: flex;
+    flex-direction: row;
+    width: 45%;
+}
+
+
+
+
+
+
+.data-dre div,
+.titulos-dre div {
+    width: 100%;
+}
+
+
 
 .inputs-dre-btn {
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    width:calc(70% - 1em);
-    align-items: end;
+    flex-direction: column;
+    justify-content: center;
+    width:calc(25% -1%);
+    align-items: center;
+
 }
 
-.inputs-dre-btn-analitico {
+.botoes-acao,
+.botoes-gerar {
+    width: 90%;
+    gap: 1%;
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    width:calc(55% - 1em);
-    align-items: end;
+
+}
+
+
+
+
+
+
+.inputs-dre-btn button,
+.inputs-dre-btn a {
+    width: 100%;
+    font-size:90%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.inputs-dre-text input {
+    font-size: 100%;
+}
+.inputs-dre-text div {
+    width: 100%;
+}
+
+#total-receitas,
+#total-despesas,
+#total-dre {
+    font-size: 1rem;
+}
+#total-vencido,
+#total-a-vencer,
+#total-vence-hoje {
+    font-size: 110%;
 }
 
 #div-registro-vazio-dre {
@@ -140,8 +240,6 @@
     text-align: center;
     color:rgba(53, 53, 53);
 }
-
-
 
 #botao-gerar-pdf {
     background-color: rgba(223, 0, 0);
@@ -172,22 +270,12 @@
     margin-bottom: 0.5em;
 }
 
-.view-dash {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    align-items: center;
-    justify-content: center;
-    
-    
-}
+
 .td-acoes {
     width: 3%;
 }
 .tr-clientes-header th {
-    font-size: 0.8em;
+    font-size: 90%;
 }
 
 .tr-clientes-header th a {
@@ -227,10 +315,11 @@
 .dash-titulo-receber {
     padding: 0;
     width: 50%;
-    border-right: 1px solid #d2d2d2 ;
+    border-left: 1px solid #d2d2d2 ;
 }
 .dash-titulo-receber h3{
-    font-size: 1em;
+    font-size: 90%;
+    float: right;
 }
 
 .dash-categoria-receber {
@@ -238,18 +327,20 @@
     width: 50%;
 }
 .dash-categoria-receber h3{
-    font-size: 1em;
-    float: right;
+    font-size: 90%;
+    float: left;
 }
 
-.tr-clientes-dash td
-{
-    text-align: center;
-    font-size: 0.9em;
-} 
-.tr-clientes-dash th {
-    font-size: 0.8em;
+
+
+tbody, thead{
+    overflow: scroll;
+    white-space: nowrap;
+    text-overflow: clip;
+    min-width: none;
+    white-space: nowrap;
 }
+
 
 .botoes-contas {
     width: 100%;
@@ -259,50 +350,11 @@
 
 
 
-#receber-group {
-    width: 100%;
-    height: 40%;
-    display: flex;
-    flex-direction: row;
-    margin-bottom: 10em;
-    justify-content: space-evenly;
-}
-#pagar-group {
-    width: 100%;
-    height: 40%;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-evenly;
-}
 
-
-
-#receber-hoje,
-#receber-vencidos,
-#receber-semana {
-    margin: 1px;
-    max-width: 32% ;
-    min-height: 30%;
-}
-
-#receber-hoje th, #receber-hoje td,
-#receber-vencidos th, #receber-vencidos td,
-#receber-semana th, #receber-semana td,
-#receber-hoje tr, #receber-vencidos tr, #receber-semana tr {
-     height: 1em;
-     width: calc(100%/7);
-     padding: 0.2em;
-}
-
-
-
-#receber-hoje table, #receber-vencidos table, #receber-semana table {
-     border: none;
-     padding: 0.2em;
-}
 
 
 .parcela_cor_azul td,
+.parcela_cor_azul th,
 .parcela_cor_azul td button,
 .parcela_cor_azul td button:disabled {
   background-color: #287dfc7a !important; /* azul de exemplo */
@@ -314,6 +366,7 @@
 }
 
 .parcela_cor_amarela td,
+.parcela_cor_amarela th,
 .parcela_cor_amarela td button,
 .parcela_cor_amarela td button:disabled {
   background-color: #fbff127a !important;
@@ -324,7 +377,8 @@
   color: black;
 }
 
-.parcela_cor_vermelha td, 
+.parcela_cor_vermelha td,
+.parcela_cor_vermelha th,
 .parcela_cor_vermelha td button,
 .parcela_cor_vermelha td button:disabled {
   background-color: #ff30307a !important; /* azul de exemplo */
@@ -360,26 +414,26 @@
     justify-content: space-between;
 }
 
+.card-footer div {
+    align-items: center;
+    margin: none;
+}
+
 .card {
     position: relative;
-    max-width: 100em;
+    width: 100%;
+    padding: 0;
 }
 
 
+#container .card {
+    width: 100%;
+}
 
 .row {
     display: flex;
     flex-direction: row;
-    min-width: 100%;
-}
-
-/* Centralizar accordion dentro de .main */
-.main {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    min-height: 60vh;
+    width: 100%;
 }
 
 .custom-accordion {
@@ -412,10 +466,6 @@
     font-size: 1em;
 }
 
-.view-dash {
-    width: 100%;
-    height: 100%;
-}
 
 .custom-accordion .accordion-button:not(.collapsed) {
     background: #f5f6fa;
@@ -458,18 +508,17 @@ html, body {
 }
 
 
-
-
 .main {
     position: relative;
     display: flex;
     flex-direction: column;
     background-color: #f1f3f6;
-    min-height: calc(100vh - 4em);
-    padding: 5em;
-    top: 4em;
-    width: calc(100% - 16em);
-    left: 16em;
+    min-height: calc(100% - 6%);
+    top: 6%;
+    width: calc(100% - 16%);
+    left: 16%;
+    padding: 5%;
+    align-items: center;
 }
 
 .main-edit {
@@ -479,9 +528,8 @@ html, body {
     background-color: #f1f3f6;
     min-height: calc(100vh - 4.5em);
     top: 1em;
-    width: calc(100% - 16em);
-
-    left: 16em;
+    width: calc(100% - 16%);
+    left: 16%;
 }
 
 .card-header-div {
@@ -498,25 +546,34 @@ html, body {
     display: flex;
     flex-direction: column;
     min-width: 75%;
-    max-width: 90%;
+    max-width: 95%;
     border-radius: 0.5em;
     border: 1px solid #dfe0e1;
     padding: 1em;
     background-color: #f8f8f9;
 }
 
-.input-documento-group {
+.input-documento-group,
+.input-pagamento-group,
+.titulo-group,
+.subtitulo-group {
     display: flex;
     flex-direction: row;
 }
 
-.input-documento {
+
+
+.input-documento,
+.input-pagamento-div {
     width: 90%;
 }
 
+
+
 .input-documento input,
 .input-valor input,
-.input-parcelas input {
+.input-parcelas input,
+.input-pagamento select {
     height: 2.75em;
 }
 
@@ -530,35 +587,39 @@ html, body {
     
 }
 
-.input-documento-generator {
+.input-documento-generator,
+.input-pagamento-btn {
     width: 10%;
     height: 3em;
 }
 
-.input-documento-generator button {
+.input-documento-generator button,
+.input-pagamento-btn button,
+.titulo-btn button,
+.subtitulo-btn button {
     text-align: center;
+    width: 100%;
     height: 2.75em;
 }
 
-.input-documento-generator .form-control {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
+.input-documento-generator .form-control,
+.input-pagamento-btn .form-control,
+.titulo-btn .form-control,
+.subtitulo-btn .form-control {
+    border-radius: 0;
 }
 
 .table {
     margin-left: auto;
     margin-right: auto;
 }
-.table-cadastro {
-    min-width: 70em;
-}
+
 
 
 
 
 .inner-accordion .table {
     margin-top: 1em;
-    min-width: 100%;
 }
 
 
@@ -595,8 +656,53 @@ html, body {
     flex-direction: row;
 }
 
-.input-form-adm-group div {
-    width:calc(100% / 3);
+.input-form-adm-group {
+    width:100%
+}
+
+.input-cidade,
+.input-bairro,
+.input-estado,
+.input-categoria {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    border-radius: 0;
+}
+
+.input-cidade .choices__inner,
+.input-bairro .choices__inner,
+.input-estado .choices__inner,
+.input-categoria .choices__inner {
+    border-radius: 0;
+}
+
+
+.input-modal-div-select {
+    width: 70%;
+}
+
+.input-modal-div-select-estado {
+    width: 100%;
+}
+
+.input-modal-div-select-categoria {
+    width: 90%;
+}
+
+.input-modal-div-btn-categoria {
+    width: 10%;
+}
+
+.input-modal-div-btn {
+    width: 30%;
+}
+
+.input-modal-div-btn button,
+.input-modal-div-btn-categoria button {
+    width: 100%;
+    border-radius: 0;
+    height: 2.75em;
 }
 
 .input-form-contato-adm-group {
@@ -625,15 +731,13 @@ html, body {
 
 
 
-.botao {
-    position: relative;
-    bottom: 5em;
-    padding: 1em;
-    height: 10%;
-    z-index: 10;
+
+.row label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 90%;
 }
-
-
 
 .tabela {
     position: relative;
@@ -642,8 +746,6 @@ html, body {
     align-items: center;
     border-radius: 1em;
     background-color: white;
-    bottom: 5em;
-    min-height: 80%;
     min-width: 100%;
 }
 
@@ -658,6 +760,72 @@ html, body {
     width: 90%;
     top: 0.05em;
     min-height: 100%;
+}
+
+.tabela-lancamento table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    white-space: nowrap;
+}
+
+.tabela-lancamento td {
+    font-size: 75%;
+}
+
+.tabela-lancamento th {
+    font-size: 70%;
+}
+
+.tabela-lancamento th,
+.tabela-lancamento td {
+    padding: 0.3em;
+    white-space: nowrap;
+    white-space: normal; 
+    word-wrap: break-word; 
+    overflow-wrap: break-word;
+    text-overflow: clip;
+}
+
+
+.card-body {
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+.tabela-lancamento table {
+    overflow: auto;
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto;
+}
+
+.tabela-lancamento th,
+.tabela-lancamento td {
+    overflow: auto;
+    text-align: center;
+    padding: 0.4em;
+    text-overflow: ellipsis; 
+    max-width: 120px;    
+    font-size: 0.9em;
+    vertical-align: middle;
+}
+.tabela-lancamento td {
+    white-space: nowrap;
+}
+.tabela-lancamento th {
+    white-space: wrap;
+}
+.tabela-lancamento-body {
+    overflow: auto;
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+.tabela-lancamento {
+    overflow: auto;
+    position: relative;
+    max-width: 100%;
 }
 
 
@@ -683,16 +851,15 @@ html, body {
 }
 
 
-.botao-adm-adicionar {
+.btn-primary {
     background-color: #5856d6;
     border: none;
     align-items: center;
-    height: 2.4em;
     box-shadow: none;
 }
 
 
-.botao-adm-adicionar:hover {
+.btn-primary:hover {
     background-color: #4b49b6;
 }
 
@@ -965,7 +1132,7 @@ html, body {
 #menu-superior {
     position: fixed;
 width: 100%;
-    height: 4em;
+    height: 5%;
 
 }
 
@@ -992,39 +1159,14 @@ width: 100%;
     display: none;
 }
 
-@media (max-width: 900px) {
-    .superior-item {
-        display: flex !important;
-        position: relative;
-
-        background: #181f2b;
-        color: #fff;
-    }
-    #menu-superior {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: auto;
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        padding: 0.2em 0.5em;
-        gap: 0.5em;
-        background: #181f2b;
-
-    }
-}
-
 
 
 
 
 
 #barra-lateral {
-    min-height: 100vh;
-    width: 16em;
-    height: 100vh;
+    width: 16%;
+    height: 100%;
     background-color: #212631;
     position: fixed;
     left: 0;
@@ -1034,14 +1176,48 @@ width: 100%;
     z-index: 10;
 }
 
+.botoes-gestor,
+.botoes-admin {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    width: 20%;
+    gap: 5%;
+}
+
+.botoes-gestor div,
+.botoes-admin div {
+    width: 100%;
+    
+}
+
+.botoes-gestor div button,
+.botoes-gestor div a,
+.botoes-admin div button,
+.botoes-admin div a{
+    width: 100%;
+    text-align: center;
+    font-size:90%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+
 #logo-container {
     width: 100%;
-    height: 13em;
+    height: 20%;
     border-bottom: 1px solid #323a49;
     background-color: #212631;
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+#logo-container img {
+    width: 100%;
+    height: auto;
+    max-height: 100%;
+    object-fit: contain;
 }
 
 
@@ -1055,10 +1231,10 @@ width: 100%;
     align-items: center;
     top: 0;
     position: fixed;
-    left: 16em;
-    width: calc(100vw - 16em);
+    left: 16%;
+    width: calc(100vw - 16%);
     min-width: 0;
-    height: 4em;
+    height: 6%;
     border-bottom: 2px solid #dbdfe6;
     z-index: 20;
 
@@ -1080,7 +1256,9 @@ width: 100%;
     position: relative;
     top:0.5em;
     left: 0.5em;
-    width: 15em;
+    white-space: nowrap;
+    text-overflow: clip;
+    width: calc(90%);
     display: flex;
     flex-direction: column;
     
@@ -1089,7 +1267,7 @@ width: 100%;
 .menu-item {
     margin-top: 1px;
     position: relative;
-min-height: 3em;
+    min-height: 3em;
     font-size: 1em;
     text-align: center;
 }
@@ -1100,8 +1278,12 @@ min-height: 3em;
     align-items: center;
     padding: 0.5em 1em;
     text-decoration: none;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
     color: whitesmoke;
     text-align: center;
+    font-size: 90%;
 }
 
 .menu-item .nav-link {
@@ -1133,4 +1315,3 @@ min-height: 3em;
     animation-fill-mode: forwards;
     animation-duration: 0.5s;
 }
-
