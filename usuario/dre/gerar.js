@@ -1,24 +1,142 @@
-function gerarpdf(nome) {
-	// Select all accordion items (accordion-item class)
-	const accordionItems = document.querySelectorAll('.accordion-item');
-	if (accordionItems.length === 0) {
-		alert('Nenhum conteúdo para exportar.');
-		return;
-	}
+function _formatDateToDDMMYYYY(input) {
+    if (!input && input !== 0) return '';
+    // Date object
+    if (input instanceof Date) {
+        const d = input;
+        return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+    }
+    // numeric timestamp
+    if (typeof input === 'number') {
+        const d = new Date(input);
+        if (!isNaN(d)) return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+        return String(input);
+    }
+    // string: already dd/mm/yyyy
+    if (typeof input === 'string') {
+        if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(input)) return input.replace(/\//g,'-');
+        if (/^\d{1,2}-\d{1,2}-\d{4}$/.test(input)) return input;
+        // try ISO parse
+        const d = new Date(input);
+        if (!isNaN(d)) return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+        return input;
+    }
+    return String(input);
+}
 
-	// Create a container to clone all accordion contents
-	const pdfContainer = document.createElement('div');
-	pdfContainer.style.padding = '20px';
+function _formatTimeToHHMM(input) {
+    if (!input && input !== 0) return '';
+    if (input instanceof Date) {
+        const d = input;
+        return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    }
+    if (typeof input === 'number') {
+        const d = new Date(input);
+        if (!isNaN(d)) return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        return String(input);
+    }
+    if (typeof input === 'string') {
+        if (/^\d{1,2}:\d{2}$/.test(input)) return input;
+        const d = new Date(input);
+        if (!isNaN(d)) return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+        return input;
+    }
+    return String(input);
+}
 
-	accordionItems.forEach(item => {
-		// Clone only the visible content of each accordion
-		const header = item.querySelector('.accordion-header');
-		const body = item.querySelector('.accordion-body');
-		if (header) pdfContainer.appendChild(header.cloneNode(true));
-		if (body) pdfContainer.appendChild(body.cloneNode(true));
-		// Add a separator between accordions
-		pdfContainer.appendChild(document.createElement('hr'));
-	});
+function _convertIsoToDDMMYYYY(text) {
+    if (!text || typeof text !== 'string') return text;
+    // Replace ISO dates like 2025-10-16 -> 16-10-2025
+    return text.replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g, function(_, y, m, d) {
+        return d + '-' + m + '-' + y;
+    });
+}
+
+function _rewriteTextNodesInElement(root) {
+    if (!root) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(n => {
+        const before = n.nodeValue;
+        const after = _convertIsoToDDMMYYYY(before);
+        if (after !== before) n.nodeValue = after;
+    });
+
+    // Also convert values/attributes inside form controls and other attributes
+    const elements = root.querySelectorAll('input, textarea, select, [placeholder], [title], [alt]');
+    elements.forEach(el => {
+        try {
+            if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+                if (typeof el.value === 'string' && el.value) {
+                    const v = _convertIsoToDDMMYYYY(el.value);
+                    if (v !== el.value) el.value = v;
+                }
+                if (el.placeholder) {
+                    const p = _convertIsoToDDMMYYYY(el.placeholder);
+                    if (p !== el.placeholder) el.placeholder = p;
+                }
+            }
+            if (el instanceof HTMLSelectElement) {
+                Array.from(el.options).forEach(opt => {
+                    if (opt.value) {
+                        const vv = _convertIsoToDDMMYYYY(opt.value);
+                        if (vv !== opt.value) opt.value = vv;
+                    }
+                    if (opt.text) {
+                        const tt = _convertIsoToDDMMYYYY(opt.text);
+                        if (tt !== opt.text) opt.text = tt;
+                    }
+                });
+            }
+            // generic attributes
+            if (el.hasAttribute && el.hasAttribute('title')) {
+                const t = _convertIsoToDDMMYYYY(el.getAttribute('title'));
+                if (t !== el.getAttribute('title')) el.setAttribute('title', t);
+            }
+            if (el.hasAttribute && el.hasAttribute('alt')) {
+                const a = _convertIsoToDDMMYYYY(el.getAttribute('alt'));
+                if (a !== el.getAttribute('alt')) el.setAttribute('alt', a);
+            }
+            if (el.hasAttribute && el.hasAttribute('placeholder')) {
+                const ph = _convertIsoToDDMMYYYY(el.getAttribute('placeholder'));
+                if (ph !== el.getAttribute('placeholder')) el.setAttribute('placeholder', ph);
+            }
+        } catch (e) {
+            // ignore conversion errors for unusual elements
+        }
+    });
+}
+
+function gerarpdf(nome='analitico', data=null, titulo=null ) {
+    // Select all accordion items (accordion-item class)
+    const accordionItems = document.querySelectorAll('.accordion-item');
+    if (accordionItems.length === 0) {
+        alert('Nenhum conteúdo para exportar.');
+        return;
+    }
+
+    // Create a container to clone all accordion contents
+    const pdfContainer = document.createElement('div');
+    pdfContainer.style.padding = '20px';
+
+    // Header com nome, data e titulo (se passados) - formatados
+    const formattedDate = _formatDateToDDMMYYYY(data);
+    const headerDiv = document.createElement('div');
+    headerDiv.style.textAlign = 'center';
+    headerDiv.style.marginBottom = '12px';
+    headerDiv.innerHTML = `<h2 style="margin:0;padding:0">DRE - ${String(nome).toUpperCase()}</h2>` +
+        ((formattedDate || titulo) ? `<div style="font-size:0.95em;margin-top:6px">${formattedDate ? formattedDate : ''}${(formattedDate && titulo) ? ' <br>' : ''}${titulo ? 'Titulo: ' + titulo : ''}</div>` : '');
+    pdfContainer.appendChild(headerDiv);
+
+    accordionItems.forEach(item => {
+        // Clone only the visible content of each accordion
+        const header = item.querySelector('.accordion-header');
+        const body = item.querySelector('.accordion-body');
+        if (header) pdfContainer.appendChild(header.cloneNode(true));
+        if (body) pdfContainer.appendChild(body.cloneNode(true));
+        // Add a separator between accordions
+        pdfContainer.appendChild(document.createElement('hr'));
+    });
 
     let totalReceitasDiv = document.querySelector('#total-receitas');
         if (totalReceitasDiv) pdfContainer.appendChild(totalReceitasDiv.cloneNode(true));
@@ -27,20 +145,24 @@ function gerarpdf(nome) {
     let totalDreDiv = document.querySelector('#total-dre');
         if (totalDreDiv) pdfContainer.appendChild(totalDreDiv.cloneNode(true));
 
-	// Use html2pdf to generate PDF
-	html2pdf()
-		.set({
-			margin: 10,
-			filename: 'dre-'+nome+'.pdf',
-			image: { type: 'jpeg', quality: 0.98 },
-			html2canvas: { scale: 10 },
-			jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-		})
-		.from(pdfContainer)
-		.save();
-}
+    // Rewrite ISO dates inside the cloned container to dd-mm-yyyy
+    _rewriteTextNodesInElement(pdfContainer);
 
-function gerarexcel(nome) {
+    // Use html2pdf to generate PDF
+    html2pdf()
+        .set({
+            margin: 10,
+            filename: 'dre-'+nome+'.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 10 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        })
+        .from(pdfContainer)
+        .save();
+}
+// ...existing code...
+
+function gerarexcel(nome, data=null, hora=null) {
     if (nome == 'analitico') {
     // Check if XLSX library is loaded
     if (typeof XLSX === 'undefined') {
@@ -56,6 +178,15 @@ function gerarexcel(nome) {
     }
 
     let allData = [];
+
+    // Adiciona header com nome, data e hora no topo do Excel (formatado)
+    const headerTitle = 'DRE - ' + String(nome).toUpperCase();
+    const formattedDate = _formatDateToDDMMYYYY(data);
+    const titulo = _formatTimeToHHMM(hora);
+    const headerDateTime = (formattedDate ? 'Data: ' + formattedDate : '') + (titulo ? (formattedDate ? '<br>' : '') + 'Titulo: ' + titulo : '');
+    allData.push([headerTitle]);
+    if (headerDateTime.trim()) allData.push([headerDateTime]);
+    allData.push([]); // linha em branco
 
     accordionItems.forEach((item) => {
         // Get title
@@ -79,10 +210,10 @@ function gerarexcel(nome) {
             }
             if (!table) return;
 
-            // Get table headers and rows
-            const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
+            // Get table headers and rows (convert ISO dates to dd-mm-yyyy)
+            const headers = Array.from(table.querySelectorAll('thead th')).map(th => _convertIsoToDDMMYYYY(th.textContent.trim()));
             const rows = Array.from(table.querySelectorAll('tbody tr')).map(tr =>
-                Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim())
+                Array.from(tr.querySelectorAll('td')).map(td => _convertIsoToDDMMYYYY(td.textContent.trim()))
             );
 
             // Add title and category
@@ -101,7 +232,7 @@ function gerarexcel(nome) {
                 }
                 next = next.nextElementSibling;
             }
-            if (saldoSubtitulo) allData.push([saldoSubtitulo]);
+            if (saldoSubtitulo) allData.push([_convertIsoToDDMMYYYY(saldoSubtitulo)]);
 
             // Linha em branco entre categorias
             allData.push([]);
@@ -111,7 +242,7 @@ function gerarexcel(nome) {
         let totalGeral = '';
         const totalGeralDiv = body.querySelector('div[id^="total-subtitulo-"]');
         if (totalGeralDiv) {
-            totalGeral = totalGeralDiv.textContent.trim();
+            totalGeral = _convertIsoToDDMMYYYY(totalGeralDiv.textContent.trim());
             if (totalGeral) allData.push([totalGeral]);
         }
         allData.push([]);
@@ -120,17 +251,17 @@ function gerarexcel(nome) {
     // Totais finais
     let totalReceitasDiv = document.querySelector('#total-receitas');
     if (totalReceitasDiv) {
-        let totalReceitas = totalReceitasDiv.textContent.trim();
+        let totalReceitas = _convertIsoToDDMMYYYY(totalReceitasDiv.textContent.trim());
         if (totalReceitas) allData.push([totalReceitas]);
     }
     let totalDespesasDiv = document.querySelector('#total-despesas');
     if (totalDespesasDiv) {
-        let totalDespesas = totalDespesasDiv.textContent.trim();
+        let totalDespesas = _convertIsoToDDMMYYYY(totalDespesasDiv.textContent.trim());
         if (totalDespesas) allData.push([totalDespesas]);
     }
     let totalDreDiv = document.querySelector('#total-dre');
     if (totalDreDiv) {
-        let totalDre = totalDreDiv.textContent.trim();
+        let totalDre = _convertIsoToDDMMYYYY(totalDreDiv.textContent.trim());
         if (totalDre) allData.push([totalDre]);
     }
 
@@ -142,8 +273,6 @@ function gerarexcel(nome) {
     // Export to Excel file
     XLSX.writeFile(wb, 'dre-' + nome + '.xlsx');
 }
-    
-    
     
     
     
@@ -163,6 +292,15 @@ function gerarexcel(nome) {
         }
 
         let allData = [];
+
+    // Header com nome, data e hora (formatado)
+    const headerTitle = 'DRE - ' + String(nome).toUpperCase();
+    const formattedDate = _formatDateToDDMMYYYY(data);
+    const titulo = _formatTimeToHHMM(hora);
+    const headerDateTime = (formattedDate ? formattedDate : '') + (titulo ? (formattedDate ? ' — ' : '') + 'Titulo: ' + titulo : '');
+        allData.push([headerTitle]);
+        if (headerDateTime.trim()) allData.push([headerDateTime]);
+        allData.push([]);
 
         accordionItems.forEach((item) => {
             // Título do accordion
@@ -200,18 +338,18 @@ function gerarexcel(nome) {
         });
 
         // Totais gerais (receitas, despesas, saldo DRE)
-        let totalReceitasDiv = body.querySelector('#total-receitas');
+        let totalReceitasDiv = document.querySelector('#total-receitas');
             if (totalReceitasDiv) {
                 let totalReceitas = totalReceitasDiv.textContent.trim();
                 if (totalReceitas) allData.push([totalReceitas]);
             }
-        let totalDespesasDiv = body.querySelector('#total-despesas');
+        let totalDespesasDiv = document.querySelector('#total-despesas');
             if (totalDespesasDiv) {
                 let totalDespesas = totalDespesasDiv.textContent.trim();
                 if (totalDespesas) allData.push([totalDespesas]);
             }
 
-        let totalDreDiv = body.querySelector('#total-dre');
+        let totalDreDiv = document.querySelector('#total-dre');
             if (totalDreDiv) {
                 let totalDre = totalDreDiv.textContent.trim();
                 if (totalDre) allData.push([totalDre]);

@@ -135,6 +135,7 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                         class="bi bi-cash-coin"></i>Tipo Pagamento</a></li>
                             <li><a href="../cadastrar.php?cadastro=categoria" class="link-light text-decoration-none"><i
                                         class="bi bi-tag"></i>Categoria</a></li>
+                            <li><a href="cadastrar.php?cadastro=custo" class="link-light text-decoration-none"><i class="bi bi-bank"></i>Centro de custos</a></li>
 
                         </ul>
                     </div>
@@ -208,10 +209,10 @@ if ($get_data_final != '' || $get_data_inicial != '') {
 
                 <div class="card">
                     <div class="card-header">
-                        <button class="btn btn-primary" id="btn-sintetico">
+                        <button class="btn btn-primary btn-dre-selecionado" id="btn-sintetico">
                             <h3>DRE - Sintético</h3>
                         </button><!--
-    --><button class="btn btn-primary" onclick="window.location.href='analitico.php'">
+    --><button class="btn btn-primary" id="btn-analitico" onclick="window.location.href='analitico.php'">
                             <h3>DRE - Analitico</h3>
                         </button>
                     </div>
@@ -223,6 +224,8 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                 <h5 class="card-title">Filtros</h5>
                                 <form method="get" action="sintetico.php">
                                     <div class="row">
+
+                                    <div class="inputs-dre">
                                         <div class="inputs-dre-text">
 
                                             <div>
@@ -239,47 +242,27 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                                     value="<?= $get_data_final ?>" class="form-control"
                                                     style="border-radius: 0;">
                                             </div>
-                                            <!-- <div>
-                            <label for="titulo" style="font-size:0.85em;">Titulo:</label>
-                                <select onchange="checarTitulo(true)" id="input-titulo" name="titulo" class="form-control">
-                                    <option value="">Escolha um Titulo</option>
-                                    <?php foreach (Con01::read(null, $_SESSION['usuario']->id_empresa) as $titulo) { ?>
-                                        <option <?php if ($titulo->id == $get_titulo) { ?>selected<?php } ?> value="<?= $titulo->id ?>"> <?= $titulo->nome ?> </option>
-                                    <?php } ?>
-                                </select>                            
-                        </div>
-
-                        <div id="subtitulo-dre">
-                            <label for="subtitulo" style="font-size:0.85em">Sub-Titulo</label>
-                            <select id="subtitulo" name="subtitulo" class="form-control">
-                                <option value="">Selecione</option>
-                                <?php
-                                // Buscar todos os subtítulos da empresa
-                                $todosSubtitulos = Con02::read(null, $_SESSION['usuario']->id_empresa);
-                                foreach ($todosSubtitulos as $sub) { ?>
-                                    <option <?php if ($sub->id == $get_subtitulo) { ?>selected<?php } ?> value="<?= $sub->id ?>" data-titulo-id="<?= $sub->id_con01 ?>">
-                                        <?= htmlspecialchars($sub->nome, ENT_QUOTES, 'UTF-8') ?>
-                                    </option>
-                                <?php } ?>
-                            </select>
-                        </div> -->
 
 
                                         </div>
                                         <div class="inputs-dre-btn">
                                             <div class="botoes-acao">
-                                                <button type="submit" class="btn-sm btn"
-                                                    style="background-color: #5856d6; color: white; ">Filtrar</button>
+                                                <button type="submit" class="btn-sm btn" style="background-color: #5856d6; color: white; ">Filtrar</button>
+                                                <a href="sintetico.php" class="btn btn-secondary btn-sm">Limpar</a>
+                                            </div>
+                                            <div class="botoes-gerar">
                                                 <?php if (isset($get_data_inicial) || isset($get_data_inicial)) { ?>
                                                     <button type="button" class="btn-sm btn" id="botao-gerar-pdf" style=" "
-                                                        onclick="gerarpdf('sintetico')">Gerar PDF</button>
+                                                        onclick="prepararGeracao('pdf')">Gerar PDF</button>
                                                     <button type="button" class="btn-sm btn" id="botao-gerar-excel"
-                                                        style=" " onclick="gerarexcel('sintetico')">Gerar Excel</button>
+                                                        style=" " onclick="prepararGeracao('excel')">Gerar Excel</button>
                                                 <?php } ?>
+                                                    
+                                                    
                                             </div>
-                                            <a href="sintetico.php" class="btn btn-secondary"
-                                                style="height: 50%;">Limpar</a>
+                                            
                                         </div>
+                                    </div>
 
                                     </div>
                                 </form>
@@ -353,7 +336,7 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                                                     $receita = $receita * (-1);
                                                                 }
                                                                 $total_subtitulo += $receita;
-                                                                $receita = 'R$' . number_format($receita, 2, ',', '.');
+                                                                $receita = 'R$ ' . number_format($receita, 2, ',', '.');
                                                                 ?>
 
                                                                 <tr>
@@ -387,20 +370,21 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                 </div>
 
             </div>
+        </div>
             <div class="card-footer">
                 <?php
                 $total_geral = array_sum($total_geral);
                 $total_receitas = array_sum($total_receitas);
                 $total_despesas = array_sum($total_despesas);
                 ?>
-                <div style="font-size:1.2em; margin-top:2em;" id="total-receitas">Total receitas: R$
+                <div style="margin-top:2em;" id="total-receitas">Total receitas: R$
                     <?= number_format($total_receitas, 2, ',', '.') ?> </div>
-                <div style="font-size:1.2em; margin-top:2em;" id="total-despesas">Total despesas: R$
+                <div style="margin-top:2em;" id="total-despesas">Total despesas: R$
                     <?= number_format($total_despesas, 2, ',', '.') ?> </div>
-                <div style="font-size:1.2em; margin-top:2em;" id="total-dre">Saldo do DRE: R$
+                <div style="margin-top:2em;" id="total-dre">Saldo do DRE: R$
                     <?= number_format($total_geral, 2, ',', '.') ?> </div>
             </div>
-        </div>
+        
     <?php } ?>
 </body>
 
@@ -468,8 +452,25 @@ if ($get_data_final != '' || $get_data_inicial != '') {
     checarTitulo()
 
 
-
-
+//colocar data inicial e/ou final no cabeçalho do pdf
+//colocar titulo e subtitulo no cabeçalho do pdf
+function prepararGeracao(target) {
+    let data_inicial = document.getElementById('data_inicial').value;
+    let data_final = document.getElementById('data_final').value;
+    let dataTexto = '';
+    if (data_inicial !== '' && data_final !== '') {
+        dataTexto = 'Período: ' + data_inicial + ' até ' + data_final;
+    } else if (data_inicial !== '') {
+        dataTexto = 'Data Inicial: ' + data_inicial;
+    } else if (data_final !== '') {
+        dataTexto = 'Data Final: ' + data_final;
+    }
+    if(target == 'pdf') {
+        gerarpdf('sintetico', dataTexto);
+    } else if(target == 'excel') {
+        gerarexcel('sintetico', dataTexto);
+    }
+}
 
 
     // function checar() {

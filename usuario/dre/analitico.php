@@ -137,6 +137,7 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                         class="bi bi-cash-coin"></i>Tipo Pagamento</a></li>
                             <li><a href="../cadastrar.php?cadastro=categoria" class="link-light text-decoration-none"><i
                                         class="bi bi-tag"></i>Categoria</a></li>
+                            <li><a href="cadastrar.php?cadastro=custo" class="link-light text-decoration-none"><i class="bi bi-bank"></i>Centro de custos</a></li>
 
                         </ul>
                     </div>
@@ -210,10 +211,10 @@ if ($get_data_final != '' || $get_data_inicial != '') {
 
                 <div class="card">
                     <div class="card-header">
-                        <button class="btn btn-primary" onclick="window.location.href='sintetico.php'">
+                        <button class="btn btn-primary" id="btn-sintetico" onclick="window.location.href='sintetico.php'">
                             <h3>DRE - Sintético</h3>
                         </button><!--
-    --><button class="btn btn-primary" id="btn-analitico">
+    --><button class="btn btn-primary btn-dre-selecionado" id="btn-analitico">
                             <h3>DRE - Analitico</h3>
                         </button>
                     </div>
@@ -225,26 +226,27 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                 <h5 class="card-title">Filtros</h5>
                                 <form method="get" action="analitico.php">
                                     <div class="row">
-                                        <div class="inputs-dre-text-analitico">
-
+                                        <div class="inputs-dre">
+                                        <div class="inputs-dre-text">
+                                        <div class="data-dre">
                                             <div>
-                                                <label for="data_inicial" style="font-size:0.85em;">Data Inicial:</label>
+                                                <label for="data_inicial">Data Inicial:</label>
                                                 <input type="date" id="data_inicial" name="data_inicial"
                                                     value="<?= $get_data_inicial ?>" class="form-control">
                                             </div>
 
                                             <div>
-                                                <label for="data_final" style="font-size:0.85em;">Data Final:</label>
+                                                <label for="data_final">Data Final:</label>
                                                 <input type="date" id="data_final" name="data_final"
                                                     value="<?= $get_data_final ?>" class="form-control">
                                             </div>
-
+                                        </div>
+                                    <div class="titulos-dre">
                                         <div>
-                                            
-                                                <label for="titulo" style="font-size:0.85em;">Titulo:</label>
+                                                <label for="titulo">Titulo:</label>
                                                 <div class="input-select-titulo">
                                                     <select id="input-titulo" class="input-select-geral" name="titulo" onchange="this.form.submit()">
-                                                        <option value="">Selecione um título</option>
+                                                        <option value="">Selecione</option>
                                                         <?php
                                                         foreach(Con01::read(null, $_SESSION['usuario']->id_empresa) as $titulo) {?>
                                                             <option <?php if($get_titulo == $titulo->id) { ?> selected <?php } ?> value="<?=$titulo->id?>"><?=$titulo->nome?></option>
@@ -255,10 +257,10 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                         </div>
 
                                         <div id="subtitulo-dre-div">
-                                        <label for="subtitulo" style="font-size:0.85em">Sub-Titulo</label>
+                                        <label for="subtitulo">Sub-Titulo</label>
                                             <div id="subtitulo-dre">
-                                                <select id="subtitulo" class="input-select-geral" name="subtitulo" class="form-control" onchange="this.form.submit()">
-                                                    <option value="">Selecione um subtitulo</option>
+                                                <select id="input-subtitulo" class="input-select-geral" name="subtitulo" class="form-control" onchange="this.form.submit()">
+                                                    <option value="">  Selecione</option>
                                                     <?php
                                                     if(isset($get_titulo)) {
                                                         foreach(Con02::read(null, $_SESSION['usuario']->id_empresa, con01_id: $get_titulo) as $subtitulo) {?>
@@ -267,24 +269,28 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                                                                                    
                                                 </select>
                                             </div>
+                                        </div>
                                         </div>                       
 
                                         </div>
-                                        <div class="inputs-dre-btn-analitico">
+                                        <div class="inputs-dre-btn">
                                             <div class="botoes-acao">
-                                                <button type="submit" class="btn-sm btn"
-                                                    style="background-color: #5856d6; color: white; ">Filtrar</button>
-                                                <?php if ((isset($get_data_inicial) && $get_data_inicial != '') || (isset($get_data_final) && $get_data_final != '') || (isset($get_titulo) && $get_titulo != '') || (isset($get_subtitulo) && $get_subtitulo != '')) { ?>
-                                                    <button type="button" class="btn-sm btn" id="botao-gerar-pdf"
-                                                        onclick="gerarpdf('analitico')">Gerar PDF</button>
-                                                    <button type="button" class="btn-sm btn" id="botao-gerar-excel"
-                                                        onclick="gerarexcel('analitico')">Gerar Excel</button>
-                                                <?php } ?>
+                                                <button type="submit" class="btn-sm btn" style="background-color: #5856d6; color: white; ">Filtrar</button>
+                                                <a href="analitico.php" class="btn btn-secondary btn-sm">Limpar</a>
                                             </div>
-                                            <a href="analitico.php" class="btn btn-secondary btn-sm"
-                                                style="height: 50%;">Limpar</a>
-                                        </div>
 
+                                            
+                                                <?php if ((isset($get_data_inicial) && $get_data_inicial != '') || (isset($get_data_final) && $get_data_final != '') || (isset($get_titulo) && $get_titulo != '') || (isset($get_subtitulo) && $get_subtitulo != '')) { ?>
+                                                    <div class="botoes-gerar">
+                                                        <button type="button" class="btn-sm btn" id="botao-gerar-pdf"
+                                                            onclick="prepararGeracao('pdf')">Gerar PDF</button>
+                                                        <button type="button" class="btn-sm btn" id="botao-gerar-excel"
+                                                            onclick="prepararGeracao('excel')">Gerar Excel</button>
+                                                    </div>
+                                                <?php } ?>
+                                            
+                                        </div>
+                                    </div>
 
                                     </div>
                                 </form>
@@ -500,11 +506,11 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                 $total_despesas = array_sum($total_despesas);
 
                                 ?>
-                                <div style="font-size:1.2em; margin-top:2em;" id="total-receitas">Total receitas: R$
+                                <div style="margin-top:2em;" id="total-receitas">Total receitas: R$
                                     <?= number_format($total_receitas, 2, ',', '.') ?> </div>
-                                <div style="font-size:1.2em; margin-top:2em;" id="total-despesas">Total despesas: R$
+                                <div style="margin-top:2em;" id="total-despesas">Total despesas: R$
                                     <?= number_format($total_despesas, 2, ',', '.') ?> </div>
-                                <div style="font-size:1.2em; margin-top:2em;" id="total-dre">Saldo do DRE: R$
+                                <div style="margin-top:2em;" id="total-dre">Saldo do DRE: R$
                                     <?= number_format($total_geral, 2, ',', '.') ?> </div>
 
                             </div>
@@ -521,44 +527,41 @@ if ($get_data_final != '' || $get_data_inicial != '') {
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script src="../../choices/choices.js"></script>
+
 <?php
 if(!isset($get_titulo)) { ?>
     <script>
     var subtituloDiv = document.getElementById('subtitulo-dre-div');
     var tituloSelect = document.getElementById('input-titulo');
-    var subtituloSelect = document.getElementById('subtitulo');
+    var subtituloSelect = document.getElementById('input-subtitulo');
     var subtituloDiv = document.getElementById('subtitulo-dre-div');
     var options = subtituloSelect.querySelectorAll('option');
-    var divText = document.querySelector('.inputs-dre-text-analitico');
+    var divText = document.querySelector('.inputs-dre-text');
     var divChildren = divText.children
-    var divBtn = document.querySelector('.inputs-dre-btn-analitico');
+    var divBtn = document.querySelector('.inputs-dre-btn');
 
     subtituloDiv.style.visibility= 'hidden';
-    divText.style.width = 'calc(47.5% + 1em)';
-    divBtn.style.width = 'calc(52.5% - 1em)';
 
-    divChildren.forEach(divChildren => {
-    divChildren.style.width = 'calc(100%/3)'
-    });
+    // divChildren.forEach(divChildren => {
+    // divChildren.style.width = 'calc(100%/2)'
+    // });
     </script>
 <?php } else { ?>
     <script>
     var subtituloDiv = document.getElementById('subtitulo-dre-div');
     var tituloSelect = document.getElementById('input-titulo');
-    var subtituloSelect = document.getElementById('subtitulo');
+    var subtituloSelect = document.getElementById('input-subtitulo');
     var subtituloDiv = document.getElementById('subtitulo-dre-div');
     var options = subtituloSelect.querySelectorAll('option');
-    var divText = document.querySelector('.inputs-dre-text-analitico');
+    var divText = document.querySelector('.inputs-dre-text');
     var divChildren = divText.children
-    var divBtn = document.querySelector('.inputs-dre-btn-analitico');
+    var divBtn = document.querySelector('.inputs-dre-btn');
 
      subtituloDiv.style.visibility = 'visible';
-    divText.style.width = 'calc(60% + 1em)';
-    divBtn.style.width = 'calc(40% - 1em)';
 
-    divChildren.forEach(divChildren => {
-    divChildren.style.width = 'calc(100%/4)'
-    });
+    // divChildren.forEach(divChildren => {
+    // divChildren.style.width = 'calc(100%/2)'
+    // });
 
 
     </script>
@@ -588,86 +591,111 @@ if(!isset($get_titulo)) { ?>
         }
     });
 
+    function prepararGeracao(target) {
+    let titulo = document.getElementById('input-titulo').options[document.getElementById('input-titulo').selectedIndex].text;
+    let subtitulo = document.getElementById('input-subtitulo').options[document.getElementById('input-subtitulo').selectedIndex].text;
+    if(subtitulo == 'Selecione') {
+        subtitulo = '';
+    }
+    if (subtitulo !== '' && subtitulo !== 'Selecione') {
+        subtitulo = ' - ' + subtitulo;
+    }
+    let data_inicial = document.getElementById('data_inicial').value;
+    let data_final = document.getElementById('data_final').value;
+    let dataTexto = '';
+    if (data_inicial !== '' && data_final !== '') {
+        dataTexto = 'Período: ' + data_inicial + ' até ' + data_final;
+    } else if (data_inicial !== '') {
+        dataTexto = 'Data Inicial: ' + data_inicial;
+    } else if (data_final !== '') {
+        dataTexto = 'Data Final: ' + data_final;
+    }
+    if(target == 'pdf'){
+         gerarpdf('analitico', dataTexto, titulo + subtitulo);
+    } else if(target == 'excel'){
+        gerarexcel('analitico', dataTexto, titulo + subtitulo);
+    }
+}
     
-    // function checarTitulo(resetSubtitulo = false) {
-    //     var tituloSelect = document.getElementById('input-titulo');
-    //     var tituloId = tituloSelect.value;
-    //     var subtituloSelect = document.getElementById('subtitulo');
-    //     let subtituloDiv = document.getElementById('subtitulo-dre-div');
-    //     var options = subtituloSelect.querySelectorAll('option');
-    //     let divText = document.querySelector('.inputs-dre-text-analitico');
-    //     divChildren = divText.children
-    //     let divBtn = document.querySelector('.inputs-dre-btn-analitico');
+    function checarTitulo(resetSubtitulo = false) {
+        var tituloSelect = document.getElementById('input-titulo');
+        var tituloId = tituloSelect.value;
+        var subtituloSelect = document.getElementById('subtitulo');
+        let subtituloDiv = document.getElementById('subtitulo-dre-div');
+        var options = subtituloSelect.querySelectorAll('option');
+        let divText = document.querySelector('.inputs-dre-text-analitico');
+        divChildren = divText.children
+        let divBtn = document.querySelector('.inputs-dre-btn-analitico');
 
-    //     options.forEach(function (option) {
-    //         if (option.value === "") {
-    //             option.style.display = '';
-    //             return;
-    //         }
-    //         if (option.getAttribute('data-titulo-id') === tituloId) {
-    //             option.style.display = '';
-    //         } else {
-    //             option.style.display = 'none';
-    //         }
-    //     });
+        options.forEach(function (option) {
+            if (option.value === "") {
+                option.style.display = '';
+                return;
+            }
+            if (option.getAttribute('data-titulo-id') === tituloId) {
+                option.style.display = '';
+            } else {
+                option.style.display = 'none';
+            }
+        });
 
-    //     if (tituloId == '') {
-    //         subtituloDiv.style.visibility= 'hidden';
-    //         divText.style.width = 'calc(45% + 1em)';
-    //         divBtn.style.width = 'calc(55% - 1em)';
+        if (tituloId == '') {
+            subtituloDiv.style.visibility= 'hidden';
+            // divText.style.width = 'calc(45% + 1em)';
+            // divBtn.style.width = 'calc(55% - 1em)';
 
-    //         divChildren.forEach(divChildren => {
-    //         divChildren.style.width = 'calc(100%/3)'
-    //     });
-    //     } else {
-    //         subtituloDiv.style.visibility = 'visible';
-    //         divText.style.width = 'calc(60% + 1em)';
-    //         divBtn.style.width = 'calc(40% - 1em)';
+        //     divChildren.forEach(divChildren => {
+        //     divChildren.style.width = 'calc(100%/3)'
+        // });
+        } else {
+            subtituloDiv.style.visibility = 'visible';
+            // divText.style.width = 'calc(60% + 1em)';
+            // divBtn.style.width = 'calc(40% - 1em)';
 
-    //         divChildren.forEach(divChildren => {
-    //         divChildren.style.width = 'calc(100%/4)'
-    //     });
-    //     }
+        //     divChildren.forEach(divChildren => {
+        //     divChildren.style.width = 'calc(100%/4)'
+        // });
+        }
 
         
 
-    //     if (resetSubtitulo) {
-    //         subtituloSelect.value = ""; // Só reseta se for troca de título
-    //     }
+        if (resetSubtitulo) {
+            subtituloSelect.value = ""; // Só reseta se for troca de título
+        }
         
-    // }
+    }
 
-    // document.getElementById('input-titulo').addEventListener('change', function () {
-    //     checarTitulo();
-    // });
-    // checarTitulo()
-
-
-
-
-    // function checar() {
-    //     let nome = document.querySelector('.input-nome input').value;
-    //     let fantasia = document.querySelector('.input-fantasia input').value;
-    //     let cpf = document.querySelector('.input-cpf input').value;
-    //     let cnpj = document.querySelector('.input-cnpj input').value;
-    //     let cep = document.querySelector('.input-cep input').value;
-    //     let endereco = document.querySelector('.input-endereco input').value;
-    //     let bairro = document.querySelector('.input-bairro input').value;
-    //     let cidade = document.querySelector('.input-cidade input').value;
-    //     let estado = document.querySelector('.input-estado input').value;
-    //     let celular = document.querySelector('.input-celular input').value;
-    //     let telefone = document.querySelector('.input-telefone input').value;
-    //     let email = document.querySelector('.input-email input').value;
+    document.getElementById('input-titulo').addEventListener('change', function () {
+        checarTitulo();
+    });
+    checarTitulo()
 
 
 
 
-    //     if (nome !== '' && fantasia !== '' && cpf !== '' && cnpj !== '' && cep !== '' && endereco !== '' && bairro !== '' && cidade !== '' && estado !== '' && celular !== '' && telefone !== '' && email !== '') {
-    //         document.querySelector('button[name="acao"]').disabled = false;
-    //     } else {
-    //         document.querySelector('button[name="acao"]').disabled = true;
-    //     }
-    // }
+    function checar() {
+        let nome = document.querySelector('.input-nome input').value;
+        let fantasia = document.querySelector('.input-fantasia input').value;
+        let cpf = document.querySelector('.input-cpf input').value;
+        let cnpj = document.querySelector('.input-cnpj input').value;
+        let cep = document.querySelector('.input-cep input').value;
+        let endereco = document.querySelector('.input-endereco input').value;
+        let bairro = document.querySelector('.input-bairro input').value;
+        let cidade = document.querySelector('.input-cidade input').value;
+        let estado = document.querySelector('.input-estado input').value;
+        let celular = document.querySelector('.input-celular input').value;
+        let telefone = document.querySelector('.input-telefone input').value;
+        let email = document.querySelector('.input-email input').value;
+
+
+
+
+        if (nome !== '' && fantasia !== '' && cpf !== '' && cnpj !== '' && cep !== '' && endereco !== '' && bairro !== '' && cidade !== '' && estado !== '' && celular !== '' && telefone !== '' && email !== '') {
+            document.querySelector('button[name="acao"]').disabled = false;
+        } else {
+            document.querySelector('button[name="acao"]').disabled = true;
+        }
+    }
 
     function encolher() {
         let barra = document.getElementById('barra-lateral');
