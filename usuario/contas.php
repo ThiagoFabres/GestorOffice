@@ -138,7 +138,7 @@ $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
 <div class="main" id="container">   
 
                 <div class="botao">
-        <a href="contas.php?acao=adicionar&target=titulo" class="btn btn-primary btn-sm botao-adm-adicionar">Adicionar titulo</a>
+        <a href="contas.php?acao=adicionar&target=titulo" class="btn btn-primary btn-lg botao-adm-adicionar">Adicionar titulo</a>
     </div>
 
         

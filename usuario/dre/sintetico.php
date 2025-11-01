@@ -12,6 +12,13 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     exit;
 }
 
+function format_valor_alinhado($valor) {
+    $formatado = number_format($valor, 2, ',', '.');
+    // 12 caracteres para alinhar valores grandes e pequenos
+    $formatado = str_pad($formatado, 12, ' ', STR_PAD_LEFT);
+    return $formatado;
+}
+
 $get_data_final = filter_input(INPUT_GET, 'data_final', FILTER_SANITIZE_SPECIAL_CHARS);
 $get_data_inicial = filter_input(INPUT_GET, 'data_inicial', FILTER_SANITIZE_SPECIAL_CHARS);
 $get_titulo = filter_input(INPUT_GET, 'titulo') ?: null;
@@ -97,6 +104,7 @@ if ($get_data_final != '' || $get_data_inicial != '') {
 <script src=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js "></script>
 <link href=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css " rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="../style/dre.css">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
@@ -209,7 +217,7 @@ if ($get_data_final != '' || $get_data_inicial != '') {
 
                 <div class="card">
                     <div class="card-header">
-                        <button class="btn btn-primary btn-dre-selecionado" id="btn-sintetico">
+                        <button class="btn btn-primary btn-dre-selecionado" style="border-bottom: 2px solid #5856d6;" id="btn-sintetico">
                             <h3>DRE - Sintético</h3>
                         </button><!--
     --><button class="btn btn-primary" id="btn-analitico" onclick="window.location.href='analitico.php'">
@@ -226,23 +234,23 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                     <div class="row">
 
                                     <div class="inputs-dre">
-                                        <div class="inputs-dre-text">
+                                        <div class="inputs-dre-text" style="width: 20%;">
+                                            <div class="data-dre">
+                                                <div>
+                                                    <label for="data_inicial" style="font-size:90%;">Data
+                                                        Inicial:</label>
+                                                    <input type="date" id="data_inicial" name="data_inicial"
+                                                        value="<?= $get_data_inicial ?>" class="form-control"
+                                                        style="border-top-right-radius: 0; border-bottom-right-radius: 0; border-top-left-radius: 0.25em; border-bottom-left-radius: 0.25em;">
+                                                </div>
 
-                                            <div>
-                                                <label for="data_inicial" style="font-size:0.85em;">Data
-                                                    Inicial:</label>
-                                                <input type="date" id="data_inicial" name="data_inicial"
-                                                    value="<?= $get_data_inicial ?>" class="form-control"
-                                                    style="border-top-right-radius: 0; border-bottom-right-radius: 0; border-top-left-radius: 0.25em; border-bottom-left-radius: 0.25em;">
+                                                <div>
+                                                    <label for="data_final" style="font-size:90%;">Data Final:</label>
+                                                    <input type="date" id="data_final" name="data_final"
+                                                        value="<?= $get_data_final ?>" class="form-control"
+                                                        style="border-radius: 0;">
+                                                </div>
                                             </div>
-
-                                            <div>
-                                                <label for="data_final" style="font-size:0.85em;">Data Final:</label>
-                                                <input type="date" id="data_final" name="data_final"
-                                                    value="<?= $get_data_final ?>" class="form-control"
-                                                    style="border-radius: 0;">
-                                            </div>
-
 
                                         </div>
                                         <div class="inputs-dre-btn">
@@ -310,8 +318,8 @@ if ($get_data_final != '' || $get_data_inicial != '') {
 
                                                     <table class="table table-striped table-bordered">
                                                         <thead>
-                                                            <tr>
-                                                                <th>Nome</th>
+                                                            <tr class="tr-dre-sintetico">
+                                                                <th>Subtitulo</th>
                                                                 <th>Receita</th>
                                                             </tr>
                                                         </thead>
@@ -336,22 +344,25 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                                                     $receita = $receita * (-1);
                                                                 }
                                                                 $total_subtitulo += $receita;
-                                                                $receita = 'R$ ' . number_format($receita, 2, ',', '.');
+                                                                $receita_formatada = format_valor_alinhado($receita);
                                                                 ?>
 
-                                                                <tr>
-                                                                    <td><?= htmlspecialchars($subtitulo->nome, ENT_QUOTES, 'UTF-8') ?>
-                                                                    </td>
-                                                                    <td><?= $receita ?></td>
+                                                                <tr class="tr-dre-sintetico">
+                                                                    <td style="width:87%;"><?= htmlspecialchars($subtitulo->nome, ENT_QUOTES, 'UTF-8') ?></td>
+                                                                    <td style="width:13%;" class="valor-monetario"><div>R$</div> <div> <?=$receita_formatada?> </div></td>
                                                                 </tr>
 
                                                             <?php
                                                             }
                                                             ?>
+                                                            <tbody>
+                                                            <tr class="tr-dre-total">
+                                                                <td>Total do Titulo:</td>
+                                                                <td id="total-dre-sintetico"><div>R$</div><div><?= number_format($total_subtitulo, 2, ',') ?></div></td>
+                                                            </tr>
+                                                            </tbody>
                                                         </tbody>
                                                     </table>
-                                                    <div style="margin-bottom:1em;" id="total-subtitulo-'.$sub_idx.'">Total do
-                                                        Titulo: R$ <?= number_format($total_subtitulo, 2, ',', '.') ?></div>
                                                 </div>
                                             </div>
                                         </div>

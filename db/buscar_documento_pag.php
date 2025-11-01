@@ -19,18 +19,50 @@ try {
         exit;
     }
 
-    // Pegar o maior documento já usado dentro da empresa do usuário
-    $sql = "SELECT MAX(CAST(documento AS UNSIGNED)) AS ultimo 
-              FROM pag01 
-             WHERE id_empresa = :id_empresa";
+    // Buscar todos os documentos existentes para a empresa e calcular
+    // em PHP o menor inteiro positivo que ainda não foi usado.
+    // Essa abordagem evita dependência de recursos SQL avançados e funciona
+    // em qualquer SGBD suportado pelo PDO.
+    $sql = "SELECT DISTINCT documento FROM pag01 WHERE id_empresa = :id_empresa";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([":id_empresa" => $id_empresa]);
-    $doc = $stmt->fetch(PDO::FETCH_ASSOC);
+    $rows = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-    if ($doc && $doc["ultimo"] !== null) {
-        $novoNumero = $doc["ultimo"] + 1;
+    // Filtrar apenas valores numéricos inteiros >= 1
+    $nums = [];
+    if ($rows) {
+        foreach ($rows as $d) {
+            // ignorar valores nulos/empty e não numéricos
+            if ($d === null) continue;
+            // remover espaços
+            $d = trim($d);
+            if ($d === '') continue;
+            // usar is_numeric para aceitar '001', etc.
+            if (is_numeric($d)) {
+                $n = (int)$d;
+                if ($n >= 1) {
+                    $nums[$n] = $n; // usar chave para evitar duplicatas
+                }
+            }
+        }
+    }
+
+    if (empty($nums)) {
+        $novoNumero = 1;
     } else {
-        $novoNumero = 1; // se não existir nenhum documento ainda nessa empresa
+        ksort($nums);
+        $novoNumero = 1;
+        foreach ($nums as $n) {
+            if ($n === $novoNumero) {
+                $novoNumero++;
+                continue;
+            }
+            if ($n > $novoNumero) {
+                // encontramos um gap: $novoNumero não existe na lista
+                break;
+            }
+            // se $n < $novoNumero (ex.: números repetidos/menores), apenas continue
+        }
     }
 
     echo json_encode([

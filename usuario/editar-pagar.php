@@ -14,25 +14,20 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     exit;
 }
 
-$view = filter_input(INPUT_GET, 'view');
-$target = filter_input(INPUT_GET, 'target');
-$con01 = filter_input(INPUT_GET, 'con01id');
-$acao = filter_input(INPUT_GET, 'acao');
-$get_opcao = filter_input(INPUT_GET, 'opcao');
-
-$get_id = filter_input(INPUT_GET, 'id') ?? filter_input(INPUT_POST, 'id');
-$get_acao = filter_input(INPUT_GET, 'acao');
 
 
 
-if (isset($view) && $view == 'contas') {
-    $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
+$get_id = filter_input(INPUT_GET, 'id') ?? filter_input(INPUT_POST, 'id') ?? null;
+if($get_id == null) {
+    $get_acao = null;
+} else {
+    $get_acao = filter_input(INPUT_GET, 'acao');
 }
-
 if (isset($get_id)) {
-    $recebimento = Pag01::read($get_id, $_SESSION['usuario']->id_empresa)[0];
+    $recebimento = Pag01::read($get_id, $_SESSION['usuario']->id_empresa)[0] ?? null;
     $parcelas_pagas = false;
-    for ($i = 1; $i < $recebimento->parcelas; $i++) {
+    if($recebimento != null) {
+        for ($i = 1; $i < $recebimento->parcelas; $i++) {
         $pag02 = Pag02::read(null, $_SESSION['usuario']->id_empresa, $recebimento->id, null, $i, )[0];
         if ($parcelas_pagas == false && $pag02->valor_pag > 0) {
             $parcelas_pagas = true;
@@ -45,6 +40,8 @@ if (isset($get_id)) {
     if ($parcelas_pagas == true) {
         header('Location: pagar.php');
     }
+    }
+    
 }
 
 
@@ -178,10 +175,29 @@ if (isset($get_id)) {
 
 
     <?php
-    $post_cadastro = filter_input(INPUT_POST, 'cadastro') ?? $post_cadastro = Cadastro::read($recebimento->id_cadastro)[0]->id_cadastro;
-    $post_titulo = filter_input(INPUT_POST, 'titulo') ?? $post_titulo = Con01::read($recebimento->id_con01)[0]->id;
-    $post_subtitulo = filter_input(INPUT_POST, 'subtitulo') ?? Con02::read($recebimento->id_con02)[0]->id;
-    $documento = filter_input(INPUT_POST, 'documento') ?? $recebimento->documento;
+    
+    $post_cadastro = filter_input(INPUT_POST, 'cadastro') ?? '';
+    if($post_cadastro == '' && isset($recebimento)) {
+        $post_cadastro = $recebimento->id_cadastro;
+    }
+
+    $post_titulo = filter_input(INPUT_POST, 'titulo') ?? '';
+    if($post_titulo == '' && isset($recebimento)) {
+        $post_titulo = $recebimento->id_con01;
+    }
+
+    $post_subtitulo = filter_input(INPUT_POST, 'subtitulo') ?? '';
+    if($post_subtitulo == '' && isset($recebimento)) {
+        $post_subtitulo = $recebimento->id_con02;
+    }
+
+
+    $documento = filter_input(INPUT_POST, 'documento') ?? '';
+    if($documento == '' && isset($recebimento)) {
+        $documento = $recebimento->documento;
+    }
+
+
 
     $valor = filter_input(INPUT_POST, 'valor');
     if($valor != null) {
@@ -189,13 +205,13 @@ if (isset($get_id)) {
         $valor = str_replace(',', '.', $valor);
     }
     if(!isset($valor) || $valor == null) {
-        $valor = $recebimento->valor;
+        $valor = $recebimento->valor  ?? '';
     }
 
     $valor = floatval($valor);
-    $parcelas_d = filter_input(INPUT_POST, 'parcelas') ?? $parcelas_d = $recebimento->parcelas;
+    $parcelas_d = filter_input(INPUT_POST, 'parcelas') ?? $parcelas_d = $recebimento->parcelas ?? '';
     $parcelas_d = intval($parcelas_d);
-    $descricao = filter_input(INPUT_POST, 'descricao') ?? $descricao = $recebimento->descricao;
+    $descricao = filter_input(INPUT_POST, 'descricao') ?? $descricao = $recebimento->descricao ?? '';
     if ($get_id != null && isset($recebimento)) {
         if(empty($_POST['data_lanc'])) {
             $data_lanc = new DateTime($recebimento->data_lanc);
@@ -501,10 +517,12 @@ if (isset($get_id)) {
                                 </table>
                             </div>
                             <div class="card-footer">
+                            <?php if(!empty($parcelas)){ ?>
                                 <button name="acao"
                                     value="<?php if (!isset($get_acao)) { ?>adicionar<?php } else if (isset($get_acao)) { ?>editar<? } ?>"
                                     class="btn btn-primary" type="submit" id="botao-editar-parcela"
                                     style="background-color:#5856d6; padding-inline:1.5em; float:right; margin-bottom: 0.5em; border: 0;">Salvar</button>
+                            <?php } ?>
                             </div>
                         </form>
                     </div>

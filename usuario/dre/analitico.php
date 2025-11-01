@@ -10,9 +10,18 @@ require_once __DIR__ . '/../../db/entities/recebimentos.php';
 require_once __DIR__ . '/../../db/entities/pagamento.php';
 require_once __DIR__ . '/../../db/entities/pagar.php';
 session_start();
+// Função para alinhar valores monetários
+
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     header('Location: /');
     exit;
+}
+
+function format_valor_alinhado($valor) {
+    $formatado = number_format($valor, 2, ',', '.');
+    // 12 caracteres para alinhar valores grandes e pequenos
+    $formatado = str_pad($formatado, 12, ' ', STR_PAD_LEFT);
+    return $formatado;
 }
 
 $get_data_final = filter_input(INPUT_GET, 'data_final', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
@@ -97,6 +106,8 @@ if ($get_data_final != '' || $get_data_inicial != '') {
 <link href=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="../style/dre.css">
+
 <link rel="stylesheet" href="../../choices/choices.css">
 
 <meta charset="UTF-8">
@@ -214,7 +225,7 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                         <button class="btn btn-primary" id="btn-sintetico" onclick="window.location.href='sintetico.php'">
                             <h3>DRE - Sintético</h3>
                         </button><!--
-    --><button class="btn btn-primary btn-dre-selecionado" id="btn-analitico">
+    --><button class="btn btn-primary btn-dre-selecionado" style="border-bottom: 2px solid #5856d6;" id="btn-analitico">
                             <h3>DRE - Analitico</h3>
                         </button>
                     </div>
@@ -432,9 +443,9 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                                     echo '<h5>' . htmlspecialchars($subtitulo->nome) . '</h5>';
                                                     $total_subtitulo = 0;
                                                     ?>
-                                                    <table class="table table-striped table-bordered">
+                                                    <table class="table table-striped table-bordered" style="margin: none;">
                                                         <thead>
-                                                            <tr>
+                                                            <tr class="tr-dre-analitico">
                                                                 <th>Data</th>
                                                                 <th>Descrição</th>
                                                                 <th>Valor</th>
@@ -455,14 +466,26 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                                                 $descricao = $metodo_nome . ' - ' . $data;
                                                                 $valor = ($titulo->tipo == 'D') ? $rec->valor_pag * -1 : $rec->valor_pag;
                                                                 $total_subtitulo += $valor;
-                                                                echo '<tr>';
-                                                                echo '<td>' . htmlspecialchars($data) . '</td>';
-                                                                echo '<td>' . htmlspecialchars($descricao) . '</td>';
-                                                                echo '<td>R$ ' . number_format($valor, 2, ',', '.') . '</td>';
+                                                                echo '<tr class="tr-dre-analitico">';
+                                                                echo '<td style="width:7rem;">' . htmlspecialchars($data) . '</td>';
+                                                                echo '<td style="width:84rem;">' . htmlspecialchars($descricao) . '</td>';
+                                                                echo '<td style="width:9rem;" class="valor-monetario"><div>R$</div> <div>' . format_valor_alinhado($valor) . '</div></td>';
                                                                 echo '</tr>';
                                                             }
-                                                            echo '</tbody></table>';
-                                                            echo '<div style="margin-bottom:1em;" id="total-subtitulo-' . $sub_idx . '">Saldo do subtitulo: R$ ' . number_format($total_subtitulo, 2, ',', '.') . '</div>';
+                                                            ?>
+                                                            <tbody>
+                                                                <tr class="tr-dre-total">
+                                                                <td style="background-color:transparent; border:none;"></td>
+                                                                <td>Saldo do subtitulo:</td>
+                                                                <td id="total-dre-analitico"> <div>R$</div><div><?= number_format($total_subtitulo, 2, ',') ?></div></td>
+                                                                </tr>
+                                                            </tbody>
+                
+                                                            <?php
+                                                            echo '</tbody>';
+                                                            echo '</table>';
+                                            
+                                                            
                                                             $totais_gerais[] = $total_subtitulo;
                                                 }
                                                 $sub_idx++;

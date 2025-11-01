@@ -14,7 +14,8 @@ class Pag01 {
     public $parcelas;
     public $data_lanc;
     public $id_usuario;
-    public function __construct($id = null, $id_empresa = null, $id_cadastro = null, $id_con01 = null, $id_con02 = null, $documento = '', $descricao = '', $valor = 0.0, $parcelas = 1, $data_lanc = null, $id_usuario = null, $obs = null) {
+    public $centro_custos;
+    public function __construct($id = null, $id_empresa = null, $id_cadastro = null, $id_con01 = null, $id_con02 = null, $documento = '', $descricao = '', $valor = 0.0, $parcelas = 1, $data_lanc = null, $id_usuario = null, $centro_custos = null) {
         $this->id = $id;
         $this->id_empresa = $id_empresa;
         $this->id_cadastro = $id_cadastro;
@@ -26,13 +27,14 @@ class Pag01 {
         $this->parcelas = $parcelas;
         $this->data_lanc = $data_lanc ? new DateTime($data_lanc) : new DateTime();
         $this->id_usuario = $id_usuario;
+        $this->centro_custos = $centro_custos;
     }
 
     public static function create($pag01) {
         $pdo = (new Database())->connect();
 
-        $sql = 'INSERT INTO pag01 (id_empresa, id_cadastro, id_con01, id_con02, documento, descricao, valor, parcelas, data_lanc, id_usuario) 
-                VALUES (:id_empresa, :id_cadastro, :id_con01, :id_con02, :documento, :descricao, :valor, :parcelas, :data_lanc, :id_usuario)';
+    $sql = 'INSERT INTO pag01 (centro_custos, id_empresa, id_cadastro, id_con01, id_con02, documento, descricao, valor, parcelas, data_lanc, id_usuario) 
+        VALUES (:centro_custos, :id_empresa, :id_cadastro, :id_con01, :id_con02, :documento, :descricao, :valor, :parcelas, :data_lanc, :id_usuario)';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id_empresa', $pag01->id_empresa);
         $stmt->bindValue(':id_cadastro', $pag01->id_cadastro);
@@ -44,6 +46,7 @@ class Pag01 {
         $stmt->bindValue(':parcelas', $pag01->parcelas);
         $stmt->bindValue(':data_lanc', $pag01->data_lanc->format('Y-m-d H:i:s'));
         $stmt->bindValue(':id_usuario', $pag01->id_usuario);
+        $stmt->bindValue(':centro_custos', $pag01->centro_custos);
 
         
 
@@ -109,6 +112,7 @@ class Pag01 {
         $sql = 'DELETE FROM pag01 WHERE id = :id';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id', $id);
+        return $stmt->execute();
 }
 }
 
@@ -180,7 +184,8 @@ class Pag02 {
         $direcao = 'asc',
         $filtro_con01 = null,
         $filtro_con02 = null,
-        $filtro_cadastro = null
+        $filtro_cadastro = null,
+        $filtro_custos = null
 
     ) {
         $pdo = (new Database())->connect();
@@ -280,6 +285,7 @@ class Pag02 {
         
         if ($filtro_documento != null) $conditions[] = 'p1.documento LIKE :filtro_documento';
         if ($filtro_cadastro != null) $conditions[] = 'p1.id_cadastro LIKE :filtro_cadastro';
+        if ($filtro_custos != null) $conditions[] = 'p1.centro_custos = :filtro_custos';
 
 
 
@@ -369,6 +375,7 @@ switch($ordenar_por) {
         if($filtro_pagamento != null) $stmt->bindValue(':filtro_pagamento', $filtro_pagamento);
         if($filtro_con01 != null) $stmt->bindValue(':filtro_con01', $filtro_con01);
         if($filtro_con02 != null) $stmt->bindValue(':filtro_con02', $filtro_con02);
+        if($filtro_custos != null) $stmt->bindValue(':filtro_custos', $filtro_custos);
 
         $stmt->execute();
 
@@ -406,6 +413,7 @@ switch($ordenar_por) {
         $sql = 'DELETE FROM pag02 WHERE id = :id';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id', $id);
+        return $stmt->execute();
 }
 
     public static function deletebypag01($id) {

@@ -10,7 +10,7 @@ require_once __DIR__ . '/../db/entities/pagamento.php';
 require_once __DIR__ . '/../db/entities/contas.php';
 require_once __DIR__ . '/..//db/entities/recebimentos.php';
 require_once __DIR__ . '/..//db/entities/pagar.php';
-require_once __DIR__ . '/..//db/entities/centrocontas.php';
+require_once __DIR__ . '/..//db/entities/centrocustos.php';
 
 session_start();
 
@@ -75,6 +75,7 @@ if (isset($view) && $view == 'cadastro') {
     $nome = filter_input(INPUT_POST, 'nome');
     $tipo = filter_input(INPUT_POST, 'tipo');
 
+
     $insta = filter_input(INPUT_POST, 'insta') ?? null;
     // support receiving the quitar id either as 'id' (existing behavior) or explicit 'modal_quitar_id'
     if($target == 'pagamento') {
@@ -109,10 +110,15 @@ if (isset($view) && $view == 'cadastro') {
 
                 if(isset($email) && $email != null) {
                     if (!Cadastro::read(null, $email)) {
-                    Cadastro::create($cadastro);
                     if(!isset($insta) || $insta == null) {
                         header('Location: cadastrar.php?cadastro=cliente');
                         exit;
+                    } else {
+                        if(isset($insta) && $insta != null) {
+                        if($insta == 'pagar') header('Location: pagar.php?acao=adicionar');
+                        if($insta == 'receber') header('Location: receber.php?acao=adicionar');
+                        exit;
+                    }
                     }
                 } else {
                     header('Location:cadastrar.php?cadastro=cliente&erro=repetido');
@@ -120,6 +126,11 @@ if (isset($view) && $view == 'cadastro') {
                 }
                 } else {
                     Cadastro::create($cadastro);
+                    if(isset($insta) && $insta != null) {
+                        if($insta == 'pagar') header('Location: pagar.php?acao=adicionar');
+                        if($insta == 'receber') header('Location: receber.php?acao=adicionar');
+                        exit;
+                    }
                 }
                 
 
@@ -159,6 +170,13 @@ if (isset($view) && $view == 'cadastro') {
                 );
                 if (!Categoria::read(null, $id_empresa, $nome)) {
                     Categoria::create($categoria);
+                    if(isset($insta) && $insta != null) {
+                        if($insta == 'pagar') header('Location: pagar.php?acao=adicionar&target=quitar&quitar_id='.$modal_quitar_id);
+                        if($insta == 'receber') header('Location: receber.php?acao=adicionar&target=quitar&quitar_id='.$modal_quitar_id);
+                        exit;
+                    }
+                } else {
+                    
                 }
                 break;
 
@@ -171,23 +189,33 @@ if (isset($view) && $view == 'cadastro') {
                 );
                 if (!TipoPagamento::read(null, $id_empresa, $nome)) {
                     TipoPagamento::create($categoria);
-
-                    if(isset($insta) && $insta != null) {
-                        if($insta == 'pagar') header('Location: pagar.php?acao=adicionar&target=quitar&quitar_id='.$modal_quitar_id);
-                        if($insta == 'receber') header('Location: receber.php?acao=adicionar&target=quitar&quitar_id='.$modal_quitar_id);
-                        exit;
+                    if(isset($insta) && $insta != null){
+                        if($insta == 'receber') {
+                            header('Location: receber.php');
+                            exit;
+                        }
+                        if($insta == 'pagar') {
+                            header('Location: pagar.php');
+                            exit;
+                        }
+                        
                     }
                 }
                 break;
             case 'custo':
 
-                $centrocontas = new CentroContas(
+                $centrocusto = new CentroCustos(
                     null,
                     $id_empresa,
                     $nome
                 );
-                if (!CentroContas::read(null, $id_empresa, $nome)) {
-                    CentroContas::create($centrocontas);
+                if (!CentroCustos::read(null, $id_empresa, $nome)) {
+                    CentroCustos::create($centrocusto);
+                    if(isset($insta) && $insta != null) {
+                        if($insta == 'pagar') header('Location: pagar.php?acao=adicionar');
+                        if($insta == 'receber') header('Location: receber.php?acao=adicionar');
+                        exit;
+                    }
                 }
                 break;
         }
@@ -261,6 +289,13 @@ if (isset($view) && $view == 'cadastro') {
                 );
                 TipoPagamento::update($pagamento);
                 break;
+            
+            case 'custo':
+                $centrocusto = new CentroCustos(
+                    $id,
+                    null,
+                    $nome
+                );
         }
     } else if ($acao == 'excluir') {
 
@@ -308,17 +343,42 @@ if (isset($view) && $view == 'cadastro') {
                 }
                 
                 break;
+            case 'custo':
+                if(Rec02::read(filtro_custos: $id) || Pag02::read(filtro_custos: $id)) {
+                    header('Location:cadastrar.php?cadastro=custo&erro=usado');
+                    exit;
+                } else {
+                    CentroCustos::delete($id);
+                }
+                break;
+            case 'cliente':
+                if(Rec02::read(filtro_cadastro:$id) || Pag02::read(filtro_cadastro:$id)) {
+                    header('Location:cadastrar.php?cadastro=cliente&erro=usado');
+                    exit;
+                } else {
+                    Cadastro::delete($id);
+                }
+                
         }
+                
 
             
     }
+
     if(isset($insta) && $insta != null) {
+        
         if(!isset($target) || $target === null) {
-            if($insta == 'pagar') header('Location: pagar.php?acao=adicionar');
-            if($insta == 'receber') header('Location: receber.php?acao=adicionar');
+            if($insta == 'pagar') header('Location: pagar.php?acao=adicionar'); 
+            exit;
+            
+            if($insta == 'receber') header('Location: receber.php?acao=adicionar'); 
+            exit;
         } else {
-            if($insta == 'pagar') header('Location: pagar.php?acao=adicionar&target=cadastro');
-            if($insta == 'receber') header('Location: receber.php?acao=adicionar&target=cadastro');
+            if($insta == 'pagar') header('Location: pagar.php?acao=adicionar&target=cadastro'); 
+            exit;
+
+            if($insta == 'receber') header('Location: receber.php?acao=adicionar&target=cadastro'); 
+            exit;
         }
     }
     
@@ -335,10 +395,11 @@ if (isset($view) && $view == 'cadastro') {
 
 } else if (isset($view) && $view == 'conta') {
     $nome = filter_input(INPUT_POST, 'nome');
+    $insta = filter_input(INPUT_POST, 'insta' );
     $tipo = filter_input(INPUT_POST, 'tipo');
     $id_conta = filter_input(INPUT_POST, 'con01id');
     $id_conta02 = filter_input(INPUT_POST, 'con02id');
-
+ 
     if($target == 'titulo') {
         if (isset($acao) && $acao == 'adicionar') {
             $conta = new Con01(
@@ -378,6 +439,7 @@ if (isset($view) && $view == 'cadastro') {
 
     
     if(isset($target) && $target == 'subtitulo') {
+
          if (isset($acao) && $acao == 'adicionar') {
                 $conta = new Con02(
                     null,
@@ -418,7 +480,16 @@ if (isset($view) && $view == 'cadastro') {
     }
 
     
-
+    if(isset($insta) && $insta != null) {
+        if($insta == 'pagar') {
+            header('Location: pagar.php?acao=adicionar'); 
+            exit;
+        }
+        if($insta == 'receber') {
+            header('Location: receber.php?acao=adicionar');
+            exit;
+        }
+    }
     if (isset($con01)) {
         $route = '?con01id=' . $con01;
     }
@@ -431,6 +502,7 @@ if (isset($view) && $view == 'cadastro') {
     $subtitulo = filter_input(INPUT_POST, 'subtitulo');
     $documento = filter_input(INPUT_POST, 'documento');
     $descricao = filter_input(INPUT_POST, 'descricao');
+    $custo = filter_input(INPUT_POST, 'custo');
     $valor = filter_input(INPUT_POST, 'valor');
     $valor = str_replace('.', '', $valor);
     $valor = str_replace(',', '.', $valor);
@@ -454,7 +526,7 @@ if (isset($view) && $view == 'cadastro') {
     if($caminho == null || $caminho == '')$numero_exibir = filter_input(INPUT_POST, 'numero_exibido') ?? str_replace('k', '&', filter_input(INPUT_GET, 'numero_exibido'));
     $numero_exibir = str_replace('k', '&', $numero_exibir);
     
-    if ($_POST['pagar'] == 1 || $_GET['pagar'] == 1) {
+    if (isset($_POST['pagar']) && ($_POST['pagar'] == 1 || $_GET['pagar'] == 1)) {
         $pagar = true;
     } else {
         $pagar = false;
@@ -479,7 +551,7 @@ if (isset($view) && $view == 'cadastro') {
 
     
 
-    
+
 
 
     if (isset($acao) && $acao == 'adicionar') {
@@ -496,7 +568,11 @@ if (isset($view) && $view == 'cadastro') {
             $parcelas_d,
             null,
             $_SESSION['usuario']->id_usuario,
+            $custo
         );
+
+        echo '<pre>';
+        print_r($recebimento);  
 
         if ($pagar) {
             if (!Pag01::read(null, $_SESSION['usuario']->id_empresa, null, $documento)) {
