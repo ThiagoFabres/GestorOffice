@@ -119,19 +119,37 @@ function gerarpdf(nome) {
     var container = document.createElement('div');
     container.style.width = "100%";
     container.style.overflow = "visible";
+    container.style.boxSizing = 'border-box';
     // prepend header with filters
     var headerEl = buildExportHeader(nome);
     container.appendChild(headerEl);
     container.appendChild(tabela);
 
+    // Ajustar largura do container para corresponder à largura útil de A4 landscape
+    // Conversão aproximada: 1mm = 96/25.4 px (para tela 96dpi)
+    var pxPerMm = 96 / 40.4;
+    var a4WidthMm = 297; // A4 landscape width in mm
+    var marginMm = 8; // margem em mm (ajustável)
+    var usableWidthMm = a4WidthMm - (marginMm * 2);
+    var usableWidthPx = Math.floor(usableWidthMm * pxPerMm);
+
+    // Aplicar largura calculada ao container (CSS pixels)
+    container.style.width = usableWidthPx + 'px';
+    // opcional: adicionar padding correspondente à margem para manter espaçamento
+    container.style.padding = marginMm + 'mm';
+
+    var scale = 2; // tela em alta resolução
+
     var opt = {
-        margin: [0, 0, 0, 0],
+        margin: [marginMm, marginMm, marginMm, marginMm],
         filename: 'contas_a_'+nome+'.pdf',
         image: { type: 'jpeg', quality: 1 },
         html2canvas: {
-            scale: 2,
+            scale: scale,
             scrollY: 0,
-            useCORS: true
+            useCORS: true,
+            // define a largura de renderização para html2canvas (em CSS pixels * scale)
+            width: usableWidthPx * scale
         },
         jsPDF: {
             unit: 'mm',
@@ -141,6 +159,7 @@ function gerarpdf(nome) {
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
+    // Gera e salva o PDF
     html2pdf().set(opt).from(container).save();
 }
 
