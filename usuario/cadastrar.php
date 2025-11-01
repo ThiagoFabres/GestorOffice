@@ -6,7 +6,7 @@ require_once __DIR__ . '/../db/entities/bairro.php';
 require_once __DIR__ . '/../db/entities/cidade.php';
 require_once __DIR__ . '/../db/entities/categoria.php';
 require_once __DIR__ . '/../db/entities/pagamento.php';
-require_once __DIR__ . '/../db/entities/centrocontas.php';
+require_once __DIR__ . '/../db/entities/centrocustos.php';
 
 session_start();
 
@@ -389,6 +389,7 @@ $estadosLista = [
                         <th>Estado</th>
                         <th>Bairro</th>
                         <th>Data de registro</th>
+                        <th>Ação</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -462,6 +463,9 @@ $estadosLista = [
                                             </td>
                                             <td>
                                                 <?= date('d/m/Y', strtotime(htmlspecialchars($cadastro->data_r, ENT_QUOTES, 'UTF-8'), )) ?>
+                                            </td>
+                                            <td>
+                                               <a class="btn btn-danger btn-sm" href="cadastros_manager.php?view=cadastro&target=cliente&acao=excluir&id=<?=$cadastro->id_cadastro?>">Excluir</a>
                                             </td>
                                 
                             </tr>
@@ -974,7 +978,7 @@ $estadosLista = [
                             else if($get_cadastro == 'cidade') {$cadastros = Cidade::read(null, $_SESSION['usuario']->id_empresa);}
                             else if($get_cadastro == 'categoria') {$cadastros = Categoria::read(null, $_SESSION['usuario']->id_empresa);}
                             else if($get_cadastro == 'pagamento') {$cadastros = TipoPagamento::read(null, $_SESSION['usuario']->id_empresa);}
-                            else if($get_cadastro == 'custo') {$cadastros = CentroContas::read(null, $_SESSION['usuario']->id_empresa);}
+                            else if($get_cadastro == 'custo') {$cadastros = CentroCustos::read(null, $_SESSION['usuario']->id_empresa);}
                             foreach ($cadastros as $cadastro) {
                                 
                             

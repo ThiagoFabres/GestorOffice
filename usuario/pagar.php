@@ -9,6 +9,7 @@ require_once __DIR__ . '/../db/entities/cidade.php';
 require_once __DIR__ . '/../db/entities/bairro.php';
 require_once __DIR__ . '/../db/entities/estados.php';
 require_once __DIR__ . '/../db/entities/categoria.php';
+require_once __DIR__ . '/../db/entities/centrocustos.php';
 
 session_start();
 
@@ -63,7 +64,24 @@ $get_filtro_pagamento = filter_input(INPUT_GET, 'forma_pagamento') ?? null;
 $get_filtro_cadastro = filter_input(INPUT_GET, 'filtro_cadastro') ?? null;
 $get_filtro_titulo = filter_input(INPUT_GET, 'filtro_titulo') ?? null;
 $get_filtro_subtitulo = filter_input(INPUT_GET, 'filtro_subtitulo') ?? null;
+$get_filtro_custo = filter_input(INPUT_GET, 'filtro_custo') ?? null;
 
+if(!isset($ordenar_por) || $ordenar_por === null){
+    if($get_filtro_por != null) {
+        switch($get_filtro_por) {
+            case 'lancamento':
+                $ordenar_por = 'data_lancamento';
+                break;
+            case 'vencimento':
+                $ordenar_por = 'data_vencimento';
+                break;
+            case 'pagamento':
+                $ordenar_por = 'data_pagamento';
+
+                break;
+        }
+    }
+}
 
 
 $parcela_paginas = Pag02::read(
@@ -150,7 +168,7 @@ if ($filtros != []) {
 
 
 <link rel="stylesheet" href="/style.css">
-\\\\\
+<link rel="stylesheet" href="/modais/lancamentos/modais.css">
 
 <link rel="stylesheet" href="../choices/choices.css"></link>
 <meta charset="UTF-8">
@@ -294,7 +312,7 @@ if ($filtros != []) {
                                                 <div class="inputs-pagamento-text">
 
                                                     <!-- Data inicial -->
-                                                    <div style="width: 25%; height: 3em;">
+                                                    <div style="width: 25%;">
                                                         <label for="filtro_data_inicial">Data
                                                             Inicial:</label>
                                                         <input type="date" id="filtro_data_inicial"
@@ -304,7 +322,7 @@ if ($filtros != []) {
                                                     </div>
 
                                                     <!-- Data final -->
-                                                    <div style="width: 25%; height: 3em;">
+                                                    <div style="width: 25%;">
                                                         <label for="filtro_data_final">Data
                                                             Final:</label>
                                                         <input type="date" id="filtro_data_final"
@@ -314,7 +332,7 @@ if ($filtros != []) {
                                                     </div>
 
                                                     <!-- Documento -->
-                                                    <div style="width: 20%;">
+                                                    <div style="width: 25%;">
                                                         <label for="filtro_nome"
                                                         >Documento:</label>
                                                         <input type="text" id="filtro_nome" name="filtro_nome"
@@ -324,7 +342,7 @@ if ($filtros != []) {
 
                                                     <!-- Tipo de pagamento -->
                                                 
-                                                    <div style="width: 20%;">
+                                                    <div style="width: 25%;">
                                                         <label for="forma_pagamento">Pagamento:</label>
                                                         <select class="form-control" name="forma_pagamento" style="border-top-left-radius: 0; border-bottom-left-radius: 0;
                                                         border-top-right-radius: 0.25em; border-bottom-right-radius: 0.25em;">
@@ -377,19 +395,30 @@ if ($filtros != []) {
                                                         </select>
                                                     </div>
 
-                                                    <div
-                                                        style="display:flex; flex-direction: column;">
-                                                        <label for="forma_pagamento"
-                                                        >Subtitulo:</label>
+                                                    <div style="display:flex; flex-direction: column;">
+                                                        <label for="subtitulo-filtro">Subtitulo:</label>
                                                         <select class="form-control" name="filtro_subtitulo"
                                                             id="subtitulo-filtro">
                                                             <?php
-                                                            // Buscar todos os subtítulos da empresa
                                                             $todosSubtitulos = Con02::read(null, $_SESSION['usuario']->id_empresa);
                                                             foreach ($todosSubtitulos as $sub) { ?>
                                                                 <option value="<?= $sub->id ?>"
                                                                     data-titulo-id="<?= $sub->id_con01 ?>" <?php if ($get_filtro_subtitulo == $sub->id) { ?> selected <?php } ?>>
                                                                     <?= htmlspecialchars($sub->nome, ENT_QUOTES, 'UTF-8') ?>
+                                                                </option>
+                                                            <?php } ?>
+                                                        </select>
+                                                    </div>
+
+                                                    <div style="display:flex; flex-direction: column;">
+                                                        <label for="centro-custos-filtro">Centro de custos:</label>
+                                                        <select class="form-control" name="filtro_custo" id="custo-filtro">
+                                                            <option value="">Selecione</option>
+                                                            <?php
+                                                            $centro_custos = CentroCustos::read(null, $_SESSION['usuario']->id_empresa);
+                                                            foreach ($centro_custos as $custo) { ?>
+                                                                <option value="<?= $custo->id ?>" <?php if ($get_filtro_custo == $custo->id) { ?> selected <?php } ?>>
+                                                                    <?= htmlspecialchars($custo->nome, ENT_QUOTES, 'UTF-8') ?>
                                                                 </option>
                                                             <?php } ?>
                                                         </select>
@@ -495,6 +524,7 @@ if ($filtros != []) {
                             }
                             ?>
                             <tr class="tr-clientes-header">
+                                <th>Centro de custos</th>
                                 <th><a
                                         href="<?= $caminho ?>?ordenar=documento&direcao=<?php echo ($ordenar_por === 'documento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Documento</a><?php if ($ordenar_por == 'documento') {
                                                          echo $seta;
@@ -546,7 +576,7 @@ if ($filtros != []) {
                                             echo $seta;
                                         } ?>
                                 </th>
-                                <!-- <th>OBS</th> -->
+                                <th>OBS</th>
                                 <th>Quitar</th>
                                 <th>Estornar</th>
                                 <th>Editar</th>
@@ -568,7 +598,8 @@ if ($filtros != []) {
                                 numero_exibir: $numero_exibir,
                                 numero_pagina: $numero_pagina,
                                 ordenar_por: $ordenar_por,
-                                direcao: $direcao
+                                direcao: $direcao,
+                                filtro_custos: $get_filtro_custo
                             );
                             if (!empty($parcelas)) {
                                 
@@ -613,6 +644,12 @@ if ($filtros != []) {
                                     $valor_total = number_format($pag01->valor, 2, ',', '.');
                                     $valor_parcela = number_format($pag02->valor_par, 2, ',', '.');
                                     $valor_pago = number_format($pag02->valor_pag, 2, ',', '.');
+
+                                    $centro_custos = '';
+                                    if($pag01->centro_custos != null) {
+                                    $centro_custos = CentroCustos::read($pag01->centro_custos, $_SESSION['usuario']->id_empresa)[0]->nome ?? '';
+                                    }
+
                                     $link = 'pagar.php?view=pagar&acao=visualizar&id=' . $pag02->id;
 
                                     $ultima_parcela = null;
@@ -623,6 +660,7 @@ if ($filtros != []) {
                                     <!-- style="<?php if ($ultima_parcela) { ?>border-bottom: 3px solid #5856d6;<?php } ?> border-inline: 1px solid #5856d6;" -->
                                     <!-- style="<?php if ($ultima_parcela) { ?>border-bottom: 2px solid #5856d6;<?php } else if ($pag02->parcela == 1) { ?> border-top: 3px solid #5856d6; <?php } ?> border-inline: 2px solid #5856d6;" -->
                                     <tr class="tr-clientes <?= $cor_parcela ?>" onclick="">
+                                        <td><?=$centro_custos?></td>
                                         <td><?= $pag01->documento; ?> </td>
                                         <td><?= $data_lanc; ?> </td>
                                         <td><?= $cadastro->razao_soc; ?> </td>
@@ -644,12 +682,16 @@ if ($filtros != []) {
                                             echo 'R$ ' . $valor_pago;
                                         } ?></td>
                                         <td><?= $pagamento->nome ?? '' ?></td>
-                                        <!-- <td><?= $pag02->obs ?></td> -->
+                                        <td><?= $pag02->obs ?></td>
                                         <td class="td-acoes">
                                             <?php $valor_restante = number_format($pag02->valor_par - $pag02->valor_pag, 2, ',', '') ?>
                                             <button class="btn btn-primary" data-bs-toggle="modal" <?php if ($pag02->valor_pag > 0) { ?> disabled <?php } ?> data-bs-target="#modal_quitar"
-                                                data-id="<?= $pag02->id ?>" data-valor-restante="<?= $valor_restante ?>"><i
-                                                    class="bi bi-cash-stack"></i></button>
+                                                data-id="<?= $pag02->id ?>"  data-valor-restante="<?= $valor_restante ?>"
+                                                data-parcela-atual="<?= $pag02->parcela ?>"
+                                                data-parcela-geral="<?= $pag01->parcelas ?>"
+                                                data-vencimento="<?= $data_venc ?>"
+                                                data-documento="<?= htmlspecialchars($pag01->documento, ENT_QUOTES, 'UTF-8') ?>"
+                                            ><i class="bi bi-cash-stack"></i></button>
                                         <td class="td-acoes">
                                             <button class="btn btn-primary" <?php if ($pag02->valor_pag == 0) { ?> disabled <?php } ?>
                                                 onclick="window.location.href='cadastros_manager.php?view=pagar&pagar=1&target=parcela&acao=estornar&id=<?= $pag02->id ?>&caminho=<?= $caminho_get ?>&pagina=<?php if (empty($filtros)) {
@@ -669,10 +711,12 @@ if ($filtros != []) {
 
 
 
-
+                                
                                 <?php } } else { ?>
                                 <tr>
                                     <td>Nenhum Lançamento encontrado</td>
+                                    <td></td>
+                                    <td></td>
                                     <td></td>
                                     <td></td>
                                     <td></td>
@@ -771,32 +815,35 @@ if ($filtros != []) {
 
         <div class="relatorios-botoes">
             <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="gerarpdf('pagar')">Gerar PDF</button>
-            <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="gerarexcel('pagar')">Gerar
-                Excel</button>
+            <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="gerarexcel('pagar')">Gerar Excel</button>
         </div>
 
-        
-
-
     <?php require_once __DIR__ . '/../modais/lancamentos/pagar/modal_quitar.php'; ?>
-    </div>
-
-    <?php require_once __DIR__ . '/../modais/lancamentos/pagar/modal_receber.php'; ?>
-    </div>
-
-    <?php require_once __DIR__ . '/../modais/lancamentos/pagar/modal_cadastro.php'; ?>
-    </div>
-
-    <?php require_once __DIR__ . '/../modais/lancamentos/pagar/modal_cadastro_bairro.php'; ?>
-     </div>                              
-            <!-- Modal Cadastro Cidade -->
+    </div>                          
+    <?php require_once __DIR__ . '/../modais/lancamentos/pagar/modal_cadastro_pagamento.php'; ?>
+    </div>  
+    <?php require_once __DIR__ . '/../modais/lancamentos/pagar/modal_titulo.php'; ?>
+    </div>  
+    <?php require_once __DIR__ . '/../modais/lancamentos/pagar/modal_subtitulo.php'; ?>
+    </div>   
+    <?php require_once __DIR__ . '/../modais/lancamentos/pagar/modal_cadastro_bairro.php'; ?>        
+    </div>                 
     <?php require_once __DIR__ . '/../modais/lancamentos/pagar/modal_cadastro_cidade.php'; ?>
     </div>
-    
     <?php require_once __DIR__ . '/../modais/lancamentos/pagar/modal_cadastro_categoria.php'; ?>
-     </div>
+    </div>  
+    <?php require_once __DIR__ . '/../modais/lancamentos/pagar/modal_cadastro.php'; ?>
+    </div>  
+    <?php require_once __DIR__ . '/../modais/lancamentos/pagar/modal_cadastro_custos.php'; ?>
+    </div>  
+    <?php require_once __DIR__ . '/../modais/lancamentos/pagar/modal_receber.php'; ?>
 
-    <?php require_once __DIR__ . '/../modais/lancamentos/pagar/modal_cadastro_pagamento.php'; ?>
+    
+
+    
+    
+
+    
 
 </body>
 
@@ -989,9 +1036,16 @@ if ($filtros != []) {
             var button = event.relatedTarget;
             var id = button.getAttribute('data-id');
             var valorRestante = button.getAttribute('data-valor-restante');
-            console.log('ID:', id, 'Valor restante:', valorRestante); // Adicione esta linha
+            var parcelaAtual = button.getAttribute('data-parcela-atual');
+            var parcelaGeral = button.getAttribute('data-parcela-geral');
+            var vencimento = button.getAttribute('data-vencimento');
+            var documento = button.getAttribute('data-documento');
             document.getElementById('modal_quitar_id').value = id;
             document.getElementById('modal_quitar_valor_restante').textContent = "Valor restante da parcela: R$ " + valorRestante;
+            document.getElementById('modal_quitar_parcela_atual').textContent = parcelaAtual || '';
+            document.getElementById('modal_quitar_parcela_geral').textContent = parcelaGeral || '';
+            document.getElementById('modal_quitar_vencimento').textContent = vencimento || '';
+            document.getElementById('modal_quitar_documento').textContent = documento || '';
         });
     });
 
@@ -1293,6 +1347,14 @@ document.addEventListener('DOMContentLoaded', function () {
     </script>
 <?php }}?>
 
-
+<?php if(isset($acao) && $acao == 'editar') { ?>
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('modal_receber');
+            var Modal = new bootstrap.Modal(modalEl);
+            Modal.show();
+        });
+    </script>
+<?php } ?>
 
 </html>

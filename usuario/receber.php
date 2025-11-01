@@ -9,8 +9,11 @@ require_once __DIR__ . '/../db/entities/cidade.php';
 require_once __DIR__ . '/../db/entities/bairro.php';
 require_once __DIR__ . '/../db/entities/estados.php';
 require_once __DIR__ . '/../db/entities/categoria.php';
+require_once __DIR__ . '/../db/entities/centrocustos.php';
 
 session_start();
+
+
 
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     header('Location: /');
@@ -37,15 +40,14 @@ $recebimentos_pagos = Rec02::readPagos();
 $ordenar_por = filter_input(INPUT_GET, 'ordenar') ?? filter_input(INPUT_POST, 'ordenar');
 $direcao = filter_input(INPUT_GET, 'direcao') ?? filter_input(INPUT_POST, 'direcao');
 
-$modal_quitar_id = filter_input(INPUT_GET, 'quitar_id');
-
 $view = filter_input(INPUT_GET, 'view');
 $target = filter_input(INPUT_GET, 'target');
+
+$modal_quitar_id = filter_input(INPUT_GET, 'quitar_id');
 
 $con01 = filter_input(INPUT_GET, 'con01id');
 
 $acao = filter_input(INPUT_GET, 'acao');
-
 
 $get_opcao = filter_input(INPUT_GET, 'opcao');
 $get_id = filter_input(INPUT_GET, 'id');
@@ -62,8 +64,26 @@ $get_filtro_pagamento = filter_input(INPUT_GET, 'forma_pagamento') ?? null;
 $get_filtro_cadastro = filter_input(INPUT_GET, 'filtro_cadastro') ?? null;
 $get_filtro_titulo = filter_input(INPUT_GET, 'filtro_titulo') ?? null;
 $get_filtro_subtitulo = filter_input(INPUT_GET, 'filtro_subtitulo') ?? null;
+$get_filtro_custo = filter_input(INPUT_GET, 'filtro_custo') ?? null;
 
-
+if(!isset($ordenar_por) || $ordenar_por === null){
+    if($get_filtro_por != null) {
+        switch($get_filtro_por) {
+            case 'lancamento':
+                $ordenar_por = 'data_lancamento';
+                $direcao = 'ASC';
+                break;
+            case 'vencimento':
+                $ordenar_por = 'data_vencimento';
+                $direcao = 'ASC';
+                break;
+            case 'pagamento':
+                $ordenar_por = 'data_pagamento';
+                $direcao = 'ASC';
+                break;
+        }
+    }
+}
 
 $parcela_paginas = Rec02::read(
     null,
@@ -136,18 +156,20 @@ if ($filtros != []) {
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
-<script src=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js "></script>
-<link href=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css " rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dragscroll/0.0.8/dragscroll.min.js"></script>
 
+<script type="module" src="node_modules/smart-webcomponents/source/modules/smart.combobox.js"></script>
+<link rel="stylesheet" type="text/css" href="node_modules/smart-webcomponents/source/styles/smart.default.css" />
 
 
 
 <link rel="stylesheet" href="/style.css">
-\\\\\
+<link rel="stylesheet" href="/modais/lancamentos/modais.css">
 
 <link rel="stylesheet" href="../choices/choices.css"></link>
 <meta charset="UTF-8">
@@ -208,9 +230,10 @@ if ($filtros != []) {
                 </a>
             </div>
 
-            <div class="menu-item">
+            <div class="menu-item ">
                 <a href="pagar.php">
-                    <div style="padding: 0.5em; align-items:center;"><i class="bi bi-cash-stack"></i></div> Contas a Pagar
+                    <div style="padding: 0.5em; align-items:center;"><i class="bi bi-cash-stack"></i></div> Contas a
+                    Pagar
                 </a>
             </div>
 
@@ -256,6 +279,8 @@ if ($filtros != []) {
     </div>
 
     <div class="main" id="container">
+
+            
         <div class="row">
             <div class="col-md-12" style="padding: 0;">
 
@@ -264,8 +289,12 @@ if ($filtros != []) {
                     <div class="card-header">
                         <div class="card-header-lancamento">
                         <h3>Contas a Receber</h3>
+
+                    <div>
                         <button data-bs-toggle="modal" data-bs-target="#modal_receber"
-                class="btn btn-primary btn-lg botao-adm-adicionar">Novo Lançamento</button>
+                        class="btn btn-primary btn-lg">Novo Lançamento</button>
+                    </div>
+                        
                         </div>
                     </div>
 
@@ -284,7 +313,7 @@ if ($filtros != []) {
                                                 <div class="inputs-pagamento-text">
 
                                                     <!-- Data inicial -->
-                                                    <div style="width: 25%; height: 3em;">
+                                                    <div style="width: 25%;">
                                                         <label for="filtro_data_inicial">Data
                                                             Inicial:</label>
                                                         <input type="date" id="filtro_data_inicial"
@@ -294,7 +323,7 @@ if ($filtros != []) {
                                                     </div>
 
                                                     <!-- Data final -->
-                                                    <div style="width: 25%; height: 3em;">
+                                                    <div style="width: 25%;">
                                                         <label for="filtro_data_final">Data
                                                             Final:</label>
                                                         <input type="date" id="filtro_data_final"
@@ -304,7 +333,7 @@ if ($filtros != []) {
                                                     </div>
 
                                                     <!-- Documento -->
-                                                    <div style="width: 20%;">
+                                                    <div style="width: 25%;">
                                                         <label for="filtro_nome"
                                                         >Documento:</label>
                                                         <input type="text" id="filtro_nome" name="filtro_nome"
@@ -314,7 +343,7 @@ if ($filtros != []) {
 
                                                     <!-- Tipo de pagamento -->
                                                 
-                                                    <div style="width: 20%;">
+                                                    <div style="width: 25%;">
                                                         <label for="forma_pagamento">Pagamento:</label>
                                                         <select class="form-control" name="forma_pagamento" style="border-top-left-radius: 0; border-bottom-left-radius: 0;
                                                         border-top-right-radius: 0.25em; border-bottom-right-radius: 0.25em;">
@@ -367,10 +396,8 @@ if ($filtros != []) {
                                                         </select>
                                                     </div>
 
-                                                    <div
-                                                        style="display:flex; flex-direction: column;">
-                                                        <label for="forma_pagamento"
-                                                        >Subtitulo:</label>
+                                                    <div style="display:flex; flex-direction: column;">
+                                                        <label for="forma_pagamento">Subtitulo:</label>
                                                         <select class="form-control" name="filtro_subtitulo"
                                                             id="subtitulo-filtro">
                                                             <?php
@@ -380,6 +407,20 @@ if ($filtros != []) {
                                                                 <option value="<?= $sub->id ?>"
                                                                     data-titulo-id="<?= $sub->id_con01 ?>" <?php if ($get_filtro_subtitulo == $sub->id) { ?> selected <?php } ?>>
                                                                     <?= htmlspecialchars($sub->nome, ENT_QUOTES, 'UTF-8') ?>
+                                                                </option>
+                                                            <?php } ?>
+                                                        </select>
+                                                    </div>
+
+                                                    <div style="display:flex; flex-direction: column;">
+                                                        <label for="centro-custos-filtro">Centro de custos:</label>
+                                                        <select class="form-control" name="filtro_custo" id="custo-filtro">
+                                                            <option value="">Selecione</option>
+                                                            <?php
+                                                            $centro_custos = CentroCustos::read(null, $_SESSION['usuario']->id_empresa);
+                                                            foreach ($centro_custos as $custo) { ?>
+                                                                <option value="<?= $custo->id ?>" <?php if ($get_filtro_custo == $custo->id) { ?> selected <?php } ?>>
+                                                                    <?= htmlspecialchars($custo->nome, ENT_QUOTES, 'UTF-8') ?>
                                                                 </option>
                                                             <?php } ?>
                                                         </select>
@@ -461,7 +502,7 @@ if ($filtros != []) {
                                         <div class="btn-filtro">
                                             <button type="submit" class="btn btn-primary"
                                                 style="background-color: #5856d6;">Filtrar</button>
-                                            <a href="pagar.php" class="btn btn-secondary">Limpar</a>
+                                            <a href="receber.php" class="btn btn-secondary">Limpar</a>
                                         </div>
 
                                     </div>
@@ -485,19 +526,20 @@ if ($filtros != []) {
                             }
                             ?>
                             <tr class="tr-clientes-header">
+                                <th>Centro de custos</th>
                                 <th><a
-                                        href="<?= $caminho ?>?ordenar=documento&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'documento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Documento</a><?php if ($ordenar_por == 'documento') {
+                                        href="<?= $caminho ?>?ordenar=documento&direcao=<?php echo ($ordenar_por === 'documento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Documento</a><?php if ($ordenar_por == 'documento') {
                                                          echo $seta;
                                                      } ?>
                                 </th>
                                 <th><a
-                                        href="<?= $caminho ?>?ordenar=data_lancamento&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'data_lancamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Data
+                                        href="<?= $caminho ?>?ordenar=data_lancamento&direcao=<?php echo ($ordenar_por === 'data_lancamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Data
                                         de Lançamento</a><?php if ($ordenar_por == 'data_lancamento') {
                                             echo $seta;
                                         } ?>
                                 </th>
                                 <th><a
-                                        href="<?= $caminho ?>?ordenar=nome&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'nome' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Nome</a><?php if ($ordenar_por == 'nome') {
+                                        href="<?= $caminho ?>?ordenar=nome&direcao=<?php echo ($ordenar_por === 'nome' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Nome</a><?php if ($ordenar_por == 'nome') {
                                                          echo $seta;
                                                      } ?>
                                 </th>
@@ -536,7 +578,7 @@ if ($filtros != []) {
                                             echo $seta;
                                         } ?>
                                 </th>
-                                <!-- <th>OBS</th> -->
+                                <th>OBS</th>
                                 <th>Quitar</th>
                                 <th>Estornar</th>
                                 <th>Editar</th>
@@ -558,10 +600,12 @@ if ($filtros != []) {
                                 numero_exibir: $numero_exibir,
                                 numero_pagina: $numero_pagina,
                                 ordenar_por: $ordenar_por,
-                                direcao: $direcao
+                                direcao: $direcao,
+                                filtro_custos: $get_filtro_custo
                             );
                             if (!empty($parcelas)) {
-
+                                
+                                
                                 if (empty($recebimentos_pagos) || $recebimentos_pagos === null)
                                     $recebimentos_pagos = []; ?>
 
@@ -602,7 +646,12 @@ if ($filtros != []) {
                                     $valor_total = number_format($rec01->valor, 2, ',', '.');
                                     $valor_parcela = number_format($rec02->valor_par, 2, ',', '.');
                                     $valor_pago = number_format($rec02->valor_pag, 2, ',', '.');
-                                    $link = 'pagar.php?view=pagar&acao=visualizar&id=' . $rec02->id;
+                                    $link = 'receber.php?view=receber&acao=visualizar&id=' . $rec02->id;
+
+                                    $centro_custos = '';
+                                    if($rec01->centro_custos != null) {
+                                    $centro_custos = CentroCustos::read($rec01->centro_custos, $_SESSION['usuario']->id_empresa)[0]->nome ?? '';
+                                    }
 
                                     $ultima_parcela = null;
                                     if ($rec02->parcela == $rec01->parcelas)
@@ -612,6 +661,7 @@ if ($filtros != []) {
                                     <!-- style="<?php if ($ultima_parcela) { ?>border-bottom: 3px solid #5856d6;<?php } ?> border-inline: 1px solid #5856d6;" -->
                                     <!-- style="<?php if ($ultima_parcela) { ?>border-bottom: 2px solid #5856d6;<?php } else if ($rec02->parcela == 1) { ?> border-top: 3px solid #5856d6; <?php } ?> border-inline: 2px solid #5856d6;" -->
                                     <tr class="tr-clientes <?= $cor_parcela ?>" onclick="">
+                                        <td><?=$centro_custos?></td>
                                         <td><?= $rec01->documento; ?> </td>
                                         <td><?= $data_lanc; ?> </td>
                                         <td><?= $cadastro->razao_soc; ?> </td>
@@ -633,7 +683,7 @@ if ($filtros != []) {
                                             echo 'R$ ' . $valor_pago;
                                         } ?></td>
                                         <td><?= $pagamento->nome ?? '' ?></td>
-                                        <!-- <td><?= $rec02->obs ?></td> -->
+                                        <td><?= $rec02->obs ?></td>
                                         <td class="td-acoes">
                                             <?php $valor_restante = number_format($rec02->valor_par - $rec02->valor_pag, 2, ',', '') ?>
                                             <button class="btn btn-primary" data-bs-toggle="modal" <?php if ($rec02->valor_pag > 0) { ?> disabled <?php } ?> data-bs-target="#modal_quitar"
@@ -641,7 +691,7 @@ if ($filtros != []) {
                                                     class="bi bi-cash-stack"></i></button>
                                         <td class="td-acoes">
                                             <button class="btn btn-primary" <?php if ($rec02->valor_pag == 0) { ?> disabled <?php } ?>
-                                                onclick="window.location.href='cadastros_manager.php?view=pagar&target=parcela&acao=estornar&id=<?= $rec02->id ?>&caminho=<?= $caminho_get ?>&pagina=<?php if (empty($filtros)) {
+                                                onclick="window.location.href='cadastros_manager.php?view=receber&target=parcela&acao=estornar&id=<?= $rec02->id ?>&caminho=<?= $caminho_get ?>&pagina=<?php if (empty($filtros)) {
                                                     echo '?pagina=' . $numero_pagina;
                                                 } else {
                                                     echo '?pagina=' . $numero_pagina;
@@ -659,9 +709,11 @@ if ($filtros != []) {
 
 
 
-                                <?php } }  else { ?>
+                                <?php } } else { ?>
                                 <tr>
                                     <td>Nenhum Lançamento encontrado</td>
+                                    <td></td>
+                                    <td></td>
                                     <td></td>
                                     <td></td>
                                     <td></td>
@@ -722,21 +774,18 @@ if ($filtros != []) {
                     </div>
 
 
-            
+                            <?php
+                            $total_vencido = array_sum($total_vencido);
+                            $total_vence_hoje = array_sum($total_vence_hoje);
+                            $total_a_vencer = array_sum($total_a_vencer);
+                            ?>
+                            <div id="total-vencido">Total vencido: R$
+                                <?= number_format($total_vencido, 2, ',', '.') ?> </div>
+                            <div id="total-vence-hoje">Total que vence hoje: R$
+                                <?= number_format($total_vence_hoje, 2, ',', '.') ?> </div>
+                            <div id="total-a-vencer">Total a vencer: R$
+                                <?= number_format($total_a_vencer, 2, ',', '.') ?> </div>
 
-                        <?php
-                        $total_vencido = array_sum($total_vencido);
-                        $total_vence_hoje = array_sum($total_vence_hoje);
-                        $total_a_vencer = array_sum($total_a_vencer);
-                        ?>
-                        <div id="total-vencido">Total vencido: R$
-                            <?= number_format($total_vencido, 2, ',', '.') ?> </div>
-                        <div id="total-vence-hoje">Total que vence hoje: R$
-                            <?= number_format($total_vence_hoje, 2, ',', '.') ?> </div>
-                        <div id="total-a-vencer">Total a vencer: R$
-                            <?= number_format($total_a_vencer, 2, ',', '.') ?> </div>
-
-                
 
                     <div class="card-select-numero">
                         <div>
@@ -763,16 +812,28 @@ if ($filtros != []) {
 
         <div class="relatorios-botoes">
             <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="gerarpdf('receber')">Gerar PDF</button>
-            <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="gerarexcel('receber')">Gerar
-                Excel</button>
+            <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="gerarexcel('receber')">Gerar Excel</button>
         </div>
 
-        
+    <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_titulo.php'; ?>
+    </div>
 
+    <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_subtitulo.php'; ?>
+    </div>
 
-        
+    <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_cadastro_bairro.php'; ?>
+    </div>                              
 
-    <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_quitar.php'; ?>
+    <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_cadastro_cidade.php'; ?>
+    </div>
+    
+    <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_cadastro_categoria.php'; ?>
+    </div>
+
+    <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_cadastro_custos.php'; ?>
+    </div>
+
+    <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_cadastro_pagamento.php'; ?>
     </div>
 
     <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_receber.php'; ?>
@@ -781,17 +842,12 @@ if ($filtros != []) {
     <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_cadastro.php'; ?>
     </div>
 
-    <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_cadastro_bairro.php'; ?>
-    </div>  
-
-    <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_cadastro_cidade.php'; ?>
-    </div>
+    <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_quitar.php'; ?>
     
-    <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_cadastro_categoria.php'; ?>
-     </div>
-
-    <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_cadastro_pagamento.php'; ?>
     
+
+    
+
 </body>
 
 <?php if(isset($modal_quitar_id)){
@@ -815,7 +871,6 @@ if ($filtros != []) {
         if (vrEl) vrEl.textContent = "Valor restante da parcela: R$ <?= $valor_restante_js ?>";
     </script>
 <?php }?>
-
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         var userBtn = document.getElementById('userBtn');
@@ -989,6 +1044,8 @@ if ($filtros != []) {
             document.getElementById('modal_quitar_valor_restante').textContent = "Valor restante da parcela: R$ " + valorRestante;
         });
     });
+
+    
 
 
 
@@ -1245,12 +1302,12 @@ document.addEventListener('DOMContentLoaded', function () {
     
     ;}, 100);
 });
-
-
 </script>
 
+
+
 <?php if (isset($acao) && $acao == 'adicionar') { 
-    if(isset($target) && $target == 'cadastro') {?>
+    if(!isset($target) || $target == 'cadastro') {?>
     <script>
         window.addEventListener('DOMContentLoaded', function () {
             var modalEl = document.getElementById('modal_receber');
@@ -1259,11 +1316,10 @@ document.addEventListener('DOMContentLoaded', function () {
             modalEl.addEventListener('hidden.bs.modal', function () {
                 window.location.href = 'receber.php';
             });
-            
         });
     </script>
     <?php } else if($target == 'quitar') { ?>
-        <script>          
+        <script>
         window.addEventListener('DOMContentLoaded', function () {
             var modalEl = document.getElementById('modal_quitar');
             var Modal = new bootstrap.Modal(modalEl);
@@ -1286,5 +1342,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     </script>
 <?php }}?>
+
+<?php if(isset($acao) && $acao == 'editar') { ?>
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('modal_receber');
+            var Modal = new bootstrap.Modal(modalEl);
+            Modal.show();
+        });
+    </script>
+<?php } ?>
 
 </html>
