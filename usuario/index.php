@@ -26,7 +26,8 @@ $data_amanha = $data_amanha->format('Y-m-d');
 
 
 
-$pagamentos_venceu = Pag02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, null, null, null, null, null, true, 'venceu');
+$pagamentos_venceu = Pag02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, 
+$data_atual, null, null, null, null, null, true, 'venceu');
 $total_pag_venceu = 0;
 foreach($pagamentos_venceu as $pag02) {
     $total_pag_venceu += $pag02->valor_par;

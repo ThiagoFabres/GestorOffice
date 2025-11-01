@@ -79,6 +79,7 @@
     width: 100%;
     height: 40em;
     display: flex;
+    gap: 10%;
     flex-direction: column;
     align-items: center;
     justify-content: space-evenly;
@@ -124,7 +125,7 @@
 }
 
 .dashboard-group {
-    width: 50%;
+    width: 90%;
     text-align: center;
     align-items: center;
 }
@@ -133,25 +134,39 @@
     width: 100%;
     cursor: pointer;
 }
+.dashboard-group table tbody tr td,
+.dashboard-group table thead tr th {
+    width: calc(100%/3);
+}
+
+.dashboard-group h1 {
+    font-size: 400%;
+}
 
 .tr-clientes-dash td {
-    overflow: scroll;
+    overflow: hidden;
     text-overflow: clip;
     min-width: none;
     white-space: nowrap;
     text-align: center;
-    font-size: 150%;
+    font-size: 275%;
     width: 100%;
+    background-color: white;
     
 } 
 .tr-clientes-dash th {
-    overflow: scroll;
+    overflow: hidden;
     text-overflow: clip;
     min-width: none;
     white-space: nowrap;
     text-align: center;
-    font-size: 175%;
+    font-size: 225%;
     width: 100%;
     color: black;
     font-weight: normal;
+}
+
+.tr-clientes th,
+.tr-clientes td{
+    overflow: hidden;
 }
