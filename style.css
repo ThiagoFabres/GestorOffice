@@ -79,6 +79,8 @@
     background-color: #5856d6;
 }
 
+
+
 .form-pagamento {
     display: flex;
     flex-direction: row;
@@ -152,17 +154,21 @@
     display: flex;
     flex-direction: row;
     gap: 1%;
-    width: calc(75% + 1%);
+    width: calc(75%);
     justify-content: space-between;
 }
-
 
 
 .data-dre {
     display: flex;
     flex-direction: row;
-    width: 45%;
+    width: 20%;
 }
+
+.data-dre div input {
+    height: 53%;
+}
+
 
 .titulos-dre {
     display: flex;
@@ -172,33 +178,27 @@
 
 
 
-
-
-
-.data-dre div,
-.titulos-dre div {
-    width: 100%;
-}
-
-
-
 .inputs-dre-btn {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    width:calc(25% -1%);
+    width:calc(40%);
     align-items: center;
 
 }
 
 .botoes-acao,
 .botoes-gerar {
-    width: 90%;
+    width: 100%;
     gap: 1%;
     display: flex;
-
+    font-size: 100%;
 }
-
+.botoes-acao button,
+.botoes-acao a,
+.botoes-gerar button {
+    font-size: 200%;
+}
 
 
 
@@ -221,7 +221,7 @@
 #total-receitas,
 #total-despesas,
 #total-dre {
-    font-size: 1rem;
+    font-size: 150%;
 }
 #total-vencido,
 #total-a-vencer,
@@ -333,13 +333,7 @@
 
 
 
-tbody, thead{
-    overflow: scroll;
-    white-space: nowrap;
-    text-overflow: clip;
-    min-width: none;
-    white-space: nowrap;
-}
+
 
 
 .botoes-contas {
@@ -553,13 +547,7 @@ html, body {
     background-color: #f8f8f9;
 }
 
-.input-documento-group,
-.input-pagamento-group,
-.titulo-group,
-.subtitulo-group {
-    display: flex;
-    flex-direction: row;
-}
+
 
 
 
@@ -686,6 +674,11 @@ html, body {
     width: 100%;
 }
 
+.modal,
+.modal-body {
+    width: 100%;
+}
+
 .input-modal-div-select-categoria {
     width: 90%;
 }
@@ -802,7 +795,7 @@ html, body {
 
 .tabela-lancamento th,
 .tabela-lancamento td {
-    overflow: auto;
+    overflow: hidden;
     text-align: center;
     padding: 0.4em;
     text-overflow: ellipsis; 
