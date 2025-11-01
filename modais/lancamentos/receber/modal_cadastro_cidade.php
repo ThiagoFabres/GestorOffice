@@ -4,7 +4,7 @@
                 
                 <!-- Cabeçalho -->
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalCadastroCidadeLabel">Nova Cidade</h5>
+                    <h5 class="modal-title" id="modalCadastroCidadeLabel">Cidade</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
                 
@@ -23,13 +23,11 @@
                     
                     <!-- Botões -->
                     <div class="d-flex justify-content-end gap-2">
-                        <button type="submit" name="acao" value="adicionar" class="btn btn-success" style="background-color: #5856d6; border-color: #5856d6;">Salvar</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        <button type="submit" name="acao" value="adicionar" class="btn btn-success" style="background-color: #5856d6; border-color: #5856d6;">Salvar</button>
                     </div>
                     </form>
                 </div>
-                
-                </div>
             </div>
+        </div>
     </div>
-</div>

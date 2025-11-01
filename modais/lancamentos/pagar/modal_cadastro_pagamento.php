@@ -13,7 +13,6 @@
                     <form method="post" action="cadastros_manager.php">
                     <input type="hidden" name="view" value="cadastro">
                     <input type="hidden" name="target" value="pagamento">
-                    <!-- these have IDs so JS can set them when opened from modal_quitar -->
                     <input type="hidden" id="modal_cadastro_pagamento_insta" name="insta" value="pagar">
                     <input type="hidden" id="modal_cadastro_pagamento_id" name="id" value="">
                     
@@ -29,13 +28,11 @@
                     </div>
                     </form>
                 </div>
-                
-                </div>
             </div>
+        </div>
     </div>
 
 <script>
-    // Copy modal_quitar id into this form when opened from the quitar modal
     document.addEventListener('DOMContentLoaded', function () {
         var pagamentoModal = document.getElementById('modal_cadastro_pagamento');
         if (!pagamentoModal) return;
@@ -46,12 +43,9 @@
                 var destIdInput = document.getElementById('modal_cadastro_pagamento_id');
                 var instaInput = document.getElementById('modal_cadastro_pagamento_insta');
                 if (quitarInput && destIdInput) {
-                    // copy the quitar id into the payment form's id field
                     destIdInput.value = quitarInput.value || '';
-                    // when opened from quitar, set insta so server redirects back to receber/pagar correctly
                     if (instaInput) instaInput.value = 'pagar';
                 } else {
-                    // ensure fields are cleared when not opened from quitar
                     if (destIdInput) destIdInput.value = '';
                 }
             } catch (e) {

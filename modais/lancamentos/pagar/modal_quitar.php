@@ -1,3 +1,4 @@
+
 <div class="modal fade" id="modal_quitar" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
             aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered" role="document">
@@ -25,6 +26,27 @@
                             <div class="valor-alvo">
                                 <p id="modal_quitar_valor_restante" style="color: #00000096;"></p>
                             </div>
+                            <div class="row mb-2">
+                                <div class="col-6">
+                                    <label>Documento</label>
+                                    <p id="modal_quitar_documento" style="color: #00000096; margin-bottom: 0;"></p>
+                                </div>
+                                <div class="col-6">
+                                    <label>Vencimento</label>
+                                    <p id="modal_quitar_vencimento" style="color: #00000096; margin-bottom: 0;"></p>
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-6">
+                                    <label>Parcela geral</label>
+                                    <p id="modal_quitar_parcela_geral" style="color: #00000096; margin-bottom: 0;"></p>
+                                </div>
+                                <div class="col-6">
+                                    <label>Parcela atual</label>
+                                    <p id="modal_quitar_parcela_atual" style="color: #00000096; margin-bottom: 0;"></p>
+                                </div>
+                            </div>
+                            
                             <label for="data">Data do pagamento</label>
                             <input class="form-control" type="date" placeholder="dd/mm/aa" name="data"
                                 value="<?= (new DateTime())->format('Y-m-d') ?>">
@@ -47,7 +69,7 @@
                                         class="form-control" id="btnModalPagamento"><i
                                             class="bi bi-plus-lg"></i></button>
                                 </div>
-                            </div>              
+                            </div>
                             <div style="margin-bottom: 3em;" class="footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
                                     style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Fechar</button>
@@ -58,3 +80,22 @@
                 </div>
             </div>
         </div>
+<script>
+// Função para preencher os campos extras do modal_quitar ao abrir (exibindo como texto)
+document.addEventListener('DOMContentLoaded', function () {
+    var modalQuitar = document.getElementById('modal_quitar');
+    if (!modalQuitar) return;
+    modalQuitar.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        // Os dados podem ser passados via data-* attributes no botão que abre o modal
+        var parcelaAtual = button ? button.getAttribute('data-parcela-atual') : '';
+        var parcelaGeral = button ? button.getAttribute('data-parcela-geral') : '';
+        var vencimento = button ? button.getAttribute('data-vencimento') : '';
+        var documento = button ? button.getAttribute('data-documento') : '';
+        document.getElementById('modal_quitar_parcela_atual').textContent = parcelaAtual || '';
+        document.getElementById('modal_quitar_parcela_geral').textContent = parcelaGeral || '';
+        document.getElementById('modal_quitar_vencimento').textContent = vencimento || '';
+        document.getElementById('modal_quitar_documento').textContent = documento || '';
+    });
+});
+</script>

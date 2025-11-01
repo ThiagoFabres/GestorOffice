@@ -75,7 +75,7 @@
                                 </div>
                                 <div class="input-modal-div-btn">
                                     <button data-bs-toggle="modal" data-bs-target="#modal_cadastro_bairro" type="button"
-                                        class="form-control" id="btnModalCadastro"><i
+                                        class="form-control" id="btnModalBairro"><i
                                             class="bi bi-plus-lg"></i></button>
                                 </div>
                             </div>
@@ -100,7 +100,7 @@
                                 </div>
                                 <div class="input-modal-div-btn">
                                     <button data-bs-toggle="modal" data-bs-target="#modal_cadastro_cidade" type="button"
-                                        class="form-control" id="btnModalCadastro"><i
+                                        class="form-control" id="btnModalCidade"><i
                                             class="bi bi-plus-lg"></i></button>
                                 </div>
                             </div>
@@ -167,7 +167,7 @@
                                 </div>
                                 <div class="input-modal-div-btn-categoria">
                                     <button data-bs-toggle="modal" data-bs-target="#modal_cadastro_categoria" type="button"
-                                        class="form-control" id="btnModalCadastro"><i
+                                        class="form-control" id="btnModalCategoria"><i
                                             class="bi bi-plus-lg"></i></button>
                                 </div>
                             </div>
