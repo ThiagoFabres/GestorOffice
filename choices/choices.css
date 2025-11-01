@@ -5,7 +5,6 @@
     height: 3em;
     background-color: white;
 }
-
 .choices[data-type*="select-one"]::after {
   display: none;
 }
@@ -14,6 +13,10 @@
   display: none;
 }
 
+.choices,
+.choices__inner {
+    
+}
 
 /* container do select */
 .input-select-titulo .choices__inner,
@@ -22,6 +25,7 @@
     align-items: center;
     padding: 0 0.75em;
     height: 2.5em;
+    
 }
 
 /* item selecionado ou placeholder */
@@ -30,10 +34,12 @@
     line-height: 1.2em;
     display: flex;
     align-items: center;
+    
 }
 
 .choices div{
     background-color: white;
+    
 }
 
 #subtitulo-dre .choices__list--single .choices__item  {
@@ -43,14 +49,20 @@
     align-items: center;
 }
 
-div input[type="text"],
-div input[type="date"],
-div input[type="number"]{
-    height: 2.75em;
+.inputs-pagamento-text input[type="text"],
+.inputs-pagamento-text input[type="number"]{
+    height: 59%;
+    font-size: 100%;
+    
+}
+.inputs-pagamento-text input[type="date"] {
+    height: 59%;
+    font-size: 90%;
 }
 
 .choices__input {
     background-color: white;
+    
 }
 
 .input-documento .choices,
@@ -83,6 +95,7 @@ div input[type="number"]{
     overflow: hidden;
     text-overflow: ellipsis;
     display: block;
+    
 }
 .inputs-pagamento-text .choices,
 .inputs-pagamento-text .choices__inner,
@@ -101,6 +114,7 @@ div input[type="number"]{
     width: 100%;
     font-size:95%;
     text-overflow: clip;
+    
 }
 
 /* CORREÇÃO: Dropdown aberto - permite texto em múltiplas linhas */
