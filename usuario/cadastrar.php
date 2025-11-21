@@ -19,6 +19,7 @@ if($_SESSION['usuario']->status != 1) {
     header('Location: index.php');
     exit();
 }
+$lateral_target = 'cadastro';
 $acao = filter_input(INPUT_GET, 'acao');
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 $get_cadastro = filter_input(INPUT_GET, 'cadastro');
@@ -137,81 +138,8 @@ $estadosLista = [
 <body id="body" >
 
 
-    <nav id="barra-lateral">
-        <div id="logo-container">
-            <img width="220px" height="220px" src="/gestor-office.png" alt="Logo" class="logo">
-        </div>
-    <div id="itens-menu">
-                        <div class="menu-item">
-            <a href="index.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-layers"></i></div> Dashboard </a>
-        </div>
-    
-        <div class="menu-item menu-item-atual accordion" >
-
-<a class="nav-link text-white" data-bs-toggle="collapse" href="#cadastrosMenu" role="button" aria-expanded="false" aria-controls="cadastrosMenu">
-        <i class="bi bi-person"></i> Cadastros
-      </a>
-      <div class="" id="cadastrosMenu">
-        <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
-          <li><a href="cadastrar.php?cadastro=cliente" class="link-light text-decoration-none"><i class="bi bi-person"></i>Cliente/Fornecedor</a></li>
-          <li><a href="cadastrar.php?cadastro=bairro" class="link-light text-decoration-none"><i class="bi bi-houses"></i>Bairro</a></li>
-          <li><a href="cadastrar.php?cadastro=cidade" class="link-light text-decoration-none"><i class="bi bi-buildings"></i>Cidade</a></li>
-          <li><a href="cadastrar.php?cadastro=pagamento" class="link-light text-decoration-none"><i class="bi bi-cash-coin"></i>Tipo Pagamento</a></li>
-          <li><a href="cadastrar.php?cadastro=categoria" class="link-light text-decoration-none"><i class="bi bi-tag"></i>Categoria</a></li>
-          <li><a href="cadastrar.php?cadastro=custo" class="link-light text-decoration-none"><i class="bi bi-bank"></i>Centro de custos</a></li>
-          
-        </ul>
-      </div>
-        </div>
-
-        <div class="menu-item">
-            <a href="contas.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-journal-bookmark"></i></div> Plano de Contas </a>
-        </div>
-
-        <div class="menu-item">
-            <a href="receber.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-wallet"></i></div> Contas a Receber </a>
-        </div>
-
-        <div class="menu-item">
-            <a href="pagar.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-cash-stack"></i></div> Contas a Pagar </a>
-        </div>
-
-        <div class="menu-item">
-            <a href="dre/sintetico.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
-        </div>
-
-
-
-        </div>
-        </div>
-
-    </nav>
-
-
-    <div id="header">
-        
-        <button onclick="encolher()" style="background:none;border:none;font-size:1.2em;color:#181f2b;outline:none;cursor:pointer; z-index:1000;">
-            <span class="btn bi bi-list"></span>
-        </button>
-        
-    <div id="titulo-header">
-        
-        <a>Dashboard</a>
-    </div>
-    <div id="menu-superior">
-        <a class="superior-item" href="/admin/">Dashboard</a>
-    </div>
-    <div class="conta-header" style="position:relative; float:right; margin-right:2em;">
-        <button id="userBtn" type="button" style="background:none;border:none;font-size:1.2em;color:#181f2b;outline:none;cursor:pointer;">
-            <span style="color:#181f2b;"><?= $_SESSION['usuario']->nome ?> </span>
-        </button>
-        <div id="userMenu" style="right:0; z-index: 1000000;">
-            <a href="/" class="dropdown-item">
-                <i class="bi bi-box-arrow-left"></i> Logout
-        </a>
-        </div>
-    </div>
-    </div>
+    <?php require_once __DIR__ . '/../componentes/lateral/lateral.php'?>
+    <?php require_once __DIR__ . '/../componentes/header/header.php' ?>
 
 
 
@@ -225,9 +153,7 @@ $estadosLista = [
             
 <div class="main" id="container">
 
-                <div class="botao">
-        <button data-bs-toggle="modal" data-bs-target="#modal_empresa" class="btn btn-primary btn-lg botao-adm-adicionar">Novo Cadastro</button>
-    </div>
+                
 
     
 
@@ -242,7 +168,9 @@ $estadosLista = [
                 
 
                     <div class="card"   >
-                        <div class="card-header"><h3>Clientes / Fornecedores</h3></div>
+                        <div class="card-header" style="display: flex; flex-direction: row; justify-content: space-between;"><h3>Clientes / Fornecedores</h3> <div class="botao">
+        <button data-bs-toggle="modal" data-bs-target="#modal_empresa" class="btn btn-primary btn-lg botao-adm-adicionar">Novo Cadastro</button>
+    </div></div>
 
                         <div class="card-header-div">
         <div class="card-header-borda">
@@ -805,11 +733,12 @@ $estadosLista = [
 
                         <div style="margin-bottom: 3em;" class="footer">
 
+                            
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                                style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Fechar</button>
                             <button name="acao" value="adicionar" class="btn btn-success"
                                 style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0;"
                                 href="consulta_cliente.php">Salvar</button>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                                style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Fechar</button>
 
 
                     </form>
@@ -851,8 +780,9 @@ $estadosLista = [
 
                         <div style="margin-bottom: 3em;" class="footer">
 
-                        <button name="acao" value="adicionar" class="btn btn-success" style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0;" href="consulta_cliente.php">Salvar</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Fechar</button>
+                        <button name="acao" value="adicionar" class="btn btn-success" style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0;" href="consulta_cliente.php">Salvar</button>
+                        
                             
 
                     </form>
@@ -890,8 +820,9 @@ $estadosLista = [
                     
                     <!-- Botões -->
                     <div class="d-flex justify-content-end gap-2">
-                        <button type="submit" name="acao" value="adicionar" class="btn btn-success" style="background-color: #5856d6; border-color: #5856d6;">Salvar</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        <button type="submit" name="acao" value="adicionar" class="btn btn-success" style="background-color: #5856d6; border-color: #5856d6;">Salvar</button>
+                        
                     </div>
                     </form>
                 </div>
@@ -926,8 +857,9 @@ $estadosLista = [
                     
                     <!-- Botões -->
                     <div class="d-flex justify-content-end gap-2">
-                        <button type="submit" name="acao" value="adicionar" class="btn btn-success" style="background-color: #5856d6; border-color: #5856d6;">Salvar</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        <button type="submit" name="acao" value="adicionar" class="btn btn-success" style="background-color: #5856d6; border-color: #5856d6;">Salvar</button>
+                        
                     </div>
                     </form>
                 </div>
@@ -943,9 +875,7 @@ $estadosLista = [
 
     ?>
     <div class="main" id="container">
-                <div class="botao">
-        <a href="cadastrar.php?cadastro=<?= $get_cadastro ?>&acao=adicionar" class="btn btn-primary btn-lg botao-adm-adicionar"> <?php if ($get_cadastro == 'cidade') {echo 'Nova';} else { echo 'Novo';} ?> <?= ucfirst($get_cadastro) ?></a>
-    </div>
+    
 
      <div class="tabela">
     
@@ -957,7 +887,9 @@ $estadosLista = [
                 
 
                     <div class="card">
-                        <div class="card-header"><h3><?= ucfirst($get_cadastro) . 's' ?></h3></div>
+                        <div class="card-header" style="display:flex; flex-direction: row; justify-content: space-between;"><h3><?= ucfirst($get_cadastro) . 's' ?></h3> <div class="botao">
+                        <a href="cadastrar.php?cadastro=<?= $get_cadastro ?>&acao=adicionar" class="btn btn-primary btn-lg botao-adm-adicionar"> <?php if ($get_cadastro == 'cidade') {echo 'Nova';} else { echo 'Novo';} ?> <?= ucfirst($get_cadastro) ?></a>
+                    </div></div>
                 
 
                     <table class="table table-striped table-cadastro">
@@ -1061,8 +993,9 @@ switch ($get_cadastro) {
 
                         <div style="margin-bottom: 3em;" class="footer">
 
-                        <button name="acao" value="adicionar" class="btn btn-success" style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0;" href="consulta_cliente.php">Salvar</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Fechar</button>
+                        <button name="acao" value="adicionar" class="btn btn-success" style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0;" href="consulta_cliente.php">Salvar</button>
+                        
                             
 
                     </form>

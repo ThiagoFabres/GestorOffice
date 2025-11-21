@@ -147,6 +147,11 @@ if (isset($view) && $view == 'cadastro') {
                 );
 
                 Bairro::create($bairro);
+                if(isset($insta) && $insta != null) {
+                        if($insta == 'pagar') header('Location: pagar.php?acao=adicionar');
+                        if($insta == 'receber') header('Location: receber.php?acao=adicionar');
+                        exit;
+                    }
                 break;
 
             case 'cidade':
@@ -156,9 +161,13 @@ if (isset($view) && $view == 'cadastro') {
                     $id_empresa,
                     $nome
                 );
-                if (!Cidade::read(null, $id_empresa, $nome)) {
-                    Cidade::create($cidade);
+                Cidade::create($cidade);
+                if(isset($insta) && $insta != null) {
+                    if($insta == 'pagar') header('Location: pagar.php?acao=adicionar');
+                    if($insta == 'receber') header('Location: receber.php?acao=adicionar');
+                exit;
                 }
+                
                 break;
 
             case 'categoria':
@@ -171,8 +180,8 @@ if (isset($view) && $view == 'cadastro') {
                 if (!Categoria::read(null, $id_empresa, $nome)) {
                     Categoria::create($categoria);
                     if(isset($insta) && $insta != null) {
-                        if($insta == 'pagar') header('Location: pagar.php?acao=adicionar&target=quitar&quitar_id='.$modal_quitar_id);
-                        if($insta == 'receber') header('Location: receber.php?acao=adicionar&target=quitar&quitar_id='.$modal_quitar_id);
+                        if($insta == 'pagar') header('Location: pagar.php?acao=adicionar');
+                        if($insta == 'receber') header('Location: receber.php?acao=adicionar');
                         exit;
                     }
                 } else {
@@ -509,12 +518,13 @@ if (isset($view) && $view == 'cadastro') {
     
     $parcelas_d = filter_input(INPUT_POST, 'parcelas_d');
 
+    $data_lanc = filter_input(INPUT_POST, 'data_lanc') ?? null;
     $parcela = $_POST['parcela'] ?? [];
     $vencimento = $_POST['vencimento'] ?? [];
     $valor_par = $_POST['valor_par'] ?? [];
     $obs02 = $_POST['obs02'] ?? [];
     $id = $_POST['id'] ?? [];
-    $id_rec = filter_input(INPUT_POST, 'id_rec01');
+    $id_rec = filter_input(INPUT_POST, 'id_lancamento');
     $data_pag = filter_input(INPUT_POST, 'data');
     // $data_pag = new DateTime($data_pag);
     // $data_pag = $data_pag->format('d-m-Y');
@@ -526,11 +536,12 @@ if (isset($view) && $view == 'cadastro') {
     if($caminho == null || $caminho == '')$numero_exibir = filter_input(INPUT_POST, 'numero_exibido') ?? str_replace('k', '&', filter_input(INPUT_GET, 'numero_exibido'));
     $numero_exibir = str_replace('k', '&', $numero_exibir);
     
-    if (isset($_POST['pagar']) && ($_POST['pagar'] == 1 || $_GET['pagar'] == 1)) {
+    if ((isset($_POST['pagar']) || isset($_GET['pagar'])) && ($_POST['pagar'] == 1 || $_GET['pagar'] == 1)) {
         $pagar = true;
     } else {
         $pagar = false;
     }
+
 
     if($id_rec != null && $acao == 'editar') {
         if($pagar) {
@@ -566,7 +577,7 @@ if (isset($view) && $view == 'cadastro') {
             $descricao,
             $valor,
             $parcelas_d,
-            null,
+            $data_lanc,
             $_SESSION['usuario']->id_usuario,
             $custo
         );
@@ -662,6 +673,7 @@ if (isset($view) && $view == 'cadastro') {
             $parcelas_d,
             $data_lanc,
             $_SESSION['usuario']->id_usuario,
+            $custo
         );
 
         if ($pagar) {
@@ -777,15 +789,25 @@ if (isset($view) && $view == 'cadastro') {
         }
 
     } else if (isset($acao) && $acao == 'quitar') {
+        if($valor != '' && $valor != null) {
         $valor_parcela = str_replace(',', '.', $valor);
         $valor_parcela = floatval($valor_parcela);
+        }
+
+        var_dump($valor) . '<br>';
+        
         if ($target == 'parcela') {
             if ($pagar) {
+                echo 'a';
                 $parcela_antiga = Pag02::read($id)[0];
+                
             } else {
                 $parcela_antiga = Rec02::read($id)[0];
             }
 
+            if($valor == '' || $valor == null) {
+                $valor_parcela = $parcela_antiga->valor_par;
+            }
             $parcela = new Rec02(
                 $id,
                 null,
@@ -800,6 +822,7 @@ if (isset($view) && $view == 'cadastro') {
             );
             if ($pagar) {
                 Pag02::update($parcela);
+                echo 'a';
                 header('Location:' . $caminho.$numero_pagina.$numero_exibir);
                 exit;
             } else {
@@ -816,12 +839,15 @@ if (isset($view) && $view == 'cadastro') {
             $id = filter_input(INPUT_GET, 'id');
         }
 
+
         if($caminho != 'receber.php' && $caminho != 'pagar.php') {
             $numero_pagina = str_replace('?', '&', $numero_pagina);
         }
        
         if ($target == 'parcela') {
             if ($pagar) {
+                echo 'a';
+                
                 $parcela_antiga = Pag02::read($id)[0];
             } else {
                 $parcela_antiga = Rec02::read($id)[0];
@@ -849,6 +875,34 @@ if (isset($view) && $view == 'cadastro') {
             }
 
 
+        }
+    } else if(isset($acao) && $acao == 'excluir') {
+        $parcelas_pagas = false;
+        if($pagar) {
+            foreach(Pag02::read(id_pag01:$id_rec, id_empresa:$_SESSION['usuario']->id_empresa) as $parcela) {
+                if($parcela->valor_pag != 0){
+                    $parcelas_pagas = true;
+                    header('Location: pagar.php?erro=usado');
+                    exit;
+                }
+                if($parcelas_pagas == false) {
+                    Pag01::delete($id_rec);
+                    header('Location: pagar.php');
+                }
+            }
+        } else if($pagar == false) {
+
+            foreach(Rec02::read(id_rec01:$id_rec, id_empresa:$_SESSION['usuario']->id_empresa) as $parcela) {
+                if($parcela->valor_pag != 0){
+                    $parcelas_pagas = true;
+                    header('Location: receber.php?erro=usado');
+                    exit;
+                }
+                if($parcelas_pagas == false) {
+                    Rec01::delete($id_rec);
+                    header('Location: receber.php');
+                }
+            }
         }
     }
 
