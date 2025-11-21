@@ -1,0 +1,16 @@
+.input-documento-group,
+.input-pagamento-group,
+.titulo-group,
+.subtitulo-group {
+    display: flex;
+    flex-direction: row;
+}
+
+
+
+.modal-input-group {
+    display: flex;
+    flex-direction: column;
+    width: calc(100%/5);
+}
+
