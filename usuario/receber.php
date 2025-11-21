@@ -35,6 +35,8 @@ $total_vencido = [];
         }
     }
 
+$lateral_target = 'receber';
+
 $recebimentos_pagos = Rec02::readPagos();
 
 $ordenar_por = filter_input(INPUT_GET, 'ordenar') ?? filter_input(INPUT_POST, 'ordenar');
@@ -71,35 +73,29 @@ if(!isset($ordenar_por) || $ordenar_por === null){
         switch($get_filtro_por) {
             case 'lancamento':
                 $ordenar_por = 'data_lancamento';
-                $direcao = 'ASC';
                 break;
             case 'vencimento':
                 $ordenar_por = 'data_vencimento';
-                $direcao = 'ASC';
                 break;
             case 'pagamento':
                 $ordenar_por = 'data_pagamento';
-                $direcao = 'ASC';
+
                 break;
         }
     }
 }
 
+
 $parcela_paginas = Rec02::read(
-    null,
-    $_SESSION['usuario']->id_empresa,
-    null,
-    null,
-    null,
-    $get_filtro_data_inicial ?? null,
-    $get_filtro_data_final ?? null,
-    $get_filtro_nome ?? null,
-    $get_filtro_opcao ?? null,
-    $get_filtro_por ?? null,
-    $get_filtro_pagamento ?? null,
-    null,
-    null,
-    null,
+    id_empresa: $_SESSION['usuario']->id_empresa,
+    filtro_data_inicial: $get_filtro_data_inicial ?? null,
+    filtro_data_final: $get_filtro_data_final ?? null,
+    filtro_documento: $get_filtro_nome ?? null,
+    filtro_opcao: $get_filtro_opcao ?? null,
+    filtro_por: $get_filtro_por ?? null,
+    filtro_pagamento: $get_filtro_pagamento ?? null,
+    filtro_cadastro:$get_filtro_cadastro ?? null, 
+    filtro_custos: $get_filtro_custo ?? null,
     read_paginas: true
 );
 
@@ -131,6 +127,10 @@ if ($get_filtro_titulo != '')
     $filtros[] = 'filtro_titulo=' . $get_filtro_titulo;
 if ($get_filtro_subtitulo != '')
     $filtros[] = 'filtro_subtitulo=' . $get_filtro_subtitulo;
+if ($get_filtro_cadastro != '')
+    $filtros[] = 'filtro_cadastro=' . $get_filtro_cadastro;
+if ($get_filtro_custo != '')
+    $filtros[] = 'filtro_custo=' . $get_filtro_custo;
 
 if ($filtros != []) {
     $caminho = 'receber.php?' . implode('&', $filtros);
@@ -156,8 +156,8 @@ if ($filtros != []) {
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js "></script>
+<link href=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css " rel="stylesheet">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
@@ -169,9 +169,21 @@ if ($filtros != []) {
 
 
 <link rel="stylesheet" href="/style.css">
-<link rel="stylesheet" href="/modais/lancamentos/modais.css">
-
+<link rel="stylesheet" href="/componentes/modais/lancamentos/modais.css">
 <link rel="stylesheet" href="../choices/choices.css"></link>
+
+<?php if($acao == 'visualizar') {?> 
+<style>
+    .choices div{
+    background-color: #eaeaea;
+}
+.form-select-titulo {
+            border-radius: 0;
+            height: 100%;
+        }
+</style>
+<?php }?>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
@@ -181,102 +193,8 @@ if ($filtros != []) {
 <body id="body">
 
 
-    <nav id="barra-lateral">
-        <div id="logo-container">
-            <img width="220px" height="220px" src="/gestor-office.png" alt="Logo" class="logo">
-        </div>
-        <div id="itens-menu">
-            <div class="menu-item">
-                <a href="index.php">
-                    <div style="padding: 0.5em; align-items:center;"><i class="bi bi-layers"></i></div> Dashboard
-                </a>
-            </div>
-            <?php if ($_SESSION['usuario']->processar == 1) { ?>
-                <div class="menu-item accordion">
-
-                    <a class="nav-link text-white" data-bs-toggle="collapse" href="#cadastrosMenu" role="button"
-                        aria-expanded="false" aria-controls="cadastrosMenu">
-                        <i class="bi bi-person"></i> Cadastros
-                    </a>
-                    <div class="collapse" id="cadastrosMenu">
-                        <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
-                            <li><a href="cadastrar.php?cadastro=cliente" class="link-light text-decoration-none"><i
-                                        class="bi bi-person"></i>Cliente/Fornecedor</a></li>
-                            <li><a href="cadastrar.php?cadastro=bairro" class="link-light text-decoration-none"><i
-                                        class="bi bi-houses"></i>Bairro</a></li>
-                            <li><a href="cadastrar.php?cadastro=cidade" class="link-light text-decoration-none"><i
-                                        class="bi bi-buildings"></i>Cidade</a></li>
-                            <li><a href="cadastrar.php?cadastro=pagamento" class="link-light text-decoration-none"><i
-                                        class="bi bi-cash-coin"></i>Tipo Pagamento</a></li>
-                            <li><a href="cadastrar.php?cadastro=categoria" class="link-light text-decoration-none"><i
-                                        class="bi bi-tag"></i>Categoria</a></li>
-                            <li><a href="cadastrar.php?cadastro=custo" class="link-light text-decoration-none"><i class="bi bi-bank"></i>Centro de custos</a></li>
-
-                        </ul>
-                    </div>
-                </div>
-            <?php } ?>
-
-            <div class="menu-item">
-                <a href="contas.php">
-                    <div style="padding: 0.5em; align-items:center;"><i class="bi bi-journal-bookmark"></i></div> Plano
-                    de Contas
-                </a>
-            </div>
-
-            <div class="menu-item menu-item-atual">
-                <a href="receber.php">
-                    <div style="padding: 0.5em; align-items:center;"><i class="bi bi-wallet"></i></div> Contas a Receber
-                </a>
-            </div>
-
-            <div class="menu-item ">
-                <a href="pagar.php">
-                    <div style="padding: 0.5em; align-items:center;"><i class="bi bi-cash-stack"></i></div> Contas a
-                    Pagar
-                </a>
-            </div>
-
-            <div class="menu-item">
-                <a href="dre/sintetico.php">
-                    <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE
-                </a>
-            </div>
-
-
-        </div>
-        </div>
-
-    </nav>
-
-
-    <div id="header">
-
-        <button onclick="encolher()"
-            style="background:none;border:none;font-size:1.2em;color:#181f2b;outline:none;cursor:pointer; z-index:1000;">
-            <span class="btn bi bi-list"></span>
-        </button>
-
-        <div id="titulo-header">
-
-            <a>Dashboard</a>
-        </div>
-        <div id="menu-superior">
-            <a class="superior-item" href="/admin/">Dashboard</a>
-        </div>
-        <div class="conta-header" style="position:relative; float:right; margin-right:2em;">
-            <button id="userBtn" type="button"
-                style="background:none;border:none;font-size:1.2em;color:#181f2b;outline:none;cursor:pointer;">
-                <span style="color:#181f2b;"><?= htmlspecialchars($_SESSION['usuario']->nome, ENT_QUOTES, 'UTF-8') ?>
-                </span>
-            </button>
-            <div id="userMenu" style="right:0; z-index: 1000000;">
-                <a href="/" class="dropdown-item">
-                    <i class="bi bi-box-arrow-left"></i> Logout
-                </a>
-            </div>
-        </div>
-    </div>
+    <?php require_once __DIR__ . '/../componentes/lateral/lateral.php'?>
+    <?php require_once __DIR__ . '/../componentes/header/header.php' ?>
 
     <div class="main" id="container">
 
@@ -397,11 +315,10 @@ if ($filtros != []) {
                                                     </div>
 
                                                     <div style="display:flex; flex-direction: column;">
-                                                        <label for="forma_pagamento">Subtitulo:</label>
+                                                        <label for="subtitulo-filtro">Subtitulo:</label>
                                                         <select class="form-control" name="filtro_subtitulo"
                                                             id="subtitulo-filtro">
                                                             <?php
-                                                            // Buscar todos os subtítulos da empresa
                                                             $todosSubtitulos = Con02::read(null, $_SESSION['usuario']->id_empresa);
                                                             foreach ($todosSubtitulos as $sub) { ?>
                                                                 <option value="<?= $sub->id ?>"
@@ -429,69 +346,78 @@ if ($filtros != []) {
                                             </div> <!-- fecha row -->
                                         </div> <!-- fecha inputs-pagamento-group -->
 
-                                        <div class="selects-pagamento">
-
+                                        <div class="selects-pagamento" style="padding-top:3%;">
+                                            <div style="display: flex; flex-direction: row;">
+                                            <div style="width: 15%;">
+                                                <h5 style="font-size: 75%;">Opção:</h5>
+                                            </div>
                                             <!-- Primeira linha de radios (opção) -->
                                             <div class="radio-pagamento">
+                                                
+                                                <div>                    
+                                                    <div class="form-check">
+                                                        <label class="form-check-label" for="todos">Todos</label>
+                                                        <input class="form-check-input" type="radio" id="todos"
+                                                            name="opcao_filtro" value="" <?php if ($get_filtro_opcao == '' || empty($get_filtro_opcao)) { ?> checked <?php } ?>>
+                                                        
+                                                    </div>
+                                                </div>
                                                 <div>
-                                                    <h5 style="font-size: 1em;">Opção:</h5>
+                                                    <div class="form-check">
+                                                        <label class="form-check-label" for="abertos">Abertos</label>
+                                                        <input class="form-check-input" type="radio" id="abertos"
+                                                            name="opcao_filtro" value="abertos" <?php if ($get_filtro_opcao == 'abertos') { ?> checked <?php } ?>
+                                                            value="abertos">
+                                                        
+                                                    </div>
                                                 </div>
-
-                                                <div class="form-check">
-                                                    <label class="form-check-label" for="">Todos</label>
-                                                    <input class="form-check-input" type="radio" id="todos"
-                                                        name="opcao_filtro" value="" <?php if ($get_filtro_opcao == '' || empty($get_filtro_opcao)) { ?> checked <?php } ?>>
-                                                    
-                                                </div>
-
-                                                <div class="form-check">
-                                                    <label class="form-check-label" for="abertos">Abertos</label>
-                                                    <input class="form-check-input" type="radio" id="abertos"
-                                                        name="opcao_filtro" value="abertos" <?php if ($get_filtro_opcao == 'abertos') { ?> checked <?php } ?>
-                                                        value="abertos">
-                                                    
-                                                </div>
-
-                                                <div class="form-check">
-                                                    <label class="form-check-label" for="quitados">Quitados</label>
-                                                    <input class="form-check-input" type="radio" id="quitados"
-                                                        name="opcao_filtro" value="quitados" <?php if ($get_filtro_opcao == 'quitados') { ?> checked <?php } ?>
-                                                        value="quitados">
-                                                    
+                                                <div>
+                                                    <div class="form-check">
+                                                        <label class="form-check-label" style="font-size: 90%;" for="quitados">Quitados</label>
+                                                        <input class="form-check-input" type="radio" id="quitados"
+                                                            name="opcao_filtro" value="quitados" <?php if ($get_filtro_opcao == 'quitados') { ?> checked <?php } ?>
+                                                            value="quitados">
+                                                    </div>
                                                 </div>
                                             </div>
-
+                                        </div>                                
 
                                             <!-- Segunda linha de radios (filtro por) -->
-                                            <div class="radio-pagamento" style="...">
-                                                <div>
-                                                    <h5 style="font-size: 1em;">Filtro <br> por:</h5>
+                                        <div style="display: flex; flex-direction: row;">                      
+                                                <div style="width: 15%;">
+                                                    <h5 style="font-size: 75%;">Filtro <br> por:</h5>
                                                 </div>
-
-                                                <div class="form-check">
-                                                    <label class="form-check-label" for="lancamento">Lançamento</label>
-                                                    <input class="form-check-input" type="radio" id="lancamento"
-                                                        name="filtro_por" <?php if ($get_filtro_por == 'lancamento' || empty($get_filtro_por)) { ?> checked <?php } ?>
-                                                        value="lancamento">
-                                                    
+                                            <div class="radio-pagamento">
+                                                
+                                                <div >                        
+                                                    <div class="form-check">
+                                                        <label class="form-check-label" for="lancamento">Lançamento</label>
+                                                        <input class="form-check-input" type="radio" id="lancamento"
+                                                            name="filtro_por" <?php if ($get_filtro_por == 'lancamento' || empty($get_filtro_por)) { ?> checked <?php } ?>
+                                                            value="lancamento">
+                                                        
+                                                    </div>
                                                 </div>
-
-                                                <div class="form-check">
-                                                    <label class="form-check-label" for="vencimento">Vencimento</label>
-                                                    <input class="form-check-input" type="radio" id="vencimento"
-                                                        name="filtro_por" <?php if ($get_filtro_por == 'vencimento') { ?>
-                                                            checked <?php } ?> value="vencimento">
-                                                    
+                                                <div >
+                                                    <div class="form-check">
+                                                        <label class="form-check-label" for="vencimento">Vencimento</label>
+                                                        <input class="form-check-input" type="radio" id="vencimento"
+                                                            name="filtro_por" <?php if ($get_filtro_por == 'vencimento') { ?>
+                                                                checked <?php } ?> value="vencimento">
+                                                        
+                                                    </div>
                                                 </div>
-
-                                                <div class="form-check">
-                                                    <label class="form-check-label" for="pagamento">Pagamento</label>
-                                                    <input class="form-check-input" type="radio" id="pagamento"
-                                                        name="filtro_por" <?php if ($get_filtro_por == 'pagamento') { ?>
-                                                            checked <?php } ?> value="pagamento">
-                                                    
+                                                <div >                    
+                                                    <div class="form-check">
+                                                        <label class="form-check-label" for="pagamento">Pagamento</label>
+                                                        <input class="form-check-input" type="radio" id="pagamento"
+                                                            name="filtro_por" <?php if ($get_filtro_por == 'pagamento') { ?>
+                                                                checked <?php } ?> value="pagamento">
+                                                        
+                                                    </div>
                                                 </div>
                                             </div>
+                                        </div>  
 
                                         </div> <!-- fecha selects-pagamento -->
 
@@ -582,6 +508,7 @@ if ($filtros != []) {
                                 <th>Quitar</th>
                                 <th>Estornar</th>
                                 <th>Editar</th>
+                                <th>Visualizar</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -604,6 +531,9 @@ if ($filtros != []) {
                                 filtro_custos: $get_filtro_custo
                             );
                             if (!empty($parcelas)) {
+
+                                $total_valor_pago = 0;
+                                $total_valor_par = 0;
                                 
                                 
                                 if (empty($recebimentos_pagos) || $recebimentos_pagos === null)
@@ -646,12 +576,13 @@ if ($filtros != []) {
                                     $valor_total = number_format($rec01->valor, 2, ',', '.');
                                     $valor_parcela = number_format($rec02->valor_par, 2, ',', '.');
                                     $valor_pago = number_format($rec02->valor_pag, 2, ',', '.');
-                                    $link = 'receber.php?view=receber&acao=visualizar&id=' . $rec02->id;
 
                                     $centro_custos = '';
                                     if($rec01->centro_custos != null) {
                                     $centro_custos = CentroCustos::read($rec01->centro_custos, $_SESSION['usuario']->id_empresa)[0]->nome ?? '';
                                     }
+
+                                    $link = 'receber.php?view=receber&acao=visualizar&id=' . $rec02->id;
 
                                     $ultima_parcela = null;
                                     if ($rec02->parcela == $rec01->parcelas)
@@ -660,7 +591,7 @@ if ($filtros != []) {
                                     ?>
                                     <!-- style="<?php if ($ultima_parcela) { ?>border-bottom: 3px solid #5856d6;<?php } ?> border-inline: 1px solid #5856d6;" -->
                                     <!-- style="<?php if ($ultima_parcela) { ?>border-bottom: 2px solid #5856d6;<?php } else if ($rec02->parcela == 1) { ?> border-top: 3px solid #5856d6; <?php } ?> border-inline: 2px solid #5856d6;" -->
-                                    <tr class="tr-clientes <?= $cor_parcela ?>" onclick="">
+                                    <tr class="tr-clientes <?= $cor_parcela ?> avoid-page-break" onclick="">
                                         <td><?=$centro_custos?></td>
                                         <td><?= $rec01->documento; ?> </td>
                                         <td><?= $data_lanc; ?> </td>
@@ -685,33 +616,67 @@ if ($filtros != []) {
                                         <td><?= $pagamento->nome ?? '' ?></td>
                                         <td><?= $rec02->obs ?></td>
                                         <td class="td-acoes">
-                                            <?php $valor_restante = number_format($rec02->valor_par - $rec02->valor_pag, 2, ',', '') ?>
+                                            <?php $valor_restante = number_format($rec02->valor_par - $rec02->valor_pag, 2, ',', '.') ?>
                                             <button class="btn btn-primary" data-bs-toggle="modal" <?php if ($rec02->valor_pag > 0) { ?> disabled <?php } ?> data-bs-target="#modal_quitar"
-                                                data-id="<?= $rec02->id ?>" data-valor-restante="<?= $valor_restante ?>"><i
-                                                    class="bi bi-cash-stack"></i></button>
+                                                data-id="<?= $rec02->id ?>"  data-valor-restante="<?= $valor_restante ?>"
+                                                data-parcela-atual="<?= $rec02->parcela ?>"
+                                                data-parcela-geral="<?= $rec01->parcelas ?>"
+                                                data-vencimento="<?= $data_venc ?>"
+                                                data-documento="<?= htmlspecialchars($rec01->documento, ENT_QUOTES, 'UTF-8') ?>"
+                                            ><i class="bi bi-cash-stack"></i></button>
                                         <td class="td-acoes">
                                             <button class="btn btn-primary" <?php if ($rec02->valor_pag == 0) { ?> disabled <?php } ?>
-                                                onclick="window.location.href='cadastros_manager.php?view=receber&target=parcela&acao=estornar&id=<?= $rec02->id ?>&caminho=<?= $caminho_get ?>&pagina=<?php if (empty($filtros)) {
-                                                    echo '?pagina=' . $numero_pagina;
-                                                } else {
-                                                    echo '?pagina=' . $numero_pagina;
-                                                } ?>&numero_exibido=<?= 'knumero_exibido=' . $numero_exibir ?>'"><i
+                                                onclick="window.location.href='cadastros_manager.php?view=receber&target=parcela&acao=estornar&id=<?= $rec02->id ?>&caminho=<?= $caminho_get ?>&pagina=<?php if (empty($filtros)) { ?>
+                                                    <?= '?pagina=' . $numero_pagina; ?>
+                                                <?php } else { ?>
+                                                    <?= '?pagina=' . $numero_pagina; ?>
+                                                <?php } ?>&numero_exibido=<?= 'knumero_exibido=' . $numero_exibir ?>'"><i
                                                     class="bi bi-wallet2"></i></button>
                                         </td>
                                         <td class="td-acoes">
                                             <button class="btn btn-primary" <?php if (in_array($rec02->id_rec01, $recebimentos_pagos)) { ?> disabled <?php } ?>
-                                                onclick="window.location.href='editar-receber.php?id=<?= $rec01->id ?>&acao=editar'"><i
+                                                onclick="window.location.href='receber.php?id=<?= $rec01->id ?>&acao=editar'"><i
                                                     class="bi bi-pen-fill"></i></button>
+                                        </td>
+                                        <td class="td-acoes">
+                                            <button class="btn btn-primary"
+                                                onclick="window.location.href='receber.php?id=<?= $rec01->id ?>&acao=visualizar'"><i class="bi bi-eye"></i></button>
                                         </td>
                                     </tr>
 
 
 
 
-
-                                <?php } } else { ?>
+                                
+                                <?php
+                                $total_valor_pago += $rec02->valor_pag;
+                                $total_valor_par += $rec02->valor_par;
+                                }
+                                ?> 
+                                <tr id="tr-totais">
+                                    <td style="display: flex; justify-content: end; font-size: 100%;">Totais:</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td style="text-align: end; font-size: 100%;">R$</td>
+                                    <td style="text-align: center; font-size: 100%;"><?= number_format($total_valor_par, '2', ',', '.')?></td>
+                                    <td></td>
+                                    <td style="text-align: end; font-size: 100%;">R$</td>
+                                    <td style="text-align: center; font-size: 100%;"><?= number_format($total_valor_pago, '2', ',', '.')?></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                                <?php } else { ?>
                                 <tr>
                                     <td>Nenhum Lançamento encontrado</td>
+                                    <td></td>
                                     <td></td>
                                     <td></td>
                                     <td></td>
@@ -773,6 +738,7 @@ if ($filtros != []) {
                         </form>
                     </div>
 
+                        <div id="totais-lancamento">          
 
                             <?php
                             $total_vencido = array_sum($total_vencido);
@@ -785,7 +751,7 @@ if ($filtros != []) {
                                 <?= number_format($total_vence_hoje, 2, ',', '.') ?> </div>
                             <div id="total-a-vencer">Total a vencer: R$
                                 <?= number_format($total_a_vencer, 2, ',', '.') ?> </div>
-
+                        </div>  
 
                     <div class="card-select-numero">
                         <div>
@@ -811,38 +777,33 @@ if ($filtros != []) {
         </div>
 
         <div class="relatorios-botoes">
-            <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="gerarpdf('receber')">Gerar PDF</button>
-            <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="gerarexcel('receber')">Gerar Excel</button>
+            <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="gerarpdf('receber',  document.querySelector('#nome-empresa h4').innerHTML)">Gerar PDF</button>
+            <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="gerarexcel('receber',  document.querySelector('#nome-empresa h4').innerHTML)">Gerar Excel</button>
         </div>
-
-    <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_titulo.php'; ?>
+    </div>                                 
+    <?php require_once __DIR__ . '/../componentes/modais/lancamentos/receber/modal_quitar.php'; ?>
+    </div>                          
+    <?php require_once __DIR__ . '/../componentes/modais/lancamentos/receber/modal_cadastro_pagamento.php'; ?>
+    </div>  
+    <?php require_once __DIR__ . '/../componentes/modais/lancamentos/receber/modal_titulo.php'; ?>
+    </div>  
+    <?php require_once __DIR__ . '/../componentes/modais/lancamentos/receber/modal_subtitulo.php'; ?>
     </div>
-
-    <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_subtitulo.php'; ?>
+    </div>    
+    <?php require_once __DIR__ . '/../componentes/modais/lancamentos/receber/modal_cadastro_bairro.php'; ?>        
+    </div>                 
+    <?php require_once __DIR__ . '/../componentes/modais/lancamentos/receber/modal_cadastro_cidade.php'; ?>
     </div>
+    <?php require_once __DIR__ . '/../componentes/modais/lancamentos/receber/modal_cadastro_categoria.php'; ?>
+    </div>  
+    <?php require_once __DIR__ . '/../componentes/modais/lancamentos/receber/modal_cadastro.php'; ?>
+    </div>  
+    <?php require_once __DIR__ . '/../componentes/modais/lancamentos/receber/modal_cadastro_custos.php'; ?>
+    </div>  
+    <?php require_once __DIR__ . '/../componentes/modais/lancamentos/receber/modal_receber.php'; ?>
 
-    <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_cadastro_bairro.php'; ?>
-    </div>                              
-
-    <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_cadastro_cidade.php'; ?>
-    </div>
     
-    <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_cadastro_categoria.php'; ?>
-    </div>
 
-    <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_cadastro_custos.php'; ?>
-    </div>
-
-    <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_cadastro_pagamento.php'; ?>
-    </div>
-
-    <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_receber.php'; ?>
-    </div>
-
-    <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_cadastro.php'; ?>
-    </div>
-
-    <?php require_once __DIR__ . '/../modais/lancamentos/receber/modal_quitar.php'; ?>
     
     
 
@@ -957,33 +918,6 @@ if ($filtros != []) {
         localStorage.setItem('posicaoScroll', JSON.stringify(posicao));
     }
 
-
-
-
-    // function checar() {
-    //     let nome = document.querySelector('.input-nome input').value;
-    //     let fantasia = document.querySelector('.input-fantasia input').value;
-    //     let cpf = document.querySelector('.input-cpf input').value;
-    //     let cnpj = document.querySelector('.input-cnpj input').value;
-    //     let cep = document.querySelector('.input-cep input').value;
-    //     let endereco = document.querySelector('.input-endereco input').value;
-    //     let bairro = document.querySelector('.input-bairro input').value;
-    //     let cidade = document.querySelector('.input-cidade input').value;
-    //     let estado = document.querySelector('.input-estado input').value;
-    //     let celular = document.querySelector('.input-celular input').value;
-    //     let telefone = document.querySelector('.input-telefone input').value;
-    //     let email = document.querySelector('.input-email input').value;
-
-
-
-
-    //     if (nome !== '' && fantasia !== '' && cpf !== '' && cnpj !== '' && cep !== '' && endereco !== '' && bairro !== '' && cidade !== '' && estado !== '' && celular !== '' && telefone !== '' && email !== '') {
-    //         document.querySelector('button[name="acao"]').disabled = false;
-    //     } else {
-    //         document.querySelector('button[name="acao"]').disabled = true;
-    //     }
-    // }
-
     function encolher() {
         let barra = document.getElementById('barra-lateral');
         let container = document.getElementById('container');
@@ -1039,9 +973,17 @@ if ($filtros != []) {
             var button = event.relatedTarget;
             var id = button.getAttribute('data-id');
             var valorRestante = button.getAttribute('data-valor-restante');
-            console.log('ID:', id, 'Valor restante:', valorRestante); // Adicione esta linha
+            var parcelaAtual = button.getAttribute('data-parcela-atual');
+            var parcelaGeral = button.getAttribute('data-parcela-geral');
+            var vencimento = button.getAttribute('data-vencimento');
+            var documento = button.getAttribute('data-documento');
             document.getElementById('modal_quitar_id').value = id;
             document.getElementById('modal_quitar_valor_restante').textContent = "Valor restante da parcela: R$ " + valorRestante;
+            document.getElementById('modal_quitar_parcela_atual').textContent = parcelaAtual || '';
+            document.getElementById('modal_quitar_parcela_geral').textContent = parcelaGeral || '';
+            document.getElementById('modal_quitar_vencimento').textContent = vencimento || '';
+            document.getElementById('modal_quitar_documento').textContent = documento || '';
+            document.getElementById('modal_quitar_valor').placeholder = valorRestante || '';
         });
     });
 
@@ -1083,6 +1025,8 @@ if ($filtros != []) {
 
 
 <script>
+
+    <?php if($acao != 'visualizar') {?>
 document.addEventListener('DOMContentLoaded', function () {
     setTimeout(function() {
         // ========== INICIALIZAÇÃO DO CHOICES.JS ==========
@@ -1302,13 +1246,12 @@ document.addEventListener('DOMContentLoaded', function () {
     
     ;}, 100);
 });
-</script>
+<?php } ?>
 
 
 
-<?php if (isset($acao) && $acao == 'adicionar') { 
-    if(!isset($target) || $target == 'cadastro') {?>
-    <script>
+<?php if (isset($acao) && ($acao == 'adicionar' || $acao == 'visualizar')) {
+    if($acao == 'visualizar') {?>
         window.addEventListener('DOMContentLoaded', function () {
             var modalEl = document.getElementById('modal_receber');
             var Modal = new bootstrap.Modal(modalEl);
@@ -1317,40 +1260,48 @@ document.addEventListener('DOMContentLoaded', function () {
                 window.location.href = 'receber.php';
             });
         });
-    </script>
+    <?php } else if(!isset($target) || $target == 'cadastro') {?>
+
+        window.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('modal_receber');
+            var Modal = new bootstrap.Modal(modalEl);
+            Modal.show();
+            
+        });
+
     <?php } else if($target == 'quitar') { ?>
-        <script>
+    
         window.addEventListener('DOMContentLoaded', function () {
             var modalEl = document.getElementById('modal_quitar');
             var Modal = new bootstrap.Modal(modalEl);
             Modal.show();
-            modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'receber.php';
-            });
+            
         });
-    </script>
+
     <?php } else if (isset($target) && $target != 'cadastro' && $target != 'quitar'){ ?>
-    <script>
+
         console.log('a');
         window.addEventListener('DOMContentLoaded', function () {
             var modalEl = document.getElementById('modal_cadastro');
             var Modal = new bootstrap.Modal(modalEl);
             Modal.show();
-            modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'receber.php';
-            });
+            
         });
-    </script>
+
 <?php }}?>
 
 <?php if(isset($acao) && $acao == 'editar') { ?>
-    <script>
+
         window.addEventListener('DOMContentLoaded', function () {
             var modalEl = document.getElementById('modal_receber');
             var Modal = new bootstrap.Modal(modalEl);
             Modal.show();
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                window.location.href = 'receber.php';
+            });
         });
-    </script>
+
 <?php } ?>
+</script>
 
 </html>

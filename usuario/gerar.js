@@ -1,41 +1,150 @@
+function limparElementosInvisiveis(tabelaClone) {
+
+    // Remove todos os link <a>
+    tabelaClone.querySelectorAll('a').forEach(a => {
+        let span = document.createElement('span');
+        span.textContent = a.textContent;
+        a.replaceWith(span);
+    });
+
+    // Remove tooltip, popover, dropdown invisíveis
+    tabelaClone.querySelectorAll('.tooltip, .popover, .dropdown-menu, .fade').forEach(el => el.remove());
+
+    // Remove atributos que podem gerar sublinhado invisível
+    tabelaClone.querySelectorAll('*').forEach(el => {
+        el.removeAttribute('href');
+        el.style.textDecoration = 'none';
+        el.style.border = 'none';
+        el.style.outline = 'none';
+    });
+
+    // Remove pseudo-elementos
+    const estiloPseudo = document.createElement('style');
+    estiloPseudo.innerHTML = `
+        *::after, *::before {
+            content: none !important;
+            display: none !important;
+        }
+    `;
+    tabelaClone.appendChild(estiloPseudo);
+}
+
 function getTabelaSemAcoes() {
     var tabelaOriginal = document.querySelector('.table.table-striped');
     if (!tabelaOriginal) return null;
 
     var tabelaClone = tabelaOriginal.cloneNode(true);
+    tabelaClone.classList.remove('table-striped');
+    tabelaClone.classList.add('avoid-page-break')
 
-    // Remove as últimas 3 colunas do cabeçalho
+    tabelaClone.style.borderCollapse = 'collapse';
+    tabelaClone.style.borderSpacing = '0';
+    tabelaClone.style.width = '100%';
+    tabelaClone.style.tableLayout = 'fixed';
+
+
+    // remove classes e estilos herdados
+    tabelaClone.querySelectorAll('*').forEach(function(el) {
+        el.classList.remove(
+            'parcela_cor_azul',
+            'parcela_cor_amarela',
+            'parcela_cor_vermelha',
+            'parcela_cor_verde',
+            'table-striped'
+        );
+
+        el.classList.add('avoid-page-break')
+        el.style.removeProperty('background-color');
+        el.style.boxShadow = 'none';
+        el.style.filter = 'none';
+        el.style.textDecoration = 'none';
+    });
+
+
+    limparElementosInvisiveis(tabelaClone);
+
+
+    // Remove 'R$' de todos os elementos da tabela
+    tabelaClone.querySelectorAll('td, th').forEach(function(el) {
+        if (el.textContent.includes('R$')) {
+            el.textContent = el.textContent.replace(/R\$\s?/g, '').trim();
+        }
+    });
+
+
+    // Remove as últimas 4 colunas do cabeçalho
     var ths = tabelaClone.querySelectorAll('thead tr');
     ths.forEach(function(tr) {
-        for (let i = 0; i < 3; i++) {
+        tr.querySelectorAll('th').forEach(function(th) {
+            th.style.fontSize = '80%'
+            th.style.backgroundColor = '#cececeff'
+        })
+        for (let i = 0; i < 4; i++) {
             if (tr.children.length > 0) tr.children[tr.children.length - 1].remove();
         }
     });
 
-    // Remove as últimas 3 colunas de cada linha do corpo
+    // Remove as últimas 4 colunas de cada linha do corpo
     var trs = tabelaClone.querySelectorAll('tbody tr');
-    trs.forEach(function(tr) {
-        for (let i = 0; i < 3; i++) {
+
+    trs.forEach(function(tr, index) {
+            tr.classList.add('avoid-page-break')
+        for (let i = 0; i < 4; i++) {
             if (tr.children.length > 0) tr.children[tr.children.length - 1].remove();
         }
+        const cor = (index % 2 === 0) ? '#ffffff' :  '#f2f2f2';
+tr.querySelectorAll('.tr-clientes td').forEach(function(td) {
+    td.style.whiteSpace = 'nowrap';
+    td.style.overflow = 'hidden';
+    td.style.textOverflow = 'ellipsis';
+
+    td.style.fontSize = '95%';
+    td.style.backgroundColor = cor;
+
+    td.style.textAlign = 'center';
+    td.style.alignItems = 'center';
+
+    td.style.border = 'none';              // remove borda duplicada
+    td.style.outline = '1px solid #ccc';   // borda segura no pdf
+
+    td.style.padding = "20px 4px";
+    td.style.lineHeight = "1.2";     // mantém texto estável
+
+            // padding mínimo
+});
+
+
+
+
     });
 
+var trTotais = tabelaClone.querySelector('#tr-totais');
+if (trTotais) {
+    trTotais.classList.add('avoid-page-break')
+    trTotais.style.backgroundColor = '#cececeff';
+    trTotais.querySelectorAll('td').forEach(function(td) {
+        td.style.backgroundColor = '#cececeff';
+    });        
+}
     return tabelaClone;
 }
 
 // Build a simple header (title + visible filters) for export
-function buildExportHeader(nome) {
+function buildExportHeader(nome, nomeEmpresa) {
     var header = document.createElement('div');
-    header.style.marginBottom = '10px';
     header.style.fontFamily = 'Arial, Helvetica, sans-serif';
 
     // Title: try to find page card title, fallback to provided nome
     var titleEl = document.querySelector('.card .card-header h3') || document.querySelector('h3') || null;
     var titleText = titleEl ? titleEl.textContent.trim() : ('Contas a ' + nome);
-
+    
     var h = document.createElement('h3');
     h.textContent = titleText;
     h.style.margin = '0 0 0 0';
+    var n = document.createElement('h1')
+    n.textContent = nomeEmpresa
+    n.style.margin = '0 0 0 0'
+    header.appendChild(n)
     header.appendChild(h);
 
     // Collect filter values from known inputs/selects
@@ -64,104 +173,193 @@ function buildExportHeader(nome) {
     var cadastro = document.querySelector('select[name="filtro_cadastro"]');
     var titulo = document.querySelector('select[name="filtro_titulo"]') || document.querySelector('#titulo-filtro');
     var subtitulo = document.querySelector('select[name="filtro_subtitulo"]') || document.querySelector('#subtitulo-filtro');
+    var custo = document.querySelector('select[name="filtro_custo"]') || document.querySelector('#custo-filtro');
     var opcao = getRadioLabel('opcao_filtro');
     var por = getRadioLabel('filtro_por');
 
-    if (di && di.value) filters.push(['Data Inicial', di.value]);
-    if (df && df.value) filters.push(['Data Final', df.value]);
-    if (doc && doc.value) filters.push(['Documento', doc.value]);
+    // Função para formatar datas yyyy-mm-dd para dd-mm-yyyy
+    function formatarDataBR(data) {
+        if (!data) return '';
+        const match = data.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (match) {
+            return `${match[3]}-${match[2]}-${match[1]}`;
+        }
+        return data;
+    }
+
+    if (di && di.value) filters.push(['<h3>Data Inicial', formatarDataBR(di.value), '</h3>']);
+    if (df && df.value) filters.push(['<h3>Data Final', formatarDataBR(df.value), '</h3>']);
+    if (doc && doc.value) filters.push(['<h3>Documento', doc.value, '</h3>']);
     if (pagamento) {
         var ptxt = getSelectText(pagamento);
-        if (ptxt && ptxt !== 'Selecione') filters.push(['Pagamento', ptxt]);
+        if (ptxt && ptxt !== 'Selecione') filters.push(['<h3>Pagamento', ptxt, '</h3>']);
     }
     if (cadastro) {
         var ctxt = getSelectText(cadastro);
-        if (ctxt && ctxt !== 'Selecione') filters.push(['Cadastro', ctxt]);
+        if (ctxt && ctxt !== 'Selecione') filters.push(['<h3>Cadastro', ctxt, '</h3>']);
     }
     if (titulo) {
         var ttxt = getSelectText(titulo);
-        if (ttxt && ttxt !== 'Selecione') filters.push(['Titulo', ttxt]);
+        if (ttxt && ttxt !== 'Selecione') filters.push(['<h3>Titulo', ttxt, '</h3>']);
     }
     if (subtitulo) {
         var stxt = getSelectText(subtitulo);
-        if (stxt && stxt !== 'Selecione') filters.push(['Subtitulo', stxt]);
+        if (stxt && stxt !== 'Selecione') filters.push(['<h3>Subtitulo', stxt, '</h3>']);
     }
-    if (opcao) filters.push(['Opção', opcao]);
-    if (por) filters.push(['Filtro por', por]);
+    if(custo) {
+        var custotxt = getSelectText(subtitulo);
+        if (custotxt && custotxt !== 'Selecione') filters.push(['<h3>Centro de Custos', custotxt, '</h3>']);
+    }
+    if (opcao) filters.push(['<h3>Opção', opcao, '</h3>']);
+    if (por) filters.push(['<h3>Filtro por', por, '</h3>']);
 
     if (filters.length > 0) {
         var wrap = document.createElement('div');
         wrap.style.display = 'flex';
         wrap.style.flexWrap = 'wrap';
         wrap.style.gap = '8px 16px';
+        wrap.style.height = '200px';
+        wrap.style.width = '154%'
+        wrap.style.alignItems = 'center'
+        wrap.style.textAlign = 'center'
 
         filters.forEach(function(f) {
             var p = document.createElement('div');
             p.style.fontSize = '12px';
-            p.innerHTML = '<strong>' + f[0] + ':</strong> ' + f[1];
+            p.innerHTML = '<strong>' + f[0] + ':</strong> ' + f[1] + f[2];
             wrap.appendChild(p);
         });
 
         header.appendChild(wrap);
+        var headerGeral = document.createElement('div')
+        header.style.marginBottom = '0';
+        headerGeral.style.width = '154%'
+        headerGeral.appendChild(header)
+    } else {
+        header.style.marginBottom = '0';
     }
 
-    return header;
+    return headerGeral;
 }
 
-function gerarpdf(nome) {
+function dividirTabelaEmBlocos(tabela, linhasPorBloco = 22) {
+    const tbody = tabela.querySelector('tbody');
+    const cabecalho = tabela.querySelector('thead');
+    if (!tbody) return [];
+
+    const linhas = Array.from(tbody.querySelectorAll('tr'));
+    const blocos = [];
+    var primeira = true
+
+    for (let i = 0; i < linhas.length; i += linhasPorBloco) {
+        var linhasAntes = linhasPorBloco
+        const bloco = document.createElement('div');
+        bloco.classList.add('tabela-bloco', 'avoid-page-break');
+        if(primeira) {
+            linhasPorBloco = linhasPorBloco -5
+        }
+            
+
+        // cria nova tabela para o bloco
+        const novaTabela = tabela.cloneNode(false);
+        novaTabela.style.width = '155%';
+        novaTabela.style.tableLayout = 'fixed';
+
+
+        novaTabela.classList.add('avoid-page-break');
+
+        // adiciona o cabeçalho
+        cabecalhoClone = cabecalho.cloneNode(true)
+        novaTabela.appendChild(cabecalhoClone);
+
+        // adiciona o corpo com subset de linhas
+        const novoTbody = document.createElement('tbody');
+        novoTbody.style.whiteSpace = 'nowrap'
+        linhas.slice(i, i + linhasPorBloco).forEach(function(tr) {
+            tr.classList.add('avoid-page-break')  
+            novoTbody.appendChild(tr.cloneNode(true))
+    });
+        novaTabela.appendChild(novoTbody);
+
+        bloco.appendChild(novaTabela);
+        
+        blocos.push(bloco);
+        if(primeira) {
+            linhasPorBloco = linhasAntes
+        }
+        primeira = false
+    }
+
+    return blocos;
+}
+
+function gerarpdf(nome, nomeEmpresa = '') {
     var tabela = getTabelaSemAcoes();
     if (!tabela) {
         alert("Tabela não encontrada!");
         return;
     }
 
-    // Criar container temporário para evitar corte
-    var container = document.createElement('div');
-    container.style.width = "100%";
-    container.style.overflow = "visible";
-    container.style.boxSizing = 'border-box';
-    // prepend header with filters
-    var headerEl = buildExportHeader(nome);
-    container.appendChild(headerEl);
-    container.appendChild(tabela);
+    
 
-    // Ajustar largura do container para corresponder à largura útil de A4 landscape
-    // Conversão aproximada: 1mm = 96/25.4 px (para tela 96dpi)
-    var pxPerMm = 96 / 40.4;
-    var a4WidthMm = 297; // A4 landscape width in mm
-    var marginMm = 8; // margem em mm (ajustável)
+    var marginMm = 8;
+    var pxPerMm = 96 / 50.4;
+    var a4WidthMm = 297;
     var usableWidthMm = a4WidthMm - (marginMm * 2);
     var usableWidthPx = Math.floor(usableWidthMm * pxPerMm);
 
-    // Aplicar largura calculada ao container (CSS pixels)
-    container.style.width = usableWidthPx + 'px';
-    // opcional: adicionar padding correspondente à margem para manter espaçamento
-    container.style.padding = marginMm + 'mm';
-
-    var scale = 2; // tela em alta resolução
-
     var opt = {
-        margin: [marginMm, marginMm, marginMm, marginMm],
-        filename: 'contas_a_'+nome+'.pdf',
+        margin: [marginMm, marginMm, marginMm, marginMm -2],
+        filename: 'contas_a_' + nome + '.pdf',
         image: { type: 'jpeg', quality: 1 },
         html2canvas: {
-            scale: scale,
             scrollY: 0,
             useCORS: true,
-            // define a largura de renderização para html2canvas (em CSS pixels * scale)
-            width: usableWidthPx * scale
+            width: usableWidthPx * 2.15
         },
-        jsPDF: {
-            unit: 'mm',
-            format: 'a4',
-            orientation: 'landscape'
-        },
+        scale: 1,
+        width: usableWidthPx,
+        jsPDF: { unit: 'mm', format: 'a4' },
         pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
-    // Gera e salva o PDF
+    // Divide a tabela em blocos
+    const blocos = dividirTabelaEmBlocos(tabela, 27);
+
+    const container = document.createElement('div');
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column'
+    container.style.textAlign = 'center'
+
+
+    const headerEl = buildExportHeader(nome, nomeEmpresa);
+    container.appendChild(headerEl);
+
+    blocos.forEach((b, idx) => {
+        container.appendChild(b);
+        if (idx < blocos.length - 1) {
+            const pageBreak = document.createElement('div');
+            pageBreak.classList.add('avoid-page-break')
+            container.appendChild(pageBreak);
+        }
+    });
+
+
     html2pdf().set(opt).from(container).save();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -170,6 +368,27 @@ function gerarpdf(nome) {
 function gerarexcel(nome) {
     var tabela = getTabelaSemAcoes();
     if (!tabela) return;
+
+
+
+    // Remove 'R$' de todos os elementos da tabela
+    tabela.querySelectorAll('td, th').forEach(function(el) {
+        if (el.textContent.includes('R$')) {
+            el.textContent = el.textContent.replace(/R\$\s?/g, '').trim();
+        }
+    });
+
+    // Formata datas para dd-mm-YYYY em todos os elementos
+    const dataRegex = /(\d{4})-(\d{2})-(\d{2})/g;
+    tabela.querySelectorAll('td, th, div, span, h3, h4, h5, h6, h1, h2').forEach(function(el) {
+        el.childNodes.forEach(function(node) {
+            if (node.nodeType === 3) { // text node
+                node.nodeValue = node.nodeValue.replace(dataRegex, function(_, y, m, d) {
+                    return d + '-' + m + '-' + y;
+                });
+            }
+        });
+    });
 
     // Converte datas para texto antes de exportar
     var trs = tabela.querySelectorAll('tbody tr');

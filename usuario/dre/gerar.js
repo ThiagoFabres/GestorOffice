@@ -1,3 +1,4 @@
+
 function _formatDateToDDMMYYYY(input) {
     if (!input && input !== 0) return '';
     // Date object
@@ -107,7 +108,8 @@ function _rewriteTextNodesInElement(root) {
     });
 }
 
-function gerarpdf(nome='analitico', data=null, titulo=null ) {
+function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=null) {
+    console.log(titulo);
     // Select all accordion items (accordion-item class)
     const accordionItems = document.querySelectorAll('.accordion-item');
     if (accordionItems.length === 0) {
@@ -122,28 +124,89 @@ function gerarpdf(nome='analitico', data=null, titulo=null ) {
     // Header com nome, data e titulo (se passados) - formatados
     const formattedDate = _formatDateToDDMMYYYY(data);
     const headerDiv = document.createElement('div');
-    headerDiv.style.textAlign = 'center';
     headerDiv.style.marginBottom = '12px';
-    headerDiv.innerHTML = `<h2 style="margin:0;padding:0">DRE - ${String(nome).toUpperCase()}</h2>` +
-        ((formattedDate || titulo) ? `<div style="font-size:0.95em;margin-top:6px">${formattedDate ? formattedDate : ''}${(formattedDate && titulo) ? ' <br>' : ''}${titulo ? 'Titulo: ' + titulo : ''}</div>` : '');
+    headerDiv.innerHTML = `<div style="font-size:0.95em;margin-top:6px; display:flex; flex-direction:row; justify-content:space-between; "><h1>${nomeEmpresa} </h1> <h4 style="text-align:right; margin-top: 15px;">` 
+    +
+        ((formattedDate || titulo) ? `${formattedDate ? formattedDate : ''}${(formattedDate && titulo) ? '  <br> <hr>' : ''}${(titulo && titulo != 'Selecione') ? 'Titulo: ' + titulo : ''}` : '</div>') + '</div> </h4>'
+    +
+     `<h2 style="text-align:center; margin:0;padding:0">Relatório demonstrativo de resultado (DRE)</h2>` 
+    +
+    '<hr>'
     pdfContainer.appendChild(headerDiv);
 
     accordionItems.forEach(item => {
+        const mainContainer = document.createElement("div")
+        mainContainer.classList.add('avoid-page-break')
         // Clone only the visible content of each accordion
-        const header = item.querySelector('.accordion-header');
-        const body = item.querySelector('.accordion-body');
-        if (header) pdfContainer.appendChild(header.cloneNode(true));
-        if (body) pdfContainer.appendChild(body.cloneNode(true));
+        const headerOriginal = item.querySelector('.accordion-header');
+        const header = headerOriginal.cloneNode(true);
+
+        if(nome == 'sintetico'){
+        header.style.fontSize = '95%'
+        }   else {
+        header.style.fontSize = '120%'
+        header.style.fontWeight = 'bold'
+        }
+        const bodyOriginal = item.querySelector('.accordion-body');
+        const body = bodyOriginal.cloneNode(true);
+
+        // Garante que o fundo do body seja branco
+        body.style.background = 'white';
+        body.style.backgroundColor = 'white';
+        body.style.boxShadow = 'none';
+        body.style.filter = 'none';
+
+        // Remove qualquer cor de fundo de elementos filhos que possam afetar o body
+        body.querySelectorAll('*').forEach(function(el) {
+            el.style.background = 'transparent';
+            el.style.backgroundColor = 'transparent';
+            el.style.boxShadow = 'none';
+            el.style.filter = 'none';
+        });
+
+        header.style.backgroundColor = 'white';
+
+        body.querySelectorAll('table').forEach(function(el) {
+            el.classList.remove('table-striped');
+        });
+        body.querySelectorAll('table tr').forEach(function(tr, index) {
+            const cor = (index % 2 === 0) ? '#f2f2f2'  : '#ffffff';
+            tr.querySelectorAll('td').forEach(td => td.style.backgroundColor = cor);
+        });
+
+        body.querySelectorAll('.tr-dre-total').forEach(function(tr) {
+            tr.style.backgroundColor = '#e1e1e2';
+            tr.querySelectorAll('td').forEach(td => td.style.backgroundColor = '#e1e1e2');
+        });
+
+        mainContainer.appendChild(header);
+        mainContainer.appendChild(body);
+
+        if (mainContainer) pdfContainer.appendChild(mainContainer.cloneNode(true));
         // Add a separator between accordions
         pdfContainer.appendChild(document.createElement('hr'));
     });
+const totaisContainer = document.createElement("div");
+totaisContainer.style.display = "flex";
+totaisContainer.style.justifyContent = "space-between"; // ou "center"
+totaisContainer.style.gap = "10px"; // espaçamento entre os totais
+totaisContainer.style.marginTop = "20px"; // margem opcional
 
-    let totalReceitasDiv = document.querySelector('#total-receitas');
-        if (totalReceitasDiv) pdfContainer.appendChild(totalReceitasDiv.cloneNode(true));
-    let totalDespesasDiv = document.querySelector('#total-despesas');
-        if (totalDespesasDiv) pdfContainer.appendChild(totalDespesasDiv.cloneNode(true));
-    let totalDreDiv = document.querySelector('#total-dre');
-        if (totalDreDiv) pdfContainer.appendChild(totalDreDiv.cloneNode(true));
+// adiciona cada total (se existir)
+const totalReceitasDiv = document.querySelector('#total-receitas');
+if (totalReceitasDiv) {
+    totaisContainer.appendChild(totalReceitasDiv.cloneNode(true));
+    totaisContainer.style.fontSize = '75%'
+}
+
+const totalDespesasDiv = document.querySelector('#total-despesas');
+if (totalDespesasDiv) totaisContainer.appendChild(totalDespesasDiv.cloneNode(true));
+
+const totalDreDiv = document.querySelector('#total-dre');
+if (totalDreDiv) totaisContainer.appendChild(totalDreDiv.cloneNode(true));
+
+// adiciona ao container principal do PDF
+pdfContainer.appendChild(totaisContainer);
 
     // Rewrite ISO dates inside the cloned container to dd-mm-yyyy
     _rewriteTextNodesInElement(pdfContainer);
@@ -154,15 +217,26 @@ function gerarpdf(nome='analitico', data=null, titulo=null ) {
             margin: 10,
             filename: 'dre-'+nome+'.pdf',
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 10 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         })
         .from(pdfContainer)
         .save();
+
+        body.querySelectorAll('table tr').forEach(function(tr) {
+            tr.querySelectorAll('td').forEach(td => td.style.backgroundColor = 'white')
+        })
+
+        const body = item.querySelector('.accordion-body');
+        body.querySelectorAll('table').forEach(function(el) {
+            el.classList.add (
+                'table-striped'
+            )
+        })
+        
 }
 // ...existing code...
 
-function gerarexcel(nome, data=null, hora=null) {
+function gerarexcel(nome, data=null, hora=null, nomeEmpresa='') {
     if (nome == 'analitico') {
     // Check if XLSX library is loaded
     if (typeof XLSX === 'undefined') {
@@ -180,7 +254,7 @@ function gerarexcel(nome, data=null, hora=null) {
     let allData = [];
 
     // Adiciona header com nome, data e hora no topo do Excel (formatado)
-    const headerTitle = 'DRE - ' + String(nome).toUpperCase();
+    const headerTitle = nomeEmpresa + '  -  ' + 'Relatório demonstrativo de resultado - ' + String(nome).toUpperCase();
     const formattedDate = _formatDateToDDMMYYYY(data);
     const titulo = _formatTimeToHHMM(hora);
     const headerDateTime = (formattedDate ? 'Data: ' + formattedDate : '') + (titulo ? (formattedDate ? '<br>' : '') + 'Titulo: ' + titulo : '');
@@ -279,6 +353,7 @@ function gerarexcel(nome, data=null, hora=null) {
     
     
     else if(nome == 'sintetico') {
+        console.log(nomeEmpresa)
         if (typeof XLSX === 'undefined') {
             alert('Biblioteca XLSX não carregada. Adicione <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script> ao seu HTML.');
             return;
@@ -294,7 +369,7 @@ function gerarexcel(nome, data=null, hora=null) {
         let allData = [];
 
     // Header com nome, data e hora (formatado)
-    const headerTitle = 'DRE - ' + String(nome).toUpperCase();
+    const headerTitle = nomeEmpresa +'  -  ' + 'Relatório demonstrativo de resultado - ' + String(nome).toUpperCase();
     const formattedDate = _formatDateToDDMMYYYY(data);
     const titulo = _formatTimeToHHMM(hora);
     const headerDateTime = (formattedDate ? formattedDate : '') + (titulo ? (formattedDate ? ' — ' : '') + 'Titulo: ' + titulo : '');
@@ -362,4 +437,3 @@ function gerarexcel(nome, data=null, hora=null) {
         XLSX.writeFile(wb, 'dre-sintetico.xlsx');
     }
 }
-    

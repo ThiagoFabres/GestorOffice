@@ -9,6 +9,7 @@ require_once __DIR__ . '/../../db/entities/categoria.php';
 require_once __DIR__ . '/../../db/entities/recebimentos.php';
 require_once __DIR__ . '/../../db/entities/pagamento.php';
 require_once __DIR__ . '/../../db/entities/pagar.php';
+require_once __DIR__ . '/../../db/entities/centrocustos.php';
 session_start();
 // Função para alinhar valores monetários
 
@@ -16,7 +17,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     header('Location: /');
     exit;
 }
-
+$lateral_target = 'dre';
 function format_valor_alinhado($valor) {
     $formatado = number_format($valor, 2, ',', '.');
     // 12 caracteres para alinhar valores grandes e pequenos
@@ -28,6 +29,7 @@ $get_data_final = filter_input(INPUT_GET, 'data_final', FILTER_SANITIZE_SPECIAL_
 $get_data_inicial = filter_input(INPUT_GET, 'data_inicial', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
 $get_titulo = filter_input(INPUT_GET, 'titulo') ?: null;
 $get_subtitulo = null;
+$get_custos = filter_input(INPUT_GET, 'filtro_custos') ?? null;
 if ($get_titulo != null)
     $get_subtitulo = filter_input(INPUT_GET, 'subtitulo') ?: null;
 
@@ -118,103 +120,9 @@ if ($get_data_final != '' || $get_data_inicial != '') {
 
 <body id="body">
 
-
-    <nav id="barra-lateral">
-        <div id="logo-container">
-            <img width="220px" height="220px" src="/gestor-office.png" alt="Logo" class="logo">
-        </div>
-        <div id="itens-menu">
-            <div class="menu-item">
-                <a href="../index.php">
-                    <div style="padding: 0.5em; align-items:center;"><i class="bi bi-layers"></i></div> Dashboard
-                </a>
-            </div>
-            <?php if ($_SESSION['usuario']->processar == 1) { ?>
-                <div class="menu-item accordion">
-
-                    <a class="nav-link text-white" data-bs-toggle="collapse" href="#cadastrosMenu" role="button"
-                        aria-expanded="false" aria-controls="cadastrosMenu">
-                        <i class="bi bi-person"></i> Cadastros
-                    </a>
-                    <div class="collapse" id="cadastrosMenu">
-                        <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
-                            <li><a href="../cadastrar.php?cadastro=cliente" class="link-light text-decoration-none"><i
-                                        class="bi bi-person"></i>Cliente/Fornecedor</a></li>
-                            <li><a href="../cadastrar.php?cadastro=bairro" class="link-light text-decoration-none"><i
-                                        class="bi bi-houses"></i>Bairro</a></li>
-                            <li><a href="../cadastrar.php?cadastro=cidade" class="link-light text-decoration-none"><i
-                                        class="bi bi-buildings"></i>Cidade</a></li>
-                            <li><a href="../cadastrar.php?cadastro=pagamento" class="link-light text-decoration-none"><i
-                                        class="bi bi-cash-coin"></i>Tipo Pagamento</a></li>
-                            <li><a href="../cadastrar.php?cadastro=categoria" class="link-light text-decoration-none"><i
-                                        class="bi bi-tag"></i>Categoria</a></li>
-                            <li><a href="cadastrar.php?cadastro=custo" class="link-light text-decoration-none"><i class="bi bi-bank"></i>Centro de custos</a></li>
-
-                        </ul>
-                    </div>
-                </div>
-            <?php } ?>
-
-            <div class="menu-item">
-                <a href="../contas.php">
-                    <div style="padding: 0.5em; align-items:center;"><i class="bi bi-journal-bookmark"></i></div> Plano
-                    de Contas
-                </a>
-            </div>
-
-            <div class="menu-item">
-                <a href="../receber.php">
-                    <div style="padding: 0.5em; align-items:center;"><i class="bi bi-wallet"></i></div> Contas a Receber
-                </a>
-            </div>
-
-            <div class="menu-item">
-                <a href="../pagar.php">
-                    <div style="padding: 0.5em; align-items:center;"><i class="bi bi-cash-stack"></i></div> Contas a
-                    Pagar
-                </a>
-            </div>
-
-            <div class="menu-item menu-item-atual">
-                <a href="analitico.php">
-                    <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE
-                </a>
-            </div>
-
-
-        </div>
-        </div>
-
-    </nav>
-
-
-    <div id="header">
-
-        <button onclick="encolher()"
-            style="background:none;border:none;font-size:1.2em;color:#181f2b;outline:none;cursor:pointer; z-index:1000;">
-            <span class="btn bi bi-list"></span>
-        </button>
-
-        <div id="titulo-header">
-
-            <a>Dashboard</a>
-        </div>
-        <div id="menu-superior">
-            <a class="superior-item" href="/admin/">Dashboard</a>
-        </div>
-        <div class="conta-header" style="position:relative; float:right; margin-right:2em;">
-            <button id="userBtn" type="button"
-                style="background:none;border:none;font-size:1.2em;color:#181f2b;outline:none;cursor:pointer;">
-                <span style="color:#181f2b;"><?= htmlspecialchars($_SESSION['usuario']->nome, ENT_QUOTES, 'UTF-8') ?>
-                </span>
-            </button>
-            <div id="userMenu" style="right:0; z-index: 1000000;">
-                <a href="/" class="dropdown-item">
-                    <i class="bi bi-box-arrow-left"></i> Logout
-                </a>
-            </div>
-        </div>
-    </div>
+    <?php require_once __DIR__ . '/../../componentes/lateral/lateral.php'?>
+    <?php require_once __DIR__ . '/../../componentes/header/header.php' ?>
+    
     <div class="main" id="container">
         <div class="row">
             <div class="col-md-12" style="padding: 0;">
@@ -252,6 +160,16 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                                     value="<?= $get_data_final ?>" class="form-control">
                                             </div>
                                         </div>
+
+                                        <div id="filtro-custos">
+                                            <label for="data_final">Centro de Custos:</label>
+                                            <select name="filtro_custos">
+                                                <option value="">Selecione</option>
+                                                <?php foreach(CentroCUstos::read(id_empresa:$_SESSION['usuario']->id_empresa) as $custo) { ?>
+                                                    <option <?php if($get_custos == $custo->id){?>selected<?php } ?>  value="<?=$custo->id?>"><?=$custo->nome?></option>
+                                                <?php } ?>
+                                            </select>
+                                        </div>
                                     <div class="titulos-dre">
                                         <div>
                                                 <label for="titulo">Titulo:</label>
@@ -284,14 +202,14 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                         </div>                       
 
                                         </div>
-                                        <div class="inputs-dre-btn">
+                                        <div class="inputs-dre-btn" id="inputs-btn-analitico">
                                             <div class="botoes-acao">
                                                 <button type="submit" class="btn-sm btn" style="background-color: #5856d6; color: white; ">Filtrar</button>
                                                 <a href="analitico.php" class="btn btn-secondary btn-sm">Limpar</a>
                                             </div>
 
                                             
-                                                <?php if ((isset($get_data_inicial) && $get_data_inicial != '') || (isset($get_data_final) && $get_data_final != '') || (isset($get_titulo) && $get_titulo != '') || (isset($get_subtitulo) && $get_subtitulo != '')) { ?>
+                                                <?php if ((isset($get_data_inicial) && $get_data_inicial != '') || (isset($get_data_final) && $get_data_final != '') || (isset($get_titulo) && $get_titulo != '') || (isset($get_subtitulo) && $get_subtitulo != '') || $get_custos != '') { ?>
                                                     <div class="botoes-gerar">
                                                         <button type="button" class="btn-sm btn" id="botao-gerar-pdf"
                                                             onclick="prepararGeracao('pdf')">Gerar PDF</button>
@@ -320,7 +238,7 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                     // Buscar títulos dinâmicos (baseados nos lançamentos pagos)
                     $titulos = [];
                     $subtitulos = [];
-                    if ($get_data_final != '' || $get_data_inicial != '' || $get_titulo != '') {
+                    if ($get_data_final != '' || $get_data_inicial != '' || $get_titulo != '' || $get_custos != '') {
                         $recebimentos_parcelas = Rec02::read(
                             null,
                             $_SESSION['usuario']->id_empresa,
@@ -329,8 +247,8 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                             filtro_opcao: 'quitados',
                             filtro_por: 'pagamento',
                             filtro_con01: $get_titulo,
-                            filtro_con02: $get_subtitulo
-
+                            filtro_con02: $get_subtitulo,
+                            filtro_custos: $get_custos
                         );
                         $pagamentos_parcelas = Pag02::read(
                             null,
@@ -340,7 +258,8 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                             filtro_opcao: 'quitados',
                             filtro_por: 'pagamento',
                             filtro_con01: $get_titulo,
-                            filtro_con02: $get_subtitulo
+                            filtro_con02: $get_subtitulo,
+                            filtro_custos: $get_custos
 
                         );
                         $recebimentos = [];
@@ -425,7 +344,7 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                                         filtro_por: 'pagamento',
                                                         filtro_con01: $titulo->id,
                                                         filtro_con02: $subtitulo->id,
-                                                        
+                                                        filtro_custos: $get_custos
                                                     );
                                                 } else {
                                                     $parcelas = Rec02::read(
@@ -436,24 +355,27 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                                         filtro_por: 'pagamento',
                                                         filtro_con01: $titulo->id,
                                                         filtro_con02: $subtitulo->id,
-                                                        
+                                                        filtro_custos: $get_custos
                                                     );
                                                 }
-                                                if (count($parcelas) > 0) {
-                                                    echo '<h5>' . htmlspecialchars($subtitulo->nome) . '</h5>';
-                                                    $total_subtitulo = 0;
-                                                    ?>
-                                                    <table class="table table-striped table-bordered" style="margin: none;">
+                                                if (count($parcelas) > 0) { $total_subtitulo = 0;?>
+                                                <div class="avoid-page-break">
+                                                <h5 class="avoid-page-break"> <?=htmlspecialchars($subtitulo->nome)?> </h5>
+                                                    
+                                                    
+                                                    <table class="table table-striped table-bordered avoid-page-break" style="margin: none;">
                                                         <thead>
                                                             <tr class="tr-dre-analitico">
-                                                                <th>Data</th>
+                                                                <th>Centro de custos</th>
                                                                 <th>Descrição</th>
                                                                 <th>Valor</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
                                                             <?php
+                                                            
                                                             foreach ($parcelas as $rec) {
+                                                                $centro_custos = 'N/A';
                                                                 if ($titulo->tipo == 'D') {
                                                                     $obj = Pag01::read($rec->id_pag01)[0];
                                                                     $pagamento_metodo = TipoPagamento::read($rec->id_pgto)[0] ?? null;
@@ -461,13 +383,17 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                                                     $obj = Rec01::read($rec->id_rec01)[0];
                                                                     $pagamento_metodo = TipoPagamento::read($rec->id_pgto)[0] ?? null;
                                                                 }
+                                                                    if($obj->centro_custos != null) {
+                                                                        $centro_custos = CentroCustos::read($obj->centro_custos)[0]->nome;
+                                                                    }
+                                                            
                                                                 $metodo_nome = $pagamento_metodo ? $pagamento_metodo->nome : 'Método não encontrado';
                                                                 $data = $rec->data_pag ? (new DateTime($rec->data_pag))->format('d/m/Y') : '';
                                                                 $descricao = $metodo_nome . ' - ' . $data;
                                                                 $valor = ($titulo->tipo == 'D') ? $rec->valor_pag * -1 : $rec->valor_pag;
                                                                 $total_subtitulo += $valor;
                                                                 echo '<tr class="tr-dre-analitico">';
-                                                                echo '<td style="width:7rem;">' . htmlspecialchars($data) . '</td>';
+                                                                echo '<td style="width:7rem; text-overflow: ellipsis; white-space: nowrap;">' . htmlspecialchars($centro_custos) . '</td>';
                                                                 echo '<td style="width:84rem;">' . htmlspecialchars($descricao) . '</td>';
                                                                 echo '<td style="width:9rem;" class="valor-monetario"><div>R$</div> <div>' . format_valor_alinhado($valor) . '</div></td>';
                                                                 echo '</tr>';
@@ -480,12 +406,12 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                                                 <td id="total-dre-analitico"> <div>R$</div><div><?= number_format($total_subtitulo, 2, ',') ?></div></td>
                                                                 </tr>
                                                             </tbody>
-                
-                                                            <?php
-                                                            echo '</tbody>';
-                                                            echo '</table>';
-                                            
                                                             
+                                                            
+                                                            </tbody>
+                                                            </table>
+                                                            </div>
+                                                        <?php    
                                                             $totais_gerais[] = $total_subtitulo;
                                                 }
                                                 $sub_idx++;
@@ -521,7 +447,7 @@ if ($get_data_final != '' || $get_data_inicial != '') {
 
                         </div>
                         <?php if (!empty($titulos)) { ?>
-                            <div class="card-footer">
+                            <div class="card-footer" id="totais-dre">
 
                                 <?php
                                 $total_geral = array_sum($total_geral);
@@ -529,11 +455,11 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                 $total_despesas = array_sum($total_despesas);
 
                                 ?>
-                                <div style="margin-top:2em;" id="total-receitas">Total receitas: R$
+                                <div style="margin-top:2em;" id="total-receitas">Total receitas: <br> R$
                                     <?= number_format($total_receitas, 2, ',', '.') ?> </div>
-                                <div style="margin-top:2em;" id="total-despesas">Total despesas: R$
+                                <div style="margin-top:2em;" id="total-despesas">Total despesas: <br> R$
                                     <?= number_format($total_despesas, 2, ',', '.') ?> </div>
-                                <div style="margin-top:2em;" id="total-dre">Saldo do DRE: R$
+                                <div style="margin-top:2em;" id="total-dre">Saldo do DRE: <br> R$
                                     <?= number_format($total_geral, 2, ',', '.') ?> </div>
 
                             </div>
@@ -564,10 +490,6 @@ if(!isset($get_titulo)) { ?>
     var divBtn = document.querySelector('.inputs-dre-btn');
 
     subtituloDiv.style.visibility= 'hidden';
-
-    // divChildren.forEach(divChildren => {
-    // divChildren.style.width = 'calc(100%/2)'
-    // });
     </script>
 <?php } else { ?>
     <script>
@@ -581,10 +503,6 @@ if(!isset($get_titulo)) { ?>
     var divBtn = document.querySelector('.inputs-dre-btn');
 
      subtituloDiv.style.visibility = 'visible';
-
-    // divChildren.forEach(divChildren => {
-    // divChildren.style.width = 'calc(100%/2)'
-    // });
 
 
     </script>
@@ -617,8 +535,13 @@ if(!isset($get_titulo)) { ?>
     function prepararGeracao(target) {
     let titulo = document.getElementById('input-titulo').options[document.getElementById('input-titulo').selectedIndex].text;
     let subtitulo = document.getElementById('input-subtitulo').options[document.getElementById('input-subtitulo').selectedIndex].text;
-    if(subtitulo == 'Selecione') {
+    let nomeEmpresa = document.querySelector('#nome-empresa h4').innerHTML
+
+    if(subtitulo == 'Selecione' || subtitulo == null || titulo == null) {
         subtitulo = '';
+    }
+    if(titulo == 'Selecione' || titulo == null) {
+        titulo = ''
     }
     if (subtitulo !== '' && subtitulo !== 'Selecione') {
         subtitulo = ' - ' + subtitulo;
@@ -634,21 +557,21 @@ if(!isset($get_titulo)) { ?>
         dataTexto = 'Data Final: ' + data_final;
     }
     if(target == 'pdf'){
-         gerarpdf('analitico', dataTexto, titulo + subtitulo);
+         gerarpdf('analitico', dataTexto, titulo + subtitulo, nomeEmpresa);
     } else if(target == 'excel'){
-        gerarexcel('analitico', dataTexto, titulo + subtitulo);
+        gerarexcel('analitico', dataTexto, titulo + subtitulo, nomeEmpresa);
     }
 }
     
     function checarTitulo(resetSubtitulo = false) {
         var tituloSelect = document.getElementById('input-titulo');
         var tituloId = tituloSelect.value;
-        var subtituloSelect = document.getElementById('subtitulo');
+        var subtituloSelect = document.getElementById('input-subtitulo');
         let subtituloDiv = document.getElementById('subtitulo-dre-div');
         var options = subtituloSelect.querySelectorAll('option');
-        let divText = document.querySelector('.inputs-dre-text-analitico');
+        let divText = document.querySelector('.inputs-dre-text');
         divChildren = divText.children
-        let divBtn = document.querySelector('.inputs-dre-btn-analitico');
+        let divBtn = document.querySelector('.inputs-dre-btn');
 
         options.forEach(function (option) {
             if (option.value === "") {
