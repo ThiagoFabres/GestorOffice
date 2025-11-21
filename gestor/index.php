@@ -13,103 +13,9 @@ if(!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 2) {
     header('Location: /');
     exit();
 }
-
-$post_acao = filter_input(INPUT_POST, 'acao');
-
-    $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-    $get_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-    $get_acao = filter_input(INPUT_GET, 'acao');
-    $get_nome = filter_input(INPUT_GET, 'nome');
-    $get_data_inicial = filter_input(INPUT_GET, 'dataInicial');
-    $get_data_final = filter_input(INPUT_GET, 'dataFinal');
-
-    $status_req = filter_input(INPUT_POST, 'status');
-    $consultar_req = filter_input(INPUT_POST, 'consultar');
-    $processar_req = filter_input(INPUT_POST, 'processar');
-
-    $nome = filter_input(INPUT_POST, 'nome');
-    $email = filter_input(INPUT_POST, 'email');
-    $status = isset($status_req) ? 1 : 0;
-    $consultar = isset($consultar_req) ? 1 : 0;
-    $processar = isset($processar_req) ? 1 : 0;
-
-if(isset($post_acao) && $post_acao == 'editar') {
-
-    
-$usuario = new Usuario(
-    $id,
-    $_SESSION['usuario']->id_empresa,
-    $nome,
-    $email,
-    null,
-    $processar,
-    $consultar,
-    null,
-    $status
-);
-
-    Usuario::update($usuario);
-}
-
-if (isset($post_acao) && $post_acao == 'inserir_cliente') {
-
-
-    function permissao() {
-        // Exemplo: só permite se o usuário logado for admin
-        return isset($_SESSION['usuario']) && $_SESSION['usuario']->cargo == Cargo::GESTOR;
-    }
-
-    function atribuirCargo($cargo) {
-        // Verifica se o cargo é válido
-        if (!in_array($cargo, [Cargo::ADMIN, Cargo::GESTOR, Cargo::USUARIO])) {
-            throw new Exception('Cargo inválido.');
-        }
-        // Se o cargo a ser atribuído for ADMIN, a pessoa precisa ter permissão para isso
-        if ($cargo == Cargo::GESTOR && !permissao()) {
-            throw new Exception('Você não tem permissão para atribuir o cargo de GESTOR.');
-        }
-        return true;
-    }
-
-
-
-// Exemplo de criação de usuário com validação de cargo
-$usuario = new Usuario(
-    null, // id_usuario
-    $_SESSION['usuario']->id_empresa, // id_empresa
-    $nome,
-    $email,
-    null,
-    $processar, // processar
-    $consultar, // consultar
-    Cargo::USUARIO, // cargo
-    $status
-);
-
-
-// Atribuindo cargo
-try {
-    atribuirCargo($usuario->cargo);
-    // O cargo foi atribuído com sucesso
-} catch (Exception $e) {
-    echo 'Erro: ' . $e->getMessage();
-}
-
-
-    if(!Usuario::read(null,$email)) {
-        if(Usuario::create($usuario)) {
-            header('Location: index.php');
-    exit;
-        };
-        
-    }
-    
-
-    
-} else {
-    $error = "Dados inválidos.";
-
-}
+$nomeEmpresa = Empresa::read($_SESSION['usuario']->id_empresa)[0]->nom_fant;
+require_once __DIR__ . '/gestor.php';
+$erro = filter_input(INPUT_GET, 'erro');
 
 
 ?>
@@ -154,10 +60,9 @@ try {
             <span class="btn bi bi-list"></span>
         </button>
         
-    <div id="titulo-header">
-        
-        <a>Dashboard</a>
-    </div>
+    <div id="nome-empresa">
+            <h4><?=$nomeEmpresa?></h4>
+        </div>
     <div id="menu-superior">
         <a class="superior-item" href="/gestor/">Dashboard</a>
     </div>
@@ -223,7 +128,7 @@ try {
                         </div>
 
                         <div>
-                            <a type="button" style="background-color: #5856d6; border: 0;" href="index.php" class="btn btn-secondary">Limpar</a>
+                            <a type="button" style="border: 0;" href="index.php" class="btn btn-secondary">Limpar</a>
                         </div>
                     </div>
                     
@@ -278,7 +183,7 @@ try {
                         <?php } ?>
                     <?php } else { ?>
                         <tr>
-                            <td>Nenhum cliente encontrado</td>
+                            <td>Nenhum usuario encontrado</td>
                             <td></td>
                             <td></td>
                             <td></td>
@@ -402,8 +307,9 @@ try {
 
                         <div style="margin-bottom: 3em;" class="footer">
 
-                        <button name="acao" value="inserir_cliente" class="btn btn-success" style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0;" disabled href="consulta_cliente.php">Salvar</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Fechar</button>
+                        <button name="acao" value="inserir_cliente" class="btn btn-success" style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0;" href="consulta_cliente.php">Salvar</button>
+                        
                             
 
                     </form>
@@ -452,20 +358,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-    function checar() {
-        var nome = document.querySelector('.input-nome input').value;
-        var email = document.querySelector('.input-email input').value;
-        let consultar = document.querySelector('input[name="consultar"]');
-        let processar = document.querySelector('input[name="processar"]');
+//     function checar() {
+//         var nome = document.querySelector('.input-nome input').value;
+//         var email = document.querySelector('.input-email input').value;
+//         let consultar = document.querySelector('input[name="consultar"]');
+//         let processar = document.querySelector('input[name="processar"]');
         
 
 
 
-if (nome !== '' && email !== '' && (consultar.checked || processar.checked)) {
-  document.querySelector('button[name="acao"]').disabled = false;
-} else {
-  document.querySelector('button[name="acao"]').disabled = true;
-}
+// if (nome !== '' && email !== '' && (consultar.checked || processar.checked)) {
+//   document.querySelector('button[name="acao"]').disabled = false;
+// } else {
+//   document.querySelector('button[name="acao"]').disabled = true;
+// }
 
 if (!consultar.checked) {
             processar.checked = false;
@@ -475,13 +381,8 @@ if (!consultar.checked) {
             consultar.checked = true;
         }
 
-    }
-
-
-</script>
-
+    // }
 <?php if (isset($get_acao) && $get_acao == 'adicionar') { ?>
-    <script>
         window.addEventListener('DOMContentLoaded', function () {
             var modalEl = document.getElementById('modal_usuario');
             var Modal = new bootstrap.Modal(modalEl);
@@ -490,8 +391,13 @@ if (!consultar.checked) {
                 window.location.href = 'index.php';
             });
         });
-    </script>
-<?php }
-; ?>
+<?php } if(isset($erro) && $erro == 'usado') { ?>
+                alert('Não é possível adicionar esse usuario, pois já existe um usuario ou gestor com esse e-mail');
+                window.location.href = 'index.php';
+<?php } ?>
+
+</script>
+
+
 
 </html>
