@@ -1,0 +1,18 @@
+.card-contas-lista {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1%;
+}
+.card-contas p {
+    color: rgba(0, 0, 0, 0.774);
+}
+.card-contas {
+    padding-inline: 1%;
+    margin-bottom: 1%;
+}
+
+#conta-nome {
+    font-size: 1.4rem;
+    margin-bottom: 0.5em;
+}
