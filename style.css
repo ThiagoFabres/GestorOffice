@@ -22,6 +22,13 @@
     margin-top: 1em;
 }
 
+#totais-lancamento {
+    width: 70%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
 .card-header-lancamento {
     display: flex;
     flex-direction: row;
@@ -73,6 +80,22 @@
     height: 1em;
     box-shadow: none;
     border-radius: 50%;
+    margin: 0;
+}
+
+.form-check {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+.form-check label {
+    width: 100%;
+    text-align: center;
+    font-size: 10%;
 }
 
 .form-check-input[type="radio"]:checked {
@@ -88,19 +111,21 @@
 }
 
 .inputs-pagamento-group {
-    width: 45%;
+    width: 60%;
     height: 100%;
 }
 .selects-pagamento{
-    width: 45%;
+    width: 30%;
     display: flex;
+    padding-top: 1.5%;
     flex-direction: column;
-    justify-content: space-evenly;
+    justify-content: space-between;
 }
 
 .radio-pagamento {
     display: flex;
     flex-direction: row;
+    width: 100%;
 }
 .radio-pagamento div {
     display: flex;
@@ -108,10 +133,14 @@
     justify-content: center;
     align-items: center;
     text-align: center;
+    width: calc(85%/3);
 }
-.radio-pagamento label {
-    font-size: 90%;
+
+.radio-pagamento div div {
+    width: 100%;
 }
+
+
 
 .inputs-pagamento-text {
     display: flex; 
@@ -178,14 +207,7 @@
 
 
 
-.inputs-dre-btn {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    width:calc(40%);
-    align-items: center;
 
-}
 
 .botoes-acao,
 .botoes-gerar {
@@ -226,7 +248,8 @@
 #total-vencido,
 #total-a-vencer,
 #total-vence-hoje {
-    font-size: 110%;
+    white-space: nowrap;
+    font-size: 100%;
 }
 
 #div-registro-vazio-dre {
@@ -283,6 +306,14 @@
   color: black;
 }
 
+#tr-totais {
+    background-color: #cececeff;
+}
+
+#tr-totais td {
+    background-color: #cececeff;
+}
+
 
 .card-select-pagina form {
     display: flex;
@@ -332,7 +363,16 @@
 }
 
 
+.avoid-page-break {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
 
+/* Adiciona espaçamento no topo de uma nova página */
+.page-break {
+  page-break-before: always;
+  break-before: page;
+}
 
 
 
@@ -507,11 +547,12 @@ html, body {
     display: flex;
     flex-direction: column;
     background-color: #f1f3f6;
-    min-height: calc(100% - 6%);
-    top: 6%;
-    width: calc(100% - 16%);
-    left: 16%;
-    padding: 5%;
+    min-height: calc(100% - 65px);
+    top: 65px;
+    width: calc(100% - 255px);
+    left: 255px;
+    padding-inline: 5%;
+    padding-block: 2.5%;
     align-items: center;
 }
 
@@ -539,7 +580,7 @@ html, body {
     position: relative;
     display: flex;
     flex-direction: column;
-    min-width: 75%;
+    min-width: 50%;
     max-width: 95%;
     border-radius: 0.5em;
     border: 1px solid #dfe0e1;
@@ -555,7 +596,12 @@ html, body {
 .input-pagamento-div {
     width: 90%;
 }
-
+#documento,
+input[name="valor"],
+input[name="descricao"],
+input[name="parcelas"] {
+    border-radius: 0;
+}
 
 
 .input-documento input,
@@ -732,6 +778,10 @@ html, body {
     font-size: 90%;
 }
 
+.form-check label {
+    font-size: 80%;
+}
+
 .tabela {
     position: relative;
     display: flex;
@@ -850,10 +900,11 @@ html, body {
     align-items: center;
     box-shadow: none;
 }
-
-
 .btn-primary:hover {
     background-color: #4b49b6;
+}
+.btn-primary:disabled {
+    background-color: #4b49b6af;
 }
 
 #userBtn {
@@ -865,17 +916,6 @@ html, body {
     cursor: pointer;
 }
 
-#userMenu {
-    display: none;
-    position: absolute;
-    top: 2.5em;
-    right: 0;
-    background: #fff;
-    border: 1px solid #dbdfe6;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    min-width: 120px;
-    padding: 0.5em 1em;
-}
 /* Estilo para o menu suspenso do usuário */
 
 .acoes {
@@ -1071,6 +1111,17 @@ html, body {
     font-size: 1em;
     color: #6a6e76;
     margin-bottom: 1em;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+}
+
+#input-login-card{
+     margin-bottom:3%; 
+     width:100%; 
+     padding:1%; 
+     padding-top:4%; 
+     border-radius:1em;
 }
 
 .card {
@@ -1135,14 +1186,7 @@ width: 100%;
     height: 0;
 }
 
-#titulo-header {
-    
-    display: flex;
-    align-items: center;     
-    height: auto;            
-    width: 100%;
 
-}
 
 
 
@@ -1158,10 +1202,12 @@ width: 100%;
 
 
 #barra-lateral {
-    width: 16%;
+    width: 255px;
     height: 100%;
     background-color: #212631;
     position: fixed;
+    overflow-y: auto;
+    scrollbar-width: thin;
     left: 0;
     top: 0;
     display: flex;
@@ -1198,7 +1244,8 @@ width: 100%;
 
 #logo-container {
     width: 100%;
-    height: 20%;
+    height: 20.5%;
+    padding: 16px;
     border-bottom: 1px solid #323a49;
     background-color: #212631;
     display: flex;
@@ -1207,9 +1254,8 @@ width: 100%;
 }
 
 #logo-container img {
-    width: 100%;
-    height: auto;
-    max-height: 100%;
+    width: 220px;
+    height: 220px;
     object-fit: contain;
 }
 
@@ -1247,11 +1293,10 @@ width: 100%;
 
 #itens-menu {
     position: relative;
-    top:0.5em;
-    left: 0.5em;
+    width: 100%;
+    padding: 8px;
     white-space: nowrap;
     text-overflow: clip;
-    width: calc(90%);
     display: flex;
     flex-direction: column;
     
@@ -1260,7 +1305,6 @@ width: 100%;
 .menu-item {
     margin-top: 1px;
     position: relative;
-    min-height: 3em;
     font-size: 1em;
     text-align: center;
 }
@@ -1269,22 +1313,25 @@ width: 100%;
     gap: 0.5em;
     display: flex;
     align-items: center;
-    padding: 0.5em 1em;
+    padding-inline: 16px;
+    padding-block: 12px;
     text-decoration: none;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    color: whitesmoke;
+    color: #e3e3e5;
     text-align: center;
-    font-size: 90%;
+    font-size: 100%;
+    font-weight: 100;
 }
 
 .menu-item .nav-link {
     display: flex !important;
     align-items: center;       /* alinha ícone e texto verticalmente */
     justify-content: flex-start;   /* centraliza horizontalmente */
-    gap: 0.9em;                 /* espaço entre ícone e texto */
-    padding-left: 1.5em !important;
+    padding-inline: 16px;
+    padding-block: 12px;
+    gap: 0.5em;                 /* espaço entre ícone e texto */
     text-decoration: none;
     color: whitesmoke !important;
 }
@@ -1307,4 +1354,26 @@ width: 100%;
     animation-name: forwards-mini;
     animation-fill-mode: forwards;
     animation-duration: 0.5s;
+}
+.menu-item:hover a,
+.menu-item-atual a {
+    color: white !important;
+}
+
+.menu-item a div i{
+    filter: brightness(50%);
+}
+
+.menu-item:hover a div i,
+.menu-item-atual a div i {
+    filter: brightness(100%);
+}
+
+.menu-li a i{
+    filter: brightness(50%);
+}
+
+.menu-li:hover a i,
+.menu-li-atual a i{
+    filter: brightness(100%);
 }
