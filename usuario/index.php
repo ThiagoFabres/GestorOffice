@@ -14,6 +14,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     header('Location: /');
     exit;
 }
+$lateral_target = 'dashboard';
  
 $data = new DateTime();
 $data_atual = $data->format('Y-m-d');
@@ -98,81 +99,8 @@ $total_rec_a_vencer = number_format($total_rec_a_vencer, 2, ',', '.');
 <body id="body" >
 
 
-    <nav id="barra-lateral">
-        <div id="logo-container">
-            <img width="220px" height="220px" src="/gestor-office.png" alt="Logo" class="logo">
-        </div>
-    <div id="itens-menu">
-                        <div class="menu-item menu-item-atual">
-            <a href="index.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-layers"></i></div> Dashboard </a>
-        </div>
-    <?php if($_SESSION['usuario']->processar == 1) { ?>
-        <div class="menu-item accordion" >
-
-<a class="nav-link text-white" data-bs-toggle="collapse" href="#cadastrosMenu" role="button" aria-expanded="false" aria-controls="cadastrosMenu">
-        <i class="bi bi-person"></i> Cadastros
-      </a>
-      <div class="collapse" id="cadastrosMenu">
-        <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
-          <li><a href="cadastrar.php?cadastro=cliente" class="link-light text-decoration-none"><i class="bi bi-person"></i>Cliente/Fornecedor</a></li>
-          <li><a href="cadastrar.php?cadastro=bairro" class="link-light text-decoration-none"><i class="bi bi-houses"></i>Bairro</a></li>
-          <li><a href="cadastrar.php?cadastro=cidade" class="link-light text-decoration-none"><i class="bi bi-buildings"></i>Cidade</a></li>
-          <li><a href="cadastrar.php?cadastro=pagamento" class="link-light text-decoration-none"><i class="bi bi-cash-coin"></i>Tipo Pagamento</a></li>
-          <li><a href="cadastrar.php?cadastro=categoria" class="link-light text-decoration-none"><i class="bi bi-tag"></i>Categoria</a></li>
-          <li><a href="cadastrar.php?cadastro=custo" class="link-light text-decoration-none"><i class="bi bi-bank"></i>Centro de custos</a></li>
-          
-        </ul>
-      </div>
-        </div>
-        <?php } ?>
-
-        <div class="menu-item">
-            <a href="contas.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-journal-bookmark"></i></div> Plano de Contas </a>
-        </div>
-
-        <div class="menu-item">
-            <a href="receber.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-wallet"></i></div> Contas a Receber </a>
-        </div>
-
-        <div class="menu-item">
-            <a href="pagar.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-cash-stack"></i></div> Contas a Pagar </a>
-        </div>
-
-        <div class="menu-item">
-            <a href="dre/sintetico.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
-        </div>
-
-
-        </div>
-        </div>
-
-    </nav>
-
-
-    <div id="header">
-        
-        <button onclick="encolher()" style="background:none;border:none;font-size:1.2em;color:#181f2b;outline:none;cursor:pointer; z-index:1000;">
-            <span class="btn bi bi-list"></span>
-        </button>
-        
-    <div id="titulo-header">
-        
-        <a>Dashboard</a>
-    </div>
-    <div id="menu-superior">
-        <a class="superior-item" href="/admin/">Dashboard</a>
-    </div>
-    <div class="conta-header" style="position:relative; float:right; margin-right:2em;">
-        <button id="userBtn" type="button" style="background:none;border:none;font-size:1.2em;color:#181f2b;outline:none;cursor:pointer;">
-            <span style="color:#181f2b;"><?= htmlspecialchars($_SESSION['usuario']->nome, ENT_QUOTES, 'UTF-8') ?> </span>
-        </button>
-        <div id="userMenu" style="right:0; z-index: 1000000;">
-            <a href="/" class="dropdown-item">
-                <i class="bi bi-box-arrow-left"></i> Logout
-        </a>
-        </div>
-    </div>
-    </div>
+    <?php require_once __DIR__ . '/../componentes/lateral/lateral.php'?>
+    <?php require_once __DIR__ . '/../componentes/header/header.php' ?>
 
 
 

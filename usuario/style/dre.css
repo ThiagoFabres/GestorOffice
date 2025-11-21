@@ -54,3 +54,26 @@
     border:none;
     text-align: end;
 }
+
+
+
+.inputs-dre-btn {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width:calc(40%);
+    align-items: center;
+}
+#inputs-btn-analitico {
+    margin-left: 2em;
+}
+
+#inputs-btn-sintetico {
+    margin-left: 1em;
+}
+
+#totais-dre {
+    background-color: #f1f3f6;
+    border: none;
+    color: black;
+}
