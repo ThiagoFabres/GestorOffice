@@ -3,6 +3,11 @@ require_once '../db/base.php'; // sua conexão PDO
 require_once '../db/entities/usuarios.php';
 session_start();
 
+if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
+    header('Location: /');
+    exit;
+}
+
 header('Content-Type: application/json');
 
 try {
