@@ -104,7 +104,7 @@ $total_rec_a_vencer = number_format($total_rec_a_vencer, 2, ',', '.');
 
 
 
-    <div class="main" id="container">
+    <div class="main" id="container" style="padding-block:0;">
         <div class="view-dash">
             <div class="dashboard-group">
                 <table class="table-bordered">
