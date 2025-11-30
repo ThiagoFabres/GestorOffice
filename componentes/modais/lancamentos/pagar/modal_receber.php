@@ -190,7 +190,7 @@
                                                     <div class="input-documento" style="<?php if($get_acao != 'visualizar') {?>width:75%;<?php } else {?> width: 100%; <?php } ?>">
                                                         <!--Nome: -->
                                                     
-                                                        <input type="text" onchange="checar()" name="documento"<?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
+                                                        <input type="text"  name="documento"<?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
                                                             class="form-control" placeholder="Documento" id="documento"
                                                             value="<?= htmlspecialchars($documento, ENT_QUOTES, 'UTF-8') ?>"
                                                             required>
@@ -269,7 +269,7 @@
                                             <div class="modal-input-group">
                                                 <label for="data_lanc">Data de lançamento:</label>
                                                 <div class="input-data-lanc">
-                                                    <input type="date" onchange="checar()" name="data_lanc" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
+                                                    <input type="date"  name="data_lanc" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
                                                         class="form-control" placeholder="Data de lançamento"
                                                         value="<?php echo $data_lanc ?>" required>
                                                 </div>
@@ -339,7 +339,7 @@
                                                 <div class="modal-input-group">
                                                         <label for="valor">Valor:</label>         
                                                     <div class="input-valor">
-                                                        <input type="text" onchange="checar()" name="valor" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
+                                                        <input type="text" id="valor" name="valor" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
                                                             class="form-control" placeholder="Valor"
                                                             value="<?= htmlspecialchars($valor, ENT_QUOTES, 'UTF-8') ?>"
                                                             required>
@@ -348,7 +348,7 @@
                                                 <div class="modal-input-group">
                                                     <label for="parcelas">Parcelas:</label>                   
                                                     <div class="input-parcelas">   
-                                                        <input type="number" onchange="checar()" name="parcelas" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
+                                                        <input type="number" id="parcelas" name="parcelas" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
                                                             class="form-control" placeholder="Parcelas"
                                                             value="<?= htmlspecialchars($parcelas_d, ENT_QUOTES, 'UTF-8') ?>"
                                                             required>
@@ -359,7 +359,7 @@
                                             <div class="input-descricao" style="width: 100%;">
                                                 <!--Nome: -->
                                                 <label for="descricao">Descrição:</label>
-                                                <input type="text" onchange="checar()" name="descricao" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
+                                                <input type="text" id="descricao" name="descricao" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
                                                     class="form-control" placeholder="Descrição"
                                                     value="<?= htmlspecialchars($descricao, ENT_QUOTES, 'UTF-8') ?>"
                                                     required>
@@ -386,18 +386,19 @@
                         </div>
 
                         <form action="cadastros_manager.php" method="post" onkeydown="return event.key != 'Enter';">
-                            <input type="hidden" name="cadastro" value="<?= $post_cadastro ?>">
-                            <input type="hidden" name="titulo" value="<?= $post_titulo ?>">
-                            <input type="hidden" name="subtitulo" value="<?= $post_subtitulo ?>">
-                            <input type="hidden" name="documento" value="<?= $documento ?>">
-                            <input type="hidden" name="descricao" value="<?= $descricao ?>">
-                            <input type="hidden" name="valor" value="<?= $valor ?>">
-                            <input type="hidden" name="parcelas_d" value="<?= $parcelas_d ?>">
                             <input type="hidden" name="view" value="receber">
                             <input type="hidden" name="pagar" value="1">
                             <input type="hidden" name="id_lancamento" value="<?= $get_id ?>">
-                            <input type="hidden" name="data_lanc" value="<?= $data_lanc ?>">
-                            <input type="hidden" name="custo" value="<?= $post_custo ?>">
+                            
+                            <input type="hidden" id="cadastro2" name="cadastro" value="<?= $post_cadastro ?>">
+                            <input type="hidden" id="titulo2" name="titulo" value="<?= $post_titulo ?>">
+                            <input type="hidden" id="subtitulo2" name="subtitulo" value="<?= $post_subtitulo ?>">
+                            <input type="hidden" id="documento2" name="documento" value="<?= $documento ?>">
+                            <input type="hidden" id="descricao2" name="descricao" value="<?= $descricao ?>">
+                            <input type="hidden" id="valor2" name="valor" value="<?= $valor ?>">
+                            <input type="hidden" id="parcelas_d"name="parcelas_d" value="<?= $parcelas_d ?>">
+                            <input type="hidden" id="data_lanc2" name="data_lanc" value="<?= $data_lanc ?>">
+                            <input type="hidden" id="custo2" name="custo" value="<?= $post_custo ?>">
 
                             <div class="tabelas-edit">
                                 <table class="table table-striped table-bordered" style="margin-bottom: 0;">
@@ -452,16 +453,20 @@
                                     </table>
                                 </table>
                             </div>
-                            <div class="card-footer" style="display:flex; flex-direction: row; width: 100%; justify-content: space-between;">
-                            <?php if(!empty($parcelas) && $get_acao != 'visualizar'){ ?>
+                            <div class="card-footer" style="display:flex; flex-direction: row; width: 100%; <?php if(!isset($get_id) || $get_id == null) { ?> justify-content: end; <?php } else { ?> justify-content: space-between; <?php }?>">
+                            <?php if(!empty($parcelas) && $get_acao != 'visualizar'){ 
+                                if(isset($get_id) && $get_id != null) {
+                                ?>
                                 <button name="acao"
                                     value="excluir"
                                     class="btn btn-danger" type="submit" id="botao-excluir-parcela"
                                     style="padding-inline:1.5em;">Excluir</button>
+                                <?php } ?>
+
                                 <button name="acao"
                                     value="<?php if (!isset($get_acao)) { ?>adicionar<?php } else if (isset($get_acao)) { ?>editar<? } ?>"
                                     class="btn btn-primary" type="submit" id="botao-editar-parcela"
-                                    style="padding-inline:1.5em; ">Salvar</button>
+                                    style="padding-inline:1.5em; float:right">Salvar</button>
                             <?php } ?>
                             </div>
                         </form>
@@ -717,8 +722,54 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
+// Sincroniza campos do formulário principal com os inputs ocultos em tempo real
+function syncHiddenInputs() {
+    const campos = [
+        { origem: 'cadastro', destino: 'cadastro2' },
+        { origem: 'titulo', destino: 'titulo2' },
+        { origem: 'subtitulo', destino: 'subtitulo2' },
+        { origem: 'documento', destino: 'documento2' },
+        { origem: 'descricao', destino: 'descricao2' },
+        { origem: 'valor', destino: 'valor2' },
+        { origem: 'parcelas', destino: 'parcelas_d' },
+        { origem: 'data_lanc', destino: 'data_lanc2' },
+        { origem: 'custo', destino: 'custo2' }
+    ];
 
 
+
+    campos.forEach(({ origem, destino }) => {
+        const origemInput = document.getElementById(origem);
+        const destinoInput = document.getElementById(destino);
+        const botao = document.getElementById('botao-editar-parcela')
+
+        if (origemInput && destinoInput) {
+            // Para selects, datas e textos
+            origemInput.addEventListener('input', function () {
+                destinoInput.value = origemInput.value;
+            });
+            origemInput.addEventListener('change', function () {
+                if(origemInput.id != 'valor' && origemInput.id != 'parcelas') {
+                    destinoInput.value = origemInput.value;
+                    console.log(destinoInput.id + ' alterado')
+                } else {
+                    const botao = document.getElementById('botao-editar-parcela')
+                    console.log(destinoInput.id + ' alterado')
+                    botao.disabled = true
+                }
+                
+            });
+            // Atualiza valor inicial ao carregar
+            destinoInput.value = origemInput.value;
+        }
+    });
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', syncHiddenInputs);
+} else {
+    syncHiddenInputs();
+}
 
 
 
@@ -881,5 +932,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }, 400);
 });
-</script>
 <?php }?>
+</script>
