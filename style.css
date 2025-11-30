@@ -423,7 +423,8 @@
   color: black;
 }
 
-.parcela_cor_verde td, 
+.parcela_cor_verde td,
+.parcela_cor_verde th, 
 .parcela_cor_verde td button,
 .parcela_cor_verde td button:disabled {
   background-color: #30ff3a7a !important; /* azul de exemplo */
@@ -1196,7 +1197,10 @@ width: 100%;
     display: none;
 }
 
+.tr-header th {
+    background-color: #f5f5f5;
 
+}
 
 
 
