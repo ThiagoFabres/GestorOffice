@@ -1,29 +1,28 @@
-<?php
-if($acao == 'editar') {
-  $id_palavra = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT);
-  $palavra_obj = Pal01::read($id_palavra, $_SESSION['usuario']->id_empresa)[0] ?? null;
+
+
+<?php 
+if($acao == 'conciliar') {
+  $id = filter_input(INPUT_GET, 'id');
+  $ban02 = Ban02::read($id)[0];
+  $ban02_tipo = $ban02->valor < 0 ? 'D' : 'C';
 }
 ?>
-
-<div class="modal fade" id="modal_cadastro_palavra" tabindex="-1" role="dialog" aria-labelledby="modalCadastroCidadeLabel">
+<div class="modal fade" id="modal_conciliar" tabindex="-1" role="dialog" aria-labelledby="modalCadastroCidadeLabel">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                 
                 <!-- Cabeçalho -->
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalCadastroCidadeLabel">Adicionar Nova Palavra Chave</h5>
+                    <h5 class="modal-title" id="modalCadastroCidadeLabel">Conciliar Lançamento</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
                 
                 <!-- Corpo -->
                 <div class="modal-body">
-                    <form method="post" action="palavra_manager.php">
-                    <?php if($acao == 'editar') { ?><input type="hidden" name="id" value="<?=$palavra_obj->id ?? ''?>"> <?php } ?>
+                    <form method="post" action="movimentacao_manager.php">
 
-                    <div>
-                            <label for="nomeBanco" class="form-label">Palavra-Chave</label>
-                            <input type="text" id="nomeBanco" name="nome" class="form-control" placeholder="Nome" <?php if($acao == 'editar') {?> value="<?=$palavra_obj->palavra?>" <?php } ?> required>
-                        </div>
+                    <input type="hidden" name="id" value="<?=$id?>">
+
                     <div class="d-flex fd-row gap-3" >
                     <div class="modal-input-group w-50">
                         <label for="titulo">Titulo</label>
@@ -35,12 +34,9 @@ if($acao == 'editar') {
                                         style="border-top-right-radius: 0; border-bottom-right-radius: 0; ">
                                         <option value="">Selecione</option>
 
-                                        <?php $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
+                                        <?php $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa, $ban02_tipo);
                                         foreach ($titulos as $titulo) { ?>
-                                            <option value="<?= $titulo->id ?>"
-                                              <?php if($acao == 'editar' && $palavra_obj->id_con01 == $titulo->id) { ?>
-                                                  selected
-                                              <?php } ?>>
+                                            <option value="<?= $titulo->id ?>">
                                                 <?= htmlspecialchars($titulo->nome, ENT_QUOTES, 'UTF-8') ?>
                                             </option>
                                         <?php } ?>
@@ -67,9 +63,7 @@ if($acao == 'editar') {
                                     $todosSubtitulos = Con02::read(null, $_SESSION['usuario']->id_empresa);
                                     foreach ($todosSubtitulos as $sub) { ?>
                                         <option value="<?= $sub->id ?>"
-                                        <?php if($acao == 'editar' && $palavra_obj->id_con02 == $sub->id) { ?>
-                                                  selected
-                                              <?php } ?>
+
                                             data-titulo-id="<?= $sub->id_con01 ?>">
                                             <?= htmlspecialchars($sub->nome, ENT_QUOTES, 'UTF-8') ?>
                                         </option>
@@ -88,7 +82,7 @@ if($acao == 'editar') {
                     <!-- Botões -->
                     <div class="d-flex justify-content-end gap-2">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                        <button type="submit" name="acao" value="<?php if(isset($acao) && $acao == 'editar') { ?>editar<?php } else {?>adicionar<?php } ?>" class="btn btn-success" style="background-color: #5856d6; border-color: #5856d6;">Salvar</button>
+                        <button type="submit" name="acao" value="conciliar" class="btn btn-success" style="background-color: #5856d6; border-color: #5856d6;">Salvar</button>
                         
                     </div>
                     </form>
@@ -233,21 +227,26 @@ function initTituloSubtitulo(tituloId, subtituloId, subtituloSelecionado) {
   }, 300);
 }
 
+// --- Inicialização automática apenas dos filtros (não do modal) ---
+document.addEventListener('DOMContentLoaded', () => {
+  // --- Valores vindos do PHP ---
+  const tituloSelecionado = <?= json_encode($post_titulo ?? '') ?>;
+  const subtituloSelecionado = <?= json_encode($post_subtitulo ?? '') ?>;
+  const filtroTituloSelecionado = '';
+  const filtroSubtituloSelecionado = '';
 
-// Inicializa Choices.js nos selects do modal quando ele for exibido
-document.addEventListener('DOMContentLoaded', function () {
-  var modalPalavra = document.getElementById('modal_cadastro_palavra');
-  if (modalPalavra) {
-    modalPalavra.addEventListener('shown.bs.modal', function () {
-      // Se estiver editando, pré-seleciona o subtítulo
-      var subtituloSelecionado = null;
-      var subtituloSelect = document.getElementById('subtitulo');
-      if (subtituloSelect) {
-        subtituloSelecionado = subtituloSelect.value;
-      }
-      initTituloSubtitulo('titulo', 'subtitulo', subtituloSelecionado);
-    });
-  }
+  // Inicializa os filtros (fora do modal)
+  initTituloSubtitulo('titulo-filtro', 'subtitulo-filtro', filtroSubtituloSelecionado);
+
+  // Restaura o título do filtro (PHP)
+  setTimeout(() => {
+    if (filtroTituloSelecionado) {
+      const select = document.getElementById('titulo-filtro');
+      if (select._choices) select._choices.setChoiceByValue(filtroTituloSelecionado.toString());
+      else select.value = filtroTituloSelecionado;
+      console.log('✅ Filtro de título restaurado:', filtroTituloSelecionado);
+    }
+  }, 400);
 });
 
 
