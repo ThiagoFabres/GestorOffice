@@ -70,9 +70,9 @@
                         <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
                             <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'contaBancario') { ?> menu-li-atual <?php } ?>"><a href="/usuario/bancario/contas/conta.php" class="link-light text-decoration-none"><i
                                         class="bi bi-person"></i>Cadastro de conta</a></li>
-                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'palavraChave') { ?> menu-li-atual <?php } ?>"><a href="/usuario/bancario/palavraChave.php" class="link-light text-decoration-none"><i
+                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'palavraChave') { ?> menu-li-atual <?php } ?>"><a href="/usuario/bancario/palavra/palavra_chave.php" class="link-light text-decoration-none"><i
                                         class="bi bi-key"></i>Palavra Chave</a></li>
-                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'movimentacao') { ?> menu-li-atual <?php } ?>"><a href="/usuario/bancario/movimentacao.php" class="link-light text-decoration-none"><i
+                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'movimentacao') { ?> menu-li-atual <?php } ?>"><a href="/usuario/bancario/movimentacao/movimentacao.php" class="link-light text-decoration-none"><i
                                         class="bi bi-buildings"></i>Movimentação bancária</a></li>
                             <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'dreBancario') { ?> menu-li-atual <?php } ?>"><a href="/usuario/bancario/dre.php" class="link-light text-decoration-none"><i
                                         class="bi bi-cash-coin"></i>Dre Bancário</a></li>
