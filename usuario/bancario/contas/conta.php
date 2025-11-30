@@ -69,8 +69,8 @@ $acao = filter_input(INPUT_GET, 'acao', FILTER_SANITIZE_STRING);
             </div>
             <div class="card-body card-contas-lista">
             <?php foreach($contas as $conta) { ?>
-                <!-- onclick="window.location.href='conta.php?acao=editar&id=<?=$conta->id?>'" -->
-                <div class="card card-contas" style="width: 24.25%;" >
+                
+                <div class="card card-contas" style="width: 24.25%;" onclick="window.location.href='conta.php?acao=editar&id=<?=$conta->id?>'" >
                     <div class="card-body">
                         <p id="conta-nome"><?= strtoupper($conta->nome) ?></p>
                         <p>Agência: <?=$conta->agencia?></p>
