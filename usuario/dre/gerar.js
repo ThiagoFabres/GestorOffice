@@ -125,11 +125,21 @@ function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=null) {
     const formattedDate = _formatDateToDDMMYYYY(data);
     const headerDiv = document.createElement('div');
     headerDiv.style.marginBottom = '12px';
-    headerDiv.innerHTML = `<div style="font-size:0.95em;margin-top:6px; display:flex; flex-direction:row; justify-content:space-between; "><h1>${nomeEmpresa} </h1> <h4 style="text-align:right; margin-top: 15px;">` 
+    headerDiv.innerHTML = `
+    <div style=" display:flex; flex-direction:row; justify-content:space-evenly; align-itens:center; height:100%;">
+        <div style=" align-itens:center; display:flex; justify-content:center; vertical-align: middle;">
+            <div style="display:flex; justify-content:center; align-itens:center; vertical-align: middle; height:100%; ">
+            <p style=" font-size:2.1em; text-align:center; margin:auto;">
+                ${nomeEmpresa}
+            </p>
+            </div>
+        </div> 
+        <div style="display:flex; flex-direction:column;"> 
+            <p style="width:100%; text-align:center; font-size:1.2em; margin-top: 15px;">` 
     +
-        ((formattedDate || titulo) ? `${formattedDate ? formattedDate : ''}${(formattedDate && titulo) ? '  <br> <hr>' : ''}${(titulo && titulo != 'Selecione') ? 'Titulo: ' + titulo : ''}` : '</div>') + '</div> </h4>'
+        ((formattedDate || titulo) ? `${formattedDate ? formattedDate + '</p>' : '</p>'}${(formattedDate && titulo) ? '' : ''}${(titulo && titulo != 'Selecione') ? ' <p style="font-size:1.2em; width:100%; text-align:center;"> Titulo: ' + titulo + '</p>': ''}` : '</div>') + '</div>  </div> </p>'
     +
-     `<h2 style="text-align:center; margin:0;padding:0">Relatório demonstrativo de resultado (DRE)</h2>` 
+     `<p style="text-align:center; font-size:1.5em; margin:0; padding:0;">Relatório demonstrativo de resultado (DRE)</p>` 
     +
     '<hr>'
     pdfContainer.appendChild(headerDiv);

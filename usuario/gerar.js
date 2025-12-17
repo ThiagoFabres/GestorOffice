@@ -30,7 +30,7 @@ function limparElementosInvisiveis(tabelaClone) {
 }
 
 function getTabelaSemAcoes() {
-    var tabelaOriginal = document.querySelector('.table.table-striped');
+    var tabelaOriginal = document.querySelector('#tabela-pdf');
     if (!tabelaOriginal) return null;
 
     var tabelaClone = tabelaOriginal.cloneNode(true);
@@ -41,6 +41,7 @@ function getTabelaSemAcoes() {
     tabelaClone.style.borderSpacing = '0';
     tabelaClone.style.width = '100%';
     tabelaClone.style.tableLayout = 'fixed';
+    tabelaClone.style.display = 'block';
 
 
     // remove classes e estilos herdados
@@ -218,14 +219,13 @@ function buildExportHeader(nome, nomeEmpresa) {
         wrap.style.display = 'flex';
         wrap.style.flexWrap = 'wrap';
         wrap.style.gap = '8px 16px';
-        wrap.style.height = '200px';
-        wrap.style.width = '154%'
+        wrap.style.width = '100%'
         wrap.style.alignItems = 'center'
         wrap.style.textAlign = 'center'
 
         filters.forEach(function(f) {
             var p = document.createElement('div');
-            p.style.fontSize = '12px';
+            p.style.fontSize = '10px';
             p.innerHTML = '<strong>' + f[0] + ':</strong> ' + f[1] + f[2];
             wrap.appendChild(p);
         });
@@ -233,7 +233,7 @@ function buildExportHeader(nome, nomeEmpresa) {
         header.appendChild(wrap);
         var headerGeral = document.createElement('div')
         header.style.marginBottom = '0';
-        headerGeral.style.width = '154%'
+        headerGeral.style.width = '100%'
         headerGeral.appendChild(header)
     } else {
         header.style.marginBottom = '0';
@@ -256,13 +256,13 @@ function dividirTabelaEmBlocos(tabela, linhasPorBloco = 22) {
         const bloco = document.createElement('div');
         bloco.classList.add('tabela-bloco', 'avoid-page-break');
         if(primeira) {
-            linhasPorBloco = linhasPorBloco -5
+            linhasPorBloco = linhasPorBloco -2
         }
             
 
         // cria nova tabela para o bloco
         const novaTabela = tabela.cloneNode(false);
-        novaTabela.style.width = '155%';
+        novaTabela.style.width = '100%';
         novaTabela.style.tableLayout = 'fixed';
 
 
@@ -299,37 +299,88 @@ function gerarpdf(nome, nomeEmpresa = '') {
         alert("Tabela não encontrada!");
         return;
     }
+    tabela.style.width = '297px';
+
 
     
 
+
     var marginMm = 8;
-    var pxPerMm = 96 / 50.4;
-    var a4WidthMm = 297;
+    var pxPerMm = 96 / 25.4;
+    var a4WidthMm = 297; // paisagem
     var usableWidthMm = a4WidthMm - (marginMm * 2);
     var usableWidthPx = Math.floor(usableWidthMm * pxPerMm);
 
     var opt = {
-        margin: [marginMm, marginMm, marginMm, marginMm -2],
+        margin: [marginMm, marginMm, marginMm, marginMm],
         filename: 'contas_a_' + nome + '.pdf',
         image: { type: 'jpeg', quality: 1 },
         html2canvas: {
             scrollY: 0,
             useCORS: true,
-            width: usableWidthPx * 2.15
+            scale: 1.1,
+            width: usableWidthPx
         },
-        scale: 1,
-        width: usableWidthPx,
-        jsPDF: { unit: 'mm', format: 'a4' },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+        pagebreak: { mode: ['css', 'avoid-all'] }
     };
 
     // Divide a tabela em blocos
-    const blocos = dividirTabelaEmBlocos(tabela, 27);
+    const blocos = dividirTabelaEmBlocos(tabela, 10);
 
     const container = document.createElement('div');
-    container.style.display = 'flex';
-    container.style.flexDirection = 'column'
-    container.style.textAlign = 'center'
+    container.style.width = '100%';
+    container.style.maxWidth = 'none';
+    container.style.display = 'block';
+    container.style.margin = '0';
+
+    tabela.style.width = '100%';
+    tabela.style.maxWidth = 'none';
+    tabela.style.margin = '0';
+    tabela.style.fontSize = '10px';
+
+    tabela.querySelectorAll('th, td').forEach(function(cell) {
+        cell.style.fontSize = '10px';
+        cell.style.padding = '2px 2px';
+        cell.style.wordBreak = 'break-all';
+        cell.style.whiteSpace = 'normal';
+        cell.style.maxWidth = '120px';
+    });
+
+    const style = document.createElement('style');
+    style.innerHTML = `
+        #tabela-pdf {
+        width:297px;
+        }
+        #tabela-pdf tbody tr, #tabela-pdf thead tr{
+            width: 1060px;
+            padding:0;
+            height: 50px;
+            }
+        #tabela-pdf table, tr, td, th, thead, tbody, .avoid-page-break {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+        #tabela-pdf thead tr th  {
+            font-size: 80% !important;
+            padding: 0;
+            text-align:center;
+            word-break: normal !important;
+            width: calc(100% / 14) !important;
+            height:20px;
+        }
+        #tabela-pdf tbody tr td {
+            font-size: 70% !important;
+            padding: 6px !important;
+            word-break: break-all !important;
+            white-space: wrap !important;
+            width: calc(100% / 14) !important;
+            height: 50px;
+            }
+        
+
+    `;
+    container.appendChild(style);
 
 
     const headerEl = buildExportHeader(nome, nomeEmpresa);
