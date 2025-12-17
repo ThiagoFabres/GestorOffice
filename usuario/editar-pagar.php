@@ -519,7 +519,7 @@ if (isset($get_id)) {
                             <div class="card-footer">
                             <?php if(!empty($parcelas)){ ?>
                                 <button name="acao"
-                                    value="<?php if (!isset($get_acao)) { ?>adicionar<?php } else if (isset($get_acao)) { ?>editar<? } ?>"
+                                    value="<?php if (!isset($get_acao)) { ?>adicionar<?php } else if (isset($get_acao)) { ?>editar<?php } ?>"
                                     class="btn btn-primary" type="submit" id="botao-editar-parcela"
                                     style="background-color:#5856d6; padding-inline:1.5em; float:right; margin-bottom: 0.5em; border: 0;">Salvar</button>
                             <?php } ?>

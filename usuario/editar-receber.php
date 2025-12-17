@@ -505,7 +505,7 @@ if (isset($get_id)) {
                             </div>
                             <div class="card-footer">
                                 <button name="acao"
-                                    value="<?php if (!isset($get_acao)) { ?>adicionar<?php } else if (isset($get_acao) && $get_acao == 'editar') { ?>editar<? } ?>"
+                                    value="<?php if (!isset($get_acao)) { ?>adicionar<?php } else if (isset($get_acao) && $get_acao == 'editar') { ?>editar<?php } ?>"
                                     class="btn btn-primary" type="submit" id="botao-editar-parcela"
                                     style="background-color:#5856d6; padding-inline:1.5em; float:right; margin-bottom: 0.5em; border: 0;">Salvar</button>
                             </div>
