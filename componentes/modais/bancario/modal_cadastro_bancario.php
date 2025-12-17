@@ -38,7 +38,7 @@
                         <button type="submit" class="btn-sm btn btn-primary">Gerar</button>
                     </form>
 
-                    <?php if (!empty($_SESSION['ofx_transactions'])): ?>
+                    <?php if (!empty($_SESSION['ofx_transactions']['transactions'])): ?>
                         <form action="movimentacao_manager.php" method="post">
                     <input type="hidden" name="acao" value="adicionar"></input>
                     <input type="hidden" name="conta" value="<?=$_SESSION['ofx_transactions']['ofx_conta']?>"></input>
