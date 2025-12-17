@@ -25,6 +25,7 @@ $get_data_inicial = filter_input(INPUT_GET, 'data_inicial', FILTER_SANITIZE_SPEC
 $get_titulo = filter_input(INPUT_GET, 'titulo') ?: null;
 $get_subtitulo = null;
 $get_custos = filter_input(INPUT_GET, 'filtro_custos') ?? null;
+$get_operacional = filter_input(INPUT_GET, 'filtro_operacional') ?: null;
 if ($get_titulo != null)
     $get_subtitulo = filter_input(INPUT_GET, 'subtitulo') ?: null;
 if ($get_data_final != '' || $get_data_inicial != '') {
@@ -79,10 +80,10 @@ if ($get_data_final != '' || $get_data_inicial != '') {
     }
 
     foreach ($subtitulos as $subtitulo) {
-        $titulo = Con01::read($subtitulo->id_con01, $_SESSION['usuario']->id_empresa, ordenar_por: 'tipo')[0];
-        if (!in_array($titulo, $titulos)) {
-            $titulos[] = $titulo;
-        }
+        $titulo = Con01::read($subtitulo->id_con01, $_SESSION['usuario']->id_empresa, ordenar_por: 'tipo', filtro_operacional:$get_operacional);
+                            if ($titulo && isset($titulo[0]) && !in_array($titulo[0], $titulos)) {
+                                $titulos[] = $titulo[0];
+                            }
     }
 }
 
@@ -129,10 +130,10 @@ if ($get_data_final != '' || $get_data_inicial != '') {
 
                 <div class="card">
                     <div class="card-header">
-                        <button class="btn btn-primary btn-dre-selecionado" style="border-bottom: 2px solid #5856d6;" id="btn-sintetico">
+                        <button class="btn btn-primary btn-dre-selecionado dre-menu-btn" style="border-bottom: 2px solid #5856d6;" id="btn-sintetico">
                             <h3>DRE - Sintético</h3>
                         </button><!--
-    --><button class="btn btn-primary" id="btn-analitico" onclick="window.location.href='analitico.php'">
+    --><button class="btn btn-primary dre-menu-btn" id="btn-analitico" onclick="window.location.href='analitico.php'">
                             <h3>DRE - Analitico</h3>
                         </button>
                     </div>
@@ -163,6 +164,14 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                                         style="border-radius: 0;">
                                                 </div>
                                             </div>
+                                             <div>
+                                                <label for="data_final">Tipo:</label>
+                                                <select class="form-control" name="filtro_operacional" style="height: 53%; border-radius: 0;">
+                                                    <option value=""  <?php if($get_operacional == null)  echo 'selected' ?>>Todos</option>
+                                                    <option value="1" <?php if($get_operacional == 1)  echo 'selected' ?> >Operacional</option>
+                                                    <option value="2" <?php if($get_operacional == 2)  echo 'selected' ?>>Não Operacional</option>
+                                                </select>
+                                                </div>
 
                                         </div>
                                         <div id="filtro-custos">
@@ -401,7 +410,7 @@ if ($get_data_final != '' || $get_data_inicial != '') {
 function prepararGeracao(target) {
     let data_inicial = document.getElementById('data_inicial').value;
     let data_final = document.getElementById('data_final').value;
-    let nomeEmpresa = document.querySelector('#nome-empresa h4').innerHTML
+    let nomeEmpresa = document.querySelector('#nome-empresa h1').innerHTML
     let dataTexto = '';
     if (data_inicial !== '' && data_final !== '') {
         dataTexto = 'Período: ' + data_inicial + ' até ' + data_final;

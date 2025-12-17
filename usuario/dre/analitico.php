@@ -30,62 +30,11 @@ $get_data_inicial = filter_input(INPUT_GET, 'data_inicial', FILTER_SANITIZE_SPEC
 $get_titulo = filter_input(INPUT_GET, 'titulo') ?: null;
 $get_subtitulo = null;
 $get_custos = filter_input(INPUT_GET, 'filtro_custos') ?? null;
+$get_operacional = filter_input(INPUT_GET, 'filtro_operacional') ?: null;
 if ($get_titulo != null)
     $get_subtitulo = filter_input(INPUT_GET, 'subtitulo') ?: null;
 
-if ($get_data_final != '' || $get_data_inicial != '') {
-    // Buscar receitas
-    $recebimentos_parcelas = Rec02::read(
-        null,
-        $_SESSION['usuario']->id_empresa,
-        filtro_data_inicial: $get_data_inicial,
-        filtro_data_final: $get_data_final,
-        filtro_opcao: 'quitados',
-        filtro_por: 'pagamento'
-    );
-    $receitas_por_categoria = [];
-    foreach ($recebimentos_parcelas as $parcela) {
-        $rec01 = Rec01::read(id: $parcela->id_rec01)[0];
-        $cadastro = Cadastro::read($rec01->id_cadastro)[0] ?? null;
-        if ($cadastro) {
-            $categoria = Categoria::read($cadastro->id_categoria)[0] ?? null;
-            $cat_nome = $categoria ? $categoria->nome : 'Sem categoria';
-            if (!isset($receitas_por_categoria[$cat_nome]))
-                $receitas_por_categoria[$cat_nome] = [];
-            $receitas_por_categoria[$cat_nome][] = [
-                'data' => $parcela->data_pag,
-                'descricao' => $rec01->descricao,
-                'valor' => $parcela->valor_pag
-            ];
-        }
-    }
 
-    // Buscar despesas
-    $pagamentos_parcelas = Pag02::read(
-        null,
-        $_SESSION['usuario']->id_empresa,
-        filtro_data_inicial: $get_data_inicial,
-        filtro_data_final: $get_data_final,
-        filtro_opcao: 'quitados',
-        filtro_por: 'pagamento'
-    );
-    $despesas_por_categoria = [];
-    foreach ($pagamentos_parcelas as $parcela) {
-        $pag01 = Pag01::read(id: $parcela->id_pag01)[0];
-        $cadastro = Cadastro::read($pag01->id_cadastro)[0] ?? null;
-        if ($cadastro) {
-            $categoria = Categoria::read($cadastro->id_categoria)[0] ?? null;
-            $cat_nome = $categoria ? $categoria->nome : 'Sem categoria';
-            if (!isset($despesas_por_categoria[$cat_nome]))
-                $despesas_por_categoria[$cat_nome] = [];
-            $despesas_por_categoria[$cat_nome][] = [
-                'data' => $parcela->data_pag,
-                'descricao' => $pag01->descricao,
-                'valor' => $parcela->valor_pag
-            ];
-        }
-    }
-}
 
 
 ?>
@@ -130,10 +79,10 @@ if ($get_data_final != '' || $get_data_inicial != '') {
 
                 <div class="card">
                     <div class="card-header">
-                        <button class="btn btn-primary" id="btn-sintetico" onclick="window.location.href='sintetico.php'">
+                        <button class="btn btn-primary dre-menu-btn" id="btn-sintetico" onclick="window.location.href='sintetico.php'">
                             <h3>DRE - Sintético</h3>
                         </button><!--
-    --><button class="btn btn-primary btn-dre-selecionado" style="border-bottom: 2px solid #5856d6;" id="btn-analitico">
+    --><button class="btn btn-primary btn-dre-selecionado dre-menu-btn" style="border-bottom: 2px solid #5856d6;" id="btn-analitico">
                             <h3>DRE - Analitico</h3>
                         </button>
                     </div>
@@ -159,6 +108,14 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                                 <input type="date" id="data_final" name="data_final"
                                                     value="<?= $get_data_final ?>" class="form-control">
                                             </div>
+                                        </div>
+                                        <div>
+                                                <label for="data_final">Tipo:</label>
+                                                <select class="form-control" name="filtro_operacional" style="height: 53%; border-radius: 0;">
+                                                    <option value=""  <?php if($get_operacional == null)  echo 'selected' ?>>Todos</option>
+                                                    <option value="1" <?php if($get_operacional == 1)  echo 'selected' ?> >Operacional</option>
+                                                    <option value="2" <?php if($get_operacional == 2)  echo 'selected' ?>>Não Operacional</option>
+                                                </select>
                                         </div>
 
                                         <div id="filtro-custos">
@@ -189,7 +146,7 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                         <label for="subtitulo">Sub-Titulo</label>
                                             <div id="subtitulo-dre">
                                                 <select id="input-subtitulo" class="input-select-geral" name="subtitulo" class="form-control" onchange="this.form.submit()">
-                                                    <option value="">  Selecione</option>
+                                                    <option value=""> Selecione</option>
                                                     <?php
                                                     if(isset($get_titulo)) {
                                                         foreach(Con02::read(null, $_SESSION['usuario']->id_empresa, con01_id: $get_titulo) as $subtitulo) {?>
@@ -298,9 +255,9 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                             }
                         }
                         foreach ($subtitulos as $subtitulo) {
-                            $titulo = Con01::read($subtitulo->id_con01, $_SESSION['usuario']->id_empresa, ordenar_por: 'tipo')[0];
-                            if (!in_array($titulo, $titulos)) {
-                                $titulos[] = $titulo;
+                            $titulo = Con01::read($subtitulo->id_con01, $_SESSION['usuario']->id_empresa, ordenar_por: 'tipo', filtro_operacional:$get_operacional);
+                            if ($titulo && isset($titulo[0]) && !in_array($titulo[0], $titulos)) {
+                                $titulos[] = $titulo[0];
                             }
                         }
 
@@ -320,7 +277,7 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                             data-bs-target="#<?= $collapseId ?>" aria-expanded="false"
                                             aria-controls="<?= $collapseId ?>">
                                             <span
-                                                style="color: #303640; font-size:1.1em; font-weight:500;"><?= htmlspecialchars($titulo->nome); ?></span>
+                                                style="color: #303640; font-size:90%; font-weight:500;"><?= ucfirst($titulo->nome); ?></span>
                                         </button>
                                     </h2>
                                     <div id="<?= $collapseId ?>" class="accordion-collapse collapse"
@@ -378,24 +335,31 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                                                 $centro_custos = 'N/A';
                                                                 if ($titulo->tipo == 'D') {
                                                                     $obj = Pag01::read($rec->id_pag01)[0];
-                                                                    $pagamento_metodo = TipoPagamento::read($rec->id_pgto)[0] ?? null;
                                                                 } else {
                                                                     $obj = Rec01::read($rec->id_rec01)[0];
-                                                                    $pagamento_metodo = TipoPagamento::read($rec->id_pgto)[0] ?? null;
                                                                 }
                                                                     if($obj->centro_custos != null) {
                                                                         $centro_custos = CentroCustos::read($obj->centro_custos)[0]->nome;
                                                                     }
                                                             
-                                                                $metodo_nome = $pagamento_metodo ? $pagamento_metodo->nome : 'Método não encontrado';
                                                                 $data = $rec->data_pag ? (new DateTime($rec->data_pag))->format('d/m/Y') : '';
-                                                                $descricao = $metodo_nome . ' - ' . $data;
+                                                                $descricao = '';
+                                                                if($obj->id_cadastro != null) {
+                                                                    $cad = Cadastro::read($obj->id_cadastro, id_empresa:$_SESSION['usuario']->id_empresa)[0];
+                                                                    $descricao .= $cad->nom_fant;
+                                                                }
+                                                                if($obj->descricao != null && $obj->descricao != '') {
+                                                                    $descricao .= $descricao != '' ? " - $obj->descricao" : $obj->descricao;
+                                                                }
+                                                                $descricao .= $descricao != '' ? " - Parcela $rec->parcela / $obj->parcelas" : "Parcela $rec->parcela / $obj->parcelas";
+                                                                $descricao .= $descricao != '' ? " - $data" : $data;
+
                                                                 $valor = ($titulo->tipo == 'D') ? $rec->valor_pag * -1 : $rec->valor_pag;
                                                                 $total_subtitulo += $valor;
                                                                 echo '<tr class="tr-dre-analitico">';
                                                                 echo '<td style="width:7rem; text-overflow: ellipsis; white-space: nowrap;">' . htmlspecialchars($centro_custos) . '</td>';
-                                                                echo '<td style="width:84rem;">' . htmlspecialchars($descricao) . '</td>';
-                                                                echo '<td style="width:9rem;" class="valor-monetario"><div>R$</div> <div>' . format_valor_alinhado($valor) . '</div></td>';
+                                                                echo '<td style="width:84rem;">' . htmlspecialchars($descricao) .'</td>';
+                                                                echo '<td style="width:9rem;" ><div class="valor-monetario"><div>R$</div> <div>' . format_valor_alinhado($valor) . '</div></div></td>';
                                                                 echo '</tr>';
                                                             }
                                                             ?>
@@ -467,6 +431,8 @@ if ($get_data_final != '' || $get_data_inicial != '') {
 
                     </div>
                 </div>
+            </div>
+        </div>
 
             <?php } ?>
             
@@ -477,9 +443,12 @@ if ($get_data_final != '' || $get_data_inicial != '') {
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script src="../../choices/choices.js"></script>
 
-<?php
+
+<script>
+
+    <?php
 if(!isset($get_titulo)) { ?>
-    <script>
+    
     var subtituloDiv = document.getElementById('subtitulo-dre-div');
     var tituloSelect = document.getElementById('input-titulo');
     var subtituloSelect = document.getElementById('input-subtitulo');
@@ -489,10 +458,10 @@ if(!isset($get_titulo)) { ?>
     var divChildren = divText.children
     var divBtn = document.querySelector('.inputs-dre-btn');
 
-    subtituloDiv.style.visibility= 'hidden';
-    </script>
+    subtituloDiv.style.display= 'none';
+    
 <?php } else { ?>
-    <script>
+    
     var subtituloDiv = document.getElementById('subtitulo-dre-div');
     var tituloSelect = document.getElementById('input-titulo');
     var subtituloSelect = document.getElementById('input-subtitulo');
@@ -502,13 +471,12 @@ if(!isset($get_titulo)) { ?>
     var divChildren = divText.children
     var divBtn = document.querySelector('.inputs-dre-btn');
 
-     subtituloDiv.style.visibility = 'visible';
+     subtituloDiv.style.display = 'block';
 
 
-    </script>
+    
 <?php }
 ?>
-<script>
     document.addEventListener('DOMContentLoaded', function () {
         var userBtn = document.getElementById('userBtn');
         var userMenu = document.getElementById('userMenu');
@@ -535,7 +503,7 @@ if(!isset($get_titulo)) { ?>
     function prepararGeracao(target) {
     let titulo = document.getElementById('input-titulo').options[document.getElementById('input-titulo').selectedIndex].text;
     let subtitulo = document.getElementById('input-subtitulo').options[document.getElementById('input-subtitulo').selectedIndex].text;
-    let nomeEmpresa = document.querySelector('#nome-empresa h4').innerHTML
+    let nomeEmpresa = document.querySelector('#nome-empresa h1').innerHTML
 
     if(subtitulo == 'Selecione' || subtitulo == null || titulo == null) {
         subtitulo = '';
@@ -585,23 +553,7 @@ if(!isset($get_titulo)) { ?>
             }
         });
 
-        if (tituloId == '') {
-            subtituloDiv.style.visibility= 'hidden';
-            // divText.style.width = 'calc(45% + 1em)';
-            // divBtn.style.width = 'calc(55% - 1em)';
 
-        //     divChildren.forEach(divChildren => {
-        //     divChildren.style.width = 'calc(100%/3)'
-        // });
-        } else {
-            subtituloDiv.style.visibility = 'visible';
-            // divText.style.width = 'calc(60% + 1em)';
-            // divBtn.style.width = 'calc(40% - 1em)';
-
-        //     divChildren.forEach(divChildren => {
-        //     divChildren.style.width = 'calc(100%/4)'
-        // });
-        }
 
         
 
