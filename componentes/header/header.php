@@ -9,11 +9,11 @@ $nomeEmpresa = Empresa::read($_SESSION['usuario']->id_empresa)[0]->nom_fant;
             <button class="btn mb-0" onclick="encolher()">
                 <span class="btn bi bi-list mb-0"></span>
             </button>
-            <a href="index.php">Dashboard</a>
+            <a href="/usuario/index.php">Dashboard</a>
         </div>
 
         <div id="nome-empresa">
-            <h4><?=$nomeEmpresa?></h4>
+            <h1><?=$nomeEmpresa?></h1>
         </div>
         <!-- <div id="conta-header">
             <button id="userBtn" type="button">
