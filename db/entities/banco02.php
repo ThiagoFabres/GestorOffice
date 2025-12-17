@@ -62,7 +62,19 @@ class Ban02 {
         $palavra = null,
         $numero_pagina = null,
         $read_paginas = null,
-        $numero_exibir = null
+        $numero_exibir = null,
+        $filtro_data_inicial = null,
+        $filtro_data_final = null,
+        $filtro_documento = null,
+        $filtro_conciliado = false,
+        $filtro_titulo = null,
+        $filtro_subtitulo = null,
+        $filtro_conta = null,
+        $filtro_tipo = null,
+        $id_original = null,
+        $read_desmembramento = null,
+        $dre_read = null,
+        $filtro_operacional = null
         ) {
 
         $pdo = (new Database())->connect();
@@ -81,7 +93,7 @@ class Ban02 {
             $conditions[] =  ' id_empresa = :id_empresa';
         }
         if($documento != null) {
-            $conditions[] =  ' LOWER(documento) = :documento';
+            $conditions[] =  ' documento = :documento';
         }
 
         if($tipo != null) {
@@ -91,17 +103,62 @@ class Ban02 {
                 $conditions[] =  ' valor <= 0';
             }
         }
+
         if($palavra != null) {
             $conditions[] = ' id_con01 IS NULL';
             $conditions[] = ' id_con02 IS NULL';
             $conditions[] = ' descricao LIKE :palavra';
         }
+        if($filtro_data_inicial != null) {
+            $conditions[] = ' data >= :filtro_data_inicial';
+        }
+        if($filtro_data_final != null) {
+            $conditions[] = ' data <= :filtro_data_final';
+        }
+
+        if($filtro_documento != null) {
+            $conditions[] = ' documento = :filtro_documento';
+        }
+
+        if($filtro_conciliado) {
+            $conditions[] = ' id_con01 IS NULL';
+            $conditions[] = ' id_con02 IS NULL';
+        }
+        if($dre_read) {
+            $conditions[] = ' id_con01 IS NOT NULL';
+            $conditions[] = ' id_con02 IS NOT NULL';
+        }
+        if($filtro_titulo != null) {
+            $conditions[] = ' id_con01 = :filtro_titulo';
+        }
+        if($filtro_subtitulo != null) {
+            $conditions[] = ' id_con02 = :filtro_subtitulo';
+        }
+        if($filtro_conta != null) {
+            $conditions[] = ' id_ban01 = :filtro_conta';
+        }
+        if($filtro_tipo != null) {
+            if($filtro_tipo == 'C') {
+                $conditions[] = ' valor > 0';
+            } else if($filtro_tipo == 'D') {
+                $conditions[] = ' valor < 0';
+            }
+            
+        }
+        if($id_original != null) {
+            $conditions[] = ' id_original = :id_original';
+            
+        }
+        if($read_desmembramento != null) {
+            $conditions[] = ' id_original != id';
+        }
+        
 
         if ($conditions) {
             $sql .= ' WHERE ' . implode(' AND ', $conditions);
         }
 
-        $sql .= ' ORDER BY data DESC';
+        $sql .= ' ORDER BY data DESC, documento DESC';
 
         if($numero_exibir != null) {
             $sql .= ' LIMIT ' . intval($numero_exibir);
@@ -124,6 +181,28 @@ class Ban02 {
         if($palavra != null) {
             $stmt->bindValue(':palavra', '%' . strtolower($palavra) . '%');
         }
+        if ($filtro_data_inicial !== null && $filtro_data_inicial != '') {
+            $stmt->bindValue(':filtro_data_inicial', $filtro_data_inicial);
+        }
+        if ($filtro_data_final !== null && $filtro_data_final != '') {
+            $stmt->bindValue(':filtro_data_final', $filtro_data_final);
+        }
+        if ($filtro_documento !== null) {
+            $stmt->bindValue(':filtro_documento', $filtro_documento);
+        }
+        if ($filtro_titulo !== null) {
+            $stmt->bindValue(':filtro_titulo', $filtro_titulo);
+        }
+        if ($filtro_subtitulo !== null) {
+            $stmt->bindValue(':filtro_subtitulo', $filtro_subtitulo);
+        }
+        if ($filtro_conta !== null) {
+            $stmt->bindValue(':filtro_conta', $filtro_conta);
+        }
+        if ($id_original !== null) {
+            $stmt->bindValue(':id_original', $id_original);
+        }
+
 
 
         $stmt->execute();
