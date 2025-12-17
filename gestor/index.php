@@ -17,7 +17,6 @@ $nomeEmpresa = Empresa::read($_SESSION['usuario']->id_empresa)[0]->nom_fant;
 require_once __DIR__ . '/gestor.php';
 $erro = filter_input(INPUT_GET, 'erro');
 
-
 ?>
 
 
@@ -33,13 +32,15 @@ $erro = filter_input(INPUT_GET, 'erro');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
+    <link rel="stylesheet" href="/../components/header/header.css"> 
+    <link rel="stylesheet" href="/../components/lateral/lateral.css">
     <title>Gestor Office Control</title>
 </head>
 
 <body id="body" >
 
 
-    <nav id="barra-lateral">
+    <div id="barra-lateral" style="">
         <div id="logo-container">
             <img width="220px" height="220px" src="/gestor-office.png" alt="Logo" class="logo">
         </div>
@@ -51,10 +52,10 @@ $erro = filter_input(INPUT_GET, 'erro');
 
         </div>
 
-    </nav>
+    </div>
 
 
-    <div id="header">
+    <div id="header" style="right:10em">
         
         <button onclick="encolher()" style="background:none;border:none;font-size:1.2em;color:#181f2b;outline:none;cursor:pointer; z-index:1000;">
             <span class="btn bi bi-list"></span>
@@ -63,18 +64,13 @@ $erro = filter_input(INPUT_GET, 'erro');
     <div id="nome-empresa">
             <h4><?=$nomeEmpresa?></h4>
         </div>
-    <div id="menu-superior">
-        <a class="superior-item" href="/gestor/">Dashboard</a>
-    </div>
+
     <div class="conta-header" style="position:relative; float:right; margin-right:2em;">
-        <button id="userBtn" type="button" style="background:none;border:none;font-size:1.2em;color:#181f2b;outline:none;cursor:pointer;">
-            <span style="color:#181f2b;"><?= $_SESSION['usuario']->nome ?> </span>
-        </button>
-        <div id="userMenu" style="right:0; z-index: 1000000;">
+
             <a href="/" class="dropdown-item">
                 <i class="bi bi-box-arrow-left"></i> Logout
-        </a>
-        </div>
+            </a>
+
     </div>
     </div>
 
