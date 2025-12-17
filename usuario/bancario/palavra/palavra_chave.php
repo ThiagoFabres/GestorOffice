@@ -68,7 +68,7 @@ $acao = filter_input(INPUT_GET, 'acao', FILTER_SANITIZE_STRING);
         
         <card class="card">
             <div class="card-header">
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal_cadastro_palavra">Adicionar Palalavra</button>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal_cadastro_palavra">Adicionar Palavra</button>
             </div>
             <div class="card-body">
                 <table class="table">
