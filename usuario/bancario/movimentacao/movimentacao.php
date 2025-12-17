@@ -14,20 +14,53 @@ require_once __DIR__ . '/../../../db/entities/banco01.php';
 require_once __DIR__ . '/../../../db/entities/banco02.php';
 require_once __DIR__ . '/../../../db/entities/palavra_chave.php';
 require_once __DIR__ . '/../../../db/entities/contas.php';
+require_once __DIR__ . '/../../../db/entities/recebimentos.php';
+require_once __DIR__ . '/../../../db/entities/pagar.php';
+require_once __DIR__ . '/../../../db/entities/pagamento.php';
+require_once __DIR__ . '/../../../db/entities/centrocustos.php';
 require_once __DIR__ . '/buscar_documento.php';
 
 $numero_exibir = filter_input(INPUT_POST, 'numero_exibido') ?? filter_input(INPUT_GET, 'numero_exibido') ?? 10;
 $numero_pagina = filter_input(INPUT_POST, 'pagina') ?? filter_input(INPUT_GET, 'pagina') ?? 1;
+
+$get_filtro_data_inicial = filter_input(INPUT_GET, 'filtro_data_inicial');
+if($get_filtro_data_inicial == '') $get_filtro_data_inicial = null;
+
+$get_filtro_data_final = filter_input(INPUT_GET, 'filtro_data_final');
+if($get_filtro_data_final == '') $get_filtro_data_final = null;
+
+$get_filtro_titulo = filter_input(INPUT_GET, 'filtro_titulo');
+if($get_filtro_titulo == '') $get_filtro_titulo = null;
+
+$get_filtro_subtitulo = filter_input(INPUT_GET, 'filtro_subtitulo');
+if($get_filtro_subtitulo == '') $get_filtro_subtitulo = null;
+
+$get_filtro_tipo = filter_input(INPUT_GET, 'filtro_tipo');
+if($get_filtro_tipo == '') $get_filtro_tipo = null;
+
+$get_filtro_conta = filter_input(INPUT_GET, 'filtro_conta');
+if($get_filtro_conta == '') $get_filtro_conta = null;
+
+$get_filtro_conciliado = filter_input(INPUT_GET, 'filtro_conciliado') == 'on' ? true : false;
+
+$erro = filter_input(INPUT_GET, 'erro');
+
+
 $numero_pagina = intval($numero_pagina);
 $numero_exibir = intval($numero_exibir);
 
 $bancario_paginas = Ban02::read(
+    id:null,
     id_empresa:$_SESSION['usuario']->id_empresa,
-    read_paginas:true
+    read_paginas:true,
+    filtro_data_inicial: $get_filtro_data_inicial  ?? null,
+    filtro_data_final: $get_filtro_data_final ?? null,
+    filtro_conciliado: $get_filtro_conciliado ?? null,
+    filtro_titulo: $get_filtro_titulo ?? null,
+    filtro_subtitulo: $get_filtro_subtitulo ?? null,
+    filtro_conta: $get_filtro_conta ?? null,
+    filtro_tipo: $get_filtro_tipo,
 ); 
-echo '<pre>';
-var_dump($bancario_paginas);
-echo '</pre>';
 
 $total_paginas = ceil($bancario_paginas / $numero_exibir);
 
@@ -35,8 +68,42 @@ $novo_documento = buscarDocumento();
 
 $lateral_target = 'movimentacao';
 $lateral_bancario = true;
-$acao = filter_input(INPUT_GET, 'acao', FILTER_SANITIZE_STRING);
+$acao = filter_input(INPUT_GET, 'acao', FILTER_SANITIZE_STRING) ?? null;
+if($acao == null) $acao = filter_input(INPUT_POST, 'acao', FILTER_SANITIZE_STRING) ?? null;
 $ofx = filter_input(INPUT_GET, 'ofx', FILTER_SANITIZE_NUMBER_INT);
+
+$filtros = [];
+if ($get_filtro_data_inicial != '')
+    $filtros[] = 'filtro_data_inicial=' . $get_filtro_data_inicial;
+if ($get_filtro_data_final != '')
+    $filtros[] = 'filtro_data_final=' . $get_filtro_data_final;
+if ($get_filtro_conciliado != '')
+    $filtros[] = 'filtro_conciliado=on';
+if($get_filtro_tipo != '')
+    $filtros[] = 'filtro_tipo=' . $get_filtro_tipo;
+if($get_filtro_titulo != '' ) 
+    $filtros[] = 'filtro_titulo=' . $get_filtro_titulo;
+if($get_filtro_subtitulo != '') 
+    $filtros[] = 'filtro_subtitulo=' . $get_filtro_subtitulo;
+if($get_filtro_conta != '')
+    $filtros[] = 'filtro_conta=' . $get_filtro_conta;
+if($numero_exibir != 10) 
+    $filtros[] = 'numero_exibido=' . $numero_exibir;
+if($numero_pagina != 1) 
+    $filtros[] = 'pagina=' . $numero_pagina;
+
+if ($filtros != []) {
+    
+    $caminho = 'movimentacao.php?' . implode('&', $filtros);
+    $caminho_get = urlencode('movimentacao.php?' . implode('&', $filtros));
+    $caminho_sem_pag = $filtros;
+    array_pop($caminho_sem_pag);
+    $caminho_sem_pag = 'movimentacao.php?' . implode('&', $caminho_sem_pag);
+} else {
+    $caminho = 'movimentacao.php';
+    $caminho_get = urlencode('movimentacao.php');
+    $caminho_sem_pag = 'movimentacao.php';
+}
 ?>
 
 
@@ -60,11 +127,11 @@ $ofx = filter_input(INPUT_GET, 'ofx', FILTER_SANITIZE_NUMBER_INT);
 
 
 <link rel="stylesheet" href="/style.css">
-<link rel="stylesheet" href="movimentacao.css">
+
 <link rel="stylesheet" href="/componentes/modais/lancamentos/modais.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
 <link rel="stylesheet" href="/../../../choices/choices.css"></link>
-
+<link rel="stylesheet" href="movimentacao.css">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
@@ -77,43 +144,136 @@ $ofx = filter_input(INPUT_GET, 'ofx', FILTER_SANITIZE_NUMBER_INT);
     <?php require_once __DIR__ . '/../../../componentes/lateral/lateral.php'?>
     <?php require_once __DIR__ . '/../../../componentes/header/header.php' ?>
     <div class="main" id="container">
-        <button class="btn btn-danger btn-sm" onclick="window.location.href='movimentacao_manager.php?acao=limpar_titulo'">Limpar Titulo</button>
+        <!-- <button class="btn btn-danger btn-sm" onclick="window.location.href='movimentacao_manager.php?acao=limpar_titulo'">Limpar Titulo</button> -->
         <button  data-bs-toggle="modal" data-bs-target="#modal_cadastro_bancario" class="btn btn-primary" >Upload Arquivo OFX</button>
+        <div class="row">
         <div class="card">
-            <div class="card-header d-flex fd-row justify-content-center align-items-center">
-                
-                    <div class="card-header-borda d-flex flex-row justify-content-space-between align-items-center">
-                        <div class="inputs-pagamento-text ai-start justify-content-start">
+            <form method="get" action="movimentacao.php">
+            <div class="card-header d-flex fd-row  align-items-center"> 
+                    <!-- <div class="card-header-borda d-flex flex-row align-items-center" style="justify-content: space-between;"> -->
+                        <div style=" display: flex; flex-direction: column;" class="input-movimentacao-text-group">    
+                            <div class="inputs-pagamento-text">
+                                
+                                <!-- Data inicial -->
+                                    <div>
+                                        <label style="display:block; height:17px">Data Inicial:</label>
+                                        <input type="date" id="filtro_data_inicial"
+                                            name="filtro_data_inicial"
+                                            value="<?=$get_filtro_data_inicial?>"
+                                            class="form-control" style="border-top-right-radius: 0; height: 3.6em; padding-block: 7.5px; margin:0;">
+                                    </div>
 
-                            <!-- Data inicial -->
-                            <div style="width: 30%;">
-                                <label for="filtro_data_inicial">Data Inicial:</label>
-                                <input type="date" id="filtro_data_inicial"
-                                    name="filtro_data_inicial"
-                                    value=""
-                                    class="form-control" style="border-top-right-radius: 0;">
-                            </div>
+                                    <!-- Data final -->
+                                    <div>
+                                        <label style="display:block; height:17px">Data Final:</label>
+                                        <input type="date" id="filtro_data_final"
+                                            name="filtro_data_final"
+                                            value="<?=$get_filtro_data_final?>" class="form-control"
+                                            style="border-top-right-radius: 0; height: 3.6em; padding-block: 7.5px; margin:0;">
+                                    </div>
 
-                            <!-- Data final -->
-                            <div style="width: 30%;">
-                                <label for="filtro_data_final">Data Final:</label>
-                                <input type="date" id="filtro_data_final"
-                                    name="filtro_data_final"
-                                    value="" class="form-control"
-                                    style="border-radius: 0;">
-                            </div>
+                                    <div class="justify-content-between">
+                                        <label >Tipo:</label>
+                                        <select id="filtro_tipo" name="filtro_tipo">
+                                            <option value="">Selecione</option>
+                                            <option <?php if($get_filtro_tipo == 'C') echo 'selected' ?> value="C">Crédito</option>
+                                            <option <?php if($get_filtro_tipo == 'D') echo 'selected' ?> value="D">Débito</option>
+                                        </select>
+                                    </div>
+                                    
+                                    
+                                </div>
+                                <div class="inputs-pagamento-text ai-start">
+                                
+                                    <div>
+                                        <label for="filtro_documento">Conta:</label>
+                                        <select id="conta-filtro" name="filtro_conta">
+                                            <option value="">Selecione</option>
+                                            <?php
+                                    // Buscar todos os subtítulos da empresa
+                                    $todasContas = Ban01::read(null, $_SESSION['usuario']->id_empresa);
+                                    foreach ($todasContas as $ban01) { ?>
+                                        <option value="<?= $ban01->id ?>" <?php if($ban01->id == $get_filtro_conta) echo 'selected' ?> >
+                                            <?= htmlspecialchars($ban01->nome, ENT_QUOTES, 'UTF-8') ?>
+                                        </option>
+                                    <?php } ?>
+                                            
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label for="filtro_data_final">Titulo:</label>
+                                        <select id="titulo-filtro" name="filtro_titulo">
+                                            <option value="">Selecione</option>
+                                            <?php $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa, $ban02_tipo);
+                                        foreach ($titulos as $titulo) { ?>
+                                            <option value="<?= $titulo->id ?>" <?php if($titulo->id == $get_filtro_titulo) echo 'selected' ?> >
+                                                <?= htmlspecialchars($titulo->nome, ENT_QUOTES, 'UTF-8') ?>
+                                            </option>
+                                        <?php } ?>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label for="filtro_documento">Subtitulo:</label>
+                                        <select id="subtitulo-filtro" name="filtro_subtitulo">
+                                            <?php
+                                    // Buscar todos os subtítulos da empresa
+                                    $todosSubtitulos = Con02::read(null, $_SESSION['usuario']->id_empresa);
+                                    foreach ($todosSubtitulos as $sub) { ?>
+                                        <option value="<?= $sub->id ?>"
+                                             <?php if($sub->id == $get_filtro_subtitulo) echo 'selected' ?>
+                                            data-titulo-id="<?= $sub->id_con01 ?>">
+                                            <?= htmlspecialchars($sub->nome, ENT_QUOTES, 'UTF-8') ?>
+                                        </option>
+                                    <?php } ?>
+                                            
+                                        </select>
+                                    </div>
+
+                                    
+
+                                    
+                                    
+                                    
+                                </div>
+                                
                         </div>
-                        <div class="inputs-pagamento-btn d-flex fd-column ai-start justify-content-space-between">
-                            <div style="width: 25%; display:flex; flex-direction:row; gap: 3%;">
-                                <button class="btn btn-primary btn-sm">Buscar</button>
-                                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modal_conciliar_palavra">Conciliar</button>
+                    
+                        
+                            
+                            <div class="inputs-pagamento-btn d-flex fd-column ai-start justify-content-space-between" style="width: 30%; justify-content: space-evenly; gap: 10%;">
+                                <div class="form-check">
+                                        <label style="font-size: 100%; overflow: visible; white-space: nowrap;" for="filtro_documento">Não Conciliados:</label>
+                                        <input type="checkbox" <?php if($get_filtro_conciliado) echo 'checked' ?> name="filtro_conciliado">
+                                </div>
+                                <div style=" display:flex; flex-direction:row; gap: 3%;">
+                                    <div class="d-flex flex-direction-column" style="flex-direction: column; justify-content: center;">
+                                        <div class="d-flex flex-direction-row" style="flex-direction: row; justify-content: space-between; gap:0.5em;">
+                                            <button class="btn btn-primary btn" type="submit">Buscar</button>
+                                            <a class="btn btn-secondary btn" href="movimentacao.php">Limpar</a>
+                                        </div>
+                                        <button type="button" class="btn btn-success btn" data-bs-toggle="modal" data-bs-target="#modal_conciliar_palavra">Conciliar</button>
+                                    </div>
+                                     
+                                </div>
                             </div>
-                        </div>
-                    </div>
+                            <!-- </div> -->
+                            </div> 
+                        </form>
+                                       
+                            
+                            
+                                    
+                                    
+
+
+                    
                 
-            </div>
-            <div class="card-body">
-                <table class="table table-hover" >
+            
+            <div class="card-body dragscroll" style="padding:0;">
+                <div id="conteudo-pdf">
+                <table class="table table-hover tabela-bancario" >
                     <thead>
                         <tr class="tr-header">
                             <th>Documento</th>
@@ -125,22 +285,41 @@ $ofx = filter_input(INPUT_GET, 'ofx', FILTER_SANITIZE_NUMBER_INT);
                             <th>Subtítulo</th>
                             <th>Descrição</th>
                             <th>Descrição Complementar</th>
+                            <th class="td-acoes">Conciliar</th>
+                            <th class="td-acoes">Desmembrar</th>
+                            <th class="td-acoes">Editar</th>
+                            <th class="td-acoes">Quitar</th>
                         </tr>
                     </thead>
                     <tbody >
                         <?php
 
+                        
                         $movimentacoes = Ban02::read(
                             id_empresa: $_SESSION['usuario']->id_empresa,
                             numero_exibir: $numero_exibir,
-                            numero_pagina: $numero_pagina
+                            numero_pagina: $numero_pagina,
+                            filtro_data_inicial: $get_filtro_data_inicial ??null,
+                            filtro_data_final: $get_filtro_data_final ?? null,
+                            filtro_conciliado:$get_filtro_conciliado,
+                            filtro_titulo: $get_filtro_titulo ?? null,
+                            filtro_subtitulo: $get_filtro_subtitulo ?? null,
+                            filtro_conta: $get_filtro_conta ?? null,
+                            filtro_tipo: $get_filtro_tipo,
                         );
 
                          if(!empty($movimentacoes)) {
+                            
                             foreach($movimentacoes as $movimentacao) {
+                                
                                 // echo '<pre>';
                                 // print_r($movimentacao);
                                 // echo '</pre>';
+                                if(empty($filtros)) {
+                                $link = $caminho . '?';
+                            } else {$link = $caminho . '&';}
+                                $link .= 'acao=conciliar&id=' . $movimentacao->id;
+                            
                             if($movimentacao->id_con01 != null) {
                                 $con01 = Con01::read($movimentacao->id_con01, $_SESSION['usuario']->id_empresa)[0];
                             } else {
@@ -157,35 +336,46 @@ $ofx = filter_input(INPUT_GET, 'ofx', FILTER_SANITIZE_NUMBER_INT);
                                 $cor_parcela = 'parcela_cor_vermelha';
                             }
                                 $tipo = $movimentacao->valor < 0 ? 'Débito' : 'Crédito';
+                                $caminho_quitar = $movimentacao->valor < 0 ? '/usuario/pagar.php?filtro_data_inicial='.$movimentacao->data.'&filtro_data_final='.$movimentacao->data.'&opcao_filtro=abertos&filtro_por=lancamento' : '/usuario/receber.php?filtro_data_inicial='.$movimentacao->data.'&filtro_data_final='.$movimentacao->data.'&opcao_filtro=abertos&filtro_por=lancamento';
                                 $data_lancamento = DateTime::createFromFormat('Y-m-d', $movimentacao->data)->format('d/m/Y');
                                 $conta_nome = Ban01::read($movimentacao->id_ban01, $_SESSION['usuario']->id_empresa)[0]->nome;
                          {?>
-                         <tr class="<?=$cor_parcela?> tr-bancario" onclick="window.location.href='movimentacao.php?acao=conciliar&id=<?= $movimentacao->id ?>'">
-                            <td><?=$movimentacao->documento?></td>
-                            <td><?=$data_lancamento?></td>
-                            <td><?=$tipo?></td>
-                            <td>R$ <?=$movimentacao->valor?></td>
-                            <td><?=$conta_nome?></td>
-                            <td><?= isset($con01) ? $con01->nome : ''?></td>
-                            <td><?= isset($con02) ? $con02->nome : ''?></td>
-                            <td><?=$movimentacao->descricao?></td>
-                            <td><?=$movimentacao->descricao_comp?></td>
-                         </tr>
+                         <tr class="<?=$cor_parcela?> tr-bancario" >
+                            <td onclick="window.location.href='<?=$link?>'"><?=$movimentacao->documento?></td>
+                            <td onclick="window.location.href='<?=$link?>'"><?=$data_lancamento?></td>
+                            <td onclick="window.location.href='<?=$link?>'"><?=$tipo?></td>
+                            <td onclick="window.location.href='<?=$link?>'">R$ <?=number_format($movimentacao->valor, 2, ',', '.', )?></td>
+                            <td onclick="window.location.href='<?=$link?>'"><?=$conta_nome?></td>
+                            <td onclick="window.location.href='<?=$link?>'"><?= isset($con01) ? $con01->nome : ''?></td>
+                            <td onclick="window.location.href='<?=$link?>'"><?= isset($con02) ? $con02->nome : ''?></td>
+                            <td onclick="window.location.href='<?=$link?>'"><?=$movimentacao->descricao?></td>
+                            <td onclick="window.location.href='<?=$link?>'"><?=$movimentacao->descricao_comp?></td>
+                            <td class="td-acoes"><button class="btn" type="button" onclick="window.location.href='<?php if(empty($filtros)) {echo $caminho . '?';} else {echo $caminho . '&';}?>acao=conciliar&id=<?= $movimentacao->id ?>'"><i class="bi bi-clipboard-check"></i></button></td>
+                            <td class="td-acoes">
+                                <button class="btn" type="button" 
+                                <?php if($movimentacao->id_original != null ) echo 'disabled'?> 
+                                onclick="window.location.href='<?php if(empty($filtros)) {echo $caminho . '?';} else {echo $caminho . '&';}?>acao=desmembrar&id=<?= $movimentacao->id ?>'">
+                                    <i class="bi bi-code-slash"></i>
+                                </button>
+                            </td>
+                            <td class="td-acoes"><button class="btn" type="button" onclick="window.location.href='<?php if(empty($filtros)) {echo $caminho . '?';} else {echo $caminho . '&';}?>acao=visualizar&id=<?= $movimentacao->id ?>'"><i class="bi bi-pen-fill"></i></button></td>
+
+                            <td class="td-acoes">
+                                <button class="btn" type="button" <?php if($movimentacao->id_con01 == null || $movimentacao->id_con02 == null) echo 'disabled'?> onclick="window.location.href='<?php if(empty($filtros)) {echo $caminho . '?';} else {echo $caminho . '&';}?>acao=quitar_bancario&id=<?=$movimentacao->id?>'" >
+                                    <i class="bi bi-arrow-90deg-up" ></i>
+                                </button>
+                            </td>
+                        </tr>
                         <?php } } }?>
-                        <?php
-                        // echo $novo_documento;
-                        // echo '<pre>';
-                        // print_r($_SESSION);
-                        // echo '</pre>';
-                        ?>
                     </tbody>
                 </table>
+                </div>
             </div>
             <div class="card-footer">
                     <div class="card-select-pagina">
                         <?php
                         ?>
-                        <form method="post" action="movimentacao.php">
+                        <form method="post" action="<?=$caminho?>">
                             <?php if ($numero_exibir != 10) { ?> <input type="hidden" value="<?= $numero_exibir ?>"
                                     name="numero_exibido" /> <?php } ?>
 
@@ -210,7 +400,7 @@ $ofx = filter_input(INPUT_GET, 'ofx', FILTER_SANITIZE_NUMBER_INT);
 
                     <div class="card-select-numero">
                         <div>
-                            <form method="post" action="movimentacao.php">
+                            <form method="post" action="<?=$caminho_sem_pag?>">
 
                                 <select class="form-control" onchange="this.form.submit()" name="numero_exibido">
                                     <option <?php if ($numero_exibir == 5) { ?> selected <?php } ?> value="5">5</option>
@@ -224,15 +414,25 @@ $ofx = filter_input(INPUT_GET, 'ofx', FILTER_SANITIZE_NUMBER_INT);
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class="relatorios-botoes">
+            <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="gerarpdf('pagar', document.querySelector('#nome-empresa h1').innerHTML)">Gerar PDF</button>
+            <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="gerarexcel('pagar', document.querySelector('#nome-empresa h1').innerHTML)">Gerar Excel</button>
+        </div>
         </div>
         
-    </div>
+        
     
 
     <?php 
     require_once __DIR__ . '/../../../componentes/modais/bancario/modal_cadastro_bancario.php';
     require_once __DIR__ . '/../../../componentes/modais/bancario/modal_conciliar.php';
     require_once __DIR__ . '/../../../componentes/modais/bancario/modal_conciliar_palavra.php';
+    require_once __DIR__ . '/../../../componentes/modais/bancario/modal_desmembrar.php';
+    require_once __DIR__ . '/../../../componentes/modais/bancario/modal_visualizar.php';
+    require_once __DIR__ . '/../../../componentes/modais/bancario/modal_quitar_bancario.php';
+    require_once __DIR__ . '/../../../componentes/modais/bancario/modal_quitar.php';
+
     // Limpa a sessão após exibir a tabela para não mostrar em acessos futuros
     if (isset($_SESSION['ofx_transactions'])) {
         unset($_SESSION['ofx_transactions']);
@@ -247,10 +447,20 @@ $ofx = filter_input(INPUT_GET, 'ofx', FILTER_SANITIZE_NUMBER_INT);
         unset($_SESSION['dias_usados']);
     }
     ?>
+    </div>
 
 </body>
 
 <script>
+    let origemInput = document.getElementById('desc_comp_original_origem')
+        let destinoInput = document.getElementById('desc_comp_original_destino')
+        if (origemInput && destinoInput) {
+            // Para selects, datas e textos
+            origemInput.addEventListener('input', function () {
+                destinoInput.value = origemInput.value;
+            });
+        }
+        
     document.addEventListener('DOMContentLoaded', function () {
         var userBtn = document.getElementById('userBtn');
         var userMenu = document.getElementById('userMenu');
@@ -475,7 +685,7 @@ $ofx = filter_input(INPUT_GET, 'ofx', FILTER_SANITIZE_NUMBER_INT);
             var Modal = new bootstrap.Modal(modalEl);
             Modal.show();
             modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'movimentacao.php';
+                window.location.href = '<?=$caminho?>';
             });
         });
     </script>
@@ -492,12 +702,293 @@ $ofx = filter_input(INPUT_GET, 'ofx', FILTER_SANITIZE_NUMBER_INT);
             var Modal = new bootstrap.Modal(modalEl);
             Modal.show();
             modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'movimentacao.php';
+                window.location.href = '<?=$caminho?>';
             });
         });
     </script>
 <?php } ?>
+<?php if($acao == 'desmembrar') {?>
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('modal_desmembrar');
+            var Modal = new bootstrap.Modal(modalEl);
+            Modal.show();
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                window.location.href = '<?=$caminho?>';
+            });
+        });
+    </script>
+<?php } ?>
+<?php if($acao == 'visualizar') {?>
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('modal_visualizar');
+            var Modal = new bootstrap.Modal(modalEl);
+            Modal.show();
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                window.location.href = '<?=$caminho?>';
+            });
+        });
+    </script>
+<?php } ?>
+<?php if($acao == 'quitar_bancario') {?>
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('modal_quitar_bancario');
+            var Modal = new bootstrap.Modal(modalEl);
+            Modal.show();
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                window.location.href = '<?=$caminho?>';
+            });
+        });
+    </script>
+<?php } ?>
+<?php if($acao == 'quitar') {?>
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('modal_quitar');
+            var Modal = new bootstrap.Modal(modalEl);
+            Modal.show();
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                window.location.href = '<?=$caminho?>';
+            });
+        });
+    </script>
+<?php } ?>
+<script>
+    
 
+        // ========== INICIALIZAÇÃO DO CHOICES.JS ==========
+        const tituloFiltroElement = document.querySelector('#titulo-filtro');
+        const subtituloFiltroElement = document.querySelector('#subtitulo-filtro');
+        const tituloModalElement = document.querySelector('#titulo');
+        const subtituloModalElement = document.querySelector('#subtitulo');
+
+        // IMPORTANTE: Guarda os subtítulos ANTES de inicializar Choices.js
+        const todosSubtitulos = subtituloFiltroElement ? 
+            Array.from(subtituloFiltroElement.querySelectorAll('option')).map(opt => ({
+                value: opt.value,
+                label: opt.textContent.trim(),
+                tituloId: opt.getAttribute('data-titulo-id')
+            })) : [];
+
+        const todosSubtitulosModal = subtituloModalElement ?
+            Array.from(subtituloModalElement.querySelectorAll('option')).map(opt => ({
+                value: opt.value,
+                label: opt.textContent.trim(),
+                tituloId: opt.getAttribute('data-titulo-id')
+            })) : [];
+
+        // Inicializa Choices.js nos elementos de filtro
+        let tituloFiltroChoice = null;
+        let subtituloFiltroChoice = null;
+        
+        if (tituloFiltroElement && typeof Choices !== 'undefined') {
+            tituloFiltroChoice = new Choices(tituloFiltroElement, {
+                searchEnabled: true,
+                searchPlaceholderValue: 'Digite para buscar...',
+                noResultsText: 'Nenhum resultado encontrado',
+                itemSelectText: '',
+                removeItemButton: false,
+            });
+        }
+
+        if (subtituloFiltroElement && typeof Choices !== 'undefined') {
+            subtituloFiltroChoice = new Choices(subtituloFiltroElement, {
+                searchEnabled: true,
+                searchPlaceholderValue: 'Digite para buscar...',
+                noResultsText: 'Nenhum resultado encontrado',
+                itemSelectText: '',
+                removeItemButton: false,
+            });
+            
+            // LIMPA IMEDIATAMENTE após inicializar
+            subtituloFiltroChoice.clearStore();
+            subtituloFiltroChoice.clearChoices();
+            subtituloFiltroChoice.setChoices(
+                [{ value: '', placeholder: 'Selecione', disabled: false }],
+                'value',
+                'placeholder',
+                true
+            );
+            subtituloFiltroChoice.setChoiceByValue('');
+        }
+
+        <?php if($acao != 'visualizar'){?>
+
+        // Inicializa Choices.js nos elementos do modal
+        let tituloModalChoice = null;
+        let subtituloModalChoice = null;
+        
+        if (tituloModalElement && typeof Choices !== 'undefined') {
+            tituloModalChoice = new Choices(tituloModalElement, {
+                searchEnabled: true,
+                searchPlaceholderValue: 'Digite para buscar...',
+                noResultsText: 'Nenhum resultado encontrado',
+                itemSelectText: '',
+                removeItemButton: false,
+            });
+        }
+
+        if (subtituloModalElement && typeof Choices !== 'undefined') {
+            subtituloModalChoice = new Choices(subtituloModalElement, {
+                searchEnabled: true,
+                searchPlaceholderValue: 'Digite para buscar...',
+                noResultsText: 'Nenhum resultado encontrado',
+                itemSelectText: '',
+                removeItemButton: false,
+            });
+            
+            // LIMPA IMEDIATAMENTE após inicializar
+            subtituloModalChoice.clearChoices();
+            subtituloModalChoice.clearStore();
+            subtituloModalChoice.setChoiceByValue('');
+
+        }
+
+        console.log('Choices.js inicializado em receber.php:', {
+            tituloFiltro: !!tituloFiltroChoice,
+            subtituloFiltro: !!subtituloFiltroChoice,
+            tituloModal: !!tituloModalChoice,
+            subtituloModal: !!subtituloModalChoice
+        });
+        <?php } ?>
+        // ========== FILTRO DE SUBTÍTULOS (FILTROS) ==========
+        if (tituloFiltroElement && subtituloFiltroElement) {
+            function carregarSubtitulosFiltro(tituloId, manterSelecao = false) {
+                const valorAtual = subtituloFiltroElement.value;
+
+                if (subtituloFiltroChoice) {
+                    subtituloFiltroChoice.clearStore();
+                    subtituloFiltroChoice.clearChoices();
+                    subtituloFiltroChoice.setChoices(
+                        [{ value: '', placeholder: 'Selecione', disabled: false }],
+                        'value',
+                        'placeholder',
+                        true
+                    );
+
+                    if (!tituloId) {
+                        subtituloFiltroChoice.setChoiceByValue('');
+                        return;
+                    }
+
+                    const subtitulosFiltrados = todosSubtitulos.filter(sub => sub.tituloId === tituloId);
+                    if (subtitulosFiltrados.length > 0) {
+                        subtituloFiltroChoice.setChoices(subtitulosFiltrados, 'value', 'label', false);
+                    }
+
+                    if (manterSelecao && valorAtual && subtitulosFiltrados.some(sub => sub.value === valorAtual)) {
+                        setTimeout(() => {
+                            subtituloFiltroChoice.setChoiceByValue(valorAtual);
+                        }, 50);
+                    } else {
+                        subtituloFiltroChoice.setChoiceByValue('<?= $get_filtro_subtitulo; ?>');
+                    }
+                } else {
+                    subtituloFiltroElement.innerHTML = '<option value="">Selecione</option>';
+                    
+                    if (!tituloId) return;
+
+                    todosSubtitulos
+                        .filter(sub => sub.tituloId === tituloId)
+                        .forEach(sub => {
+                            const option = document.createElement('option');
+                            option.value = sub.value;
+                            option.textContent = sub.label;
+                            option.setAttribute('data-titulo-id', sub.tituloId);
+                            subtituloFiltroElement.appendChild(option);
+                        });
+
+                    if (manterSelecao && valorAtual) {
+                        subtituloFiltroElement.value = valorAtual;
+                    } else {
+                        subtituloFiltroElement.value = '';
+                    }
+                }
+
+            }
+
+            tituloFiltroElement.addEventListener('change', function(e) {
+                const valor = e.detail ? e.detail.value : e.target.value;
+                carregarSubtitulosFiltro(valor, false);
+            });
+
+            const tituloInicial = tituloFiltroElement.value;
+            if (tituloInicial) {
+                carregarSubtitulosFiltro(tituloInicial, true);
+            }
+        }
+
+        // ========== FILTRO DE SUBTÍTULOS (MODAL) ==========
+        if (tituloModalElement && subtituloModalElement) {
+            function carregarSubtitulosModal(tituloId) {
+                if (subtituloModalChoice) {
+                    subtituloModalChoice.clearStore();
+                    subtituloModalChoice.clearChoices();
+                    subtituloModalChoice.setChoices(
+                        [{ value: '', placeholder: 'Selecione', disabled: false }],
+                        'placeholder',
+                        'label',
+                        true
+                    );
+
+                    if (!tituloId) {
+                        subtituloModalChoice.setChoiceByValue('');
+                        return;
+                    }
+
+                    const subtitulosFiltrados = todosSubtitulosModal.filter(sub => sub.tituloId === tituloId);
+                    if (subtitulosFiltrados.length > 0) {
+                        subtituloModalChoice.setChoices(subtitulosFiltrados, 'value', 'label', false);
+                    }
+                    
+                    subtituloModalChoice.setChoiceByValue('');
+                } else {
+                    subtituloModalElement.innerHTML = '<option value="">Selecione</option>';
+                    
+                    if (!tituloId) return;
+
+                    todosSubtitulosModal
+                        .filter(sub => sub.tituloId === tituloId)
+                        .forEach(sub => {
+                            const option = document.createElement('option');
+                            option.value = sub.value;
+                            option.textContent = sub.label;
+                            option.setAttribute('data-titulo-id', sub.tituloId);
+                            subtituloModalElement.appendChild(option);
+                        });
+                    
+                    subtituloModalElement.value = '';
+                }
+            }
+
+            tituloModalElement.addEventListener('change', function(e) {
+                const valor = e.detail ? e.detail.value : e.target.value;
+                carregarSubtitulosModal(valor);
+            });
+
+            const tituloInicialModal = tituloModalElement.value;
+            if (tituloInicialModal) {
+                carregarSubtitulosModal(tituloInicialModal);
+            }
+        }
+    
+    
+
+</script>
+<?php if($erro == 'valor') { ?>
+    <script>
+        alert('Um ou mais valores não são aceitos ou são maiores do que o valor inicial')
+        window.location.href="<?=$caminho?>"
+    </script>
+<?php } ?>
+<?php if($erro == 'valor_total') { ?>
+    <script>
+        alert('O valor total é maior do que o valor inicial')
+        window.location.href="<?=$caminho?>"
+    </script>
+<?php } ?>
 
 
 
