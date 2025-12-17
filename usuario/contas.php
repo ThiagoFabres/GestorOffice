@@ -164,20 +164,26 @@ $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
                     <?php if(isset($target) && $target == 'titulo'){ ?>
                         <div class="input-nome input-form-adm">
                             <label for="nome">Tipo:</label>
-                            <select name="tipo" class="form-select" id="tipo">
+                            <select name="tipo" class="form-select" id="tipo" style="margin-bottom: 1em;">
                                 <option <?php if (($acao == 'editar') && $conta_modal->tipo == 'C') {?> selected <?php } ?> value="C">Crédito</option>
                                 <option <?php if (($acao == 'editar') && $conta_modal->tipo == 'D') {?> selected <?php } ?> value="D">Débito</option>
                             </select>
+                            <div class="d-flex flex-column justify-content-start align-items-start">
+                                <label>Operacional:</label>
+                                <input name="operacional" type="checkbox" <?php if($acao != 'editar' || $conta_modal->operacional == 1) {?> checked <?php } ?>></input>
+                            </div>
+                            
                         </div>
                     <?php } ?>
 
 
                         <div style="margin-bottom: 3em;" class="footer">
-
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0;">Fechar</button>
-                        <button class="btn btn-success" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Salvar</button>
+                        <?php if($acao == 'editar'){ ?><button name="acao" value="excluir" style="float: left;" class="btn btn-danger" >Excluir</button> <?php } ?>
+                        <button class="btn btn-success" style="border-top-left-radius: 0; border-bottom-left-radius: 0; float:right;">Salvar</button> 
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0; float:right;">Fechar</button>
                         
-                        <?php if($acao == 'editar'){ ?><button name="acao" value="excluir" style="float: right;" class="btn btn-danger" >Excluir</button> <?php } ?> 
+                        
+                        
                             
 
                     </form>

@@ -49,7 +49,8 @@ foreach($pagamentos_a_vencer as $pag02) {
 }
 $total_pag_a_vencer = number_format($total_pag_a_vencer, 2, ',', '.');
 
-$recebimentos_venceu = Rec02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, null, null, null, null, null, true, 'venceu');
+$recebimentos_venceu = Rec02::read( null, $_SESSION['usuario']->id_empresa, null, null, null, 
+$data_atual, null, null, null, null, null, true, 'venceu');
 $total_rec_venceu = 0;
 foreach($recebimentos_venceu as $rec02) {
     $total_rec_venceu += $rec02->valor_par;
