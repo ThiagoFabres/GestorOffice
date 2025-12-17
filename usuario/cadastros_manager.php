@@ -128,7 +128,8 @@ if (isset($view) && $view == 'cadastro') {
                     Cadastro::create($cadastro);
                     if(isset($insta) && $insta != null) {
                         if($insta == 'pagar') header('Location: pagar.php?acao=adicionar');
-                        if($insta == 'receber') header('Location: receber.php?acao=adicionar');
+                        else if($insta == 'receber') header('Location: receber.php?acao=adicionar');
+                        else header('Location: cadastrar.php?cadastro=cliente');
                         exit;
                     }
                 }
@@ -149,7 +150,8 @@ if (isset($view) && $view == 'cadastro') {
                 Bairro::create($bairro);
                 if(isset($insta) && $insta != null) {
                         if($insta == 'pagar') header('Location: pagar.php?acao=adicionar');
-                        if($insta == 'receber') header('Location: receber.php?acao=adicionar');
+                        else if($insta == 'receber') header('Location: receber.php?acao=adicionar');
+                        else header('Location: cadastrar.php?cadastro=bairro');
                         exit;
                     }
                 break;
@@ -164,7 +166,8 @@ if (isset($view) && $view == 'cadastro') {
                 Cidade::create($cidade);
                 if(isset($insta) && $insta != null) {
                     if($insta == 'pagar') header('Location: pagar.php?acao=adicionar');
-                    if($insta == 'receber') header('Location: receber.php?acao=adicionar');
+                    else if($insta == 'receber') header('Location: receber.php?acao=adicionar');
+                    else header('Location: cadastrar.php?cadastro=cidade');
                 exit;
                 }
                 
@@ -181,7 +184,8 @@ if (isset($view) && $view == 'cadastro') {
                     Categoria::create($categoria);
                     if(isset($insta) && $insta != null) {
                         if($insta == 'pagar') header('Location: pagar.php?acao=adicionar');
-                        if($insta == 'receber') header('Location: receber.php?acao=adicionar');
+                        else if($insta == 'receber') header('Location: receber.php?acao=adicionar');
+                        else header('Location: cadastrar.php?cadastro=categoria');
                         exit;
                     }
                 } else {
@@ -199,14 +203,10 @@ if (isset($view) && $view == 'cadastro') {
                 if (!TipoPagamento::read(null, $id_empresa, $nome)) {
                     TipoPagamento::create($categoria);
                     if(isset($insta) && $insta != null){
-                        if($insta == 'receber') {
-                            header('Location: receber.php');
-                            exit;
-                        }
-                        if($insta == 'pagar') {
-                            header('Location: pagar.php');
-                            exit;
-                        }
+                        if($insta == 'receber') header('Location: receber.php');
+                        else if($insta == 'pagar') header('Location: pagar.php');
+                        else header('Location: cadastrar.php?cadastro=categoria');
+                        exit;
                         
                     }
                 }
@@ -222,7 +222,8 @@ if (isset($view) && $view == 'cadastro') {
                     CentroCustos::create($centrocusto);
                     if(isset($insta) && $insta != null) {
                         if($insta == 'pagar') header('Location: pagar.php?acao=adicionar');
-                        if($insta == 'receber') header('Location: receber.php?acao=adicionar');
+                        else if($insta == 'receber') header('Location: receber.php?acao=adicionar');
+                        else header('Location: cadastrar.php?cadastro=categoria');
                         exit;
                     }
                 }
@@ -410,12 +411,15 @@ if (isset($view) && $view == 'cadastro') {
     $id_conta02 = filter_input(INPUT_POST, 'con02id');
  
     if($target == 'titulo') {
+        $operacional = filter_input(INPUT_POST, 'operacional') == 'on' ? 1 : 0;
+
         if (isset($acao) && $acao == 'adicionar') {
             $conta = new Con01(
                 null,
                 $_SESSION['usuario']->id_empresa,
                 $tipo,
-                $nome
+                $nome,
+                $operacional
             );
 
             Con01::create($conta);
@@ -424,15 +428,11 @@ if (isset($view) && $view == 'cadastro') {
                 $id_conta,
                 null,
                 $tipo,
-                $nome
+                $nome,
+                $operacional
             );
-
-            if(!Con02::read(null, null, $id_conta) ) {
                 Con01::update($conta);
-            } else {
-                header('Location: contas.php?con01id='.$id_conta.'&erro=usado_sub');
-                exit;
-            }
+
             
         } else if (isset($acao) && $acao == 'excluir') {
             
@@ -464,17 +464,8 @@ if (isset($view) && $view == 'cadastro') {
                     $id_conta,
                     $nome
                 );
-            
 
-                if(!Rec01::read(null, null, null,
-                 null, null, $id_conta02) 
-                    && !Pag01::read(null, null, null,
-                     null, null, $id_conta02) ) {
             Con02::update($conta);
-        } else {
-            header('Location: contas.php?con01id='.$id_conta.'&erro=usado');
-            exit;
-        }
             } else if (isset($acao) && $acao == 'excluir') {
 
 
@@ -515,6 +506,7 @@ if (isset($view) && $view == 'cadastro') {
     $valor = filter_input(INPUT_POST, 'valor');
     $valor = str_replace('.', '', $valor);
     $valor = str_replace(',', '.', $valor);
+    $id_ban = filter_input(INPUT_POST, 'id_ban');
     
     $parcelas_d = filter_input(INPUT_POST, 'parcelas_d');
 
@@ -579,24 +571,27 @@ if (isset($view) && $view == 'cadastro') {
             $parcelas_d,
             $data_lanc,
             $_SESSION['usuario']->id_usuario,
-            $custo
+            $custo,
+            $id_ban
         );
 
         echo '<pre>';
         print_r($recebimento);  
 
         if ($pagar) {
-            if (!Pag01::read(null, $_SESSION['usuario']->id_empresa, null, $documento)) {
+            if(!Pag01::read(null, $_SESSION['usuario']->id_empresa, null, $documento)[0]) {
                 Pag01::create($recebimento);
             } else {
                 header('Location:pagar.php?erro=repetido');
+                exit;
             }
-            $rec01 = Pag01::read(null, $_SESSION['usuario']->id_empresa, null, $documento)[0];
+            $rec01 = Pag01::read(null, $_SESSION['usuario']->id_empresa, id_cadastro: $cadastro, documento: $documento)[0];
         } else {
-            if (!Rec01::read(null, $_SESSION['usuario']->id_empresa, null, $documento)) {
+            if (!Rec01::read(null, $_SESSION['usuario']->id_empresa, id_cadastro: $cadastro, documento: $documento)[0]) {
                 Rec01::create($recebimento);
             } else {
                 header('Location:receber.php?erro=repetido');
+                exit;
             }
             $rec01 = Rec01::read(null, $_SESSION['usuario']->id_empresa, null, $documento)[0];
         }
@@ -677,7 +672,7 @@ if (isset($view) && $view == 'cadastro') {
         );
 
         if ($pagar) {
-            if ($rec01->documento == $recebimento->documento || !Pag01::read(null, $_SESSION['usuario']->id_empresa, $documento)[0]) {
+            if ($rec01->documento == $recebimento->documento || !Pag01::read(null, $_SESSION['usuario']->id_empresa, id_cadastro: $cadastro, documento: $documento)[0]) {
                 Pag01::update($recebimento);
             } else {
                 header('Location:pagar.php?erro=repetido');
@@ -685,7 +680,7 @@ if (isset($view) && $view == 'cadastro') {
             }
             $rec01 = Pag01::read(null, $_SESSION['usuario']->id_empresa, null, $documento)[0];
         } else {
-            if ($rec01->documento == $recebimento->documento || !Rec01::read(null, $_SESSION['usuario']->id_empresa, null, $documento)) {
+            if ($rec01->documento == $recebimento->documento || !Rec01::read(null, $_SESSION['usuario']->id_empresa,id_cadastro: $cadastro, documento: $documento)) {
                 Rec01::update($recebimento);
             } else {
                 header('Location:receber.php?erro=repetido');
@@ -789,6 +784,7 @@ if (isset($view) && $view == 'cadastro') {
         }
 
     } else if (isset($acao) && $acao == 'quitar') {
+        $insta = filter_input(INPUT_POST, 'insta');
         if($valor != '' && $valor != null) {
         $valor_parcela = str_replace(',', '.', $valor);
         $valor_parcela = floatval($valor_parcela);
@@ -822,14 +818,16 @@ if (isset($view) && $view == 'cadastro') {
             );
             if ($pagar) {
                 Pag02::update($parcela);
-                echo 'a';
-                header('Location:' . $caminho.$numero_pagina.$numero_exibir);
-                exit;
+                
             } else {
                 Rec02::update($parcela);
-                header('Location:' . $caminho.$numero_pagina.$numero_exibir);
+            }
+            if($insta == 'bancario') {
+                header('Location: bancario/movimentacao/'.$caminho.$numero_pagina.$numero_exibir);
                 exit;
             }
+            header('Location:' . $caminho.$numero_pagina.$numero_exibir);
+            exit;
 
 
         }
@@ -843,11 +841,14 @@ if (isset($view) && $view == 'cadastro') {
         if($caminho != 'receber.php' && $caminho != 'pagar.php') {
             $numero_pagina = str_replace('?', '&', $numero_pagina);
         }
+
+        $caminho_completo = $caminho.$numero_pagina.$numero_exibir;
+        
+        $caminho_completo = str_replace(' ', '', $caminho_completo);
+
        
         if ($target == 'parcela') {
             if ($pagar) {
-                echo 'a';
-                
                 $parcela_antiga = Pag02::read($id)[0];
             } else {
                 $parcela_antiga = Rec02::read($id)[0];
@@ -865,12 +866,12 @@ if (isset($view) && $view == 'cadastro') {
             
             if ($pagar) {
                 Pag02::update($parcela);
-                header('Location:' . $caminho.$numero_pagina.$numero_exibir);
+                header('Location:' . $caminho_completo);
                 exit;
             } else {
 
                 Rec02::update($parcela);
-                header('Location:' . $caminho.$numero_pagina.$numero_exibir);
+                header('Location:' . $caminho_completo);
                 exit;
             }
 
