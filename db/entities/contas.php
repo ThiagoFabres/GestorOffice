@@ -6,28 +6,38 @@ Class Con01 {
     public $id_empresa;
     public $tipo;
     public $nome;
+    public $operacional;
 
-    public function __construct($id = null, $id_empresa = null,  $tipo = '', $nome = '') {
+    public function __construct($id = null, $id_empresa = null,  $tipo = '', $nome = '', $operacional = '') {
         $this->id = $id;
         $this->id_empresa = $id_empresa;
         $this->tipo = $tipo;
         $this->nome = $nome;
+        $this->operacional = $operacional;
 
     }
 
     public static function create($conta) {
         $pdo = (new Database())->connect();
-        $sql = 'INSERT INTO con01 (id_empresa, tipo, nome) 
-                VALUES (:id_empresa, :tipo, :nome)';
+        $sql = 'INSERT INTO con01 (id_empresa, tipo, nome, operacional) 
+                VALUES (:id_empresa, :tipo, :nome, :operacional)';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id_empresa', $conta->id_empresa);
         $stmt->bindValue(':tipo', $conta->tipo);
         $stmt->bindValue(':nome', $conta->nome);
+        $stmt->bindValue(':operacional', $conta->operacional);
 
         return $stmt->execute();
     }
 
-    public static function read($id = null, $idempresa = null, $tipo = null, $ordenar_por = null) : array {
+    public static function read(
+        $id = null,
+        $idempresa = null, 
+        $tipo = null, 
+        $ordenar_por = null,
+        $filtro_operacional = null,
+        ) : array {
+
         $pdo = (new Database())->connect();
         $query = 'SELECT * FROM con01';
         $conditions = [];
@@ -35,6 +45,13 @@ Class Con01 {
         if ($id != null) $conditions[] = 'id = :id';
         if ($idempresa != null) $conditions[] = 'id_empresa = :id_empresa';
         if ($tipo != null) $conditions[] = 'tipo = :tipo';
+         if($filtro_operacional != null) {
+            if($filtro_operacional == 1) {
+                $conditions[] = ' operacional = 1';
+            } else if($filtro_operacional == 2) {
+                $conditions[] = ' operacional = 0';
+            }
+        }
 
         if ($conditions) {
             $query .= ' WHERE ' . implode(' AND ', $conditions);
@@ -60,12 +77,14 @@ Class Con01 {
         $pdo = (new Database())->connect();
         $sql = 'UPDATE con01 
                 SET tipo = :tipo, 
-                    nome = :nome 
+                    nome = :nome,
+                    operacional = :operacional
                 WHERE id = :id';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id', $conta->id);
         $stmt->bindValue(':tipo', $conta->tipo);
         $stmt->bindValue(':nome', $conta->nome);
+        $stmt->bindValue(':operacional', $conta->operacional);
 
         return $stmt->execute();
     }
@@ -105,7 +124,15 @@ Class Con02 {
 
         return $stmt->execute();
     }
-    public static function read($id = null, $idempresa = null, $con01_id = null, $filtro_data_inicial = null, $filtro_data_final = null): array {
+    public static function read(
+        $id = null, $idempresa = null,
+        $con01_id = null,
+        $filtro_data_inicial = null,
+        $filtro_data_final = null,
+        $filtro_operacional = null,
+
+           ): array {
+        
         $pdo = (new Database())->connect();
         $query = 'SELECT * FROM con02';
         $conditions = [];
@@ -115,6 +142,7 @@ Class Con02 {
         if ($con01_id != null) $conditions[] = 'id_con01 = :id_con01';
         if ($filtro_data_inicial != null) $conditions[] = 'data_r >= :data_inicial';
         if ($filtro_data_final != null) $conditions[] = 'data_r <= :data_final';
+       
 
 
         if ($conditions) {
