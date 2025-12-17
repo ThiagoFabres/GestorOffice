@@ -72,26 +72,7 @@ $erro = filter_input(INPUT_GET, 'erro');
     </nav>
 
 
-    <div id="header">
-        
-        <button onclick="encolher()" style="background:none;border:none;font-size:1.2em;color:#181f2b;outline:none;cursor:pointer; z-index:1000;">
-            <span class="btn bi bi-list"></span>
-        </button>
-        
-        <div id="menu-superior">
-            <a class="superior-item" href="/admin/">Dashboard</a>
-        </div>
-        <div class="conta-header" style="position:relative; float:right; margin-right:2em;">
-            <button id="userBtn" type="button" style="background:none;border:none;font-size:1.2em;color:#181f2b;outline:none;cursor:pointer;">
-                <span style="color:#181f2b;"><?= $_SESSION['usuario']->nome ?> </span>
-            </button>
-            <div id="userMenu" style="right:0; z-index: 1000000;">
-                <a href="/" class="dropdown-item">
-                    <i class="bi bi-box-arrow-left"></i> Logout
-            </a>
-            </div>
-        </div>
-    </div>
+    <?php  require_once __DIR__ . '/../componentes/header/header.php' ?>
 
 
 
@@ -310,7 +291,6 @@ $erro = filter_input(INPUT_GET, 'erro');
     <?php 
     $id = $_GET['id']; 
     $empresa = Empresa::read($id);
-    print_r($empresa); 
     $empresa = $empresa[0];
      ?>
     
@@ -334,11 +314,15 @@ $erro = filter_input(INPUT_GET, 'erro');
     </div>
 
     <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input type="text" class="form-control" id="cnpj" placeholder="CNPJ" name="cnpj" value="<?= $empresa->cpf ?>" required>
+        <input type="text" class="form-control" id="cnpj" placeholder="CNPJ" name="cnpj" value="<?= $empresa->cnpj ?>" required>
     </div>
 
     <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input type="text" class="form-control" id="cpf" placeholder="CPF" name="cpf" value="<?= $empresa->cnpj ?>" required>
+        <input type="text" class="form-control" id="cnpj_principal" placeholder="CNPJ principal" name="cnpj_principal" value="<?= $empresa->cnpj_principal ?>">
+    </div>
+
+    <div style="display:flex; flex-direction:row;" class="mb-3">
+        <input type="text" class="form-control" id="cpf" placeholder="CPF" name="cpf" value="<?= $empresa->cpf ?>" required>
     </div>
 
     <div style="display:flex; flex-direction:row;" class="mb-3">
@@ -440,6 +424,11 @@ $erro = filter_input(INPUT_GET, 'erro');
                             <!--cnpj-->
                             <input type="text" onchange="checar()" name="cnpj" class="form-control"
                                 placeholder="CNPJ" value="" required>
+                        </div>
+                        <div class="input-cnpj input-form-adm">
+                            <!--cnpj-->
+                            <input type="text" onchange="checar()" name="cnpj_principal" class="form-control"
+                                placeholder="CNPJ Principal" value="" required>
                         </div>
 
                         

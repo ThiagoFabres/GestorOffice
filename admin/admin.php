@@ -22,6 +22,7 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'editar') {
     $nome = $_POST['nome'];
     $fantasia = $_POST['fantasia'];
     $cnpj = $_POST['cnpj'];
+    $cnpj_principal = $_POST['cnpj_principal'] ?? $cnpj;
     $cpf = $_POST['cpf'];
     $cep = $_POST['cep'];
     $endereco = $_POST['endereco'];
@@ -50,13 +51,13 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'editar') {
         $telefone,
         $status,
         $data_r,
-        $cep
+        $cep,
+        $cnpj_principal
 );
-
-
+$gestor_atual = Usuario::read(idempresa:$id, cargo:Cargo::GESTOR)[0];
 
 $gestor = new Usuario(
-    null, // id_usuario
+    $gestor_atual->id_usuario, // id_usuario
     $id, // id_empresa
     $nome,
     $email,
@@ -65,6 +66,7 @@ $gestor = new Usuario(
     0, // consultar
     Cargo::GESTOR
 );
+
 
 // Atribuindo cargo
 try {
@@ -76,7 +78,8 @@ try {
 
 Empresa::update($empresa);
 Usuario::update($gestor);
-
+header('Location: index.php');
+exit;
 
 
 
@@ -88,6 +91,7 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'adicionar') {
     $nome = $_POST['nome'];
     $fantasia = $_POST['fantasia'];
     $cnpj = $_POST['cnpj'];
+    $cnpj_principal = $_POST['cnpj_principal'] ?? $cnpj;
     $cpf = $_POST['cpf'];
     $cep = $_POST['cep'];
     $endereco = $_POST['endereco'];
@@ -117,8 +121,8 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'adicionar') {
         $telefone,
         $status,
         date('Y-m-d H:i:s'), // data_r
-        $cep
-
+        $cep,
+        $cnpj_principal
     );
 
 
