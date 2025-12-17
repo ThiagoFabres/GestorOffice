@@ -7,6 +7,10 @@
     margin-bottom: 0.5em;
 }
 
+select[readonly] {
+  pointer-events: none;
+  touch-action: none;
+}
 
 
 .btn {
@@ -26,7 +30,12 @@
     width: 70%;
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: space-evenly;
+}
+#totais-lancamento div {
+    white-space: nowrap;
+    font-size: 100%;
+    font-weight: bold;
 }
 
 .card-header-lancamento {
@@ -44,8 +53,7 @@
     text-align: center;
 }
 
-.card-header #btn-analitico,
-.card-header #btn-sintetico {
+.card-header .dre-menu-btn {
     background-color: transparent;
     border-radius: 0;
     align-items: center;
@@ -57,9 +65,11 @@
     border-radius: 0;
 }
 
-.card-header #btn-analitico:hover,
-.card-header #btn-sintetico:hover,
+.card-header .dre-menu-btn:hover,
+.card-header .dre-menu-btn:active,
 .btn-dre-selecionado {
+    background-color: transparent;
+
         border-bottom: 2px solid #5856d6;
 }
 
@@ -98,7 +108,8 @@
     font-size: 10%;
 }
 
-.form-check-input[type="radio"]:checked {
+input[type="radio"]:checked,
+input[type="checkbox"]:checked {
     background-color: #5856d6;
 }
 
@@ -250,6 +261,7 @@
 #total-vence-hoje {
     white-space: nowrap;
     font-size: 100%;
+    font-weight: bold;
 }
 
 #div-registro-vazio-dre {
@@ -296,7 +308,10 @@
 
 .td-acoes {
     width: 3%;
+    text-align: center;
+
 }
+
 .tr-clientes-header th {
     font-size: 90%;
 }
@@ -312,6 +327,7 @@
 
 #tr-totais td {
     background-color: #cececeff;
+    font-weight: bold;
 }
 
 
@@ -548,8 +564,8 @@ html, body {
     display: flex;
     flex-direction: column;
     background-color: #f1f3f6;
-    min-height: calc(100% - 65px);
-    top: 65px;
+    min-height: calc(100% - 74px);
+    top: 74px;
     width: calc(100% - 255px);
     left: 255px;
     padding-inline: 5%;
@@ -574,15 +590,15 @@ html, body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 1em;
+    padding-block: 1em;
 }
 
 .card-header-borda {
     position: relative;
     display: flex;
     flex-direction: column;
-    min-width: 50%;
-    max-width: 95%;
+    min-width: 65%;
+    max-width: calc(100% - 2em);
     border-radius: 0.5em;
     border: 1px solid #dfe0e1;
     padding: 1em;
@@ -1169,7 +1185,7 @@ input[name="parcelas"] {
     background-color: white;
     padding: 2em;
     position: relative;
-    min-width: 80em;
+    min-width: 100%;
     justify-content: center;
     align-items: center;
 }
@@ -1248,7 +1264,7 @@ width: 100%;
 
 #logo-container {
     width: 100%;
-    height: 20.5%;
+    height: 219px;
     padding: 16px;
     border-bottom: 1px solid #323a49;
     background-color: #212631;
@@ -1274,11 +1290,12 @@ width: 100%;
     align-items: center;
     top: 0;
     position: fixed;
-    left: 16%;
-    width: calc(100vw - 16%);
+    left: 255px;
+    width: calc(100% - 255px);
     min-width: 0;
-    height: 6%;
-    border-bottom: 2px solid #dbdfe6;
+    height: 65px;
+    padding-inline: 24px;
+    border-bottom: 3px solid #dbdfe6;
     z-index: 20;
 
 }
@@ -1361,7 +1378,14 @@ width: 100%;
 }
 .menu-item:hover a,
 .menu-item-atual a {
+    
     color: white !important;
+}
+.menu-item {
+    font-size: 115%;
+}
+.menu-li {
+    font-size: 100%;
 }
 
 .menu-item a div i{

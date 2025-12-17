@@ -11,7 +11,7 @@
     min-width: 0;
     height: 65px;
     padding-inline: 24px;
-    border-bottom: 2px solid #dbdfe6;
+    border-bottom: 3px solid #dbdfe6;
     z-index: 20;
 
 }
@@ -40,9 +40,15 @@
 #conta-header {
     float: right;
 }
+#nome-empresa {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-#nome-empresa h4 {
+#nome-empresa h1 {
     text-align: center;
+    white-space: nowrap;
 }
 #conta-header {
     display: flex;

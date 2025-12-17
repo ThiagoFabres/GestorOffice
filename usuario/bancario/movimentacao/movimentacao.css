@@ -1,3 +1,34 @@
 .tr-bancario td {
-    font-size: 95%;
+    white-space: nowrap;
+}
+.tabela-bancario {
+    white-space: nowrap;
+    overflow: auto;
+    text-overflow: auto;
+}
+.input-movimentacao-text-group {
+    width: 70%;
+
+}
+.inputs-pagamento-text div:has(input[type="date"]){
+    width: calc(100%/3);
+    height: 5.175em;
+}
+
+.inputs-pagamento-text {
+    width: 100%;
+    height: 50%;
+    justify-content: start;
+}
+.inputs-pagamento-text div {
+    display: flex;
+    flex-direction: column;
+}
+
+.inputs-pagamento-text div:has(select){
+    width: calc(100%/3);
+    height: 4.3em;
+}
+.inputs-pagamento-text div label {
+    font-weight: bold;
 }
