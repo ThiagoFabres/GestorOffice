@@ -7,6 +7,7 @@ require_once  __DIR__ . '/db/entities/cargo.php';
 
 session_start();
 
+
 if(!isset($_POST['acao'])) {
 
 if (isset($_POST['email']) && isset($_POST['senha'])) {
@@ -16,7 +17,7 @@ if (isset($_POST['email']) && isset($_POST['senha'])) {
 
 
     if ($email && $senha) {
-        $usuario = Usuario::read(null, $email); // busca apenas 1 usuário
+        $usuario = Usuario::read(null, $email);
         
 
         if ($usuario && password_verify($senha, $usuario[0]->senha)) {
@@ -32,13 +33,13 @@ if (isset($_POST['email']) && isset($_POST['senha'])) {
             break;  
         case 2:
             $empresa = Empresa::read($usuario[0]->id_empresa);
-
+echo 'a';
            if ($empresa[0]->status == 1) {
     header('Location: gestor/index.php');
     exit; 
-} else {
-    $error = "Empresa inativa.";
-}
+    } else {
+        header('Location: /index.php?erro=empresa_inativa');
+    }
             break;
         case 3:
             header('Location: usuario/index.php');
@@ -61,8 +62,6 @@ if (isset($_POST['email']) && isset($_POST['senha'])) {
     header('Location: index.php?erro=campos');
     exit; 
 }
-
-echo $error;
 
 
 } else if (isset($_POST['acao']) && $_POST['acao'] == 'editar') {
@@ -87,7 +86,7 @@ echo $error;
             if ($usuario && password_verify($senha, $usuario[0]->senha)) {
                 $usuario[0]->senha = $nova_senha;
 
-                Usuario::update($usuario[0]);
+                Usuario::updateSenha($usuario[0]);
                 $_SESSION['usuario'] = $usuario[0];
                 $success = "Senha atualizada com sucesso.";
                 header('Location: index.php?sucesso=1');
