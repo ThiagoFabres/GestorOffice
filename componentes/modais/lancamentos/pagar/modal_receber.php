@@ -38,6 +38,19 @@
     
     
 }
+    $id_ban = filter_input(INPUT_GET, 'id_ban') ?? null;
+    if($id_ban != null) {
+        $ban02 = Ban02::read($id_ban, $_SESSION['usuario']->id_empresa)[0];
+        $ban02_valor = $ban02->valor < 0 ? $ban02->valor * (-1) : $ban02->valor;
+        $ban02_valor = number_format($ban02_valor, 2, ',', '.');
+
+        if($ban02->descricao_comp != '') {
+            $ban02_desc = "$ban02->descricao - $ban02->descricao_comp";
+        } else {
+            $ban02_desc = "$ban02->descricao";
+        }
+        $ban02_desc = htmlspecialchars($ban02_desc, ENT_QUOTES, 'UTF-8');
+    }
 
 
     $post_cadastro = filter_input(INPUT_POST, 'cadastro') ?? '';
@@ -166,15 +179,18 @@
         $data_lanc = new Datetime();
         $data_lanc = $data_lanc->format('Y-m-d');
     }
+    if($id_ban != null) {
+        $data_lanc = $ban02->data;
+    }
     ?>
+    
 
         <div class="tabela">
             <div class="row">
                 <div class="col-md-12" style="padding: 0;">
-                    <?php if(!empty($parcelas)) echo'<div class="card" style="padding: 0;">'?>
-                <?php ?>
+<div class="card" style="padding: 0;">
                         <div class="card-header-div">
-                            <?php if(!empty($parcelas)) echo '<div class="card-header-borda">'?> 
+                            <div class="card-header-borda" style="width: 100%;">
                                 <div class="tab-pane fade show active" id="vendas" role="tabpanel"
                                     aria-labelledby="vendas-tab">
                                     <form method="post" action="pagar.php?acao=editar"
@@ -182,7 +198,12 @@
                                         <?php if (isset($get_id)) { ?>
                                             <input type="hidden" name="id" value="<?= $get_id ?>">
                                         <?php } ?>
+                                        <?php if (isset($id_ban) && $id_ban != null) { ?>
+                                            <input type="hidden" name="id_ban" readonly value="<?= $id_ban ?>">
+                                        <?php } ?>
                                         <div class="row">
+                                            <?php
+                                            ?>
                                             <div class="input-group-edit-parcela"style="width: 100%; position:relative; display:flex; flex-direction:row; justify-content: space-between;">
                                             <div class="modal-input-group">
                                                 <label for="documento">Documento:</label>
@@ -222,7 +243,9 @@
 
                                                                 $custos = CentroCustos::read( null, $_SESSION['usuario']->id_empresa);
                                                                 foreach ($custos as $custo) { ?>
-                                                                    <option value="<?= $custo->id ?>" <?php if (($post_custo == $custo->id)) { ?> selected <?php } ?>>
+                                                                    <option value="<?= $custo->id ?>" <?php if (($post_custo == $custo->id)) { ?> selected <?php } ?>
+                                                                    
+                                                                    >
                                                                         <?= htmlspecialchars($custo->nome, ENT_QUOTES, 'UTF-8') ?>
                                                                     </option>
                                                                 <?php } ?>
@@ -269,7 +292,7 @@
                                             <div class="modal-input-group">
                                                 <label for="data_lanc">Data de lançamento:</label>
                                                 <div class="input-data-lanc">
-                                                    <input type="date"  name="data_lanc" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
+                                                    <input type="date"  name="data_lanc" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?> <?php if($id_ban != null) echo 'readonly'?>
                                                         class="form-control" placeholder="Data de lançamento"
                                                         value="<?php echo $data_lanc ?>" required>
                                                 </div>
@@ -283,16 +306,16 @@
                                             <div class="modal-input-group">
                                                 <label for="titulo">Titulo</label>
                                             <div class="titulo-group">
-                                                <div class="input-titulo" style="<?php if($get_acao != 'visualizar') {?>width:75%;<?php } else {?>width: 100%;<?php } ?>">
+                                                <div class="input-titulo" style="<?php if($get_acao != 'visualizar' && $id_ban == null) {?>width:75%;<?php } else {?>width: 100%; height: 92%;<?php } ?>">
                                                     <!--Nome: -->
                                                     
-                                                    <select name="titulo" class="form-control form-select-titulo" id="titulo" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
+                                                    <select name="titulo" class="form-control form-select-titulo" style="height: 100%; border-radius: 0;" id="titulo" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?> <?php if($id_ban != null) echo 'readonly' ?>
                                                         style="border-top-right-radius: 0; border-bottom-right-radius: 0; ">
                                                         <option value="">Selecione</option>
 
                                                         <?php $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa, 'D');
                                                         foreach ($titulos as $titulo) { ?>
-                                                            <option value="<?= $titulo->id ?>" <?php if ($titulo->id == $post_titulo) { ?> selected <?php } ?>>
+                                                            <option value="<?= $titulo->id ?>" <?php if (($titulo->id == $post_titulo) || ($id_ban != null && $ban02->id_con01 == $titulo->id)) { ?> selected <?php } ?> >
                                                                 <?= htmlspecialchars($titulo->nome, ENT_QUOTES, 'UTF-8') ?>
                                                             </option>
                                                         <?php } ?>
@@ -312,16 +335,16 @@
                                             <div class="modal-input-group">
                                                 <label for="subtitulo">Sub-Titulo</label>
                                                 <div class="subtitulo-group">
-                                                    <div class="input-subtitulo-div" style="<?php if($get_acao != 'visualizar') {?>width:75%;<?php } else {?>width: 100%;<?php } ?>">
+                                                    <div class="input-subtitulo-div" style="<?php if($get_acao != 'visualizar' && $id_ban == null) {?>width:75%;<?php } else {?>width: 100%; height:92%;<?php } ?>" >
 
-                                                        <select id="subtitulo" name="subtitulo" class="form-control form-select-titulo" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>>
+                                                        <select id="subtitulo" name="subtitulo" class="form-control form-select-titulo" style="height: 100%; border-radius: 0;" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?> <?php if($id_ban != null) echo 'readonly' ?>>
                                                             <option value="">Selecione</option>
                                                             <?php
                                                             // Buscar todos os subtítulos da empresa
                                                             $todosSubtitulos = Con02::read(null, $_SESSION['usuario']->id_empresa);
                                                             foreach ($todosSubtitulos as $sub) { ?>
                                                                 <option value="<?= $sub->id ?>"
-                                                                    data-titulo-id="<?= $sub->id_con01 ?>" <?php if ($sub->id == $post_subtitulo) { ?> selected <?php } ?>>
+                                                                    data-titulo-id="<?= $sub->id_con01 ?>" <?php if (($sub->id == $post_subtitulo) || ($id_ban != null && $ban02->id_con02 == $sub->id)) { ?> selected <?php } ?>>
                                                                     <?= htmlspecialchars($sub->nome, ENT_QUOTES, 'UTF-8') ?>
                                                                 </option>
                                                             <?php } ?>
@@ -339,18 +362,18 @@
                                                 <div class="modal-input-group">
                                                         <label for="valor">Valor:</label>         
                                                     <div class="input-valor">
-                                                        <input type="text" id="valor" name="valor" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
+                                                        <input type="text" id="valor" <?php if($id_ban != null) echo 'readonly'?> name="valor" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
                                                             class="form-control" placeholder="Valor"
-                                                            value="<?= htmlspecialchars($valor, ENT_QUOTES, 'UTF-8') ?>"
+                                                            value="<?php if($id_ban != null) echo $ban02_valor; else echo $valor?>"
                                                             required>
                                                     </div>
                                                 </div>  
                                                 <div class="modal-input-group">
                                                     <label for="parcelas">Parcelas:</label>                   
                                                     <div class="input-parcelas">   
-                                                        <input type="number" id="parcelas" name="parcelas" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
+                                                        <input type="number" id="parcelas" name="parcelas" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?> <?php if($id_ban != null) echo 'readonly'?>
                                                             class="form-control" placeholder="Parcelas"
-                                                            value="<?= htmlspecialchars($parcelas_d, ENT_QUOTES, 'UTF-8') ?>"
+                                                            value="<?php if($id_ban != null) echo 1; else echo $parcelas_d?>"
                                                             required>
                                                     </div>
                                                 </div> 
@@ -359,9 +382,9 @@
                                             <div class="input-descricao" style="width: 100%;">
                                                 <!--Nome: -->
                                                 <label for="descricao">Descrição:</label>
-                                                <input type="text" id="descricao" name="descricao" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
+                                                <input type="text" id="descricao" name="descricao" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?> <?php if($id_ban != null) echo 'readonly'?>
                                                     class="form-control" placeholder="Descrição"
-                                                    value="<?= htmlspecialchars($descricao, ENT_QUOTES, 'UTF-8') ?>"
+                                                    value="<?php if($id_ban != null) echo $ban02_desc; else echo htmlspecialchars($descricao, ENT_QUOTES, 'UTF-8') ?>"
                                                     required>
                                             </div>
 
@@ -389,7 +412,9 @@
                             <input type="hidden" name="view" value="receber">
                             <input type="hidden" name="pagar" value="1">
                             <input type="hidden" name="id_lancamento" value="<?= $get_id ?>">
-                            
+                            <?php if (isset($id_ban) && $id_ban != null) { ?>
+                                <input type="hidden" name="id_ban" readonly value="<?= $id_ban ?>">
+                            <?php } ?>
                             <input type="hidden" id="cadastro2" name="cadastro" value="<?= $post_cadastro ?>">
                             <input type="hidden" id="titulo2" name="titulo" value="<?= $post_titulo ?>">
                             <input type="hidden" id="subtitulo2" name="subtitulo" value="<?= $post_subtitulo ?>">
@@ -464,7 +489,7 @@
                                 <?php } ?>
 
                                 <button name="acao"
-                                    value="<?php if (!isset($get_acao)) { ?>adicionar<?php } else if (isset($get_acao)) { ?>editar<? } ?>"
+                                    value="<?php if (!isset($get_acao)) { ?>adicionar<?php } else if (isset($get_acao)) { ?>editar<?php } ?>"
                                     class="btn btn-primary" type="submit" id="botao-editar-parcela"
                                     style="padding-inline:1.5em; float:right">Salvar</button>
                             <?php } ?>
@@ -475,10 +500,13 @@
             </div>
         </div>
     </div>
+    </div>
+    </div>
 
 <?php } ?>
 
     <script>
+        const podeEditar = <?php echo $get_acao != 'visualizar' ? 'true' : 'false'; ?>;;
 document.addEventListener("DOMContentLoaded", function () {
         const inputs = Array.from(document.querySelectorAll("input[name^='vencimento[']"));
 
@@ -753,7 +781,6 @@ function syncHiddenInputs() {
                     destinoInput.value = origemInput.value;
                     console.log(destinoInput.id + ' alterado')
                 } else {
-                    const botao = document.getElementById('botao-editar-parcela')
                     console.log(destinoInput.id + ' alterado')
                     botao.disabled = true
                 }
@@ -778,159 +805,160 @@ if (document.readyState === 'loading') {
 <?php if($get_acao != 'visualizar') {?>
 
 document.addEventListener('DOMContentLoaded', () => {
-  console.log("🔧 Inicializando títulos e subtítulos (modal + filtros)...");
 
-  // --- Valores vindos do PHP ---
-  const tituloSelecionado = <?= json_encode($post_titulo ?? '') ?>;
-  const subtituloSelecionado = <?= json_encode($post_subtitulo ?? '') ?>;
-  const filtroTituloSelecionado = <?= json_encode($get_filtro_titulo ?? '') ?>;
-  const filtroSubtituloSelecionado = <?= json_encode($get_filtro_subtitulo ?? '') ?>;
+    console.log("🔧 Inicializando títulos e subtítulos (modal + filtros)...");
 
-  // --- Função genérica para inicializar título e subtítulo (com Choices e filtro) ---
-  function initTituloSubtitulo(tituloId, subtituloId, subtituloSelecionado) {
-    const tituloSelect = document.getElementById(tituloId);
-    const subtituloSelect = document.getElementById(subtituloId);
-    if (!tituloSelect || !subtituloSelect) return;
+    // --- Valores vindos do PHP ---
+    const tituloSelecionado       = <?= json_encode($post_titulo ?? '') ?>;
+    const subtituloSelecionado    = <?= json_encode($post_subtitulo ?? '') ?>;
 
-    // 🔹 Inicia Choices no título
-    if (!tituloSelect._choices) {
-      try {
-        const tituloChoices = new Choices(tituloSelect, {
-          searchEnabled: true,
-          shouldSort: false,
-          itemSelectText: '',
-          removeItemButton: false,
-          searchPlaceholderValue: 'Digite para buscar...',
-          noResultsText: 'Nenhum resultado encontrado'
+    const filtroTituloSelecionado   = <?= json_encode($get_filtro_titulo ?? '') ?>;
+    const filtroSubtituloSelecionado = <?= json_encode($get_filtro_subtitulo ?? '') ?>;
+
+    // ========================================================================
+    // FUNÇÃO PRINCIPAL
+    // ========================================================================
+    function initTituloSubtitulo(tituloId, subtituloId, subtituloSelecionado) {
+
+        const tituloSelect = document.getElementById(tituloId);
+        const subtituloSelect = document.getElementById(subtituloId);
+
+        if (!tituloSelect || !subtituloSelect) return;
+
+        // ======================================================
+        // 1) Inicializa TÍTULO com Choices (se ainda não tem)
+        // ======================================================
+        if (!tituloSelect._choices) {
+            tituloSelect._choices = new Choices(tituloSelect, {
+                searchEnabled: true,
+                shouldSort: false,
+                itemSelectText: '',
+                removeItemButton: false,
+                searchPlaceholderValue: 'Digite para buscar...',
+                noResultsText: 'Nenhum resultado encontrado'
+            });
+        }
+
+        // ======================================================
+        // 2) Captura opções ORIGINAIS de Subtítulo
+        // ======================================================
+        const origOptions = Array.from(subtituloSelect.querySelectorAll('option'))
+            .map(opt => ({
+                value: String(opt.value),
+                label: opt.textContent.trim(),
+                tituloId: String(opt.getAttribute('data-titulo-id') || '')
+            }))
+            .filter(o => o.value !== '' && o.label.toLowerCase() !== 'seleccione'
+        );
+
+        // ======================================================
+        // 3) Destroi instancia anterior do subtitulo (se houver)
+        // ======================================================
+        if (subtituloSelect._choices) {
+            try { subtituloSelect._choices.destroy(); } catch {}
+        }
+
+        // ======================================================
+        // 4) Inicializa subtítulo novamente
+        // ======================================================
+        const subtituloChoices = new Choices(subtituloSelect, {
+            searchEnabled: true,
+            shouldSort: false,
+            itemSelectText: '',
+            removeItemButton: false,
+            searchPlaceholderValue: 'Digite para buscar...',
+            noResultsText: 'Nenhum subtítulo encontrado...'
         });
-        tituloSelect._choices = tituloChoices;
-      } catch (e) {
-        console.warn('⚠️ Erro iniciando Choices em', tituloId, e);
-      }
-    }
+        subtituloSelect._choices = subtituloChoices;
 
-    // 🔹 Guarda opções originais do subtítulo
-    const origOptions = Array.from(subtituloSelect.querySelectorAll('option')).map(o => ({
-      value: String(o.value),
-      label: o.textContent.trim(),
-      tituloId: (o.getAttribute('data-titulo-id') || '').toString()
-    })).filter(o => o.value && o.value.toLowerCase() !== 'selecione');
+        // Começa vazio
+        subtituloChoices.clearChoices();
+        subtituloChoices.setChoices([{ value: '', label: 'Selecione', disabled: true }]);
 
-    // 🔹 Destroi instância anterior se houver
-    try {
-      if (subtituloSelect._choices && typeof subtituloSelect._choices.destroy === 'function') {
-        subtituloSelect._choices.destroy();
-      }
-    } catch {}
+        // ========================================================================
+        // 5) Função para filtrar subtítulos pelo título selecionado
+        // ========================================================================
+        function filtrarSubtitulos(tituloValue, manterSelecao) {
 
-    // 🔹 Inicializa Choices no subtítulo
-    let subtituloChoice = null;
-    try {
-      subtituloChoice = new Choices(subtituloSelect, {
-        searchEnabled: true,
-        shouldSort: false,
-        itemSelectText: '',
-        removeItemButton: false,
-        searchPlaceholderValue: 'Digite para buscar...',
-        noResultsText: 'Nenhum resultado encontrado'
-      });
-      subtituloSelect._choices = subtituloChoice;
+            subtituloChoices.clearChoices();
+            subtituloChoices.setChoices([{ value: '', label: 'Selecione', disabled: true }]);
 
-      // 🔸 Começa VAZIO (apenas “Selecione”)
-      <?php if($get_acao != 'visualizar') {?>
-      subtituloChoice.clearChoices();
-      subtituloChoice.clearStore();
-      <?php }?>
-      subtituloChoice.setChoices([{ value: '', label: 'Selecione', disabled: true }], 'value', 'label', true);
-    } catch (e) {
-      console.error('Erro ao inicializar Choices para', subtituloId, e);
-    }
+            const filtrados = origOptions.filter(o => o.tituloId === String(tituloValue));
 
-    // 🔹 Filtra subtítulos pelo título
-    function filtrarSubtitulosPorTitulo(tituloValue, manterSelecao = false) {
-      if (!subtituloChoice) return;
-      try {
-        const filtrados = origOptions.filter(o => o.tituloId === String(tituloValue));
-        <?php if($get_acao != 'visualizar') {?>
-        subtituloChoice.clearChoices();
-        <?php }?>
-        subtituloChoice.setChoices([{ value: '', label: 'Selecione', disabled: true }], 'value', 'label', true);
-        if (filtrados.length) subtituloChoice.setChoices(filtrados, 'value', 'label', false);
+            if (filtrados.length) {
+                subtituloChoices.setChoices(filtrados, 'value', 'label', false);
+            }
 
-        // limpa seleção, se necessário
-        if (!manterSelecao) {
-          subtituloChoice.removeActiveItems();
-          subtituloSelect.value = '';
-        } else {
-          const atual = subtituloSelect.value;
-          if (atual && filtrados.some(f => f.value === atual)) {
-            subtituloChoice.setChoiceByValue(atual);
-          } else {
-            subtituloChoice.removeActiveItems();
-            subtituloSelect.value = '';
-          }
+            if (!manterSelecao) {
+                subtituloChoices.removeActiveItems();
+            }
         }
-      } catch (e) {
-        console.error('Erro filtrando subtítulos:', e);
-      }
-    }
 
-    // 🔹 Listener para mudança no título
-    tituloSelect.addEventListener('change', function () {
-      const tituloId = this.value;
-      filtrarSubtitulosPorTitulo(tituloId, false);
-    });
+        // ========================================================================
+        // 6) Listener para mudança no título
+        // ========================================================================
+        tituloSelect.addEventListener('change', (e) => {
+            filtrarSubtitulos(e.target.value, false);
+        });
 
-    // 🔹 Pré-seleciona subtítulo do PHP
-    function aplicarPreSelecao() {
-      if (!subtituloSelecionado) return;
-      const found = origOptions.find(o => o.value === String(subtituloSelecionado));
-      if (!found) return;
+        // ========================================================================
+        // 7) PRÉ-SELEÇÃO DO PHP (título + subtítulo)
+        // ========================================================================
+        function aplicarPreSelecao() {
+            if (!subtituloSelecionado) return;
 
-      const tituloId = found.tituloId;
-      if (tituloSelect && tituloId && tituloSelect.value !== tituloId) {
-        tituloSelect.value = tituloId;
-        if (tituloSelect._choices) tituloSelect._choices.setChoiceByValue(tituloId);
-        filtrarSubtitulosPorTitulo(tituloId, true);
-      }
+            const encontrado = origOptions.find(o => o.value === String(subtituloSelecionado));
+            if (!encontrado) return;
 
-      setTimeout(() => {
-        try {
-          subtituloChoice.setChoiceByValue(String(found.value));
-        } catch {
-          const container = subtituloSelect.closest('.choices');
-          const item = container?.querySelector(`.choices__item[data-value="${found.value}"]`);
-          if (item) item.click();
+            const tituloId = encontrado.tituloId;
+
+            // Seleciona o título antes
+            tituloSelect.value = tituloId;
+            tituloSelect._choices.setChoiceByValue(tituloId);
+
+            // Recarrega subtítulos
+            filtrarSubtitulos(tituloId, true);
+
+            // Seleciona o subtítulo (com delay mínimo)
+            setTimeout(() => {
+                try {
+                    subtituloChoices.setChoiceByValue(String(subtituloSelecionado));
+                } catch {
+                    console.warn("⚠ Não conseguiu selecionar via método. Tentando fallback...");
+                }
+
+                subtituloSelect.value = subtituloSelecionado;
+                subtituloSelect.dispatchEvent(new Event('change', { bubbles: true }));
+
+            }, 80);
         }
-        subtituloSelect.value = found.value;
-        subtituloSelect.dispatchEvent(new Event('change', { bubbles: true }));
-      }, 200);
+
+        // Tempo para Choices terminar de construir
+        setTimeout(aplicarPreSelecao, 200);
     }
 
-    // 🔹 Inicialização
+    // ========================================================================
+    //  inicializa MODAL
+    // ========================================================================
+    initTituloSubtitulo('titulo', 'subtitulo', subtituloSelecionado);
+
+    // ========================================================================
+    // inicializa FILTROS LATERAIS
+    // ========================================================================
+    initTituloSubtitulo('titulo-filtro', 'subtitulo-filtro', filtroSubtituloSelecionado);
+
+    // ========================================================================
+    // Restaura título do filtro
+    // ========================================================================
     setTimeout(() => {
-      if (tituloSelect.value) {
-        filtrarSubtitulosPorTitulo(tituloSelect.value, true);
-      }
-      aplicarPreSelecao();
-    }, 300);
-  }
+        if (filtroTituloSelecionado) {
+            const t = document.getElementById('titulo-filtro');
+            if (t && t._choices) t._choices.setChoiceByValue(String(filtroTituloSelecionado));
+        }
+    }, 400);
 
-  // === Inicializa o modal ===
-  initTituloSubtitulo('titulo', 'subtitulo', subtituloSelecionado);
-
-  // === Inicializa os filtros ===
-  initTituloSubtitulo('titulo-filtro', 'subtitulo-filtro', filtroSubtituloSelecionado);
-
-  // === Restaura o título do filtro (PHP) ===
-  setTimeout(() => {
-    if (filtroTituloSelecionado) {
-      const select = document.getElementById('titulo-filtro');
-      if (select._choices) select._choices.setChoiceByValue(filtroTituloSelecionado.toString());
-      else select.value = filtroTituloSelecionado;
-      console.log('✅ Filtro de título restaurado:', filtroTituloSelecionado);
-    }
-  }, 400);
 });
-<?php }?>
+
+
 </script>
+<?php }?>
