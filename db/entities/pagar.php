@@ -15,7 +15,8 @@ class Pag01 {
     public $data_lanc;
     public $id_usuario;
     public $centro_custos;
-    public function __construct($id = null, $id_empresa = null, $id_cadastro = null, $id_con01 = null, $id_con02 = null, $documento = '', $descricao = '', $valor = 0.0, $parcelas = 1, $data_lanc = null, $id_usuario = null, $centro_custos = null) {
+    public $id_convertido;
+    public function __construct($id = null, $id_empresa = null, $id_cadastro = null, $id_con01 = null, $id_con02 = null, $documento = '', $descricao = '', $valor = 0.0, $parcelas = 1, $data_lanc = null, $id_usuario = null, $centro_custos = null, $id_convertido = null) {
         $this->id = $id;
         $this->id_empresa = $id_empresa;
         $this->id_cadastro = $id_cadastro;
@@ -28,6 +29,7 @@ class Pag01 {
         $this->data_lanc = $data_lanc ? new DateTime($data_lanc) : new DateTime();
         $this->id_usuario = $id_usuario;
         $this->centro_custos = $centro_custos;
+        $this->id_convertido = $id_convertido;
     }
 
     public static function create($pag01) {
@@ -281,7 +283,7 @@ class Pag02 {
         if ($data != null) $conditions[] = 'MONTH(p2.vencimento) = MONTH(:data) AND YEAR(p2.vencimento) = YEAR(:data)';
         if ($parcela != null) $conditions[] = 'p2.parcela = :parcela';
         if ($filtro_pagamento != null) $conditions[] = 'p2.id_pgto = :filtro_pagamento';
-        if ($dash_quitado != null && $dash_quitado == true) $conditions[] = 'p2.valor_pag != p2.valor_par';
+        if ($dash_quitado != null && $dash_quitado == true) $conditions[] = 'p2.valor_pag <= p2.valor_par';
 
         
         if ($filtro_documento != null) $conditions[] = 'p1.documento LIKE :filtro_documento';

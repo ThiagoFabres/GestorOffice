@@ -15,7 +15,8 @@ class Rec01 {
     public $data_lanc;
     public $id_usuario;
     public $centro_custos;
-    public function __construct($id = null, $id_empresa = null, $id_cadastro = null, $id_con01 = null, $id_con02 = null, $documento = '', $descricao = '', $valor = 0.0, $parcelas = 1, $data_lanc = null, $id_usuario = null, $centro_custos = null) {
+    public $id_convertido;
+    public function __construct($id = null, $id_empresa = null, $id_cadastro = null, $id_con01 = null, $id_con02 = null, $documento = '', $descricao = '', $valor = 0.0, $parcelas = 1, $data_lanc = null, $id_usuario = null, $centro_custos = null, $id_convertido = null) {
         $this->id = $id;
         $this->id_empresa = $id_empresa;
         $this->id_cadastro = $id_cadastro;
@@ -28,13 +29,14 @@ class Rec01 {
         $this->data_lanc = $data_lanc ? new DateTime($data_lanc) : new DateTime();
         $this->id_usuario = $id_usuario;
         $this->centro_custos = $centro_custos;
+        $this->id_convertido = $id_convertido;
     }
 
     public static function create($rec01) {
         $pdo = (new Database())->connect();
 
-        $sql = 'INSERT INTO rec01 (centro_custos, id_empresa, id_cadastro, id_con01, id_con02, documento, descricao, valor, parcelas, data_lanc, id_usuario) 
-                VALUES (:centro_custos, :id_empresa, :id_cadastro, :id_con01, :id_con02, :documento, :descricao, :valor, :parcelas, :data_lanc, :id_usuario)';
+        $sql = 'INSERT INTO rec01 (centro_custos, id_empresa, id_cadastro, id_con01, id_con02, documento, descricao, valor, parcelas, data_lanc, id_usuario, id_convertido) 
+                VALUES (:centro_custos, :id_empresa, :id_cadastro, :id_con01, :id_con02, :documento, :descricao, :valor, :parcelas, :data_lanc, :id_usuario, :id_convertido)';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id_empresa', $rec01->id_empresa);
         $stmt->bindValue(':id_cadastro', $rec01->id_cadastro);
@@ -47,6 +49,7 @@ class Rec01 {
         $stmt->bindValue(':data_lanc', $rec01->data_lanc->format('Y-m-d H:i:s'));
         $stmt->bindValue(':id_usuario', $rec01->id_usuario);
         $stmt->bindValue(':centro_custos', $rec01->centro_custos);
+        $stmt->bindValue(':id_convertido', $rec01->id_convertido);
 
         
 
@@ -282,7 +285,7 @@ class Rec02 {
         if ($data != null) $conditions[] = 'MONTH(r2.vencimento) = MONTH(:data) AND YEAR(r2.vencimento) = YEAR(:data)';
         if ($parcela != null) $conditions[] = 'r2.parcela = :parcela';
         if ($filtro_pagamento != null) $conditions[] = 'r2.id_pgto = :filtro_pagamento';
-        if ($dash_quitado == true) $conditions[] = 'r2.valor_pag != r2.valor_par';
+        if ($dash_quitado == true) $conditions[] = 'r2.valor_pag <= 0';
 
         
         if ($filtro_documento != null) $conditions[] = 'r1.documento LIKE :filtro_documento';
