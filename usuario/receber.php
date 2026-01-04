@@ -12,6 +12,8 @@ require_once __DIR__ . '/../db/entities/categoria.php';
 require_once __DIR__ . '/../db/entities/centrocustos.php';
 require_once __DIR__ . '/../db/entities/banco02.php';
 require_once __DIR__ . '/../db/entities/banco01.php';
+require_once __DIR__ . '/../db/base.php';
+
 
 session_start();
 
@@ -22,10 +24,11 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     exit;
 }
 
-
+require_once __DIR__ . '/../db/buscar_documento_rec.php';
 
 $lateral_target = 'receber';
 
+$novo_documento = buscarDocumento();
 $recebimentos_pagos = Rec02::readPagos();
 
 $ordenar_por = filter_input(INPUT_GET, 'ordenar') ?? filter_input(INPUT_POST, 'ordenar');
@@ -172,6 +175,8 @@ if ($filtros != []) {
         
 </style>
 <?php }?>
+
+
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -579,7 +584,17 @@ if ($filtros != []) {
                                     ?>
                                     <!-- style="<?php if ($ultima_parcela) { ?>border-bottom: 3px solid #5856d6;<?php } ?> border-inline: 1px solid #5856d6;" -->
                                     <!-- style="<?php if ($ultima_parcela) { ?>border-bottom: 2px solid #5856d6;<?php } else if ($rec02->parcela == 1) { ?> border-top: 3px solid #5856d6; <?php } ?> border-inline: 2px solid #5856d6;" -->
-                                    <tr class="tr-clientes <?= $cor_parcela ?> avoid-page-break" onclick="">
+                                    <tr class="tr-clientes <?= $cor_parcela ?> avoid-page-break" data-id="<?= $rec02->id ?>"
+                                        data-id="<?= $rec02->id ?>"
+                                        data-id-rec01="<?= $rec01->id ?>"
+                                        data-valor-pag="<?= $rec02->valor_pag ?>"
+                                        data-valor-restante="<?= number_format($rec02->valor_par - $rec02->valor_pag, 2, ',', '.') ?>"
+                                        data-parcela-atual="<?= $rec02->parcela ?>"
+                                        data-parcela-geral="<?= $rec01->parcelas ?>"
+                                        data-vencimento="<?= $data_venc ?>"
+                                        data-documento="<?= htmlspecialchars($rec01->documento, ENT_QUOTES, 'UTF-8') ?>"
+                                        data-id-rec01-recebido="<?= in_array($rec02->id_rec01, $recebimentos_pagos) ? '1' : '0' ?>"
+                                        onclick="">
                                         <td><?=$centro_custos?></td>
                                         <td><?= $rec01->documento; ?> </td>
                                         <td><?= $data_lanc; ?> </td>
@@ -690,6 +705,7 @@ if ($filtros != []) {
                 </div>
                 </table>
             </div>
+            
                 <div class="card-footer">
                     <div class="card-select-pagina">
                         <?php
@@ -730,11 +746,19 @@ if ($filtros != []) {
                         $total_parcelas = 0;
                         $total_pagamentos = 0;
                         $parcelas_totais = Rec02::read(
-                        id_empresa: $_SESSION['usuario']->id_empresa, 
-                        filtro_data_inicial: $get_filtro_data_inicial, 
-                        filtro_data_final: $get_filtro_data_final,
-                        filtro_por: $get_filtro_por,
-                        filtro_opcao: $get_filtro_opcao,
+                        id_empresa: $_SESSION['usuario']->id_empresa,
+                                filtro_data_inicial: $get_filtro_data_inicial,
+                                filtro_data_final: $get_filtro_data_final,
+                                filtro_documento: $get_filtro_nome,
+                                filtro_opcao: $get_filtro_opcao,
+                                filtro_por: $get_filtro_por,
+                                filtro_pagamento: $get_filtro_pagamento,
+                                filtro_cadastro: $get_filtro_cadastro,
+                                filtro_con01: $get_filtro_titulo,
+                                filtro_con02: $get_filtro_subtitulo,
+                                ordenar_por: $ordenar_por,
+                                direcao: $direcao,
+                                filtro_custos: $get_filtro_custo
                     );
                         
                         foreach ($parcelas_totais as $pt) {
@@ -747,16 +771,16 @@ if ($filtros != []) {
                         <div id="totais-lancamento">          
 
                             <?php if($get_filtro_opcao == null ||  $get_filtro_opcao == 'todos' || $get_filtro_opcao == 'abertos')  {?>
-                                <div id="total-vencido">Total das Parcelas: R$
-                                    <?= number_format($total_parcelas, 2, ',', '.') ?> </div>
+                                <div id="total-parcela">Total das Parcelas: R$
+                                    <?= number_format($total_parcelas, 2, ',', '.') ?> 
                                 </div>
                             <?php } ?>  
                             <?php if($get_filtro_opcao == 'quitados')  {?>
-                                <div id="total-vencido">Total Pago: R$
-                                    <?= number_format($total_pagamentos, 2, ',', '.') ?> </div>
+                                <div id="total-parcela">Total Pago: R$
+                                    <?= number_format($total_pagamentos, 2, ',', '.') ?>
                                 </div>
                             <?php } ?>
-
+                        </div>
                     <div class="card-select-numero">
                         <div>
                             <form method="post" action="<?= $caminho ?>">
@@ -784,6 +808,9 @@ if ($filtros != []) {
             <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="gerarpdf('receber',  document.querySelector('#nome-empresa h1').innerHTML)">Gerar PDF</button>
             <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="gerarexcel('receber',  document.querySelector('#nome-empresa h1').innerHTML)">Gerar Excel</button>
         </div>
+
+        
+
         <div class="tabela-lancamento dragscroll" style="display:none;">
                     <table class="tabela-lancamento1 table table-striped avoid-page-break" id="tabela-pdf" style="width:297px">
                         <thead>
@@ -797,63 +824,48 @@ if ($filtros != []) {
                             }
                             ?>
                             <tr class="tr-clientes-header">
-                                <th>Centro de custos</th>
+                                <th>CENTRO</th>
                                 <th><a
-                                        href="<?= $caminho ?>?ordenar=documento&direcao=<?php echo ($ordenar_por === 'documento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Documento</a><?php if ($ordenar_por == 'documento') {
+                                        href="<?= $caminho ?>?ordenar=documento&direcao=<?php echo ($ordenar_por === 'documento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">DOCUMENTO</a><?php if ($ordenar_por == 'documento') {
                                                          echo $seta;
                                                      } ?>
                                 </th>
                                 <th><a
-                                        href="<?= $caminho ?>?ordenar=data_lancamento&direcao=<?php echo ($ordenar_por === 'data_lancamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Data
-                                        de Lançamento</a><?php if ($ordenar_por == 'data_lancamento') {
+                                        href="<?= $caminho ?>?ordenar=data_lancamento&direcao=<?php echo ($ordenar_por === 'data_lancamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">DATA.LANC</a><?php if ($ordenar_por == 'data_lancamento') {
                                             echo $seta;
                                         } ?>
                                 </th>
+                                <th><a>DESCRIÇÃO</a></th>
                                 <th><a
-                                        href="<?= $caminho ?>?ordenar=nome&direcao=<?php echo ($ordenar_por === 'nome' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Nome</a><?php if ($ordenar_por == 'nome') {
+                                        href="<?= $caminho ?>?ordenar=valor&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'valor' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">VALOR</a><?php if ($ordenar_por == 'valor') {
                                                          echo $seta;
                                                      } ?>
                                 </th>
-                                <th><a>Descrição</a></th>
+                                <th><a>PARC.GERAL</a></th>
+                                <th><a>PARC.ATUAL</a></th>
                                 <th><a
-                                        href="<?= $caminho ?>?ordenar=valor&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'valor' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Valor</a><?php if ($ordenar_por == 'valor') {
-                                                         echo $seta;
-                                                     } ?>
-                                </th>
-                                <th><a>Parcela Geral</a></th>
-                                <th><a>Parcela Atual</a></th>
-                                <th><a
-                                        href="<?= $caminho ?>?ordenar=valor_parcela&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'valor_parcela' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Valor
-                                        da Parcela</a><?php if ($ordenar_por == 'valor_parcela') {
+                                        href="<?= $caminho ?>?ordenar=valor_parcela&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'valor_parcela' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">VALOR.PARC</a><?php if ($ordenar_por == 'valor_parcela') {
                                             echo $seta;
                                         } ?></th>
                                 <th><a
-                                        href="<?= $caminho ?>?ordenar=data_vencimento&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'data_vencimento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Vencimento</a><?php if ($ordenar_por == 'data_vencimento') {
+                                        href="<?= $caminho ?>?ordenar=data_vencimento&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'data_vencimento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">DATA.VENC</a><?php if ($ordenar_por == 'data_vencimento') {
                                                          echo $seta;
                                                      } ?>
                                 </th>
                                 <th><a
-                                        href="<?= $caminho ?>?ordenar=data_pagamento&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'data_pagamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Data
-                                        de Pagamento</a><?php if ($ordenar_por == 'data_pagamento') {
+                                        href="<?= $caminho ?>?ordenar=data_pagamento&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'data_pagamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">DATA.PAG</a><?php if ($ordenar_por == 'data_pagamento') {
                                             echo $seta;
                                         } ?>
                                 </th>
                                 <th><a
-                                        href="<?= $caminho ?>?ordenar=valor_pagamento&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'valor_pagamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Valor
-                                        Pago</a><?php if ($ordenar_por == 'valor_pagamento') {
+                                        href="<?= $caminho ?>?ordenar=valor_pagamento&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'valor_pagamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">VALOR.PAG</a><?php if ($ordenar_por == 'valor_pagamento') {
                                             echo $seta;
                                         } ?></th>
                                 <th><a
-                                        href="<?= $caminho ?>?ordenar=tipo_pagamento&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'tipo_pagamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Tipo
-                                        de Pagamento</a><?php if ($ordenar_por == 'tipo_pagamento') {
+                                        href="<?= $caminho ?>?ordenar=tipo_pagamento&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'tipo_pagamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">TIPO.PAG</a><?php if ($ordenar_por == 'tipo_pagamento') {
                                             echo $seta;
                                         } ?>
                                 </th>
-                                <th>OBS</th>
-                                <th>Quitar</th>
-                                <th>Estornar</th>
-                                <th>Editar</th>
-                                <th>Visualizar</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -934,59 +946,38 @@ if ($filtros != []) {
                                     ?>
                                     <!-- style="<?php if ($ultima_parcela) { ?>border-bottom: 3px solid #5856d6;<?php } ?> border-inline: 1px solid #5856d6;" -->
                                     <!-- style="<?php if ($ultima_parcela) { ?>border-bottom: 2px solid #5856d6;<?php } else if ($rec02->parcela == 1) { ?> border-top: 3px solid #5856d6; <?php } ?> border-inline: 2px solid #5856d6;" -->
-                                    <tr class="tr-clientes <?= $cor_parcela ?> avoid-page-break" onclick="">
-                                        <td><?=$centro_custos?></td>
-                                        <td><?= $rec01->documento; ?> </td>
-                                        <td><?= $data_lanc; ?> </td>
-                                        <td><?= $cadastro->razao_soc; ?> </td>
-                                        <td><?= $rec01->descricao; ?></td>
-                                        <td>R$ <?= $valor_total ?></td>
-                                        <td><?= $rec01->parcelas ?></td>
-                                        <td><?= $rec02->parcela ?></td>
-                                        <td>R$ <?= $valor_parcela ?></td>
-                                        <td><?= $data_venc ?></td>
-                                        <td><?php if ($rec02->valor_pag == 0) {
-                                            echo 'Não foi pago';
-                                        } else {
-                                            echo $data_pag ?? 'Não foi pago';
-                                        } ?>
-                                        </td>
-                                        <td><?php if ($rec02->valor_pag == 0) {
-                                            echo '';
-                                        } else {
-                                            echo 'R$ ' . $valor_pago;
-                                        } ?></td>
-                                        <td><?= $pagamento->nome ?? '' ?></td>
-                                        <td><?= $rec02->obs ?></td>
-                                        <td class="td-acoes">
-                                            <?php $valor_restante = number_format($rec02->valor_par - $rec02->valor_pag, 2, ',', '.') ?>
-                                            <button class="btn btn-primary" data-bs-toggle="modal" <?php if ($rec02->valor_pag > 0) { ?> disabled <?php } ?> data-bs-target="#modal_quitar"
-                                                data-id="<?= $rec02->id ?>"  data-valor-restante="<?= $valor_restante ?>"
-                                                data-parcela-atual="<?= $rec02->parcela ?>"
-                                                data-parcela-geral="<?= $rec01->parcelas ?>"
-                                                data-vencimento="<?= $data_venc ?>"
-                                                data-documento="<?= htmlspecialchars($rec01->documento, ENT_QUOTES, 'UTF-8') ?>"
-                                            ><i class="bi bi-cash-stack"></i></button>
-                                        <td class="td-acoes">
-                                            <button class="btn btn-primary" <?php if ($rec02->valor_pag == 0) { ?> disabled <?php } ?>
-                                                onclick="window.location.href='cadastros_manager.php?view=receber&target=parcela&acao=estornar&id=<?= $rec02->id ?>&caminho=<?= $caminho_get ?>&pagina=<?php if (empty($filtros)) { ?>
-                                                    <?= '?pagina=' . $numero_pagina; ?>
-                                                <?php } else { ?>
-                                                    <?= '?pagina=' . $numero_pagina; ?>
-                                                <?php } ?>&numero_exibido=<?= 'knumero_exibido=' . $numero_exibir ?>'"><i
-                                                    class="bi bi-wallet2"></i></button>
-                                        </td>
-                                        <td class="td-acoes">
-                                            <button class="btn btn-primary" <?php if (in_array($rec02->id_rec01, $recebimentos_pagos)) { ?> disabled <?php } ?>
-                                                onclick="window.location.href='receber.php?id=<?= $rec01->id ?>&acao=editar'"><i
-                                                    class="bi bi-pen-fill"></i></button>
-                                        </td>
-                                        <td class="td-acoes">
-                                            <button class="btn btn-primary"
-                                                onclick="window.location.href='receber.php?id=<?= $rec01->id ?>&acao=visualizar'"><i class="bi bi-eye"></i></button>
-                                        </td>
-                                    </tr>
-
+                                    <div class="avoid-page-break" style="page-break-inside:avoid; break-inside:avoid;">
+                                        <tr class="tr-clientes <?= $cor_parcela ?>" onclick="">
+                                            <td><?php echo substr($centro_custos, 0, 9)?></td>
+                                            <td><?= $rec01->documento; ?> </td>
+                                            <td><?= $data_lanc; ?> </td>
+                                            <td colspan="9" class="descricao-full" style="text-align:start;" id="td-descricao"><?= nl2br(htmlspecialchars($cadastro->razao_soc . ' - ' . $rec01->descricao, ENT_QUOTES, 'UTF-8')) ?></td>
+                                        </tr>
+                                        <tr class="tr-clientes <?= $cor_parcela ?>" onclick="">
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td>R$ <?= $valor_total ?></td>
+                                            <td><?= $rec01->parcelas ?></td>
+                                            <td><?= $rec02->parcela ?></td>
+                                            <td>R$ <?= $valor_parcela ?></td>
+                                            <td><?= $data_venc ?></td>
+                                            <td><?php if ($rec02->valor_pag == 0) {
+                                                echo 'Não foi pago';
+                                            } else {
+                                                echo $data_pag ?? 'Não foi pago';
+                                            } ?>
+                                            </td>
+                                            <td><?php if ($rec02->valor_pag == 0) {
+                                                echo '';
+                                            } else {
+                                                echo 'R$ ' . $valor_pago;
+                                            } ?></td>
+                                            <td><?php echo substr($pagamento->nome ?? '', 0, 9) ?? '' ?></td>
+                                        
+                                        </tr>
+                                    </div>
 
 
 
@@ -1003,28 +994,16 @@ if ($filtros != []) {
                                     <td></td>
                                     <td></td>
                                     <td></td>
-                                    <td></td>
                                     <td style="text-align: end; font-size: 100%;">R$</td>
                                     <td style="text-align: center; font-size: 100%;"><?= number_format($total_valor_par, '2', ',', '.')?></td>
                                     <td></td>
                                     <td style="text-align: end; font-size: 100%;">R$</td>
                                     <td style="text-align: center; font-size: 100%;"><?= number_format($total_valor_pago, '2', ',', '.')?></td>
                                     <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
                                 </tr>
                                 <?php } else { ?>
                                 <tr>
                                     <td>Nenhum Lançamento encontrado</td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
                                     <td></td>
                                     <td></td>
                                     <td></td>
@@ -1044,6 +1023,13 @@ if ($filtros != []) {
                     </table>                
                 </div>
     </div>
+
+                <div id="custom-context-menu" style="display:none; position:absolute; z-index:9999; background:#fff; border:1px solid #ccc; box-shadow:0 2px 8px rgba(0,0,0,0.2); min-width:180px; border-radius:6px; overflow:hidden;">
+                    <button id="menu-quitar" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-cash-stack"></i> Quitar</button>
+                    <button id="menu-estornar" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-wallet2"></i> Estornar</button>
+                    <button id="menu-editar" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-pen-fill"></i> Editar</button>
+                    <button id="menu-visualizar" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-eye"></i> Visualizar</button>
+                </div>
                                   
     <?php require_once __DIR__ . '/../componentes/modais/lancamentos/receber/modal_quitar.php'; ?>
     </div>                          
@@ -1075,6 +1061,96 @@ if ($filtros != []) {
     
 
 </body>
+<script>
+// Custom context menu behavior
+;(function(){
+    const menu = document.getElementById('custom-context-menu');
+    let currentRow = null;
+
+    document.addEventListener('contextmenu', function(e){
+        // target any table data row (including clicks inside cells or buttons)
+        let row = e.target.closest('.tr-clientes');
+        // ignore header rows or other non-data rows
+        if (row && !row.classList.contains('tr-clientes-header')) {
+            // stop browser menu and any propagation; run in capture to beat other handlers
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+            console.debug('custom contextmenu intercept', row);
+            currentRow = row;
+            // compute menu size and position to keep within viewport
+            const menuWidth = menu.offsetWidth || 220;
+            const menuHeight = menu.offsetHeight || 160;
+            let x = e.pageX - 260;
+            let y = e.pageY - 70;
+           
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
+            menu.style.display = 'block';
+            // enable/disable items based on data attrs
+            const valorPag = parseFloat(row.getAttribute('data-valor-pag') || '0');
+            const recebido = row.getAttribute('data-id-pag01-recebido') === '1';
+            const btnQ = document.getElementById('menu-quitar');
+            const btnE = document.getElementById('menu-estornar');
+            const btnEd = document.getElementById('menu-editar');
+            if (btnQ) btnQ.disabled = valorPag > 0;
+            if (btnE) btnE.disabled = valorPag == 0;
+            if (btnEd) btnEd.disabled = recebido;
+        } else {
+            // allow browser context menu when not on a data row
+            menu.style.display = 'none';
+        }
+    }, true);
+
+    document.addEventListener('click', function(e){
+        if (!menu.contains(e.target)) menu.style.display = 'none';
+    });
+    window.addEventListener('scroll', ()=> menu.style.display = 'none');
+
+    // actions
+    document.getElementById('menu-quitar').addEventListener('click', function(){
+        if (!currentRow) return;
+        const id = currentRow.getAttribute('data-id');
+        const valorRestante = currentRow.getAttribute('data-valor-restante');
+        const parcelaAtual = currentRow.getAttribute('data-parcela-atual');
+        const parcelaGeral = currentRow.getAttribute('data-parcela-geral');
+        const vencimento = currentRow.getAttribute('data-vencimento');
+        const documento = currentRow.getAttribute('data-documento');
+        const modalEl = document.getElementById('modal_quitar');
+        if (modalEl) {
+            document.getElementById('modal_quitar_id').value = id;
+            const vr = document.getElementById('modal_quitar_valor_restante'); if (vr) vr.textContent = 'Valor restante da parcela: R$ ' + valorRestante;
+            const pa = document.getElementById('modal_quitar_parcela_atual'); if (pa) pa.textContent = parcelaAtual || '';
+            const pg = document.getElementById('modal_quitar_parcela_geral'); if (pg) pg.textContent = parcelaGeral || '';
+            const vv = document.getElementById('modal_quitar_vencimento'); if (vv) vv.textContent = vencimento || '';
+            const doc = document.getElementById('modal_quitar_documento'); if (doc) doc.textContent = documento || '';
+            const modalVal = document.getElementById('modal_quitar_valor'); if (modalVal) modalVal.placeholder = valorRestante || '';
+            const bsModal = new bootstrap.Modal(modalEl); bsModal.show();
+        }
+        menu.style.display = 'none';
+    });
+
+    document.getElementById('menu-estornar').addEventListener('click', function(){
+        if (!currentRow) return;
+        const id = currentRow.getAttribute('data-id');
+        const url = 'cadastros_manager.php?view=receber&target=parcela&acao=estornar&id=' + id + '&caminho=<?= $caminho_get ?>&pagina=<?= $numero_pagina ?>&numero_exibido=knumero_exibido=<?= $numero_exibir ?>';
+        window.location.href = url;
+    });
+
+    document.getElementById('menu-editar').addEventListener('click', function(){
+        if (!currentRow) return;
+        const idRec01 = currentRow.getAttribute('data-id-rec01');
+        window.location.href = 'receber.php?id=' + idRec01 + '&acao=editar';
+    });
+
+    document.getElementById('menu-visualizar').addEventListener('click', function(){
+        if (!currentRow) return;
+        const idRec01 = currentRow.getAttribute('data-id-rec01');
+        window.location.href = 'receber.php?id=' + idRec01 + '&acao=visualizar';
+    });
+
+})();
+</script>
 <script src="gerar.js"></script>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
@@ -1119,20 +1195,6 @@ if ($filtros != []) {
         });
     <?php } ?>
 
-    document.getElementById("btnBuscarDoc").addEventListener("click", function () {
-                document.getElementById("documento").placeholder = 'Buscando...';
-                fetch("/../db/buscar_documento_rec.php")
-                    .then(response => response.json())
-                    .then(data => {
-
-                        if (data.sucesso) {
-                            document.getElementById("documento").value = data.numero;
-                        } else {
-                            alert("Nenhum documento disponível encontrado.");
-                        }
-                    })
-                    .catch(err => console.error("Erro:", err));
-    });
     document.addEventListener('DOMContentLoaded', function () {
         var userBtn = document.getElementById('userBtn');
         var userMenu = document.getElementById('userMenu');
@@ -1503,7 +1565,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     subtituloModalElement.value = '';
                 }
             }
-
+            subtituloModalChoice.clearStore();
+            subtituloModalChoice.clearChoices();
             tituloModalElement.addEventListener('change', function(e) {
                 const valor = e.detail ? e.detail.value : e.target.value;
                 carregarSubtitulosModal(valor);
@@ -1514,7 +1577,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 carregarSubtitulosModal(tituloInicialModal);
             }
         }
-    
+    subtituloModalChoice.clearStore();
+            subtituloModalChoice.clearChoices();
     
     ;}, 100);
 });
