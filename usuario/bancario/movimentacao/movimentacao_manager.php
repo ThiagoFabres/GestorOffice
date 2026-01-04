@@ -463,7 +463,12 @@ if($acao == 'processar') {
 } else if($acao == 'editar_desmembramento') {
     $id = filter_input(INPUT_POST, 'id');
     $ban02 = Ban02::read($id, $_SESSION['usuario']->id_empresa)[0];
-    $primeiro_ban02 = Ban02::read(id_empresa:$_SESSION['usuario']->id_empresa, id_original: $ban02->id_original)[0];
+    if($ban02->id_original == null) {
+        $primeiro_ban02 = $ban02;
+    } else {
+        $primeiro_ban02 = Ban02::read(id_empresa:$_SESSION['usuario']->id_empresa, id_original: $ban02->id_original)[0];
+    }
+    
 
     $descricao_comp_original = filter_input(INPUT_POST, 'descricao_comp_original');
 
