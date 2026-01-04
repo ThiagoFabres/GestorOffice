@@ -272,7 +272,6 @@ if ($filtros != []) {
                 
             
             <div class="card-body dragscroll" style="padding:0;">
-                <div id="conteudo-pdf">
                 <table class="table table-hover tabela-bancario" >
                     <thead>
                         <tr class="tr-header">
@@ -340,7 +339,14 @@ if ($filtros != []) {
                                 $data_lancamento = DateTime::createFromFormat('Y-m-d', $movimentacao->data)->format('d/m/Y');
                                 $conta_nome = Ban01::read($movimentacao->id_ban01, $_SESSION['usuario']->id_empresa)[0]->nome;
                          {?>
-                         <tr class="<?=$cor_parcela?> tr-bancario" >
+                         <tr class="<?=$cor_parcela?> tr-bancario" 
+                             oncontextmenu="return window.openCustomContextMenu ? window.openCustomContextMenu(event, this) : false;"
+                             data-id="<?= $movimentacao->id ?>"
+                             data-valor="<?= $movimentacao->valor ?>"
+                             data-id-original="<?= $movimentacao->id_original ?? '' ?>"
+                             data-id-con01="<?= $movimentacao->id_con01 ?? '' ?>"
+                             data-id-con02="<?= $movimentacao->id_con02 ?? '' ?>"
+                         >
                             <td onclick="window.location.href='<?=$link?>'"><?=$movimentacao->documento?></td>
                             <td onclick="window.location.href='<?=$link?>'"><?=$data_lancamento?></td>
                             <td onclick="window.location.href='<?=$link?>'"><?=$tipo?></td>
@@ -369,7 +375,7 @@ if ($filtros != []) {
                         <?php } } }?>
                     </tbody>
                 </table>
-                </div>
+
             </div>
             <div class="card-footer">
                     <div class="card-select-pagina">
@@ -415,13 +421,106 @@ if ($filtros != []) {
                     </div>
                 </div>
             </div>
-            <div class="relatorios-botoes">
-            <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="gerarpdf('pagar', document.querySelector('#nome-empresa h1').innerHTML)">Gerar PDF</button>
-            <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="gerarexcel('pagar', document.querySelector('#nome-empresa h1').innerHTML)">Gerar Excel</button>
+            
         </div>
+
+        <div style="display: none;">
+                <table id="tabela-pdf">
+                    <thead>
+                        <tr class="tr-header">
+                            <th>Documento</th>
+                            <th>Data de Lançamento</th>
+                            <th>Tipo de Lançamento</th>
+                            <th>Descrição</th>
+                            <th>Valor</th>
+                            <th>Conta</th>
+                            <th>Título</th>
+                            <th>Subtítulo</th>
+                            
+                        </tr>
+                    </thead>
+                    <tbody >
+                        <?php
+
+                        
+                        $movimentacoes = Ban02::read(
+                            id_empresa: $_SESSION['usuario']->id_empresa,
+                            filtro_data_inicial: $get_filtro_data_inicial ??null,
+                            filtro_data_final: $get_filtro_data_final ?? null,
+                            filtro_conciliado:$get_filtro_conciliado,
+                            filtro_titulo: $get_filtro_titulo ?? null,
+                            filtro_subtitulo: $get_filtro_subtitulo ?? null,
+                            filtro_conta: $get_filtro_conta ?? null,
+                            filtro_tipo: $get_filtro_tipo,
+                        );
+
+                         if(!empty($movimentacoes)) {
+                            
+                            foreach($movimentacoes as $movimentacao) {
+                                
+                                // echo '<pre>';
+                                // print_r($movimentacao);
+                                // echo '</pre>';
+                                if(empty($filtros)) {
+                                $link = $caminho . '?';
+                            } else {$link = $caminho . '&';}
+                                $link .= 'acao=conciliar&id=' . $movimentacao->id;
+                            
+                            if($movimentacao->id_con01 != null) {
+                                $con01 = Con01::read($movimentacao->id_con01, $_SESSION['usuario']->id_empresa)[0];
+                            } else {
+                                $con01 = null;
+                            }
+                            if($movimentacao->id_con02 != null) {
+                                $con02 = Con02::read($movimentacao->id_con02, $_SESSION['usuario']->id_empresa)[0];
+                            } else {
+                                $con02 = null;
+                            }
+                            if($movimentacao->id_con01 != null && $movimentacao->id_con02 != null )   {
+                                $cor_parcela = 'parcela_cor_verde';
+                            } else {
+                                $cor_parcela = 'parcela_cor_vermelha';
+                            }
+                                $tipo = $movimentacao->valor < 0 ? 'Débito' : 'Crédito';
+                                $caminho_quitar = $movimentacao->valor < 0 ? '/usuario/pagar.php?filtro_data_inicial='.$movimentacao->data.'&filtro_data_final='.$movimentacao->data.'&opcao_filtro=abertos&filtro_por=lancamento' : '/usuario/receber.php?filtro_data_inicial='.$movimentacao->data.'&filtro_data_final='.$movimentacao->data.'&opcao_filtro=abertos&filtro_por=lancamento';
+                                $data_lancamento = DateTime::createFromFormat('Y-m-d', $movimentacao->data)->format('d/m/Y');
+                                $conta_nome = Ban01::read($movimentacao->id_ban01, $_SESSION['usuario']->id_empresa)[0]->nome;
+                         {?>
+                         <tr>
+                            <td onclick="window.location.href='<?=$link?>'"><?=$movimentacao->documento?></td>
+                            <td onclick="window.location.href='<?=$link?>'"><?=$data_lancamento?></td>
+                            <td onclick="window.location.href='<?=$link?>'"><?=$tipo?></td>
+                            <td colspan="9" class="descricao-full" style="text-align:start;" id="td-descricao" onclick="window.location.href='<?=$link?>'"><?php echo $movimentacao->descricao_comp != '' ? substr(substr($movimentacao->descricao, 0, 60) . ' - ' . substr($movimentacao->descricao_comp, 0,60), 0, 100) : $movimentacao->descricao ?></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td onclick="window.location.href='<?=$link?>'">R$ <?=number_format($movimentacao->valor, 2, ',', '.', )?></td>
+                            <td onclick="window.location.href='<?=$link?>'"><?=$conta_nome?></td>
+                            <td onclick="window.location.href='<?=$link?>'"><?= isset($con01) ? substr($con01->nome, 0, 15) : ''?></td>
+                            <td onclick="window.location.href='<?=$link?>'"><?= isset($con02) ? substr($con02->nome, 0, 15) : ''?></td>
+                            
+                        </tr>
+                        <?php } } }?>
+                    </tbody>
+                </table>
+
+                <!-- Context menu for bancario table rows -->
+                
+
+                </div>
+        <div id="custom-context-menu" style="display:none; position:absolute; z-index:9999; background:#fff; border:1px solid #ccc; box-shadow:0 2px 8px rgba(0,0,0,0.2); min-width:200px; border-radius:6px; overflow:hidden;">
+                    <button id="menu-conciliar" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-clipboard-check"></i> Conciliar</button>
+                    <button id="menu-desmembrar" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-code-slash"></i> Desmembrar</button>
+                    <button id="menu-editar-bancario" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-pen-fill"></i> Editar</button>
+                    <button id="menu-quitar-bancario" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-arrow-90deg-up"></i> Quitar</button>
+                </div>
+        <div class="relatorios-botoes" style="float:left; width:100%">
+            <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="gerarpdf('movimentacao', document.querySelector('#nome-empresa h1').innerHTML)">Gerar PDF</button>
+            <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="gerarexcel('movimentacao', document.querySelector('#nome-empresa h1').innerHTML)">Gerar Excel</button>
         </div>
-        
-        
     
 
     <?php 
@@ -452,14 +551,128 @@ if ($filtros != []) {
 </body>
 
 <script>
-    let origemInput = document.getElementById('desc_comp_original_origem')
-        let destinoInput = document.getElementById('desc_comp_original_destino')
-        if (origemInput && destinoInput) {
-            // Para selects, datas e textos
-            origemInput.addEventListener('input', function () {
-                destinoInput.value = origemInput.value;
-            });
+// Custom context menu for movimentacao table — initialize after DOM
+;(function(){
+    console.debug('init movimentacao contextmenu script');
+    // shared state for inline handler
+    window._mov_ctx_row = null;
+
+    // global handler callable from oncontextmenu attribute on rows
+    window.openCustomContextMenu = function(e, row) {
+        try {
+            const menu = document.getElementById('custom-context-menu');
+            if (!menu) return false;
+            if (!row || !row.classList.contains('tr-bancario')) return false;
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+            console.debug('openCustomContextMenu called', row);
+            window._mov_ctx_row = row;
+            const menuWidth = menu.offsetWidth || 220;
+            const menuHeight = menu.offsetHeight || 160;
+            let x = e.pageX - 260;
+            let y = e.pageY - 70;
+
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
+            menu.style.display = 'block';
+            const idOriginal = row.getAttribute('data-id-original') || '';
+            const idCon01 = row.getAttribute('data-id-con01') || '';
+            const idCon02 = row.getAttribute('data-id-con02') || '';
+            const btnConc = document.getElementById('menu-conciliar');
+            const btnDes = document.getElementById('menu-desmembrar');
+            const btnEd = document.getElementById('menu-editar-bancario');
+            const btnQ = document.getElementById('menu-quitar-bancario');
+            if (btnConc) btnConc.disabled = (idCon01 !== '' && idCon02 !== '');
+            if (btnDes) btnDes.disabled = (idOriginal !== '');
+            if (btnEd) btnEd.disabled = false;
+            if (btnQ) btnQ.disabled = (idCon01 === '' || idCon02 === '');
+            row.classList.add('context-menu-open');
+            return false;
+        } catch (err) { console.error(err); return false; }
+    };
+
+    document.addEventListener('DOMContentLoaded', function(){
+        console.log('a')
+        const menu = document.getElementById('custom-context-menu');
+        if (!menu) {
+            console.warn('custom-context-menu not found');
+            return;
         }
+        const base = '<?php if(empty($filtros)) {echo $caminho . '?';} else {echo $caminho . '&';}?>';
+
+        function openMenuForEvent(e) {
+            try {
+                let row = e.target.closest('.tr-bancario');
+                if (row && !row.classList.contains('tr-header')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+                    console.debug('movimentacao contextmenu intercepted', row);
+                    window._mov_ctx_row = row;
+                    const menuWidth = menu.offsetWidth || 220;
+                    const menuHeight = menu.offsetHeight || 160;
+                    let x = e.pageX - 355;
+                    let y = e.pageY - 170;
+                    menu.style.left = x + 'px';
+                    menu.style.top = y + 'px';
+                    menu.style.display = 'block';
+
+                    // enable/disable based on row attributes
+                    const idOriginal = row.getAttribute('data-id-original') || '';
+                    const idCon01 = row.getAttribute('data-id-con01') || '';
+                    const idCon02 = row.getAttribute('data-id-con02') || '';
+                    const btnConc = document.getElementById('menu-conciliar');
+                    const btnDes = document.getElementById('menu-desmembrar');
+                    const btnEd = document.getElementById('menu-editar-bancario');
+                    const btnQ = document.getElementById('menu-quitar-bancario');
+                    if (btnConc) btnConc.disabled = (idCon01 !== '' && idCon02 !== ''); // already conciliated
+                    if (btnDes) btnDes.disabled = (idOriginal !== '');
+                    if (btnEd) btnEd.disabled = false;
+                    if (btnQ) btnQ.disabled = (idCon01 === '' || idCon02 === '');
+                    // visual highlight
+                    row.classList.add('context-menu-open');
+                } else {
+                    menu.style.display = 'none';
+                    if (window._mov_ctx_row) window._mov_ctx_row.classList.remove('context-menu-open');
+                    window._mov_ctx_row = null;
+                }
+            } catch (err) { console.error('contextmenu handler error', err); }
+        }
+
+        // capture-phase listener to beat other handlers
+        document.addEventListener('contextmenu', openMenuForEvent, true);
+
+        // fallback assignment for environments that may not respect capture listeners
+        document.body.oncontextmenu = function(e) {
+            // try our handler; if it chooses to open menu it will prevent default
+            openMenuForEvent(e);
+            // if menu was opened, ensure default prevented
+            if (menu.style.display === 'block') return false;
+            return true;
+        };
+
+        document.addEventListener('click', function(e){ if (!menu.contains(e.target)) { menu.style.display = 'none'; if (window._mov_ctx_row) window._mov_ctx_row.classList.remove('context-menu-open'); window._mov_ctx_row = null; } });
+        window.addEventListener('scroll', ()=> { menu.style.display = 'none'; if (window._mov_ctx_row) window._mov_ctx_row.classList.remove('context-menu-open'); window._mov_ctx_row = null; });
+
+        function navigateTo(action, id) { window.location.href = base + 'acao=' + action + '&id=' + id; }
+
+        document.getElementById('menu-conciliar').addEventListener('click', function(){ if (!window._mov_ctx_row) return; navigateTo('conciliar', window._mov_ctx_row.getAttribute('data-id')); });
+        document.getElementById('menu-desmembrar').addEventListener('click', function(){ if (!window._mov_ctx_row) return; navigateTo('desmembrar', window._mov_ctx_row.getAttribute('data-id')); });
+        document.getElementById('menu-editar-bancario').addEventListener('click', function(){ if (!window._mov_ctx_row) return; navigateTo('visualizar', window._mov_ctx_row.getAttribute('data-id')); });
+        document.getElementById('menu-quitar-bancario').addEventListener('click', function(){ if (!window._mov_ctx_row) return; navigateTo('quitar_bancario', window._mov_ctx_row.getAttribute('data-id')); });
+
+    });
+})();
+
+    // let origemInput = document.getElementById('desc_comp_original_origem')
+    //     let destinoInput = document.getElementById('desc_comp_original_destino')
+    //     if (origemInput && destinoInput) {
+    //         // Para selects, datas e textos
+    //         origemInput.addEventListener('input', function () {
+    //             destinoInput.value = origemInput.value;
+    //         });
+    //     }
         
     document.addEventListener('DOMContentLoaded', function () {
         var userBtn = document.getElementById('userBtn');
