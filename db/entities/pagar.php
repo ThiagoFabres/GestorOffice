@@ -35,8 +35,8 @@ class Pag01 {
     public static function create($pag01) {
         $pdo = (new Database())->connect();
 
-    $sql = 'INSERT INTO pag01 (centro_custos, id_empresa, id_cadastro, id_con01, id_con02, documento, descricao, valor, parcelas, data_lanc, id_usuario) 
-        VALUES (:centro_custos, :id_empresa, :id_cadastro, :id_con01, :id_con02, :documento, :descricao, :valor, :parcelas, :data_lanc, :id_usuario)';
+    $sql = 'INSERT INTO pag01 (centro_custos, id_empresa, id_cadastro, id_con01, id_con02, documento, descricao, valor, parcelas, data_lanc, id_usuario, id_convertido) 
+        VALUES (:centro_custos, :id_empresa, :id_cadastro, :id_con01, :id_con02, :documento, :descricao, :valor, :parcelas, :data_lanc, :id_usuario, :id_convertido)';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id_empresa', $pag01->id_empresa);
         $stmt->bindValue(':id_cadastro', $pag01->id_cadastro);
@@ -49,6 +49,8 @@ class Pag01 {
         $stmt->bindValue(':data_lanc', $pag01->data_lanc->format('Y-m-d H:i:s'));
         $stmt->bindValue(':id_usuario', $pag01->id_usuario);
         $stmt->bindValue(':centro_custos', $pag01->centro_custos);
+        $stmt->bindValue(':id_convertido', $pag01->id_convertido);
+
 
         
 
@@ -89,7 +91,7 @@ class Pag01 {
         $pdo = (new Database())->connect();
 
         $sql = 'UPDATE pag01 
-                SET centro_custos = :centro_custos, id_cadastro = :id_cadastro, id_con01 = :id_con01, id_con02 = :id_con02, documento = :documento, descricao = :descricao, valor = :valor, parcelas = :parcelas, data_lanc = :data_lanc, id_usuario = :id_usuario 
+                SET centro_custos = :centro_custos, id_cadastro = :id_cadastro, id_con01 = :id_con01, id_con02 = :id_con02, documento = :documento, descricao = :descricao, valor = :valor, parcelas = :parcelas, data_lanc = :data_lanc, id_usuario = :id_usuario, id_convertido = :id_convertido
                 WHERE id = :id';
 
         $stmt = $pdo->prepare($sql);
@@ -104,6 +106,7 @@ class Pag01 {
         $stmt->bindValue(':data_lanc', $pag01->data_lanc->format('Y-m-d H:i:s'));
         $stmt->bindValue(':id_usuario', $pag01->id_usuario);
         $stmt->bindValue(':centro_custos', $pag01->centro_custos);
+        $stmt->bindValue(':id_convertido', $pag01->id_convertido);
 
         
 
