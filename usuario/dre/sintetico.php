@@ -7,6 +7,7 @@ require_once __DIR__ . '/../../db/entities/recebimentos.php';
 require_once __DIR__ . '/../../db/entities/pagamento.php';
 require_once __DIR__ . '/../../db/entities/pagar.php';
 require_once __DIR__ . '/../../db/entities/centrocustos.php';
+require_once __DIR__ . '/../../db/entities/empresas.php';
 session_start();
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     header('Location: /');
@@ -26,38 +27,48 @@ $get_titulo = filter_input(INPUT_GET, 'titulo') ?: null;
 $get_subtitulo = null;
 $get_custos = filter_input(INPUT_GET, 'filtro_custos') ?? null;
 $get_operacional = filter_input(INPUT_GET, 'filtro_operacional') ?: null;
+$todas_empresas = filter_input(INPUT_GET, 'todas_empresas') == 'on' ? 1 : 0;
 if ($get_titulo != null)
     $get_subtitulo = filter_input(INPUT_GET, 'subtitulo') ?: null;
-if ($get_data_final != '' || $get_data_inicial != '') {
+if($todas_empresas) {
+    $empresa = Empresa::read(id: $_SESSION['usuario']->id_empresa)[0];
+    $empresa_lista = Empresa::read(cnpj_principal: $empresa->cnpj_principal);
+} else {
+    $empresa_lista = Empresa::read(id: $_SESSION['usuario']->id_empresa);
+}
+if ($get_data_inicial != '' || $get_data_final != '' || $get_custos != '' || $get_operacional != '') {
+    $recebimentos = [];
+    $pagamentos = [];
+    foreach($empresa_lista as $empresa) {
     $recebimentos_parcelas = Rec02::read(
-        id_empresa: $_SESSION['usuario']->id_empresa,
+        id_empresa: $empresa->id,
         filtro_data_inicial: $get_data_inicial ?? null,
         filtro_data_final: $get_data_final ?? null,
         filtro_opcao: 'quitados',
         filtro_por: 'pagamento',
         filtro_custos: $get_custos,
-        //  filtro_con01:$get_titulo, filtro_con02:$get_subtitulo
     );
-    $recebimentos = [];
+    
     foreach ($recebimentos_parcelas as $parcela) {
         $recebimentos[] = Rec01::read(id: $parcela->id_rec01)[0]->id;
 
     }
 
+
     $pagamentos_parcelas = Pag02::read(
-        id_empresa: $_SESSION['usuario']->id_empresa,
+        id_empresa: $empresa->id,
         filtro_data_inicial: $get_data_inicial,
         filtro_data_final: $get_data_final,
         filtro_opcao: 'quitados',
         filtro_por: 'pagamento',
         filtro_custos: $get_custos,
-        // filtro_con01:$get_titulo, filtro_con02:$get_subtitulo
     );
-    $pagamentos = [];
+    
     foreach ($pagamentos_parcelas as $parcela) {
         $pagamentos[] = Pag01::read(id: $parcela->id_pag01)[0]->id;
 
     }
+}
 
     $recebimentos_e_pagamentos = array_merge($recebimentos, $pagamentos);
 
@@ -78,13 +89,14 @@ if ($get_data_final != '' || $get_data_inicial != '') {
             }
         }
     }
-
-    foreach ($subtitulos as $subtitulo) {
-        $titulo = Con01::read($subtitulo->id_con01, $_SESSION['usuario']->id_empresa, ordenar_por: 'tipo', filtro_operacional:$get_operacional);
+    foreach($empresa_lista as $empresa) {
+        foreach ($subtitulos as $subtitulo) {
+            $titulo = Con01::read($subtitulo->id_con01, $empresa->id, ordenar_por: 'tipo', filtro_operacional:$get_operacional);
                             if ($titulo && isset($titulo[0]) && !in_array($titulo[0], $titulos)) {
                                 $titulos[] = $titulo[0];
                             }
     }
+}
 }
 
 
@@ -140,11 +152,8 @@ if ($get_data_final != '' || $get_data_inicial != '') {
 
                     <div class="card-header-div">
                         <div class="card-header-borda">
-                            <div class="tab-pane fade show active" id="vendas" role="tabpanel"
-                                aria-labelledby="vendas-tab">
                                 <h5 class="card-title">Filtros</h5>
                                 <form method="get" action="sintetico.php">
-                                    <div class="row">
 
                                     <div class="inputs-dre">
                                         <div class="inputs-dre-text">
@@ -172,18 +181,25 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                                     <option value="2" <?php if($get_operacional == 2)  echo 'selected' ?>>Não Operacional</option>
                                                 </select>
                                                 </div>
+                                                <div id="filtro-custos">
+                                                <label for="data_final">C. Custos:</label>
+                                                <select name="filtro_custos">
+                                                    <option value="">Selecione</option>
 
-                                        </div>
-                                        <div id="filtro-custos">
-                                            <label for="data_final">Centro de Custos:</label>
-                                            <select name="filtro_custos">
-                                                <option value="">Selecione</option>
-                                                <?php foreach(CentroCUstos::read(id_empresa:$_SESSION['usuario']->id_empresa) as $custo) { ?>
+                                                <?php foreach(CentroCustos::read(id_empresa:$_SESSION['usuario']->id_empresa) as $custo) { ?>
                                                     <option <?php if($get_custos == $custo->id){?>selected<?php } ?>  value="<?=$custo->id?>"><?=$custo->nome?></option>
                                                 <?php } ?>
                                             </select>
+                                                </div>
+                                                <div class="d-flex flex-column align-items-center">
+                                                <label for="data_final" id="input-label-todas-empresas" >Todas as Empresas:</label>
+                                                <input <?php if($todas_empresas) echo 'checked' ?> type="checkbox" name="todas_empresas">
+                                        </div>  
+                                        
+
                                         </div>
-                                        <div class="inputs-dre-btn" id="inputs-btn-sintetico">
+                                        
+                                        <div class="inputs-dre-btn">
                                             <div class="botoes-acao">
                                                 <button type="submit" class="btn-sm btn" style="background-color: #5856d6; color: white; ">Filtrar</button>
                                                 <a href="sintetico.php" class="btn btn-secondary btn-sm">Limpar</a>
@@ -202,19 +218,18 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                         </div>
                                     </div>
 
-                                    </div>
                                 </form>
 
 
 
-                            </div>
+
                         </div>
 
                         </tbody>
 
                     </div>
                     <?php
-                    if ($get_data_inicial != '' || $get_data_final != '' || $get_custos != '') {
+                    if ($get_data_inicial != '' || $get_data_final != '' || $get_custos != '' || $get_operacional != '') {
                         
                         if (isset($titulos)) {
                             $total_geral = [];
@@ -236,7 +251,7 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                                                 data-bs-target="#collapse<?= $i ?>" aria-expanded="false"
                                                 aria-controls="collapse<?= $i ?>">
-                                                <span style="color: #303640; font-size:1.1em; font-weight:500;">
+                                                <span style="color: #303640; font-size:25px; font-weight:500;">
                                                     <?php echo htmlspecialchars($titulo->nome, ENT_QUOTES, 'UTF-8'); ?> </span>
                                             </button>
                                         </h2>
@@ -244,7 +259,7 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                             class="accordion-collapse <?php if (!isset($con01) || $con01 != $titulo->id) { ?>collapse<?php } ?>"
                                             aria-labelledby="heading<?= $i ?>" data-bs-parent="#accordionExample">
                                             <div class="accordion-body">
-                                                <div class="inner-accordion avoid-page-break">
+                                                <div class="inner-accordion">
 
 
                                                     <table class="table table-striped table-bordered">
@@ -261,10 +276,11 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                                             foreach ($subtitulos_filtrados as $subtitulo) {
                                                                 $receita = 0;
                                                                 if ($titulo->tipo == 'D') {
-                                                                    $recebimentos_parcelas = Pag02::read(null, $_SESSION['usuario']->id_empresa, filtro_con02: $subtitulo->id, filtro_opcao: 'quitados', filtro_por: 'pagamento', filtro_data_inicial: $get_data_inicial, filtro_data_final: $get_data_final, filtro_custos: $get_custos);
+
+                                                                    $recebimentos_parcelas = Pag02::read(null, filtro_con02: $subtitulo->id, filtro_opcao: 'quitados', filtro_por: 'pagamento', filtro_data_inicial: $get_data_inicial, filtro_data_final: $get_data_final, filtro_custos: $get_custos);
                                                                    
                                                                 } else {
-                                                                    $recebimentos_parcelas = Rec02::read(null, $_SESSION['usuario']->id_empresa, filtro_con02: $subtitulo->id, filtro_opcao: 'quitados', filtro_por: 'pagamento', filtro_data_inicial: $get_data_inicial, filtro_data_final: $get_data_final, filtro_custos: $get_custos);
+                                                                    $recebimentos_parcelas = Rec02::read(null, filtro_con02: $subtitulo->id, filtro_opcao: 'quitados', filtro_por: 'pagamento', filtro_data_inicial: $get_data_inicial, filtro_data_final: $get_data_final, filtro_custos: $get_custos);
                                                                 
                                                                 }
 
@@ -287,9 +303,8 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                                                 ?>
 
                                                                 <tr class="tr-dre-sintetico">
-                                                                    <!-- <td style="width:25%;"><?=$centro_custos?></td> -->
-                                                                    <td style="width:50%;"><?= htmlspecialchars($subtitulo->nome, ENT_QUOTES, 'UTF-8') ?></td>
-                                                                    <td style="width:25%;" class="valor-monetario"><div>R$</div> <div> <?=$receita_formatada?> </div></td>
+                                                                    <td style="width:75%;"><?= htmlspecialchars($subtitulo->nome, ENT_QUOTES, 'UTF-8') ?></td>
+                                                                    <td style="width:25%;" ><div class="valor-monetario"><div>R$</div> <div> <?=$receita_formatada?> </div></div></td>
                                                                 </tr>
 
                                                             <?php
@@ -299,7 +314,7 @@ if ($get_data_final != '' || $get_data_inicial != '') {
                                                             <tr class="tr-dre-total">
                                                                 <!-- <td></td> -->
                                                                 <td>Total do Titulo:</td>
-                                                                <td id="total-dre-sintetico"><div>R$</div><div><?= number_format($total_subtitulo, 2, ',') ?></div></td>
+                                                                <td id="total-dre-sintetico"><div>R$</div><div><?= number_format($total_subtitulo, 2, ',', '.') ?></div></td>
                                                             </tr>
                                                             </tbody>
                                                         </tbody>

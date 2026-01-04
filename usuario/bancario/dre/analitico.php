@@ -83,7 +83,7 @@ if($todas_empresas) {
     <?php require_once __DIR__ . '/../../../componentes/header/header.php' ?>
     
     <div class="main" id="container">
-        <div class="row">
+
             <div class="col-md-12" style="padding: 0;">
 
 
@@ -112,9 +112,8 @@ if($todas_empresas) {
                                 aria-labelledby="vendas-tab">
                                 <h5 class="card-title">Filtros</h5>
                                 <form method="get" action="analitico.php">
-                                    <div class="row">
                                         <div class="inputs-dre">
-                                        <div class="inputs-dre-text">
+                                        <div class="inputs-dre-text" >
                                         <div class="data-dre">
                                             <div>
                                                 <label for="data_inicial">Data Inicial:</label>
@@ -140,10 +139,9 @@ if($todas_empresas) {
                                                 </select>
                                                 </div>
                                         
-                                    <div class="titulos-dre">
                                         <div>
                                                 <label for="titulo">Titulo:</label>
-                                                <div class="input-select-titulo">
+                                                <div class="input-select-titulo ">
                                                     <select id="input-titulo" class="input-select-geral" name="titulo" onchange="this.form.submit()">
                                                         <option value="">Selecione</option>
                                                         <?php
@@ -170,10 +168,9 @@ if($todas_empresas) {
                                             </div>
                                         </div>
                                         <div class="d-flex flex-column align-items-center">
-                                                <label for="data_final">Todas as Empresas:</label>
+                                                <label for="data_final" id="input-label-todas-empresas" >Todas as Empresas:</label>
                                                 <input <?php if($todas_empresas) echo 'checked' ?> type="checkbox" name="todas_empresas">
-                                                </div>
-                                        </div>                       
+                                                </div>               
 
                                         </div>
                                         <div class="inputs-dre-btn" id="inputs-btn-analitico">
@@ -195,7 +192,6 @@ if($todas_empresas) {
                                         </div>
                                     </div>
 
-                                    </div>
                                 </form>
 
 
@@ -279,10 +275,10 @@ if($todas_empresas) {
                                             data-bs-target="#<?= $collapseId ?>" aria-expanded="false"
                                             aria-controls="<?= $collapseId ?>">
                                             <span
-                                                style="color: #303640; font-size:90%; font-weight:500;"><?= ucfirst($titulo->nome); ?></span>
+                                                style="color: #303640; font-size:25px; font-weight:500;"><?= ucfirst($titulo->nome); ?></span>
                                         </button>
                                     </h2>
-                                    <div id="<?= $collapseId ?>" class="accordion-collapse collapse"
+                                    <div id="<?= $collapseId ?>" class="accordion-collapse collapse "
                                         aria-labelledby="headingTitulo<?= $i ?>">
                                         <div class="accordion-body">
                                             <?php
@@ -317,7 +313,7 @@ if($todas_empresas) {
                                                 
                                                 
                                                 if (count($parcelas) > 0) { $total_subtitulo = 0;?>
-                                                <div class="avoid-page-break">
+                                                <div class="">
                                                 <h5 class="avoid-page-break"> <?=htmlspecialchars($subtitulo->nome)?> </h5>
                                                     
                                                     
@@ -343,14 +339,14 @@ if($todas_empresas) {
                                                                 $descricao = $rec->descricao . ' - ' .$data;
                                                                 $valor = $rec->valor;
                                                                 $total_subtitulo += $valor;
-                                                                echo '<tr class="tr-dre-analitico">';
-                                                                echo '<td style="width:84rem;">' . htmlspecialchars($descricao) . '</td>';
-                                                                echo '<td style="width:9rem;" class="valor-monetario "><div>R$</div> <div>' . format_valor_alinhado($valor) . '</div></td>';
+                                                                echo '<tr class="tr-dre-analitico avoid-page-break">';
+                                                                echo '<td style="width:84rem;">' . htmlspecialchars($descricao) .  '</td>';
+                                                                echo '<td style="width:9rem;" ><div class="valor-monetario"><div>R$</div> <div>' . format_valor_alinhado($valor) . '</div></div></td>';
                                                                 echo '</tr>';
                                                             }
                                                             ?>
                                                             <tbody>
-                                                                <tr class="tr-dre-total">
+                                                                <tr class="tr-dre-total avoid-page-break">
                                                                 <td>Saldo do subtitulo:</td>
                                                                 <td id="total-dre-analitico"> <div>R$</div><div><?= number_format($total_subtitulo, 2, ',') ?></div></td>
                                                                 </tr>
@@ -393,9 +389,7 @@ if($todas_empresas) {
                                 </div>
 
                             </div>
-
-                        </div>
-                        <?php if (!empty($titulos)) { ?>
+                         <?php if (!empty($titulos)) { ?>
                             <div class="card-footer" id="totais-dre">
 
                                 <?php
@@ -412,12 +406,13 @@ if($todas_empresas) {
                                     <?= number_format($total_geral, 2, ',', '.') ?> </div>
 
                             </div>
-                        <?php } ?>
+                        <?php } ?>                       
+                        </div>
+                        
 
                     </div>
                 </div>
             </div>
-        </div>
 
             <?php } ?>
             
@@ -428,37 +423,6 @@ if($todas_empresas) {
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script src="../../../choices/choices.js"></script>
 
-<?php
-if(!isset($get_titulo)) { ?>
-    <script>
-    var subtituloDiv = document.getElementById('subtitulo-dre-div');
-    var tituloSelect = document.getElementById('input-titulo');
-    var subtituloSelect = document.getElementById('input-subtitulo');
-    var subtituloDiv = document.getElementById('subtitulo-dre-div');
-    var options = subtituloSelect.querySelectorAll('option');
-    var divText = document.querySelector('.inputs-dre-text');
-    var divChildren = divText.children
-    var divBtn = document.querySelector('.inputs-dre-btn');
-
-    subtituloDiv.style.display= 'none';
-    </script>
-<?php } else { ?>
-    <script>
-    var subtituloDiv = document.getElementById('subtitulo-dre-div');
-    var tituloSelect = document.getElementById('input-titulo');
-    var subtituloSelect = document.getElementById('input-subtitulo');
-    var subtituloDiv = document.getElementById('subtitulo-dre-div');
-    var options = subtituloSelect.querySelectorAll('option');
-    var divText = document.querySelector('.inputs-dre-text');
-    var divChildren = divText.children
-    var divBtn = document.querySelector('.inputs-dre-btn');
-
-     subtituloDiv.style.display = 'block';
-
-
-    </script>
-<?php }
-?>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         var userBtn = document.getElementById('userBtn');

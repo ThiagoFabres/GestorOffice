@@ -134,8 +134,6 @@ $titulos = [];
 
 
     <div class="main" id="container">
-        
-        <div class="row">
             <div class="col-md-12" style="padding: 0;">
 
 
@@ -163,11 +161,10 @@ $titulos = [];
                                 aria-labelledby="vendas-tab">
                                 <h5 class="card-title">Filtros</h5>
                                 <form method="get" action="sintetico.php">
-                                    <div class="row">
 
-                                    <div class="inputs-dre">
-                                        <div class="inputs-dre-text">
-                                            <div class="data-dre">
+                                    <div class="inputs-dre d-flex flex-row">
+                                        <div class="inputs-dre-text d-flex flex-row">
+                                            <div class="data-dre d-flex flex-row">
                                                 <div>
                                                     <label for="data_inicial" style="font-size:90%;">Data Inicial:</label>
                                                     <input type="date" id="data_inicial" name="data_inicial"
@@ -184,7 +181,7 @@ $titulos = [];
 
                                                 <div>
                                                 <label for="data_final">Tipo:</label>
-                                                <select class="form-control" name="filtro_operacional" style="height: 53%; border-radius: 0;">
+                                                <select class="form-control" name="filtro_operacional" style="height: 50%; border-radius: 0;">
                                                     <option value=""  <?php if($get_operacional == null)  echo 'selected' ?>>Todos</option>
                                                     <option value="1" <?php if($get_operacional == 1)  echo 'selected' ?> >Operacional</option>
                                                     <option value="2" <?php if($get_operacional == 2)  echo 'selected' ?>>Não Operacional</option>
@@ -214,7 +211,6 @@ $titulos = [];
                                         </div>
                                     </div>
 
-                                    </div>
                                 </form>
 
                             </div>
@@ -241,12 +237,12 @@ $titulos = [];
                             ?>
 
                             <div class="accordion custom-accordion avoid-page-break" style="border: 0;">
-                                <div class="accordion-item">
+                                <div class="accordion-item ">
                                     <h2 class="accordion-header" id="heading<?= $i ?>">
                                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                                             data-bs-target="#collapse<?= $i ?>" aria-expanded="false"
                                             aria-controls="collapse<?= $i ?>">
-                                            <span style="color: #303640; font-size:1.1em; font-weight:500;">
+                                            <span style="color: #303640; font-size:25px; font-weight:500;">
                                                 <?php echo htmlspecialchars($titulo->nome, ENT_QUOTES, 'UTF-8'); ?> </span>
                                         </button>
                                     </h2>
@@ -257,14 +253,14 @@ $titulos = [];
                                             <div class="inner-accordion avoid-page-break">
 
                                                 <table class="table table-striped table-bordered">
-                                                    <thead>
-                                                        <tr class="tr-dre-sintetico">
+                                                    <thead class="avoid-page-break">
+                                                        <tr class="tr-dre-sintetico avoid-page-break avoid-page-break">
                                                             <!-- <th style="width:25%;">Centro de Custos</th> -->
                                                             <th style="width:50%;">Subtitulo</th>
                                                             <th style="width:25%;">Receita</th>
                                                         </tr>
                                                     </thead>
-                                                    <tbody>
+                                                    <tbody class="avoid-page-break">
                                                         <?php
                                                         $total_subtitulo = 0;
                                                         foreach ($subtitulos_filtrados as $subtitulo) {
@@ -294,17 +290,17 @@ $titulos = [];
                                                             $receita_formatada = format_valor_alinhado($receita);
                                                             ?>
 
-                                                            <tr class="tr-dre-sintetico">
+                                                            <tr class="tr-dre-sintetico avoid-page-break">
                                                                 <!-- <td style="width:25%;"><?=$centro_custos?></td> -->
-                                                                <td style="width:50%;"><?= htmlspecialchars($subtitulo->nome, ENT_QUOTES, 'UTF-8') ?></td>
-                                                                <td style="width:100%; justify-content:space-between" class="valor-monetario d-flex flex-row"><div>R$</div> <div> <?= $receita_formatada?> </div></td>
+                                                                <td style="width: 75%;"><?= htmlspecialchars($subtitulo->nome, ENT_QUOTES, 'UTF-8') ?></td>
+                                                                <td style="width: 25%;"><div class="valor-monetario d-flex flex-row justify-content-between"><div>R$</div> <div> <?= $receita_formatada?> </div></div></td>
                                                             </tr>
 
                                                         <?php
                                                         } // foreach subtitulos_filtrados
                                                         ?>
                                                     <tbody>
-                                                    <tr class="tr-dre-total">
+                                                    <tr class="tr-dre-total avoid-page-break">
                                                         <!-- <td></td> -->
                                                         <td style="background-color:transparent">Total do Titulo:</td>
                                                         <td id="total-dre-sintetico" style="background-color:transparent; justify-content:space-between" class="d-flex flex-row total-dre-sintetico"><div>R$ </div><div><?=number_format($total_subtitulo, 2, ',', '.') ?></div></td>
@@ -331,24 +327,23 @@ $titulos = [];
                         ?>
 
                         </div>
-                        <div class="card-footer" id="totais-dre">
+                        <div class="card-footer avoid-page-break" style="break-inside:avoid;"id="totais-dre">
                             <?php
                             $total_geral = array_sum($total_geral);
                             $total_receitas = array_sum($total_receitas);
                             $total_despesas = array_sum($total_despesas);
                             ?>
-                            <div style="margin-top:2em;" id="total-receitas">Total receitas: <br> R$
+                            <div style="margin-top:2em;" class="avoid-page-break" id="total-receitas">Total receitas: <br> R$
                                 <?= number_format($total_receitas, 2, ',', '.') ?> </div>
-                            <div style="margin-top:2em;" id="total-despesas">Total despesas: <br> R$
+                            <div style="margin-top:2em;" class="avoid-page-break" id="total-despesas">Total despesas: <br> R$
                                 <?= number_format($total_despesas, 2, ',', '.') ?> </div>
-                            <div style="margin-top:2em;" id="total-dre">Saldo do DRE: <br> R$
+                            <div style="margin-top:2em;" class="avoid-page-break" id="total-dre">Saldo do DRE: <br> R$
                                 <?= number_format($total_geral, 2, ',', '.') ?> </div>
                         </div>
 
                     <?php }  ?>
-
+                </div>
                 </div> <!-- card -->
-            </div>
         </div>
     </div>
 
