@@ -25,16 +25,54 @@ select[readonly] {
     gap: 1em;
     margin-top: 1em;
 }
+label{
+    white-space: nowrap;
+    font-size: 90%;
+}
+.descricao-full {
+        white-space: pre-wrap;
+        word-break: break-word;
+        padding: 8px 12px;
+        text-align: start;
+    }
+
+#custom-context-menu {
+    display: none;
+    position:absolute; 
+    z-index:9999; 
+    padding: 1em;
+    background:#fff; 
+    border:1px solid #ccc; 
+    box-shadow:0 2px 8px rgba(0,0,0,0.2); 
+    min-width:180px; 
+    border-radius:6px; 
+    overflow:hidden;
+}
+#custom-context-menu button{
+    border-radius: 10px;
+    padding: 2.5%;
+    background-color: #f1f1f1;
+    border: 1px solid #ccc;
+}
+#custom-context-menu button i {
+    filter: brightness(50%);
+}
+#custom-context-menu button:hover{
+    background-color: #ccc;
+    filter: brightness(100%);
+    
+}
 
 #totais-lancamento {
-    width: 70%;
+    width: 50%;
+    margin-right: 10%;
     display: flex;
     flex-direction: row;
     justify-content: space-evenly;
 }
 #totais-lancamento div {
     white-space: nowrap;
-    font-size: 100%;
+    font-size: 150%;
     font-weight: bold;
 }
 
@@ -186,34 +224,24 @@ input[type="checkbox"]:checked {
     display: flex;
     flex-direction: row;
     width: 100%;
-    gap: 1em;
-    justify-content: space-between;
-}
-
-.inputs-dre-text {
-    display: flex;
-    flex-direction: row;
-    gap: 1%;
-    width: calc(75%);
     justify-content: space-between;
 }
 
 
-.data-dre {
-    display: flex;
-    flex-direction: row;
-    width: 20%;
-}
 
-.data-dre div input {
-    height: 53%;
-}
+
+
 
 
 .titulos-dre {
     display: flex;
     flex-direction: row;
-    width: 45%;
+    max-width: 45%;
+}
+.titulos-dre div .choices .choices__inner .choices__list .choices__item {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
 }
 
 
@@ -256,11 +284,9 @@ input[type="checkbox"]:checked {
 #total-dre {
     font-size: 150%;
 }
-#total-vencido,
-#total-a-vencer,
-#total-vence-hoje {
+#total-parcela {
     white-space: nowrap;
-    font-size: 100%;
+    font-size: 200%;
     font-weight: bold;
 }
 
@@ -597,8 +623,10 @@ html, body {
     position: relative;
     display: flex;
     flex-direction: column;
+    width: fit-content;
     min-width: 65%;
-    max-width: calc(100% - 2em);
+    
+
     border-radius: 0.5em;
     border: 1px solid #dfe0e1;
     padding: 1em;
@@ -609,11 +637,6 @@ html, body {
 
 
 
-.input-documento,
-.input-pagamento-div {
-    width: 90%;
-}
-#documento,
 input[name="valor"],
 input[name="descricao"],
 input[name="parcelas"] {
@@ -985,7 +1008,7 @@ input[name="parcelas"] {
 
 @keyframes encolher-header {
       0% {
-        left: 16em;
+        left: 255px;
       }
       100% {
         left: 0;
@@ -1012,17 +1035,44 @@ input[name="parcelas"] {
       0% {
         
         left: 0;
-        
+        width: auto;
 
       }
       100% {
-        left: 16em;
+        left: 25em;
         width: 100%;
         
       }
     }
 
+    @keyframes encolher-container {
+      0% {
+        
+        left: 25em;
+        width: 100%;
+
+      }
+      100% {
+        left: 0;
+        width: auto;
+        
+      }
+    }
+
 @keyframes encolher {
+    from {
+        left: 16em;
+        
+
+    }
+
+    to {
+        left: 0;
+        width: 100%;
+    }
+}
+
+@keyframes encolher-lateral {
     from {
         left: 0;
         
@@ -1031,6 +1081,17 @@ input[name="parcelas"] {
 
     to {
         left: -16em;
+    }
+}
+@keyframes expandir-lateral {
+    from {
+        left: -16em;
+        
+
+    }
+
+    to {
+        left: 0
     }
 }
 
@@ -1331,6 +1392,7 @@ width: 100%;
 }
 
 .menu-item a {
+    text-align: start;
     gap: 0.5em;
     display: flex;
     align-items: center;

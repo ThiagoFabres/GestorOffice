@@ -13,10 +13,15 @@
     justify-content: space-between;
     height: 100%;
 }
+
 .valor-monetario div {
     height: 100%;
+
 }
 
+.row {
+    width: 100%;
+}
 
 .total-subtitulo-analitico {
     position:relative; 
@@ -27,7 +32,9 @@
     justify-content:space-between; 
     color:black; 
 }
-
+.titulos-dre label {
+    margin: 3%;
+}
 .total-subtitulo-sintetico {
     position:relative; 
     left:42.65%; 
@@ -57,25 +64,81 @@
     text-align: end;
 }
 
+.card-header-borda {
+    min-width: 80%;
+}
+
 
 
 .inputs-dre-btn {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    width:calc(40%);
-    align-items: center;
-}
-#inputs-btn-analitico {
-    margin-left: 2em;
+    min-height: 100%;
+    align-items: right;
 }
 
-#inputs-btn-sintetico {
-    margin-left: 1em;
+.inputs-dre-btn a,
+.inputs-dre-btn button {
+   height: 90%;
 }
+
+
+
+.inputs-dre-text {
+    display: flex;
+    flex-direction: row;
+    
+}
+
+.inputs-dre {
+    display: flex;
+    flex-direction: row;
+}
+
+.inputs-dre-btn button{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
+}
+
 
 #totais-dre {
     background-color: #f1f3f6;
     border: none;
     color: black;
+}
+.selects-dre {
+    display: flex;
+    flex-direction: row;
+    max-width: calc(100%);
+    overflow: hidden;
+}
+.selects-dre div label {
+    white-space: nowrap;
+    width: 90%;
+    font-size: 80%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.selects-dre div {
+    bottom: 3.5%;
+}
+ #filtro_custos {
+    width: 10px;
+}
+.data-dre {
+    display: flex;
+    flex-direction: row;
+    width: 25%;
+}
+.data-dre div {
+    width: 50%;
+
+}
+.data-dre div input {
+        border-radius: 0;
+}
+.data-dre div label {
+    font-size: 80%;
 }
