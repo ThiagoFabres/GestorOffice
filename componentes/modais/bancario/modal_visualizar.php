@@ -33,8 +33,9 @@ foreach($desmembramentos as $desmembramento) {
                 <div class="modal-content">
                 <!-- Cabeçalho -->
                 <div class="modal-header" style="display: flex; justify-content: center;">
-                    <div class="card-header-borda">
-                        <div class="d-flex flex-row gap-2">
+                    <?php if($desmembramentos != null) {?><div class="card-header-borda"> <?php } ?>
+                    <div class="d-flex flex-column w-100">
+                        <div class="d-flex flex-row gap-2 w-100">
 
                             <div class="d-flex flex-column" style="width: calc(100%/3);">
                                 <label>Documento:</label>
@@ -60,6 +61,7 @@ foreach($desmembramentos as $desmembramento) {
                             </div>
                         </div>
                     </div>
+                    <?php if($desmembramentos != null) {?></div><?php } ?>
                 </div>
                 
                 <!-- Corpo -->
@@ -72,12 +74,13 @@ foreach($desmembramentos as $desmembramento) {
                     
                     
                 </form>
-                <?php if($desmembramentos != null) { ?>
                 <form method="post" action="movimentacao_manager.php">
                     <input type="hidden" name="id" value="<?=$get_id?>">
                     <input type="hidden" name="valor" value="<?=$ban02->valor?>">
                     <input type="hidden" name="caminho" value="<?=$caminho?>">
                     <input id="desc_comp_original_destino2" type="hidden" name="descricao_comp_original" value="<?=$ban02->descricao_comp?>">
+                <?php if($desmembramentos != null) { ?>
+                
                     
                     <?php 
                     $i = 0;

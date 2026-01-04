@@ -38,7 +38,7 @@
     
     
 }
-    $id_ban = filter_input(INPUT_GET, 'id_ban') ?? null;
+    $id_ban = filter_input(INPUT_GET, 'id_ban') ?? filter_input(INPUT_POST, 'id_ban') ?? $recebimento->id_convertido ?? null;
     if($id_ban != null) {
         $ban02 = Ban02::read($id_ban, $_SESSION['usuario']->id_empresa)[0];
         $ban02_valor = $ban02->valor < 0 ? $ban02->valor * (-1) : $ban02->valor;
@@ -69,9 +69,14 @@
     }
 
     $documento = filter_input(INPUT_POST, 'documento') ?? '';
-    if($documento == '' && isset($recebimento)) {
+    if($documento == '') {
+        if(isset($recebimento)) {
         $documento = $recebimento->documento;
+    } else {
+        $documento = $novo_documento;
     }
+    }
+    
 
     $post_custo = filter_input(INPUT_POST, 'custo') ?? '';
     if($post_custo == '' && isset($recebimento)) {
@@ -189,6 +194,7 @@
             <div class="row">
                 <div class="col-md-12" style="padding: 0;">
 <div class="card" style="padding: 0;">
+    
                         <div class="card-header-div">
                             <div class="card-header-borda" style="width: 100%;">
                                 <div class="tab-pane fade show active" id="vendas" role="tabpanel"
@@ -208,24 +214,15 @@
                                             <div class="modal-input-group">
                                                 <label for="documento">Documento:</label>
                                                 <div class="input-documento-group" style="display: flex; flex-direction: row;">
-                                                    <div class="input-documento" style="<?php if($get_acao != 'visualizar') {?>width:75%;<?php } else {?> width: 100%; <?php } ?>">
+                                                    <div class="input-documento" style="width: 100%;">
                                                         <!--Nome: -->
                                                     
                                                         <input type="text"  name="documento"<?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
                                                             class="form-control" placeholder="Documento" id="documento"
-                                                            value="<?= htmlspecialchars($documento, ENT_QUOTES, 'UTF-8') ?>"
+                                                            value="<?= $documento  ?>" readonly
                                                             required>
                                                     </div>
 
-                                                    <?php if($get_acao != 'visualizar'){ ?>
-                                                
-                                                    <div class="input-documento-generator" style="width: 25%;">
-
-                                                        <button type="button" class="form-control" id="btnBuscarDoc"><i class="bi bi-text-center"></i></button>
-
-                                                    </div>
-
-                                                    <?php } ?>
                                                 </div>
                                             </div>
                                                 
@@ -309,7 +306,7 @@
                                                 <div class="input-titulo" style="<?php if($get_acao != 'visualizar' && $id_ban == null) {?>width:75%;<?php } else {?>width: 100%; height: 92%;<?php } ?>">
                                                     <!--Nome: -->
                                                     
-                                                    <select name="titulo" class="form-control form-select-titulo" style="height: 100%; border-radius: 0;" id="titulo" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?> <?php if($id_ban != null) echo 'readonly' ?>
+                                                    <select name="titulo" class="form-control form-select-titulo" style="height: 100%; border-radius: 0;" id="titulo" <?php if($get_acao == 'visualizar' ){ ?> disabled <?php } ?> <?php if($id_ban != null) echo 'readonly' ?>
                                                         style="border-top-right-radius: 0; border-bottom-right-radius: 0; ">
                                                         <option value="">Selecione</option>
 
@@ -506,7 +503,6 @@
 <?php } ?>
 
     <script>
-        const podeEditar = <?php echo $get_acao != 'visualizar' ? 'true' : 'false'; ?>;;
 document.addEventListener("DOMContentLoaded", function () {
         const inputs = Array.from(document.querySelectorAll("input[name^='vencimento[']"));
 
@@ -749,8 +745,6 @@ document.addEventListener("DOMContentLoaded", function () {
     })();
 
 
-
-// Sincroniza campos do formulário principal com os inputs ocultos em tempo real
 function syncHiddenInputs() {
     const campos = [
         { origem: 'cadastro', destino: 'cadastro2' },
@@ -792,6 +786,7 @@ function syncHiddenInputs() {
     });
 }
 
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', syncHiddenInputs);
 } else {
@@ -801,8 +796,7 @@ if (document.readyState === 'loading') {
 
 
 
-
-<?php if($get_acao != 'visualizar') {?>
+<?php if($get_acao != 'visualizar'  && $id_ban == null) {?>
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -873,6 +867,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Começa vazio
         subtituloChoices.clearChoices();
+        subtituloChoices.clearStore();
         subtituloChoices.setChoices([{ value: '', label: 'Selecione', disabled: true }]);
 
         // ========================================================================
@@ -881,6 +876,7 @@ document.addEventListener('DOMContentLoaded', () => {
         function filtrarSubtitulos(tituloValue, manterSelecao) {
 
             subtituloChoices.clearChoices();
+            subtituloChoices.clearStore();
             subtituloChoices.setChoices([{ value: '', label: 'Selecione', disabled: true }]);
 
             const filtrados = origOptions.filter(o => o.tituloId === String(tituloValue));
@@ -918,6 +914,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Recarrega subtítulos
             filtrarSubtitulos(tituloId, true);
+            
 
             // Seleciona o subtítulo (com delay mínimo)
             setTimeout(() => {
@@ -958,6 +955,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 400);
 
 });
+
 
 
 </script>

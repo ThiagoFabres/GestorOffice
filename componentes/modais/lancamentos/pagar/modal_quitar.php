@@ -87,17 +87,19 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!modalQuitar) return;
     modalQuitar.addEventListener('show.bs.modal', function (event) {
         var button = event.relatedTarget;
+        // Se não houver um elemento relacionado (aberto via JS), não sobrescreve valores já preenchidos
+        if (!button) return;
         // Os dados podem ser passados via data-* attributes no botão que abre o modal
-        var parcelaAtual = button ? button.getAttribute('data-parcela-atual') : '';
-        var parcelaGeral = button ? button.getAttribute('data-parcela-geral') : '';
-        var vencimento = button ? button.getAttribute('data-vencimento') : '';
-        var documento = button ? button.getAttribute('data-documento') : '';
-        var valorRestante = button ? button.getAttribute('data-valor') : '';
-        document.getElementById('modal_quitar_parcela_atual').textContent = parcelaAtual || '';
-        document.getElementById('modal_quitar_parcela_geral').textContent = parcelaGeral || '';
-        document.getElementById('modal_quitar_vencimento').textContent = vencimento || '';
-        document.getElementById('modal_quitar_documento').textContent = documento || '';
-        document.getElementById('modal_quitar_valor').placeholder = valorRestante || '';
+        var parcelaAtual = button.getAttribute('data-parcela-atual') || '';
+        var parcelaGeral = button.getAttribute('data-parcela-geral') || '';
+        var vencimento = button.getAttribute('data-vencimento') || '';
+        var documento = button.getAttribute('data-documento') || '';
+        var valorRestante = button.getAttribute('data-valor') || '';
+        var elParAtual = document.getElementById('modal_quitar_parcela_atual'); if (elParAtual) elParAtual.textContent = parcelaAtual;
+        var elParGeral = document.getElementById('modal_quitar_parcela_geral'); if (elParGeral) elParGeral.textContent = parcelaGeral;
+        var elVenc = document.getElementById('modal_quitar_vencimento'); if (elVenc) elVenc.textContent = vencimento;
+        var elDoc = document.getElementById('modal_quitar_documento'); if (elDoc) elDoc.textContent = documento;
+        var elVal = document.getElementById('modal_quitar_valor'); if (elVal) elVal.placeholder = valorRestante;
     });
 });
 </script>

@@ -1,5 +1,5 @@
 <?php
-if($acao == 'quitar_bancario'){
+if($acao == 'quitar'){
 $id_quitar = filter_input(INPUT_GET, 'id');
 $tipo = filter_input(INPUT_GET, 'tipo');
 if($tipo == 'C') {

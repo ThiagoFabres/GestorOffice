@@ -70,9 +70,14 @@
     }
 
     $documento = filter_input(INPUT_POST, 'documento') ?? '';
-    if($documento == '' && isset($recebimento)) {
-        $documento = $recebimento->documento;
+    if($documento == '') {
+
+    if(isset($recebimento)) {
+        $documento = $recebimento->documento ?? '';
+    } else {
+        $documento = $novo_documento;
     }
+}
 
     $post_custo = filter_input(INPUT_POST, 'custo') ?? '';
     if($post_custo == '' && isset($recebimento)) {
@@ -208,24 +213,14 @@
                                             <div class="modal-input-group">
                                                 <label for="documento">Documento:</label>
                                                 <div class="input-documento-group" style="display: flex; flex-direction: row;">
-                                                    <div class="input-documento" style="<?php if($get_acao != 'visualizar') {?>width:75%;<?php } else {?> width: 100%; <?php } ?>">
+                                                    <div class="input-documento" style="width:100%;">
                                                         <!--Nome: -->
                                                     
                                                         <input type="text" onchange="checar()" name="documento"<?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
                                                             class="form-control" placeholder="Documento" id="documento"
-                                                            value="<?= htmlspecialchars($documento, ENT_QUOTES, 'UTF-8') ?>"
+                                                            value="<?= $documento ?>" readonly
                                                             required>
                                                     </div>
-
-                                                    <?php if($get_acao != 'visualizar'){ ?>
-                                                
-                                                    <div class="input-documento-generator" style="width: 25%;">
-
-                                                        <button type="button" class="form-control" id="btnBuscarDoc"><i class="bi bi-text-center"></i></button>
-
-                                                    </div>
-
-                                                    <?php } ?>
                                                 </div>
                                             </div>
                                                 
@@ -866,6 +861,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Começa vazio
         subtituloChoices.clearChoices();
+        subtituloChoices.clearStore();
         subtituloChoices.setChoices([{ value: '', label: 'Selecione', disabled: true }]);
 
         // ========================================================================
@@ -874,6 +870,7 @@ document.addEventListener('DOMContentLoaded', () => {
         function filtrarSubtitulos(tituloValue, manterSelecao) {
 
             subtituloChoices.clearChoices();
+            subtituloChoices.clearStore();
             subtituloChoices.setChoices([{ value: '', label: 'Selecione', disabled: true }]);
 
             const filtrados = origOptions.filter(o => o.tituloId === String(tituloValue));
@@ -911,6 +908,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Recarrega subtítulos
             filtrarSubtitulos(tituloId, true);
+            
 
             // Seleciona o subtítulo (com delay mínimo)
             setTimeout(() => {
