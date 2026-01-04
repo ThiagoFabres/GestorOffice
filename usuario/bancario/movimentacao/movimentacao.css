@@ -1,5 +1,7 @@
 .tr-bancario td {
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .tabela-bancario {
     white-space: nowrap;
