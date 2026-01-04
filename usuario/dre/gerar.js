@@ -121,35 +121,62 @@ function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=null) {
     const pdfContainer = document.createElement('div');
     pdfContainer.style.padding = '20px';
 
+    // Inject PDF-specific CSS to control page-break behavior.
+    // Keep only small headers/titles together but allow table rows to be split across pages
+    // to avoid large jumps/blank pages when a whole accordion can't fit on one page.
+    const pdfStyle = document.createElement('style');
+    pdfStyle.type = 'text/css';
+    pdfStyle.appendChild(document.createTextNode(`
+        /* Keep headers together with the following content when possible */
+        .avoid-page-break-header { page-break-inside: avoid; break-inside: avoid; -webkit-column-break-inside: avoid; }
+        .avoid-page-break-header { page-break-after: avoid; }
+
+        /* Allow tables to split across pages (so a large table doesn't force a big gap) */
+        table, tbody, thead, tfoot { page-break-inside: auto !important; break-inside: auto !important; }
+
+        /* Prevent individual table rows from being split across pages */
+        tr, td, th { page-break-inside: avoid !important; break-inside: avoid !important; }
+
+
+        /* Small safety: avoid forcing columns or shadows to create gaps inside PDF */
+        .avoid-page-break-header, .accordion-header { background: transparent !important; }
+    `));
+    pdfContainer.appendChild(pdfStyle);
+
     // Header com nome, data e titulo (se passados) - formatados
     const formattedDate = _formatDateToDDMMYYYY(data);
     const headerDiv = document.createElement('div');
     headerDiv.style.marginBottom = '12px';
     headerDiv.innerHTML = `
-    <div style=" display:flex; flex-direction:row; justify-content:space-evenly; align-itens:center; height:100%;">
-        <div style=" align-itens:center; display:flex; justify-content:center; vertical-align: middle;">
-            <div style="display:flex; justify-content:center; align-itens:center; vertical-align: middle; height:100%; ">
-            <p style=" font-size:2.1em; text-align:center; margin:auto;">
-                ${nomeEmpresa}
-            </p>
-            </div>
+    <div style=" display:flex; flex-direction:row; justify-content:start  align-itens:start; height:100%; ;">
+        <div style="display:flex; justify-content:start; align-itens:start; height:100%; width:100%;" >
+            <div style="display:flex; justify-content:start; align-itens:start; height:100%; width:100%;">
+                <p style="font-size:25px; text-align:start; margin:0;  white-space: nowrap; overflow:hidden; text-overflow:hidden;  padding-right:9px;">
+                    ${nomeEmpresa.substr(0, 22)}  - 
+                </p>
+
+            <p style="  font-size:20px; padding-top:5px; text-align:start; margin:0;  white-space: nowrap; overflow:hidden; text-overflow:hidden;">` 
+                +
+                
+                    ((formattedDate || titulo) ?  `${ formattedDate ? formattedDate + '</p>' : '</p>'}` : '</div>') + '</div>  </div> </p>' 
+                +
+            `</div>
         </div> 
         <div style="display:flex; flex-direction:column;"> 
-            <p style="width:100%; text-align:center; font-size:1.2em; margin-top: 15px;">` 
+       `     
     +
-        ((formattedDate || titulo) ? `${formattedDate ? formattedDate + '</p>' : '</p>'}${(formattedDate && titulo) ? '' : ''}${(titulo && titulo != 'Selecione') ? ' <p style="font-size:1.2em; width:100%; text-align:center;"> Titulo: ' + titulo + '</p>': ''}` : '</div>') + '</div>  </div> </p>'
+    `<p style="text-align:center; font-size:1.5em; margin:0; padding:0;">Relatório demonstrativo de resultado (DRE)</p>` 
     +
-     `<p style="text-align:center; font-size:1.5em; margin:0; padding:0;">Relatório demonstrativo de resultado (DRE)</p>` 
-    +
-    '<hr>'
+    '</div></div><hr>'
     pdfContainer.appendChild(headerDiv);
 
     accordionItems.forEach(item => {
         const mainContainer = document.createElement("div")
-        mainContainer.classList.add('avoid-page-break')
         // Clone only the visible content of each accordion
         const headerOriginal = item.querySelector('.accordion-header');
         const header = headerOriginal.cloneNode(true);
+        // Mark only the header to avoid splitting it away from the following content
+        // if (header && header.classList) header.classList.add('avoid-page-break-header');
 
         if(nome == 'sintetico'){
         header.style.fontSize = '95%'
@@ -224,7 +251,7 @@ pdfContainer.appendChild(totaisContainer);
     // Use html2pdf to generate PDF
     html2pdf()
         .set({
-            margin: 10,
+            margin: 0,
             filename: 'dre-'+nome+'.pdf',
             image: { type: 'jpeg', quality: 0.98 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }

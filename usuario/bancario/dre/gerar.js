@@ -126,27 +126,31 @@ function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=null) {
     const headerDiv = document.createElement('div');
     headerDiv.style.marginBottom = '1px';
     headerDiv.innerHTML = `
-    <div style=" display:flex; flex-direction:row; justify-content:space-evenly; align-itens:center; height:100%;">
-        <div style=" align-itens:center; display:flex; justify-content:center; vertical-align: middle;">
-            <div style="display:flex; justify-content:center; align-itens:center; vertical-align: middle; height:100%; ">
-            <p style=" font-size:2.1em; text-align:center; margin:auto;">
-                ${nomeEmpresa}
-            </p>
-            </div>
+    <div style=" display:flex; flex-direction:row; justify-content:start  align-itens:start; height:100%; ;">
+        <div style="display:flex; justify-content:start; align-itens:start; height:100%; width:100%;" >
+            <div style="display:flex; justify-content:start; align-itens:start; height:100%; width:100%;">
+                <p style="font-size:25px; text-align:start; margin:0;  white-space: nowrap; overflow:hidden; text-overflow:hidden;  padding-right:9px;">
+                    ${nomeEmpresa.substr(0, 22)}  - 
+                </p>
+
+            <p style="  font-size:20px; padding-top:5px; text-align:start; margin:0;  white-space: nowrap; overflow:hidden; text-overflow:hidden;">` 
+                +
+                
+                    ((formattedDate || titulo) ?  `${ formattedDate ? formattedDate + '</p>' : '</p>'}` : '</div>') + '</div>  </div> </p>' 
+                +
+            `</div>
         </div> 
         <div style="display:flex; flex-direction:column;"> 
-            <p style="width:100%; text-align:center; font-size:1.2em; margin-top: 15px;">` 
+       `     
     +
-        ((formattedDate || titulo) ? `${formattedDate ? formattedDate + '</p>' : '</p>'}${(formattedDate && titulo) ? '' : ''}${(titulo && titulo != 'Selecione') ? ' <p style="font-size:1.2em; width:100%; text-align:center;">Titulo: ' + titulo + '</p>': ''}` : '</div>') + '</div>  </div> </p>'
+    `<p style="text-align:center; font-size:1.5em; margin:0; padding:0;">Relatório demonstrativo de resultado (DRE)</p>` 
     +
-     `<p style="text-align:center; font-size:1.5em; margin:0; padding:0;">Relatório demonstrativo de resultado (DRE)</p>` 
-    +
-    '<hr>'
+    '</div></div><hr>'
+
     pdfContainer.appendChild(headerDiv);
 
     accordionItems.forEach(item => {
         const mainContainer = document.createElement("div")
-        mainContainer.classList.add('avoid-page-break')
         // Clone only the visible content of each accordion
         const headerOriginal = item.querySelector('.accordion-header');
         const header = headerOriginal.cloneNode(true);
@@ -226,7 +230,7 @@ pdfContainer.appendChild(totaisContainer);
     // Use html2pdf to generate PDF
     html2pdf()
         .set({
-            margin: 10,
+            margin: 0,
             filename: 'dre-'+nome+'.pdf',
             image: { type: 'jpeg', quality: 0.8 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
