@@ -469,8 +469,8 @@ if (isset($view) && $view == 'cadastro') {
             } else if (isset($acao) && $acao == 'excluir') {
 
 
-                if(!Rec01::read(null, null, null, null,null, $id_conta02) 
-                    && !Pag01::read(null, null, null, null,null,  $id_conta02) ) {
+                if(!Rec01::read(con02: $id_conta02) 
+                    && !Pag01::read(con02: $id_conta02) ) {
             Con02::delete($id_conta02);
         } else {
             header('Location: contas.php?con01id='.$id_conta.'&erro=usado');
