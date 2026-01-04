@@ -28,9 +28,38 @@ function format_valor_alinhado($valor) {
     return $formatado;
 }
 
-$get_data_final = filter_input(INPUT_GET, 'data_final', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
-$get_data_inicial = filter_input(INPUT_GET, 'data_inicial', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
+$get_periodo = filter_input(INPUT_GET, 'periodo', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
 $get_titulo = filter_input(INPUT_GET, 'titulo') ?: null;
+$filtro_tipo = filter_input(INPUT_GET, 'filtro_tipo') ?: null;
+
+if($get_periodo != null){
+$get_periodo = str_replace('%2F', '/', $get_periodo);
+$primeiro_dia_periodo = DateTime::createFromFormat('d/m/Y', '1/' . $get_periodo)->format('Y-m-01');
+$ultimo_dia_periodo = DateTime::createFromFormat('m/Y', $get_periodo)->format('Y-m-t');
+// $get_periodo = new Datetime('first day of this month');
+
+                        $ban02_lista = Ban02::read(id_empresa: $_SESSION['usuario']->id_empresa, filtro_data_inicial: $primeiro_dia_periodo ?? null, filtro_data_final: $ultimo_dia_periodo ?? null, dre_read:true, filtro_tipo: $filtro_tipo ?? null);
+                        $lista_tabela = [];
+                        foreach($ban02_lista as $ban02) {
+                            $idCon = $ban02->id_con02;
+                            if (!isset($lista_tabela[$idCon])) {
+                                $lista_tabela[$idCon] = [
+                                    'valor' => 0,
+                                    'con02' => $idCon,
+                                    'receitas' => 0,
+                                    'despesas' => 0
+                                ];
+                            }
+                            $valor = $ban02->valor ?? 0;
+                            $lista_tabela[$idCon]['valor'] += $valor;
+                            if ($valor > 0) {
+                                $lista_tabela[$idCon]['receitas'] += $valor;
+                            } else {
+                                $lista_tabela[$idCon]['despesas'] += abs($valor);
+                            }
+                        }
+}
+
 $get_subtitulo = null;
 $get_custos = filter_input(INPUT_GET, 'filtro_custos') ?? null;
 $todas_empresas = filter_input(INPUT_GET, 'todas_empresas') == 'on' ? 1 : 0;
@@ -81,6 +110,7 @@ if($todas_empresas) {
     
     <div class="main" id="container">
         <div class="row">
+
             <div class="col-md-12" style="padding: 0;">
 
 
@@ -108,25 +138,23 @@ if($todas_empresas) {
                             <div class="tab-pane fade show active" id="vendas" role="tabpanel"
                                 aria-labelledby="vendas-tab">
                                 <h5 class="card-title">Filtros</h5>
-                                <form method="get" action="analitico.php">
+                                <form method="get" action="grafico.php">
                                     <div class="row">
                                         <div class="inputs-dre">
                                         <div class="inputs-dre-text">
-                                        <div class="data-dre">
                                             <div>
-                                                <label for="data_inicial">Data Inicial:</label>
-                                                <input type="text" id="data_inicial" placeholder="MM/AAAA" name="data_inicial"
-                                                    value="<?= $get_data_inicial ?>" class="form-control">
+                                                <label for="data_inicial">Período</label>:</label>
+                                                <input type="text" id="data_inicial" placeholder="mm/aaaa" name="periodo"
+                                                    value="<?= $get_periodo ?>" class="form-control">
                                             </div>
-
-                                            <div>
-                                                <label for="data_final">Data Final:</label>
-                                                <input type="date" id="data_final" name="data_final"
-                                                    value="<?= $get_data_final ?>" class="form-control">
+                                        <div>
+                                                <label for="filtro_tipo">Tipo:</label>
+                                                <select name="filtro_tipo">
+                                                    <option value="">Todos</option>
+                                                    <option value="C" <?php if($filtro_tipo == 'C') echo 'selected'; ?>>Receitas</option>
+                                                    <option value="D" <?php if($filtro_tipo == 'D') echo 'selected'; ?>>Despesas</option>
+                                                </select>
                                             </div>
-
-                                            
-                                        </div>
                                                             
 
                                         </div>
@@ -160,8 +188,96 @@ if($todas_empresas) {
 
 
                     </div>
+                    <div class="card-body">
+                        <?php
+                        if($get_periodo != null) {
+                        
 
-                   
+                        
+                        ?>
+
+                        <?php
+                        // Preparar dados para o gráfico (pie ou confronto receitas/despesas)
+                        $chart_labels = [];
+                        $chart_data = [];
+                        $chart_receitas = [];
+                        $chart_despesas = [];
+                        $chart_mode = empty($filtro_tipo) ? 'line' : 'pie';
+                        if (!empty($lista_tabela)) {
+                            foreach ($lista_tabela as $item_chart) {
+                                $sub_chart = Con02::read(id: $item_chart['con02'])[0];
+                                $label = $sub_chart->nome ?? ('Conta ' . ($item_chart['con02'] ?? ''));
+                                $chart_labels[] = $label;
+                                if ($chart_mode === 'pie') {
+                                    $chart_data[] = round($item_chart['valor'] ?? 0, 2);
+                                } else {
+                                    $chart_receitas[] = round($item_chart['receitas'] ?? 0, 2);
+                                    $chart_despesas[] = round($item_chart['despesas'] ?? 0, 2);
+                                }
+                            }
+                        }
+
+                        $total_tabela = 0;
+                        ?>
+
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Distribuição - Gráfico de <?php echo $filtro_tipo != null ? 'Pizza' : 'Linha'?></h5>
+                                <div class="chart-container" style="max-width:100%; height:20%; margin:0 auto;">
+                                    <canvas id="drePieChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <table class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Descrição</th>
+                                    <th>Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach($lista_tabela as $item) {?>
+                                <tr>
+                                    <td>
+
+                                        <?php 
+                                        $sub = Con02::read(id: $item['con02'])[0];
+                                        echo $sub->nome;
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <div class="valor-monetario">
+                                            <div>
+                                                R$
+                                            </div>
+                                            <div>  
+                                            <?= format_valor_alinhado($item['valor']); ?>
+                                            </div>
+                                        </div>  
+                                    </td>
+                                    
+                                <?php
+                                $total_tabela += $item['valor'];
+                                } ?>
+                                <tr>
+                                    <td>
+                                        <div class="d-flex flex-row justify-content-end">
+                                        <strong style="width: 100%; text-align: end;">Total</strong>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="valor-monetario">
+                                        <strong>R$</strong><strong><?php echo format_valor_alinhado($total_tabela); ?></strong>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <?php } ?>
+                    </div>
+
+                    
                     </div>
                 </div>
             </div>
@@ -397,6 +513,77 @@ if(!isset($get_titulo)) { ?>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="gerar.js"></script>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    (function(){
+        const chartMode = <?php echo json_encode($chart_mode ?? 'pie'); ?>;
+        const labels = <?php echo json_encode($chart_labels ?? []); ?>;
+        const data = <?php echo json_encode($chart_data ?? []); ?>;
+        const receitas = <?php echo json_encode($chart_receitas ?? []); ?>;
+        const despesas = <?php echo json_encode($chart_despesas ?? []); ?>;
+
+        if (chartMode === 'pie') {
+            if (labels.length && data.length) {
+                const ctx = document.getElementById('drePieChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            data: data,
+                            backgroundColor: [
+                                '#1a46cdff', '#15d18cff', '#15b8d1ff', '#ca9713ff', '#d12112ff', '#1c30c8ff', '#ac1a1aff', '#990ed1ff'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'right' } }
+                    }
+                });
+            }
+        } else {
+            // Linha comparando receitas x despesas por categoria
+            if (labels.length && (receitas.length || despesas.length)) {
+                const ctx = document.getElementById('drePieChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Receitas',
+                                data: receitas,
+                                borderColor: '#1cc88a',
+                                backgroundColor: 'rgba(28,200,138,0.15)',
+                                tension: 0.2,
+                                fill: true
+                            },
+                            {
+                                label: 'Despesas',
+                                data: despesas,
+                                borderColor: '#e74a3b',
+                                backgroundColor: 'rgba(231,74,59,0.15)',
+                                tension: 0.2,
+                                fill: true
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'bottom' } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+            }
+        }
+    })();
+</script>
 
 
 

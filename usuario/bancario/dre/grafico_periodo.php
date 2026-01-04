@@ -28,9 +28,77 @@ function format_valor_alinhado($valor) {
     return $formatado;
 }
 
-$get_data_final = filter_input(INPUT_GET, 'data_final', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
-$get_data_inicial = filter_input(INPUT_GET, 'data_inicial', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
+$get_periodo_inicial = filter_input(INPUT_GET, 'periodo_inicial', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
+$get_periodo_final = filter_input(INPUT_GET, 'periodo_final', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
+
 $get_titulo = filter_input(INPUT_GET, 'titulo') ?: null;
+$filtro_tipo = filter_input(INPUT_GET, 'filtro_tipo') ?: null;
+
+// Processar comparação entre dois períodos (espera-se formato mm/yyyy)
+function period_range_from_mm_yyyy($mm_yyyy) {
+    $mm_yyyy = str_replace('%2F', '/', $mm_yyyy);
+    $d = DateTime::createFromFormat('m/Y', $mm_yyyy);
+    if (!$d) return [null, null, null];
+    $first = DateTime::createFromFormat('Y-m-d', $d->format('Y-m-01'))->format('Y-m-01');
+    $last = DateTime::createFromFormat('Y-m-d', $d->format('Y-m-t'))->format('Y-m-t');
+    return [$first, $last, $d->format('m/Y')];
+}
+
+$lista_tabela = [];
+$period_label_1 = null;
+$period_label_2 = null;
+if ($get_periodo_inicial != null) {
+    list($p1_start, $p1_end, $period_label_1) = period_range_from_mm_yyyy($get_periodo_inicial);
+    $ban02_p1 = Ban02::read(id_empresa: $_SESSION['usuario']->id_empresa, filtro_data_inicial: $p1_start ?? null, filtro_tipo: $filtro_tipo ?? null, filtro_data_final: $p1_end ?? null, dre_read:true);
+} else {
+    $ban02_p1 = [];
+}
+
+if ($get_periodo_final != null) {
+    list($p2_start, $p2_end, $period_label_2) = period_range_from_mm_yyyy($get_periodo_final);
+    $ban02_p2 = Ban02::read(id_empresa: $_SESSION['usuario']->id_empresa, filtro_data_inicial: $p2_start ?? null,  filtro_tipo: $filtro_tipo ?? null, filtro_data_final: $p2_end ?? null, dre_read:true);
+} else {
+    $ban02_p2 = [];
+}
+
+// Agregar por conta (con02) para cada período
+foreach ([$ban02_p1, $ban02_p2] as $idx => $list) {
+    $periodIndex = $idx + 1; // 1 ou 2
+    foreach ($list as $ban02) {
+        $idCon = $ban02->id_con02;
+        if (!isset($lista_tabela[$idCon])) {
+            $lista_tabela[$idCon] = [
+                'con02' => $idCon,
+                'nome' => null,
+                'periodo1' => 0,
+                'periodo2' => 0,
+                'receitas1' => 0,
+                'despesas1' => 0,
+                'receitas2' => 0,
+                'despesas2' => 0,
+            ];
+        }
+        $valor = $ban02->valor ?? 0;
+        $keyVal = 'periodo' . $periodIndex;
+        $lista_tabela[$idCon][$keyVal] += $valor;
+        $rKey = 'receitas' . $periodIndex;
+        $dKey = 'despesas' . $periodIndex;
+        if ($valor > 0) {
+            $lista_tabela[$idCon][$rKey] += $valor;
+        } else {
+            $lista_tabela[$idCon][$dKey] += abs($valor);
+        }
+    }
+}
+
+// Preencher nomes das contas
+foreach ($lista_tabela as $idCon => &$item) {
+    $sub = Con02::read(id: $idCon);
+    if ($sub && isset($sub[0])) $item['nome'] = $sub[0]->nome ?? ('Conta ' . $idCon);
+}
+unset($item);
+
+
 $get_subtitulo = null;
 $get_custos = filter_input(INPUT_GET, 'filtro_custos') ?? null;
 $todas_empresas = filter_input(INPUT_GET, 'todas_empresas') == 'on' ? 1 : 0;
@@ -81,22 +149,25 @@ if($todas_empresas) {
     
     <div class="main" id="container">
         <div class="row">
+
             <div class="col-md-12" style="padding: 0;">
 
 
                 <div class="card">
                     <div class="card-header">
-                        <button class="btn btn-primary dre-menu-btn" id="btn-sintetico" onclick="window.location.href='sintetico.php'">
+                        <button class="btn btn-primary dre-menu-btn" id="btn-sintetico" onclick="window.location.href='sintetico.php'"  id="btn-sintetico">
                             <h3>DRE - Sintético</h3>
                         </button>
-                        <button class="btn btn-primary dre-menu-btn" onclick="window.location.href='analitico.php'">
+
+                        <button class="btn btn-primary dre-menu-btn" onclick="window.location.href='analitico.php'"  id="btn-analitico">
                             <h3>DRE - Analitico</h3>
                         </button>
-                        </button>
-                        <button class="btn btn-primary dre-menu-btn" onclick="window.location.href='grafico.php'">
+
+                        <button class="btn btn-primary btn-dre-selecionado dre-menu-btn" onclick="window.location.href='grafico.php'" id="btn-grafico">
                             <h3>Gráfico</h3>
                         </button>
-                        <button class="btn btn-primary btn-dre-selecionado dre-menu-btn" style="border-bottom: 2px solid #5856d6;"> 
+
+                        <button class="btn btn-primary dre-menu-btn" style="border-bottom: 2px solid #5856d6;"  id="btn-grafico-periodo">
                             <h3>Gráfico por período</h3>
                         </button>
                     </div>
@@ -106,25 +177,28 @@ if($todas_empresas) {
                             <div class="tab-pane fade show active" id="vendas" role="tabpanel"
                                 aria-labelledby="vendas-tab">
                                 <h5 class="card-title">Filtros</h5>
-                                <form method="get" action="analitico.php">
+                                <form method="get" action="grafico_periodo.php">
                                     <div class="row">
                                         <div class="inputs-dre">
                                         <div class="inputs-dre-text">
-                                        <div class="data-dre">
                                             <div>
-                                                <label for="data_inicial">Data Inicial:</label>
-                                                <input type="date" id="data_inicial" name="data_inicial"
-                                                    value="<?= $get_data_inicial ?>" class="form-control">
+                                                <label for="data_inicial">Período inicial</label>:</label>
+                                                <input type="text" id="data_inicial" placeholder="mm/aaaa" name="periodo_inicial"
+                                                    value="<?= $get_periodo_inicial ?>" class="form-control" style="border-radius: 0;">
                                             </div>
-
                                             <div>
-                                                <label for="data_final">Data Final:</label>
-                                                <input type="date" id="data_final" name="data_final"
-                                                    value="<?= $get_data_final ?>" class="form-control">
+                                                <label for="data_inicial">Período Final</label>:</label>
+                                                <input type="text" id="data_final" placeholder="mm/aaaa" name="periodo_final"
+                                                    value="<?= $get_periodo_final ?>" class="form-control" style="border-radius: 0;">
                                             </div>
-
-                                            
-                                        </div>
+                                        <div>
+                                                <label for="filtro_tipo">Tipo:</label>
+                                                <select name="filtro_tipo">
+                                                    <option value="">Todos</option>
+                                                    <option value="C" <?php if($filtro_tipo == 'C') echo 'selected'; ?>>Receitas</option>
+                                                    <option value="D" <?php if($filtro_tipo == 'D') echo 'selected'; ?>>Despesas</option>
+                                                </select>
+                                            </div>
                                                             
 
                                         </div>
@@ -158,8 +232,101 @@ if($todas_empresas) {
 
 
                     </div>
+                    <div class="card-body">
+                        <?php
+                        if($get_periodo_inicial != null) {
+                        
 
-                   
+                        
+                        ?>
+
+                        <?php
+                        // Preparar dados para o gráfico comparando dois períodos
+                        $chart_labels = [];
+                        $chart_data_p1 = [];
+                        $chart_data_p2 = [];
+                        // Se filtro_tipo == 'C' usamos receitas, se 'D' usamos despesas, se vazio usamos total líquido (periodo)
+                        $type = $filtro_tipo ?? '';
+                        if (!empty($lista_tabela)) {
+                            foreach ($lista_tabela as $idCon => $item_chart) {
+                                $label = $item_chart['nome'] ?? ('Conta ' . $idCon);
+                                $chart_labels[] = $label;
+                                if ($type === 'C') {
+                                    $chart_data_p1[] = round($item_chart['receitas1'] ?? 0, 2);
+                                    $chart_data_p2[] = round($item_chart['receitas2'] ?? 0, 2);
+                                } elseif ($type === 'D') {
+                                    $chart_data_p1[] = round($item_chart['despesas1'] ?? 0, 2);
+                                    $chart_data_p2[] = round($item_chart['despesas2'] ?? 0, 2);
+                                } else {
+                                    $chart_data_p1[] = round($item_chart['periodo1'] ?? 0, 2);
+                                    $chart_data_p2[] = round($item_chart['periodo2'] ?? 0, 2);
+                                }
+                            }
+                        }
+
+                        $total_tabela = 0;
+                        ?>
+
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Distribuição - Gráfico de Linha</h5>
+                                <div class="chart-container" style="max-width:100%; height:20%; margin:0 auto;">
+                                    <canvas id="drePieChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <table class="table table-striped table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Descrição</th>
+                                    <th><?php echo $period_label_1 ?? 'Período 1'; ?></th>
+                                    <th><?php echo $period_label_2 ?? 'Período 2'; ?></th>
+                                    <th>Diferença</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                $total_p1 = 0;
+                                $total_p2 = 0;
+                                foreach($lista_tabela as $item) { ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($item['nome'] ?? ('Conta ' . ($item['con02'] ?? ''))); ?></td>
+                                    <td>
+                                        <div class="valor-monetario">
+                                            <div>R$</div>
+                                            <div><?php echo format_valor_alinhado($item['periodo1'] ?? 0); ?></div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="valor-monetario">
+                                            <div>R$</div>
+                                            <div><?php echo format_valor_alinhado($item['periodo2'] ?? 0); ?></div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="valor-monetario">
+                                            <div>R$</div>
+                                            <div><?php echo format_valor_alinhado( ($item['periodo2'] ?? 0) - ($item['periodo1'] ?? 0) ); ?></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php
+                                    $total_p1 += $item['periodo1'] ?? 0;
+                                    $total_p2 += $item['periodo2'] ?? 0;
+                                } ?>
+                                <tr>
+                                    <td><div class="d-flex flex-row justify-content-end"><strong style="width: 100%; text-align: end;">Total</strong></div></td>
+                                    <td><div class="valor-monetario"><strong>R$</strong><strong><?php echo format_valor_alinhado($total_p1); ?></strong></div></td>
+                                    <td><div class="valor-monetario"><strong>R$</strong><strong><?php echo format_valor_alinhado($total_p2); ?></strong></div></td>
+                                    <td><div class="valor-monetario"><strong>R$</strong><strong><?php echo format_valor_alinhado($total_p2 - $total_p1); ?></strong></div></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <?php } ?>
+                    </div>
+
+                    
                     </div>
                 </div>
             </div>
@@ -261,24 +428,28 @@ if(!isset($get_titulo)) { ?>
     
     function checarTitulo(resetSubtitulo = false) {
         var tituloSelect = document.getElementById('input-titulo');
-        var tituloId = tituloSelect.value;
+        var tituloId = tituloSelect ? tituloSelect.value : '';
         var subtituloSelect = document.getElementById('input-subtitulo');
+        if (!subtituloSelect) return;
         let subtituloDiv = document.getElementById('subtitulo-dre-div');
         var options = subtituloSelect.querySelectorAll('option');
         let divText = document.querySelector('.inputs-dre-text');
-        divChildren = divText.children
+        divChildren = divText ? divText.children : []
         let divBtn = document.querySelector('.inputs-dre-btn');
+        const pageFiltroTipo = <?php echo json_encode($filtro_tipo ?? ''); ?>;
 
         options.forEach(function (option) {
             if (option.value === "") {
                 option.style.display = '';
                 return;
             }
-            if (option.getAttribute('data-titulo-id') === tituloId) {
-                option.style.display = '';
-            } else {
-                option.style.display = 'none';
+            const optTituloId = option.getAttribute('data-titulo-id') || '';
+            const optTipo = option.getAttribute('data-tipo') || '';
+            let show = (optTituloId === tituloId || tituloId === '');
+            if (pageFiltroTipo && pageFiltroTipo !== '') {
+                show = show && (optTipo === pageFiltroTipo);
             }
+            option.style.display = show ? '' : 'none';
         });
 
         if (tituloId == '') {
@@ -395,6 +566,46 @@ if(!isset($get_titulo)) { ?>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="gerar.js"></script>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    (function(){
+        const labels = <?php echo json_encode($chart_labels ?? []); ?>;
+        const dataP1 = <?php echo json_encode($chart_data_p1 ?? []); ?>;
+        const dataP2 = <?php echo json_encode($chart_data_p2 ?? []); ?>;
+        const labelP1 = <?php echo json_encode($period_label_1 ?? 'Período 1'); ?>;
+        const labelP2 = <?php echo json_encode($period_label_2 ?? 'Período 2'); ?>;
+
+        if (labels.length) {
+            const ctx = document.getElementById('drePieChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: labelP1,
+                            data: dataP1,
+                            backgroundColor: '#1a46cdff'
+                        },
+                        {
+                            label: labelP2,
+                            data: dataP2,
+                            backgroundColor: '#15d18cff'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+    })();
+</script>
 
 
 
