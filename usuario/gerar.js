@@ -118,7 +118,7 @@ function getTabelaSemAcoes() {
         var cor = (groupIndex % 2 === 0) ? '#ffffff' : '#f2f2f2';
             tr.style.backgroundColor = cor;
         // evita quebra de página dentro da linha
-        try { tr.style.pageBreakInside = 'avoid'; tr.style.breakInside = 'avoid'; } catch(e){}
+        
         // remove as mesmas 4 colunas pelo índice final, garantindo consistência com o thead
         for (let i = 0; i < 4; i++) {
             // remove a última célula apenas se o número de células for maior que finalColCount
@@ -151,7 +151,6 @@ function getTabelaSemAcoes() {
 
             td.style.padding = "6px 4px";
             td.style.lineHeight = "1.2";
-            try { td.style.pageBreakInside = 'avoid'; td.style.breakInside = 'avoid'; } catch(e){}
         });
 
 
@@ -287,7 +286,41 @@ function buildExportHeader(nome, nomeEmpresa) {
     return headerGeral;
 }
 
-// bloco logic removed — we will export the whole table and use CSS to avoid page breaks inside rows
+function dividirTabelaEmBlocos(tabela, tamanhoBloco = 12) {
+    const thead = tabela.querySelector('thead')?.cloneNode(true);
+    const tfoot = tabela.querySelector('tfoot')?.cloneNode(true);
+    const rows = Array.from(tabela.querySelectorAll('tbody tr'));
+
+    const blocos = [];
+
+    for (let i = 0; i < rows.length; i += tamanhoBloco) {
+        const novaTabela = document.createElement('table');
+        novaTabela.className = tabela.className;
+        novaTabela.style.width = '100%';
+        novaTabela.style.tableLayout = 'fixed';
+        novaTabela.style.borderCollapse = 'collapse';
+
+        if (tabela.querySelector('colgroup')) {
+            novaTabela.appendChild(tabela.querySelector('colgroup').cloneNode(true));
+        }
+
+        if (thead) novaTabela.appendChild(thead.cloneNode(true));
+
+        const novoTbody = document.createElement('tbody');
+        rows.slice(i, i + tamanhoBloco).forEach(tr => {
+            novoTbody.appendChild(tr.cloneNode(true));
+        });
+
+        novaTabela.appendChild(novoTbody);
+
+        if (tfoot) novaTabela.appendChild(tfoot.cloneNode(true));
+
+        blocos.push(novaTabela);
+    }
+
+    return blocos;
+}
+
 
 function gerarpdf(nome, nomeEmpresa = '') {
     var tabela = getTabelaSemAcoes();
@@ -327,12 +360,7 @@ function gerarpdf(nome, nomeEmpresa = '') {
     // marca a tabela exportada com uma classe para aplicar CSS local sem depender de ID
     tabelaParaExport.classList.add('export-table');
     // aplica estilos que evitam quebra dentro das linhas/células
-    tabelaParaExport.querySelectorAll('tbody tr').forEach(function(r) {
-        try { r.style.pageBreakInside = 'avoid'; r.style.breakInside = 'avoid'; } catch(e){}
-    });
-    tabelaParaExport.querySelectorAll('td, th').forEach(function(c) {
-        try { c.style.pageBreakInside = 'avoid'; c.style.breakInside = 'avoid'; } catch(e){}
-    });
+
 
     const container = document.createElement('div');
     container.style.width = '100%';
@@ -363,7 +391,6 @@ function gerarpdf(nome, nomeEmpresa = '') {
             min-height: 0 !important;
         }
         .export-table, .export-table tr, .export-table td, .export-table th, .export-table thead, .export-table tbody, .avoid-page-break {
-            page-break-inside: avoid !important;
             box-sizing: border-box !important;
             background-image: none !important;
             box-shadow: none !important;
@@ -390,12 +417,56 @@ function gerarpdf(nome, nomeEmpresa = '') {
     container.appendChild(style);
 
 
-    const headerEl = buildExportHeader(nome, nomeEmpresa);
-    container.appendChild(headerEl);
-    container.appendChild(tabelaParaExport);
+const tabelasPaginadas = dividirTabelaEmBlocos(tabelaParaExport, 20);
+const ultimoIndex = tabelasPaginadas.length - 1;
+
+tabelasPaginadas.forEach((tbl, index) => {
+
+    const headerClone = buildExportHeader(nome, nomeEmpresa);
 
 
-    html2pdf().set(opt).from(container).save();
+    const qtdLinhas = tbl.querySelectorAll('tbody tr').length;
+
+    if (index === ultimoIndex && qtdLinhas === 1) {
+        const thead = tbl.querySelector('thead');
+        if (thead) thead.remove();
+    }
+
+    const bodytbl = document.createElement('div');
+    bodytbl.appendChild(headerClone);
+    bodytbl.appendChild(tbl);
+
+    bodytbl.classList.add('avoid-page-break');
+
+    container.appendChild(bodytbl);
+});
+
+
+
+    html2pdf()
+    .set(opt)
+    .from(container)
+    .toPdf()
+    .get('pdf')
+    .then(function (pdf) {
+
+        const totalPages = pdf.internal.getNumberOfPages();
+        const pageWidth = pdf.internal.pageSize.getWidth();
+
+        pdf.setFontSize(9);
+
+        for (let i = 1; i <= totalPages; i++) {
+            pdf.setPage(i);
+
+            pdf.text(
+                `Página ${i} de ${totalPages}`,
+                pageWidth - 10, // canto direito
+                10,             // topo
+                { align: 'right' }
+            );
+        }
+    })
+    .save();
 }
 
 

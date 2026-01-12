@@ -22,8 +22,6 @@ function limparElementosInvisiveis(tabelaClone) {
             el.style.background = 'none';
             el.style.backgroundColor = 'transparent';
             el.style.boxShadow = 'none';
-            el.style.minHeight = '0';
-            el.style.height = 'auto';
             el.style.backgroundRepeat = 'no-repeat';
             el.style.backgroundSize = 'auto';
         } catch (e) {}
@@ -38,8 +36,6 @@ function limparElementosInvisiveis(tabelaClone) {
             background-image: none !important;
             background: none !important;
             box-shadow: none !important;
-            min-height: 0 !important;
-            height: auto !important;
         }
     `;
     tabelaClone.appendChild(estiloPseudo);
@@ -150,7 +146,6 @@ function getTabelaSemAcoes() {
             td.style.outline = '1px solid #ccc';
 
             td.style.padding = "6px 4px";
-            td.style.lineHeight = "1.2";
             try { td.style.pageBreakInside = 'avoid'; td.style.breakInside = 'avoid'; } catch(e){}
         });
 
@@ -180,6 +175,7 @@ function buildExportHeader(nome, nomeEmpresa) {
     var titleText = titleEl ? titleEl.textContent.trim() : ("Relatorio de Movimentação Bancária");
     
     var h = document.createElement('p');
+    const s = document.createElement('div')
     h.textContent = nomeEmpresa + ' - ' + titleText;
     h.style.margin = '0 0 0 0';
     h.style.fontSize = '24px';
@@ -218,22 +214,27 @@ function buildExportHeader(nome, nomeEmpresa) {
     var custo = document.querySelector('select[name="filtro_custo"]') || document.querySelector('#custo-filtro');
     var opcao = getRadioLabel('opcao_filtro');
     var por = getRadioLabel('filtro_por');
+    var valor_i = document.getElementById('saldo-inicial-pdf').innerHTML
+    
+
 
     // Função para formatar datas yyyy-mm-dd para dd-mm-yyyy
     function formatarDataBR(data) {
-        if (!data) return '';
-        console.log(data)
-        const data_formatada = new Date(Date(data))
-        console.log(data_formatada)
-        return data_formatada.toLocaleDateString('pt-BR');
-    }
+    if (!data) return '';
 
+    const [year, month, day] = data.split('-');
+
+    return `${day}/${month}/${year}`;
+}
+
+    filters.push(['Saldo Inicial', 'R$ ' + valor_i])
     if((di && di.value) && (df && df.value)) {
         filters.push(['Período', formatarDataBR(di.value) + ' até ' + formatarDataBR(df.value)]);
     } else {
         if (di && di.value) filters.push(['Data Inicial', formatarDataBR(di.value)]);
     if (df && df.value) filters.push(['Data Final', formatarDataBR(df.value)]);
     }
+
     
     if (doc && doc.value) filters.push(['Documento', doc.value]);
     if (pagamento) {
@@ -349,6 +350,17 @@ function gerarpdf(nome, nomeEmpresa = '') {
         cell.style.maxWidth = '100%';
     });
 
+    const saldo_f = document.querySelector('#saldo-final-pdf strong').cloneNode(true);
+    saldo_f.style.textAlign = 'center'
+    const footer = document.createElement('div')
+    footer.style.width = '100%';
+    footer.style.display = 'flex';
+    footer.style.justifyContent = 'center'
+    footer.style.alignItems = 'center'
+    footer.style.paddingTop = '20px'
+    footer.style.borderTop = '1px solid #ccc'
+    footer.appendChild(saldo_f)
+
     const style = document.createElement('style');
     style.innerHTML = `
         .export-table {
@@ -359,8 +371,7 @@ function gerarpdf(nome, nomeEmpresa = '') {
         /* remover alturas fixas para evitar cálculos diferentes entre head/body */
         .export-table tbody tr, .export-table thead tr{
             padding:0;
-            height: auto !important;
-            min-height: 0 !important;
+
         }
         .export-table, .export-table tr, .export-table td, .export-table th, .export-table thead, .export-table tbody, .avoid-page-break {
             page-break-inside: avoid !important;
@@ -374,8 +385,7 @@ function gerarpdf(nome, nomeEmpresa = '') {
             text-align:center;
             word-break: normal !important;
             
-            height: auto !important;;
-            min-height: 0 !important;
+
         }
         .export-table tbody tr td {
             font-size: 75% !important;
@@ -383,7 +393,7 @@ function gerarpdf(nome, nomeEmpresa = '') {
             white-space:nowrap;
             overflow:hidden;
             text-overflow:hidden;
-            height: auto !important;
+
             font-weight: bold !important;
         }
             #td-descricao {
@@ -396,6 +406,7 @@ function gerarpdf(nome, nomeEmpresa = '') {
     const headerEl = buildExportHeader(nome, nomeEmpresa);
     container.appendChild(headerEl);
     container.appendChild(tabelaParaExport);
+    container.appendChild(footer)
 
 
     html2pdf().set(opt).from(container).save();
@@ -496,7 +507,7 @@ function gerarexcel(nome) {
         return aoa;
     }
 
-    var wb = XLSX.utils.table_to_book(tabela, {sheet: "relatorio "+nome});
+    var wb = XLSX.utils.table_to_book(tabela, {sheet: "relatorio_"+nome});
     var sheetName = wb.SheetNames[0];
     var ws = wb.Sheets[sheetName];
     var dataAoA = XLSX.utils.sheet_to_json(ws, {header:1});
@@ -504,5 +515,5 @@ function gerarexcel(nome) {
     var newAoA = headerAoA.concat(dataAoA);
     var newWs = XLSX.utils.aoa_to_sheet(newAoA);
     wb.Sheets[sheetName] = newWs;
-    XLSX.writeFile(wb, "relatorio"+nome+".xlsx");
+    XLSX.writeFile(wb, "relatorio_"+nome+".xlsx");
 }
