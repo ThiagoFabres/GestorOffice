@@ -1,6 +1,5 @@
 <?php 
 
-
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     header('Location: /');
     exit;
