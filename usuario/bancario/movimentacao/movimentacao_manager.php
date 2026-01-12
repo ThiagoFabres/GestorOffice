@@ -26,6 +26,7 @@ if($acao == 'processar') {
         $lines = explode("\n", $content);
 
         $conta = filter_input(INPUT_POST, 'conta');
+        $conta_obj = Ban01::read($conta)[0];
         $data_atual = (new DateTime())->format('Y-m-d');
         $ultima_data = buscarData($conta);
         $importadas = Ban02Imp::read($_SESSION['usuario']->id_empresa, $conta);      
@@ -57,15 +58,19 @@ if($acao == 'processar') {
                 $current['data_analizada'] = date('Y-m-d', strtotime($date));
                 
             }
-            if(isset($current['data_analizada'])){;
+            if(isset($current['data_analizada'])){
 
             $data_analizada = $current['data_analizada'];
             
                 // if (isset($importadas_set[$data_analizada])) continue;
                 if (isset($importadas_set[$data_analizada])) continue;
                 // if(Ban02Imp::read($_SESSION['usuario']->id_empresa, $conta, $data_analizada)) continue;
+                // echo $conta_obj->data;
+                // echo '<br>';
+                // echo $data_analizada;
+                // exit;
 
-                if( $ultima_data != null && ($data_analizada >= $data_atual || $data_analizada == $ultima_data)) {
+                if($ultima_data != null && ($data_analizada >= $data_atual || $data_analizada == $ultima_data ) || $conta_obj->data > $data_analizada) {
                     continue;
                 }
             
