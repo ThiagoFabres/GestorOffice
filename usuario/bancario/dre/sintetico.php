@@ -84,20 +84,20 @@ $titulos = [];
 
     // Obter títulos (con01) a partir dos subtítulos
     
-    foreach ($subtitulos as $sub) {
-        $c1 = Con01::read(
-            $sub->id_con01,
-            $empresa->id,
-            ordenar_por: 'tipo',
-            filtro_operacional: $get_operacional
-        );
+        foreach ($subtitulos as $sub) {
+            $c1 = Con01::read(
+                $sub->id_con01,
+                $empresa->id,
+                ordenar_por: 'tipo',
+                filtro_operacional: $get_operacional
+            );
 
 
-        if ($c1 && isset($c1[0]) && !in_array($c1[0]->id, $titulos_ids)) {
-            $titulos_ids[] = $c1[0]->id;
-            $titulos[] = $c1[0];
+            if ($c1 && isset($c1[0]) && !in_array($c1[0]->id, $titulos_ids)) {
+                $titulos_ids[] = $c1[0]->id;
+                $titulos[] = $c1[0];
+            }
         }
-    }
     }
 
 
@@ -441,52 +441,7 @@ $titulos = [];
         }
     }
 
-    function encolher() {
-        let barra = document.getElementById('barra-lateral');
-        let container = document.getElementById('container');
-        let superior = document.getElementById('header');
-        let body = document.getElementById('body');
-
-        if (!barra || !container || !superior || !body) return;
-
-        if (barra.style.animationName === 'encolher') {
-
-            superior.style.animationName = 'expandir-header'
-            superior.style.animationDuration = '0.5s';
-            superior.style.animationFillMode = 'backwards';
-
-            barra.style.animationName = 'expandir';
-            barra.style.animationDuration = '0.5s';
-            barra.style.animationFillMode = 'backwards';
-
-            container.style.animationName = 'expandir-container'
-            container.style.animationDuration = '0.5s';
-            container.style.animationFillMode = 'backwards';
-
-            body.style.animationName = 'expandir-container'
-            body.style.animationDuration = '0.5s';
-            body.style.animationFillMode = 'backwards';
-            return;
-        } else {
-
-            superior.style.animationName = 'encolher-header'
-            superior.style.animationDuration = '0.5s';
-            superior.style.animationFillMode = 'forwards';
-
-            barra.style.animationName = 'encolher';
-            barra.style.animationDuration = '0.5s';
-            barra.style.animationFillMode = 'forwards';
-
-            container.style.animationName = 'encolher'
-            container.style.animationDuration = '0.5s';
-            container.style.animationFillMode = 'forwards';
-
-            body.style.animationName = 'encolher'
-            body.style.animationDuration = '0.5s';
-            body.style.animationFillMode = 'forwards';
-
-        }
-    }
+  
 
 </script>
 
