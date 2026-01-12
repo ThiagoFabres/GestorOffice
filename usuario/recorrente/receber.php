@@ -44,6 +44,7 @@ $novo_documento = buscarDocumento();
 <link rel="stylesheet" href="recorrentes.css">
 <link rel="stylesheet" href="../../choices/choices.css">
 
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
@@ -58,7 +59,7 @@ $novo_documento = buscarDocumento();
 
 
 
-    <div class="main" style="min-height:80vh; justify-content: center;">
+    <div id="container" class="main" style="min-height:80vh; justify-content: center;">
 
                 <div  style="padding: 0; min-width:0; ">
                     <div class="card" style="padding: 0; min-width:0;">
@@ -101,7 +102,7 @@ $novo_documento = buscarDocumento();
                                                         style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
                                                         <option value="">Selecione</option>
 
-                                                        <?php $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa, 'D');
+                                                        <?php $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa, 'C');
                                                         foreach ($titulos as $titulo) { ?>
                                                             <option value="<?= $titulo->id ?>">
                                                                 <?= htmlspecialchars($titulo->nome, ENT_QUOTES, 'UTF-8') ?>
@@ -174,6 +175,12 @@ $novo_documento = buscarDocumento();
                                                         value=""
                                                         style="border-radius:0;"
                                                         required>
+                                                </div>
+                                            </div>
+                                            <div>
+                                            <div class="d-flex flex-column">
+                                                    <label>Descrição:</label>
+                                                    <input value="" name="descricao" placeholder="Descricao" class="form-control">
                                                 </div>
                                             </div>
 
