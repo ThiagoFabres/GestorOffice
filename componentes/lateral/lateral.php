@@ -80,6 +80,11 @@
                     </ul>
                 </div>
             </div>
+            <div class="menu-item <?php if($lateral_target == 'comparativo') {?>menu-item-atual<?php } ?>">
+                <a href="/usuario/dre/comparativo.php">
+                    <div style=" align-items:center;"><i class="bi bi-arrow-left-right"></i></div> DRE Comparativo
+                </a>
+            </div>
             <div class="menu-item accordion <?php if( isset($lateral_recorrente) && $lateral_recorrente ){ 
                 ?>menu-item-atual<?php } ?>">
                 <a class="nav-link text-white" data-bs-toggle="collapse" href="#recorrenteMenu" role="button"
@@ -97,8 +102,16 @@
                 </div>
             </div>
 
+            <div class="menu-item <?php if($lateral_target == 'manual') {?>menu-item-atual<?php } ?>">
+                <a href="/usuario/manual/manual.php">
+                    <div style=" align-items:center;"><i class="bi bi-binoculars"></i></div> Manual
+                </a>
+            </div>
+
 
         </div>
         </div>
 
     </nav>
+
+    
