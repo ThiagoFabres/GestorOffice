@@ -14,7 +14,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     exit;
 }
 
-
+$lateral_target = 'contas';
 $con01 = filter_input(INPUT_GET, 'con01id');
 $con02 = filter_input(INPUT_GET, 'con02id');
 $erro = filter_input(INPUT_GET, 'erro');
@@ -56,89 +56,15 @@ $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
 <body id="body" >
 
 
-    <nav id="barra-lateral">
-        <div id="logo-container">
-            <img width="220px" height="220px" src="/gestor-office.png" alt="Logo" class="logo">
-        </div>
-    <div id="itens-menu">
-                        <div class="menu-item">
-            <a href="index.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-layers"></i></div> Dashboard </a>
-        </div>
-    <?php if($_SESSION['usuario']->processar == 1) { ?>
-        <div class="menu-item accordion" >
-
-<a class="nav-link text-white" data-bs-toggle="collapse" href="#cadastrosMenu" role="button" aria-expanded="false" aria-controls="cadastrosMenu">
-        <i class="bi bi-person"></i> Cadastros
-      </a>
-      <div class="collapse" id="cadastrosMenu">
-        <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
-          <li><a href="cadastrar.php?cadastro=cliente" class="link-light text-decoration-none"><i class="bi bi-person"></i>Cliente/Fornecedor</a></li>
-          <li><a href="cadastrar.php?cadastro=bairro" class="link-light text-decoration-none"><i class="bi bi-houses"></i>Bairro</a></li>
-          <li><a href="cadastrar.php?cadastro=cidade" class="link-light text-decoration-none"><i class="bi bi-buildings"></i>Cidade</a></li>
-          <li><a href="cadastrar.php?cadastro=pagamento" class="link-light text-decoration-none"><i class="bi bi-cash-coin"></i>Tipo Pagamento</a></li>
-          <li><a href="cadastrar.php?cadastro=categoria" class="link-light text-decoration-none"><i class="bi bi-tag"></i>Categoria</a></li>
-          <li><a href="cadastrar.php?cadastro=custo" class="link-light text-decoration-none"><i class="bi bi-bank"></i>Centro de custos</a></li>
-          
-        </ul>
-      </div>
-        </div>
-        <?php } ?>
-
-        <div class="menu-item menu-item-atual">
-            <a href="contas.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-journal-bookmark"></i></div> Plano de Contas </a>
-        </div>
-
-        <div class="menu-item">
-            <a href="receber.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-wallet"></i></div> Contas a Receber </a>
-        </div>
-
-        <div class="menu-item">
-            <a href="pagar.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-cash-stack"></i></div> Contas a Pagar </a>
-        </div>
-
-        <div class="menu-item">
-            <a href="dre/sintetico.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
-        </div>
-
-
-        </div>
-        </div>
-
-    </nav>
-
-
-    <div id="header">
-        
-        <button onclick="encolher()" style="background:none;border:none;font-size:1.2em;color:#181f2b;outline:none;cursor:pointer; z-index:1000;">
-            <span class="btn bi bi-list"></span>
-        </button>
-        
-    <div id="titulo-header">
-        
-        <a>Dashboard</a>
-    </div>
-    <div id="menu-superior">
-        <a class="superior-item" href="/admin/">Dashboard</a>
-    </div>
-    <div class="conta-header" style="position:relative; float:right; margin-right:2em;">
-        <button id="userBtn" type="button" style="background:none;border:none;font-size:1.2em;color:#181f2b;outline:none;cursor:pointer;">
-            <span style="color:#181f2b;"><?= htmlspecialchars($_SESSION['usuario']->nome, ENT_QUOTES, 'UTF-8') ?> </span>
-        </button>
-        <div id="userMenu" style="right:0; z-index: 1000000;">
-            <a href="/" class="dropdown-item">
-                <i class="bi bi-box-arrow-left"></i> Logout
-        </a>
-        </div>
-    </div>
-    </div>
-
+    <?php require_once __DIR__ . '/../componentes/lateral/lateral.php'?>
+    <?php require_once __DIR__ . '/../componentes/header/header.php' ?>
 
 
     
 <div class="main" id="container">   
 
                 <div class="botao">
-        <a href="contas.php?acao=adicionar&target=titulo" class="btn btn-primary btn-sm botao-adm-adicionar">Adicionar titulo</a>
+        <a href="contas.php?acao=adicionar&target=titulo" class="btn btn-primary btn-lg botao-adm-adicionar">Adicionar Título</a>
     </div>
 
         
@@ -196,22 +122,22 @@ $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
             <div class="modal-content">
                 <div class="modal-header">
                     <?php if(isset($target )&& $target == 'titulo') {
-                        $titulo_modal = 'Novo título';
+                        $titulo_modal = 'Novo Título';
                         $target = 'titulo';
 
                     } else if(isset($target) && $target == 'subtitulo') {
-                        $titulo_modal = 'Novo subtítulo';
+                        $titulo_modal = 'Novo Subtítulo';
                         $target = 'subtitulo';
                     }
 
                      if($acao == 'editar') {
                         if($target == 'titulo') {
                             $conta_modal = Con01::read($con01, $_SESSION['usuario']->id_empresa)[0];
-                        $titulo_modal = 'Editar titulo: ' .$conta_modal->nome;
+                        $titulo_modal = 'Editar Título: ' .$conta_modal->nome;
                         $target = 'titulo'; 
                         } else if($target == 'subtitulo') {
                             $conta_modal = Con02::read($con02, $_SESSION['usuario']->id_empresa)[0];
-                            $titulo_modal = 'Editar subtítulo: ' .$conta_modal->nome;
+                            $titulo_modal = 'Editar Subtítulo: ' .$conta_modal->nome;
                             $target = 'subtitulo';
                         }  
                     }
@@ -238,20 +164,26 @@ $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
                     <?php if(isset($target) && $target == 'titulo'){ ?>
                         <div class="input-nome input-form-adm">
                             <label for="nome">Tipo:</label>
-                            <select name="tipo" class="form-select" id="tipo">
+                            <select name="tipo" class="form-select" id="tipo" style="margin-bottom: 1em;">
                                 <option <?php if (($acao == 'editar') && $conta_modal->tipo == 'C') {?> selected <?php } ?> value="C">Crédito</option>
                                 <option <?php if (($acao == 'editar') && $conta_modal->tipo == 'D') {?> selected <?php } ?> value="D">Débito</option>
                             </select>
+                            <div class="d-flex flex-column justify-content-start align-items-start">
+                                <label>Operacional:</label>
+                                <input name="operacional" type="checkbox" <?php if($acao != 'editar' || $conta_modal->operacional == 1) {?> checked <?php } ?>></input>
+                            </div>
+                            
                         </div>
                     <?php } ?>
 
 
                         <div style="margin-bottom: 3em;" class="footer">
-
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0;">Fechar</button>
-                        <button class="btn btn-success" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Salvar</button>
+                        <?php if($acao == 'editar'){ ?><button name="acao" value="excluir" style="float: left;" class="btn btn-danger" >Excluir</button> <?php } ?>
+                        <button class="btn btn-success" style="border-top-left-radius: 0; border-bottom-left-radius: 0; float:right;">Salvar</button> 
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0; float:right;">Fechar</button>
                         
-                        <?php if($acao == 'editar'){ ?><button name="acao" value="excluir" style="float: right;" class="btn btn-danger" >Excluir</button> <?php } ?> 
+                        
+                        
                             
 
                     </form>

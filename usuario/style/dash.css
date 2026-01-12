@@ -1,3 +1,6 @@
+html {
+    font-size: 100%;
+}
 .card table {
     width: 100%;
     table-layout: fixed;
@@ -20,6 +23,11 @@
     /* allow the card-body to shrink when inside a flex container so overflow works */
     min-height: 0;
 }
+.dashboard-group p {
+    font-size: 30px;
+    white-space: nowrap;
+    
+}
 
 .card table {
     overflow: auto;
@@ -40,6 +48,8 @@
     font-size: 90%;
     vertical-align: middle;
 }
+
+.tr-vazio 
 
 .card-body {
     overflow: auto;
@@ -81,6 +91,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    padding: 5%;
     justify-content: space-evenly;
 }
 
@@ -124,34 +135,53 @@
 }
 
 .dashboard-group {
-    width: 50%;
+    width: 100%;
     text-align: center;
     align-items: center;
 }
 
-.dashboard-group table {
-    width: 100%;
+.dashboard-group:first-child {
     cursor: pointer;
 }
+.dashboard-group table {
+        width: 100%;
+}
+.dashboard-group table tbody tr td,
+.dashboard-group table thead tr th {
+    width: calc(100%/3);
+}
+
+
 
 .tr-clientes-dash td {
-    overflow: scroll;
+    overflow: hidden;
     text-overflow: clip;
     min-width: none;
+    padding: 5px;
     white-space: nowrap;
     text-align: center;
-    font-size: 150%;
-    width: 100%;
+    font-size: 200%;
+    width: 200%;
+    background-color: white;
     
 } 
+
 .tr-clientes-dash th {
-    overflow: scroll;
+    overflow: hidden;
     text-overflow: clip;
     min-width: none;
     white-space: nowrap;
     text-align: center;
-    font-size: 175%;
-    width: 100%;
+    font-size: 30px;
+    width: 200%;
     color: black;
     font-weight: normal;
+}
+
+.tr-clientes th,
+.tr-clientes td{
+    overflow: hidden;
+}
+.tr-clientes-dash td{
+    height:70px;
 }

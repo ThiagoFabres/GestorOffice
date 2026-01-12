@@ -14,7 +14,9 @@ class Rec01 {
     public $parcelas;
     public $data_lanc;
     public $id_usuario;
-    public function __construct($id = null, $id_empresa = null, $id_cadastro = null, $id_con01 = null, $id_con02 = null, $documento = '', $descricao = '', $valor = 0.0, $parcelas = 1, $data_lanc = null, $id_usuario = null, $obs = null) {
+    public $centro_custos;
+    public $id_convertido;
+    public function __construct($id = null, $id_empresa = null, $id_cadastro = null, $id_con01 = null, $id_con02 = null, $documento = '', $descricao = '', $valor = 0.0, $parcelas = 1, $data_lanc = null, $id_usuario = null, $centro_custos = null, $id_convertido = null) {
         $this->id = $id;
         $this->id_empresa = $id_empresa;
         $this->id_cadastro = $id_cadastro;
@@ -26,13 +28,15 @@ class Rec01 {
         $this->parcelas = $parcelas;
         $this->data_lanc = $data_lanc ? new DateTime($data_lanc) : new DateTime();
         $this->id_usuario = $id_usuario;
+        $this->centro_custos = $centro_custos;
+        $this->id_convertido = $id_convertido;
     }
 
     public static function create($rec01) {
         $pdo = (new Database())->connect();
 
-        $sql = 'INSERT INTO rec01 (id_empresa, id_cadastro, id_con01, id_con02, documento, descricao, valor, parcelas, data_lanc, id_usuario) 
-                VALUES (:id_empresa, :id_cadastro, :id_con01, :id_con02, :documento, :descricao, :valor, :parcelas, :data_lanc, :id_usuario)';
+        $sql = 'INSERT INTO rec01 (centro_custos, id_empresa, id_cadastro, id_con01, id_con02, documento, descricao, valor, parcelas, data_lanc, id_usuario, id_convertido) 
+                VALUES (:centro_custos, :id_empresa, :id_cadastro, :id_con01, :id_con02, :documento, :descricao, :valor, :parcelas, :data_lanc, :id_usuario, :id_convertido)';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id_empresa', $rec01->id_empresa);
         $stmt->bindValue(':id_cadastro', $rec01->id_cadastro);
@@ -44,6 +48,8 @@ class Rec01 {
         $stmt->bindValue(':parcelas', $rec01->parcelas);
         $stmt->bindValue(':data_lanc', $rec01->data_lanc->format('Y-m-d H:i:s'));
         $stmt->bindValue(':id_usuario', $rec01->id_usuario);
+        $stmt->bindValue(':centro_custos', $rec01->centro_custos);
+        $stmt->bindValue(':id_convertido', $rec01->id_convertido);
 
         
 
@@ -85,7 +91,7 @@ class Rec01 {
         $pdo = (new Database())->connect();
 
         $sql = 'UPDATE rec01 
-                SET id_cadastro = :id_cadastro, id_con01 = :id_con01, id_con02 = :id_con02, documento = :documento, descricao = :descricao, valor = :valor, parcelas = :parcelas, data_lanc = :data_lanc, id_usuario = :id_usuario 
+                SET centro_custos = :centro_custos, id_cadastro = :id_cadastro, id_con01 = :id_con01, id_con02 = :id_con02, documento = :documento, descricao = :descricao, valor = :valor, parcelas = :parcelas, data_lanc = :data_lanc, id_usuario = :id_usuario 
                 WHERE id = :id';
 
         $stmt = $pdo->prepare($sql);
@@ -99,6 +105,7 @@ class Rec01 {
         $stmt->bindValue(':parcelas', $rec01->parcelas);
         $stmt->bindValue(':data_lanc', $rec01->data_lanc->format('Y-m-d H:i:s'));
         $stmt->bindValue(':id_usuario', $rec01->id_usuario);
+        $stmt->bindValue(':centro_custos', $rec01->centro_custos);
 
         
 
@@ -110,6 +117,8 @@ class Rec01 {
         $sql = 'DELETE FROM rec01 WHERE id = :id';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id', $id);
+
+        return $stmt->execute();
 }
 }
 
@@ -181,7 +190,8 @@ class Rec02 {
         $direcao = 'asc',
         $filtro_con01 = null,
         $filtro_con02 = null,
-        $filtro_cadastro = null
+        $filtro_cadastro = null,
+        $filtro_custos = null
     ) {
         $pdo = (new Database())->connect();
 
@@ -275,11 +285,12 @@ class Rec02 {
         if ($data != null) $conditions[] = 'MONTH(r2.vencimento) = MONTH(:data) AND YEAR(r2.vencimento) = YEAR(:data)';
         if ($parcela != null) $conditions[] = 'r2.parcela = :parcela';
         if ($filtro_pagamento != null) $conditions[] = 'r2.id_pgto = :filtro_pagamento';
-        if ($dash_quitado == true) $conditions[] = 'r2.valor_pag != r2.valor_par';
+        if ($dash_quitado == true) $conditions[] = 'r2.valor_pag <= 0';
 
         
         if ($filtro_documento != null) $conditions[] = 'r1.documento LIKE :filtro_documento';
         if ($filtro_cadastro != null) $conditions[] = 'r1.id_cadastro LIKE :filtro_cadastro';
+        if ($filtro_custos != null) $conditions[] = 'r1.centro_custos = :filtro_custos';
 
 
 
@@ -354,25 +365,32 @@ switch($ordenar_por) {
         //     echo $query;
         //     exit;
         // }
+
         $stmt = $pdo->prepare($query);
 
-        if ($id != null) $stmt->bindValue(':id', $id);
-        if ($id_empresa != null) $stmt->bindValue(':id_empresa', $id_empresa);
-        if ($id_rec01 != null) $stmt->bindValue(':id_rec01', $id_rec01);
-        if ($parcela != null) $stmt->bindValue(':parcela', $parcela);
-        if ($data != null) {
-        if ($data instanceof DateTime) {
-            $data = $data->format('Y-m-d'); // ou 'Y-m' se só quiser comparar mês
+        // Helper para verificar se marcador existe na query
+        $hasParam = function($param) use ($query) {
+            return strpos($query, $param) !== false;
+        };
+
+        if ($id != null && $hasParam(':id')) $stmt->bindValue(':id', $id);
+        if ($id_empresa != null && $hasParam(':id_empresa')) $stmt->bindValue(':id_empresa', $id_empresa);
+        if ($id_rec01 != null && $hasParam(':id_rec01')) $stmt->bindValue(':id_rec01', $id_rec01);
+        if ($parcela != null && $hasParam(':parcela')) $stmt->bindValue(':parcela', $parcela);
+        if ($data != null && $hasParam(':data')) {
+            if ($data instanceof DateTime) {
+                $data = $data->format('Y-m-d');
+            }
+            $stmt->bindValue(':data', $data);
         }
-        $stmt->bindValue(':data', $data);
-        }
-        if($filtro_data_inicial != null) $stmt->bindValue(':filtro_data_inicial', $filtro_data_inicial);
-        if($filtro_data_final != null) $stmt->bindValue(':filtro_data_final', $filtro_data_final);
-        if($filtro_documento != null) $stmt->bindValue(':filtro_documento', '%' . $filtro_documento . '%');
-        if($filtro_cadastro != null) $stmt->bindValue(':filtro_cadastro', $filtro_cadastro);
-        if($filtro_pagamento != null) $stmt->bindValue(':filtro_pagamento', $filtro_pagamento);
-        if($filtro_con01 != null) $stmt->bindValue(':filtro_con01', $filtro_con01);
-        if($filtro_con02 != null) $stmt->bindValue(':filtro_con02', $filtro_con02);
+        if($filtro_data_inicial != null && $hasParam(':filtro_data_inicial')) $stmt->bindValue(':filtro_data_inicial', $filtro_data_inicial);
+        if($filtro_data_final != null && $hasParam(':filtro_data_final')) $stmt->bindValue(':filtro_data_final', $filtro_data_final);
+        if($filtro_documento != null && $hasParam(':filtro_documento')) $stmt->bindValue(':filtro_documento', '%' . $filtro_documento . '%');
+        if($filtro_cadastro != null && $hasParam(':filtro_cadastro')) $stmt->bindValue(':filtro_cadastro', $filtro_cadastro);
+        if($filtro_pagamento != null && $hasParam(':filtro_pagamento')) $stmt->bindValue(':filtro_pagamento', $filtro_pagamento);
+        if($filtro_con01 != null && $hasParam(':filtro_con01')) $stmt->bindValue(':filtro_con01', $filtro_con01);
+        if($filtro_con02 != null && $hasParam(':filtro_con02')) $stmt->bindValue(':filtro_con02', $filtro_con02);
+        if($filtro_custos != null && $hasParam(':filtro_custos')) $stmt->bindValue(':filtro_custos', $filtro_custos);
 
         $stmt->execute();
 
@@ -410,6 +428,7 @@ switch($ordenar_por) {
         $sql = 'DELETE FROM rec02 WHERE id = :id';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id', $id);
+
 }
 public static function deletebyrec01($id) {
         $pdo = (new Database())->connect();

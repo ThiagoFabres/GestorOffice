@@ -93,7 +93,6 @@ return $stmt->fetchAll();
     $sql = 'UPDATE usuario 
             SET nome = :nome, 
                 email = :email,
-                senha = :senha,
                 processar = :processar, 
                 consultar = :consultar, 
                 status = :status 
@@ -105,10 +104,25 @@ return $stmt->fetchAll();
 
     $stmt->bindValue(':nome', $usuario->nome);
     $stmt->bindValue(':email', $usuario->email);
-    $stmt->bindValue(':senha', password_hash($usuario->senha, PASSWORD_DEFAULT));
     $stmt->bindValue(':processar', $usuario->processar, PDO::PARAM_INT);
     $stmt->bindValue(':consultar', $usuario->consultar, PDO::PARAM_INT);
     $stmt->bindValue(':status', $usuario->status, PDO::PARAM_INT);
+    $stmt->bindValue(':id_usuario', $usuario->id_usuario, PDO::PARAM_INT);
+
+    return $stmt->execute();
+}
+
+public static function updateSenha($usuario) {
+    $pdo = (new Database())->connect();
+
+    $sql = 'UPDATE usuario 
+            SET senha = :senha,
+            WHERE id_usuario = :id_usuario';
+
+    $stmt = $pdo->prepare($sql);
+
+    
+    $stmt->bindValue(':senha', password_hash($usuario->senha, PASSWORD_DEFAULT));
     $stmt->bindValue(':id_usuario', $usuario->id_usuario, PDO::PARAM_INT);
 
     return $stmt->execute();

@@ -2,6 +2,8 @@
 <?php
 
 require_once __DIR__ . '/../db/entities/usuarios.php';
+require_once __DIR__ . '/../db/entities/empresas.php';
+require_once __DIR__ . '/../db/entities/cargo.php';
 
 session_start();
 
@@ -9,170 +11,11 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 1) {
     header('Location: /');
     exit;
 }
-
-require_once __DIR__ . '/../db/entities/empresas.php';
-require_once __DIR__ . '/../db/entities/cargo.php';
+require_once __DIR__ . '/admin.php';
 
 
+$erro = filter_input(INPUT_GET, 'erro');
 
-
-function permissao() {
-        // Exemplo: só permite se o usuário logado for admin
-        return isset($_SESSION['usuario']) && $_SESSION['usuario']->cargo == Cargo::ADMIN;
-    }
-
-    function atribuirCargo($cargo) {
-        // Verifica se o cargo é válido
-        if (!in_array($cargo, [Cargo::ADMIN, Cargo::GESTOR, Cargo::USUARIO])) {
-            throw new Exception('Cargo inválido.');
-        }
-        // Se o cargo a ser atribuído for ADMIN, a pessoa precisa ter permissão para isso
-        if ($cargo == Cargo::ADMIN && !permissao()) {
-            throw new Exception('Você não tem permissão para atribuir o cargo de ADMIN.');
-        }
-        return true;
-    }
-
-
-if (isset($_POST['acao']) && $_POST['acao'] == 'editar') {
-    $id = $_POST['id'];
-    $nome = $_POST['nome'];
-    $fantasia = $_POST['fantasia'];
-    $cnpj = $_POST['cnpj'];
-    $cpf = $_POST['cpf'];
-    $cep = $_POST['cep'];
-    $endereco = $_POST['endereco'];
-    $bairro = $_POST['bairro'];
-    $cidade = $_POST['cidade'];
-    $estado = $_POST['estado'];
-    $celular = $_POST['celular'];
-    $telefone = $_POST['telefone'];
-    $email = $_POST['email'];
-    $status = isset($_POST['status']) ? 1 : 0;
-    $data_r = $_POST['data_r'];
-    if(strlen($estado) == 2){$estado = mb_strtoupper($estado);};
-
-    $empresa = new Empresa(
-        $id, // id
-        $nome,
-        $fantasia,
-        $endereco,
-        $bairro,
-        $cidade,
-        $estado,
-        $cpf,
-        $cnpj,
-        $email,
-        $celular,
-        $telefone,
-        $status,
-        $data_r,
-        $cep
-);
-
-
-
-$gestor = new Usuario(
-    null, // id_usuario
-    $id, // id_empresa
-    $nome,
-    $email,
-    null,
-    0, // processar
-    0, // consultar
-    Cargo::GESTOR
-);
-
-// Atribuindo cargo
-try {
-    atribuirCargo($gestor->cargo);
-    // O cargo foi atribuído com sucesso
-} catch (Exception $e) {
-    echo 'Erro: ' . $e->getMessage();
-}
-
-Empresa::update($empresa);
-Usuario::update($gestor);
-
-
-
-
-
-}
-
-if (isset($_POST['acao']) && $_POST['acao'] == 'adicionar') {
-
-    $nome = $_POST['nome'];
-    $fantasia = $_POST['fantasia'];
-    $cnpj = $_POST['cnpj'];
-    $cpf = $_POST['cpf'];
-    $cep = $_POST['cep'];
-    $endereco = $_POST['endereco'];
-    $bairro = $_POST['bairro'];
-    $cidade = $_POST['cidade'];
-    $estado = $_POST['estado'];
-    $celular = $_POST['celular'];
-    $telefone = $_POST['telefone'];
-    $email = $_POST['email'];
-    $status = isset($_POST['status']) ? 1 : 0;
-
-
-    
-
-    $empresa = new Empresa(
-        null, // id
-        $nome,
-        $fantasia,
-        $endereco,
-        $bairro,
-        $cidade,
-        $estado,
-        $cpf,
-        $cnpj,
-        $email,
-        $celular,
-        $telefone,
-        $status,
-        date('Y-m-d H:i:s'), // data_r
-        $cep
-
-    );
-
-
-// Exemplo de criação de usuário com validação de cargo
-$gestor = new Usuario(
-    null, // id_usuario
-    null, // id_empresa
-    $nome,
-    $email,
-    '123456',
-    0, // processar
-    0, // consultar
-    Cargo::GESTOR,
-    $status
-);
-
-// Atribuindo cargo
-try {
-    atribuirCargo($gestor->cargo);
-    // O cargo foi atribuído com sucesso
-} catch (Exception $e) {
-    echo 'Erro: ' . $e->getMessage();
-}
-
-if(!Empresa::read(null, $email) && !Usuario::read(null, $email)) { 
-
-    Empresa::create($empresa);
-    $empresacriada = Empresa::read(null, $email);
-    $empresaid = $empresacriada[0];
-    $gestor->id_empresa = $empresaid->id;
-    Usuario::create($gestor);
-}
-
-} else {
-    $error = "Dados inválidos.";
-
-}
 
 ?>
 
@@ -229,30 +72,7 @@ if(!Empresa::read(null, $email) && !Usuario::read(null, $email)) {
     </nav>
 
 
-    <div id="header">
-        
-        <button onclick="encolher()" style="background:none;border:none;font-size:1.2em;color:#181f2b;outline:none;cursor:pointer; z-index:1000;">
-            <span class="btn bi bi-list"></span>
-        </button>
-        
-    <div id="titulo-header">
-        
-        <a>Dashboard</a>
-    </div>
-    <div id="menu-superior">
-        <a class="superior-item" href="/admin/">Dashboard</a>
-    </div>
-    <div class="conta-header" style="position:relative; float:right; margin-right:2em;">
-        <button id="userBtn" type="button" style="background:none;border:none;font-size:1.2em;color:#181f2b;outline:none;cursor:pointer;">
-            <span style="color:#181f2b;"><?= $_SESSION['usuario']->nome ?> </span>
-        </button>
-        <div id="userMenu" style="right:0; z-index: 1000000;">
-            <a href="/" class="dropdown-item">
-                <i class="bi bi-box-arrow-left"></i> Logout
-        </a>
-        </div>
-    </div>
-    </div>
+    <?php  require_once __DIR__ . '/../componentes/header/header.php' ?>
 
 
 
@@ -409,7 +229,7 @@ if(!Empresa::read(null, $email) && !Usuario::read(null, $email)) {
                             <button type="submit" style="background-color: #5856d6; border: 0;" class="btn btn-primary">Buscar</button>
                         </div>
                         <div>
-                            <a type="button" style="background-color: #5856d6; border: 0;" href="index.php?registro=cadastros" class="btn btn-secondary">Limpar</a>
+                            <a type="button" style="border: 0;" href="index.php?registro=cadastros" class="btn btn-secondary">Limpar</a>
                         </div>
                     </div>
                     
@@ -471,7 +291,6 @@ if(!Empresa::read(null, $email) && !Usuario::read(null, $email)) {
     <?php 
     $id = $_GET['id']; 
     $empresa = Empresa::read($id);
-    print_r($empresa); 
     $empresa = $empresa[0];
      ?>
     
@@ -495,11 +314,15 @@ if(!Empresa::read(null, $email) && !Usuario::read(null, $email)) {
     </div>
 
     <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input type="text" class="form-control" id="cnpj" placeholder="CNPJ" name="cnpj" value="<?= $empresa->cpf ?>" required>
+        <input type="text" class="form-control" id="cnpj" placeholder="CNPJ" name="cnpj" value="<?= $empresa->cnpj ?>" required>
     </div>
 
     <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input type="text" class="form-control" id="cpf" placeholder="CPF" name="cpf" value="<?= $empresa->cnpj ?>" required>
+        <input type="text" class="form-control" id="cnpj_principal" placeholder="CNPJ principal" name="cnpj_principal" value="<?= $empresa->cnpj_principal ?>">
+    </div>
+
+    <div style="display:flex; flex-direction:row;" class="mb-3">
+        <input type="text" class="form-control" id="cpf" placeholder="CPF" name="cpf" value="<?= $empresa->cpf ?>" required>
     </div>
 
     <div style="display:flex; flex-direction:row;" class="mb-3">
@@ -602,6 +425,11 @@ if(!Empresa::read(null, $email) && !Usuario::read(null, $email)) {
                             <input type="text" onchange="checar()" name="cnpj" class="form-control"
                                 placeholder="CNPJ" value="" required>
                         </div>
+                        <div class="input-cnpj input-form-adm">
+                            <!--cnpj-->
+                            <input type="text" onchange="checar()" name="cnpj_principal" class="form-control"
+                                placeholder="CNPJ Principal" value="" required>
+                        </div>
 
                         
                         
@@ -674,8 +502,10 @@ if(!Empresa::read(null, $email) && !Usuario::read(null, $email)) {
 
                         <div style="margin-bottom: 3em;" class="footer">
 
-                        <button name="acao" value="adicionar" class="btn btn-success" style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0;" disabled href="consulta_cliente.php">Salvar</button>
+
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Fechar</button>
+                        <button name="acao" value="adicionar" class="btn btn-success" style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0;" href="consulta_cliente.php">Salvar</button>
+                        
                             
 
                     </form>
@@ -696,8 +526,8 @@ if(!Empresa::read(null, $email) && !Usuario::read(null, $email)) {
 
 </body>
 
-<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script> -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script src="../choices/choices.js"></script>
 
 <script>
@@ -726,29 +556,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-    function checar() {
-        let nome = document.querySelector('.input-nome input').value;
-        let fantasia = document.querySelector('.input-fantasia input').value;
-        let cpf = document.querySelector('.input-cpf input').value;
-        let cnpj = document.querySelector('.input-cnpj input').value;
-        let cep = document.querySelector('.input-cep input').value;
-        let endereco = document.querySelector('.input-endereco input').value;
-        let bairro = document.querySelector('.input-bairro input').value;
-        let cidade = document.querySelector('.input-cidade input').value;
-        let estado = document.querySelector('.input-estado input').value;
-        let celular = document.querySelector('.input-celular input').value;
-        let telefone = document.querySelector('.input-telefone input').value;
-        let email = document.querySelector('.input-email input').value;
+    // function checar() {
+    //     let nome = document.querySelector('.input-nome input').value;
+    //     let fantasia = document.querySelector('.input-fantasia input').value;
+    //     let cpf = document.querySelector('.input-cpf input').value;
+    //     let cnpj = document.querySelector('.input-cnpj input').value;
+    //     let cep = document.querySelector('.input-cep input').value;
+    //     let endereco = document.querySelector('.input-endereco input').value;
+    //     let bairro = document.querySelector('.input-bairro input').value;
+    //     let cidade = document.querySelector('.input-cidade input').value;
+    //     let estado = document.querySelector('.input-estado input').value;
+    //     let celular = document.querySelector('.input-celular input').value;
+    //     let telefone = document.querySelector('.input-telefone input').value;
+    //     let email = document.querySelector('.input-email input').value;
 
 
 
 
-        if (nome !== '' && fantasia !== '' && cpf !== '' && cnpj !== '' && cep !== '' && endereco !== '' && bairro !== '' && cidade !== '' && estado !== '' && celular !== '' && telefone !== '' && email !== '') {
-            document.querySelector('button[name="acao"]').disabled = false;
-        } else {
-            document.querySelector('button[name="acao"]').disabled = true;
-        }
-    }
+    //     if (nome !== '' && fantasia !== '' && cpf !== '' && cnpj !== '' && cep !== '' && endereco !== '' && bairro !== '' && cidade !== '' && estado !== '' && celular !== '' && telefone !== '' && email !== '') {
+    //         document.querySelector('button[name="acao"]').disabled = false;
+    //     } else {
+    //         document.querySelector('button[name="acao"]').disabled = true;
+    //     }
+    // }
 
     function encolher() {
         let barra = document.getElementById('barra-lateral');
@@ -797,10 +627,8 @@ if (barra.style.animationName === 'encolher') {
         body.style.animationDuration = '0.5s';
         body.style.animationFillMode = 'forwards';
     }}
-</script>
 
 <?php if ( isset($_GET['acao']) && $_GET['acao'] == 'adicionar') { ?>
-    <script>
         window.addEventListener('DOMContentLoaded', function () {
             var modalEl = document.getElementById('modal_empresa');
             var Modal = new bootstrap.Modal(modalEl);
@@ -809,11 +637,14 @@ if (barra.style.animationName === 'encolher') {
                 window.location.href = 'index.php';
             });
         });
+<?php } if(isset($erro) && $erro == 'usado') { ?>
+                alert('Não é possível adicionar essa empresa, pois já existe um usuario ou gestor com esse e-mail');
+                window.location.href = 'index.php';
+<?php } ?>
+
+</script>
 
 
-    </script>
-<?php }
-; ?>
 
 
 

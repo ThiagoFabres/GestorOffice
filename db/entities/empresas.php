@@ -20,8 +20,9 @@ class Empresa {
     public $data_r;
 
     public $cep;
+    public $cnpj_principal;
 
-    public function __construct($id = null, $razao_soc = '', $nom_fant = '', $rua = '', $bairro = '', $cidade = '', $estado = '', $cpf = '',$cnpj = '', $email = '', $celular = '', $fixo = '',  $status = 1, $data_r = '', $cep = '') {
+    public function __construct($id = null, $razao_soc = '', $nom_fant = '', $rua = '', $bairro = '', $cidade = '', $estado = '', $cpf = '',$cnpj = '', $email = '', $celular = '', $fixo = '',  $status = 1, $data_r = '', $cep = '', $cnpj_principal = '') {
         $this->id = $id;
         $this->razao_soc = $razao_soc;
         $this->nom_fant = $nom_fant;
@@ -37,11 +38,13 @@ class Empresa {
         $this->status = $status;
         $this->data_r = $data_r;
         $this->cep = $cep;
+        $this->cnpj_principal = $cnpj_principal;
     }
 
     public static function create($empresa) {
         $pdo = (new Database())->connect();
-        $sql = 'INSERT INTO empresas (razao_soc, nom_fant, rua, bairro, cidade, estado, cpf, cnpj, email, celular, fixo, status, data_r, cep) VALUES (:razao_soc, :nom_fant, :rua, :bairro, :cidade, :estado, :cpf, :cnpj, :email, :celular, :fixo, :status, :data_r, :cep)';
+        $sql = 'INSERT INTO empresas (razao_soc, nom_fant, rua, bairro, cidade, estado, cpf, cnpj, email, celular, fixo, status, data_r, cep, cnpj_principal) 
+        VALUES (:razao_soc, :nom_fant, :rua, :bairro, :cidade, :estado, :cpf, :cnpj, :email, :celular, :fixo, :status, :data_r, :cep, :cnpj_principal)';
         $stmt = $pdo->prepare($sql);
 
         $stmt->bindValue(':razao_soc', $empresa->razao_soc);
@@ -58,11 +61,22 @@ class Empresa {
         $stmt->bindValue(':status', $empresa->status);
         $stmt->bindValue(':data_r', $empresa->data_r);
         $stmt->bindValue(':cep', $empresa->cep);
+        $stmt->bindValue(':cnpj_principal', $empresa->cnpj_principal);
 
        return $stmt->execute(); 
     }
 
-        public static function read($id = null, $email = null, $nome = null, $filtro_data_inicial = null, $filtro_data_final = null, $estado = null, $cidade = null, $bairro = null): array {
+        public static function read(
+            $id = null, 
+            $email = null, 
+            $nome = null, 
+            $filtro_data_inicial = null, 
+            $filtro_data_final = null, 
+            $estado = null, 
+            $cidade = null, 
+            $bairro = null, 
+            $cnpj_principal = null): array {
+
         $pdo = (new Database())->connect();
         $query = 'SELECT * FROM empresas';
         $conditions = [];
@@ -74,6 +88,7 @@ class Empresa {
         if ($estado != null) $conditions[] = 'estado = :estado';
         if ($cidade != null) $conditions[] = 'cidade = :cidade';
         if ($bairro != null) $conditions[] = 'bairro = :bairro';
+        if ($cnpj_principal != null) $conditions[] = 'cnpj_principal = :cnpj_principal';
         
         
         if ($conditions) {
@@ -107,6 +122,9 @@ class Empresa {
         if ($bairro != null) {
             $stmt->bindValue(':bairro', $bairro);
         }
+        if($cnpj_principal != null) {
+            $stmt->bindValue(':cnpj_principal', $cnpj_principal);
+        }
         $stmt->execute();
         
             return $stmt->fetchAll(PDO::FETCH_OBJ);
@@ -128,7 +146,8 @@ class Empresa {
         fixo = :fixo, 
         status = :status, 
         cep = :cep, 
-        data_r = :data_r 
+        data_r = :data_r,
+        cnpj_principal = :cnpj_principal
     WHERE id = :id';
 
         $stmt = $pdo->prepare($sql);
@@ -148,6 +167,7 @@ class Empresa {
     $stmt->bindValue(':cep', $empresa->cep);
     $stmt->bindValue(':data_r', $empresa->data_r);
     $stmt->bindValue(':id', $empresa->id, PDO::PARAM_INT); // ← Faltava esse bind
+    $stmt->bindValue(':cnpj_principal', $empresa->cnpj_principal);
 
        return $stmt->execute(); 
         

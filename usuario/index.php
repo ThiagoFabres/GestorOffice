@@ -14,6 +14,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     header('Location: /');
     exit;
 }
+$lateral_target = 'dashboard';
  
 $data = new DateTime();
 $data_atual = $data->format('Y-m-d');
@@ -26,7 +27,8 @@ $data_amanha = $data_amanha->format('Y-m-d');
 
 
 
-$pagamentos_venceu = Pag02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, null, null, null, null, null, true, 'venceu');
+$pagamentos_venceu = Pag02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, 
+$data_atual, null, null, null, null, null, true, 'venceu');
 $total_pag_venceu = 0;
 foreach($pagamentos_venceu as $pag02) {
     $total_pag_venceu += $pag02->valor_par;
@@ -47,7 +49,8 @@ foreach($pagamentos_a_vencer as $pag02) {
 }
 $total_pag_a_vencer = number_format($total_pag_a_vencer, 2, ',', '.');
 
-$recebimentos_venceu = Rec02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, null, null, null, null, null, true, 'venceu');
+$recebimentos_venceu = Rec02::read( null, $_SESSION['usuario']->id_empresa, null, null, null, 
+$data_atual, null, null, null, null, null, true, 'venceu');
 $total_rec_venceu = 0;
 foreach($recebimentos_venceu as $rec02) {
     $total_rec_venceu += $rec02->valor_par;
@@ -68,6 +71,46 @@ foreach($recebimentos_a_vencer as $rec02) {
 }
 $total_rec_a_vencer = number_format($total_rec_a_vencer, 2, ',', '.');
 
+
+$data_final = DateTime::createFromFormat('Y-m-d', $data_atual)->format('Y-m-t');
+$data_inicial = DateTime::createFromFormat('Y-m-d', $data_atual)->format('Y-m-01');
+
+$receber_lancamento = Rec02::read(id_empresa: $_SESSION['usuario']->id_empresa, filtro_data_inicial:$data_inicial, filtro_data_final:$data_final, filtro_por:'vencimento');
+$total_rec_lancamento = 0;
+foreach($receber_lancamento as $rec02) {
+    $total_rec_lancamento += $rec02->valor_par;
+}
+
+
+$pagar_lancamento = Pag02::read(id_empresa: $_SESSION['usuario']->id_empresa,filtro_data_inicial:$data_inicial, filtro_data_final:$data_final, filtro_por:'vencimento');
+$total_pag_lancamento = 0;
+foreach($pagar_lancamento as $pag02) {
+    $total_pag_lancamento += $pag02->valor_par;
+}
+
+
+$saldo_lancamento = $total_rec_lancamento - $total_pag_lancamento;
+$saldo_lancamento = number_format($saldo_lancamento, 2, ',', '.');
+$total_pag_lancamento = number_format($total_pag_lancamento, 2, ',', '.');
+$total_rec_lancamento = number_format($total_rec_lancamento, 2, ',', '.');
+
+$receber_pagamento = Rec02::read(id_empresa: $_SESSION['usuario']->id_empresa, filtro_data_inicial:$data_inicial, filtro_data_final:$data_final, filtro_por:'pagamento');
+$total_rec_pagamento = 0;
+foreach($receber_pagamento as $rec02) {
+    $total_rec_pagamento += $rec02->valor_par;
+}
+
+
+$pagar_pagamento = Pag02::read(id_empresa: $_SESSION['usuario']->id_empresa, filtro_data_inicial:$data_inicial, filtro_data_final:$data_final, filtro_por:'pagamento');
+$total_pag_pagamento = 0;
+foreach($pagar_pagamento as $pag02) {
+    $total_pag_pagamento += $pag02->valor_par;
+}
+
+$saldo_pagamento = $total_rec_pagamento - $total_pag_pagamento;
+$saldo_pagamento = number_format($saldo_pagamento, 2, ',', '.');
+$total_pag_pagamento = number_format($total_pag_pagamento, 2, ',', '.');
+$total_rec_pagamento = number_format($total_rec_pagamento, 2, ',', '.');
 ?>
 
 
@@ -97,212 +140,308 @@ $total_rec_a_vencer = number_format($total_rec_a_vencer, 2, ',', '.');
 <body id="body" >
 
 
-    <nav id="barra-lateral">
-        <div id="logo-container">
-            <img width="220px" height="220px" src="/gestor-office.png" alt="Logo" class="logo">
-        </div>
-    <div id="itens-menu">
-                        <div class="menu-item menu-item-atual">
-            <a href="index.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-layers"></i></div> Dashboard </a>
-        </div>
-    <?php if($_SESSION['usuario']->processar == 1) { ?>
-        <div class="menu-item accordion" >
-
-<a class="nav-link text-white" data-bs-toggle="collapse" href="#cadastrosMenu" role="button" aria-expanded="false" aria-controls="cadastrosMenu">
-        <i class="bi bi-person"></i> Cadastros
-      </a>
-      <div class="collapse" id="cadastrosMenu">
-        <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
-          <li><a href="cadastrar.php?cadastro=cliente" class="link-light text-decoration-none"><i class="bi bi-person"></i>Cliente/Fornecedor</a></li>
-          <li><a href="cadastrar.php?cadastro=bairro" class="link-light text-decoration-none"><i class="bi bi-houses"></i>Bairro</a></li>
-          <li><a href="cadastrar.php?cadastro=cidade" class="link-light text-decoration-none"><i class="bi bi-buildings"></i>Cidade</a></li>
-          <li><a href="cadastrar.php?cadastro=pagamento" class="link-light text-decoration-none"><i class="bi bi-cash-coin"></i>Tipo Pagamento</a></li>
-          <li><a href="cadastrar.php?cadastro=categoria" class="link-light text-decoration-none"><i class="bi bi-tag"></i>Categoria</a></li>
-          <li><a href="cadastrar.php?cadastro=custo" class="link-light text-decoration-none"><i class="bi bi-bank"></i>Centro de custos</a></li>
-          
-        </ul>
-      </div>
-        </div>
-        <?php } ?>
-
-        <div class="menu-item">
-            <a href="contas.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-journal-bookmark"></i></div> Plano de Contas </a>
-        </div>
-
-        <div class="menu-item">
-            <a href="receber.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-wallet"></i></div> Contas a Receber </a>
-        </div>
-
-        <div class="menu-item">
-            <a href="pagar.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-cash-stack"></i></div> Contas a Pagar </a>
-        </div>
-
-        <div class="menu-item">
-            <a href="dre/sintetico.php"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE</a>
-        </div>
-
-
-        </div>
-        </div>
-
-    </nav>
-
-
-    <div id="header">
-        
-        <button onclick="encolher()" style="background:none;border:none;font-size:1.2em;color:#181f2b;outline:none;cursor:pointer; z-index:1000;">
-            <span class="btn bi bi-list"></span>
-        </button>
-        
-    <div id="titulo-header">
-        
-        <a>Dashboard</a>
-    </div>
-    <div id="menu-superior">
-        <a class="superior-item" href="/admin/">Dashboard</a>
-    </div>
-    <div class="conta-header" style="position:relative; float:right; margin-right:2em;">
-        <button id="userBtn" type="button" style="background:none;border:none;font-size:1.2em;color:#181f2b;outline:none;cursor:pointer;">
-            <span style="color:#181f2b;"><?= htmlspecialchars($_SESSION['usuario']->nome, ENT_QUOTES, 'UTF-8') ?> </span>
-        </button>
-        <div id="userMenu" style="right:0; z-index: 1000000;">
-            <a href="/" class="dropdown-item">
-                <i class="bi bi-box-arrow-left"></i> Logout
-        </a>
-        </div>
-    </div>
-    </div>
+    <?php require_once __DIR__ . '/../componentes/lateral/lateral.php'?>
+    <?php require_once __DIR__ . '/../componentes/header/header.php' ?>
 
 
 
-    <div class="main" id="container">
-        <div class="view-dash">
-            <div class="dashboard-group">
-                <table class="table-bordered">
-                    <thead>
-                        <tr class="tr-clientes-dash">
-                            <h1>Contas a receber</h1>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        
-                        <tr>
-                            <td>
-                                <table class="table-bordered" onclick="window.location.href='receber.php?&filtro_data_final=<?= $data_ontem ?>&filtro_por=vencimento&opcao_filtro=abertos'">
-                                    <thead>
-                                        <tr class="tr-clientes-dash parcela_cor_vermelha" >
-                                            <th>Vencidos</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr class="tr-clientes-dash">
-                                            <td>R$ <?=$total_rec_venceu?></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </td>
+    <div class="main d-flex justify-content-center align-items-center" id="container" style="padding-block:0; height: 80vh;">
+        <div class="d-flex flex-row gap-5 w-100 justify-content-center">
+            <div class="d-flex flex-column gap-4 w-100" >
+                <div class="dashboard-group">
+                    <table class="table-bordered">
 
-                            <td>
-                                <table class="table-bordered" onclick="window.location.href='receber.php?filtro_data_inicial=<?= $data_atual ?>&filtro_data_final=<?= $data_atual ?>&filtro_por=vencimento&opcao_filtro=abertos'">
-                                    <thead>
-                                        <tr class="tr-clientes-dash parcela_cor_amarela">
-                                            <th>Vence hoje</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr class="tr-clientes-dash">
-                                            <td>R$ <?=$total_rec_hoje?></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </td>
+                                <h1>Contas a receber</h1>
 
-                            <td>
-                                <table class="table-bordered" onclick="window.location.href='receber.php?&filtro_data_inicial=<?= $data_amanha ?>&filtro_por=vencimento&opcao_filtro=abertos'">
-                                    <thead>
-                                        <tr class="tr-clientes-dash parcela_cor_azul">
-                                            <th>A vencer</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr class="tr-clientes-dash">
-                                            <td>R$ <?=$total_rec_a_vencer?></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                        <tbody>
+                            
+                            <tr>
+                                <td>
+                                    <table class="table-bordered" onclick="window.location.href='receber.php?&filtro_data_final=<?= $data_ontem ?>&filtro_por=vencimento&opcao_filtro=abertos'">
+                                        <thead>
+                                            <tr class="tr-clientes-dash parcela_cor_vermelha" >
+                                                <th>Vencidos</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="tr-clientes-dash">
+                                                <td>
+                                                    <div class="d-flex flex-row justify-content-between">
+                                                        <div>R$</div> 
+                                                        <div><?=$total_rec_venceu?></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+
+                                <td>
+                                    <table class="table-bordered" onclick="window.location.href='receber.php?filtro_data_inicial=<?= $data_atual ?>&filtro_data_final=<?= $data_atual ?>&filtro_por=vencimento&opcao_filtro=abertos'">
+                                        <thead>
+                                            <tr class="tr-clientes-dash parcela_cor_amarela">
+                                                <th>Vence hoje</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="tr-clientes-dash">
+                                                <td>
+                                                    <div class="d-flex flex-row justify-content-between">
+                                                        <div>R$</div> 
+                                                        <div><?=$total_rec_hoje?></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+
+                                <td>
+                                    <table class="table-bordered" onclick="window.location.href='receber.php?&filtro_data_inicial=<?= $data_amanha ?>&filtro_por=vencimento&opcao_filtro=abertos'">
+                                        <thead>
+                                            <tr class="tr-clientes-dash parcela_cor_azul">
+                                                <th>A vencer</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="tr-clientes-dash">
+                                                <td>
+                                                    <div class="d-flex flex-row justify-content-between">
+                                                        <div>R$</div> 
+                                                        <div><?=$total_rec_a_vencer?></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="dashboard-group">
+                    <table class="table-bordered">
+
+                                <p>Saldo Mensal por data de Lançamento</p>
+
+                        <tbody>
+                            
+                            <tr>
+                                <td>
+                                    <table class="table-bordered">
+                                        <thead>
+                                            <tr class="tr-clientes-dash"style="background-color: #ccc;" >
+                                                <th>+</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="tr-clientes-dash">
+                                                <td>
+                                                    <div class="d-flex flex-row justify-content-between">
+                                                        <div>R$</div> 
+                                                        <div><?=$total_rec_lancamento?></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+
+                                <td>
+                                    <table class="table-bordered w-100">
+                                        <thead>
+                                            <tr class="tr-clientes-dash" style="background-color: #ccc;">
+                                                <th>-</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="tr-clientes-dash">
+                                                <td>
+                                                    <div class="d-flex flex-row justify-content-between">
+                                                        <div>R$</div> 
+                                                        <div><?=$total_pag_lancamento?></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+
+                                <td>
+                                    <table class="table-bordered w-100">
+                                        <thead>
+                                            <tr class="tr-clientes-dash" style="background-color: #ccc;">
+                                                <th>=</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="tr-clientes-dash">
+                                                <td>
+                                                    <div class="d-flex flex-row justify-content-between">
+                                                        <div>R$</div> 
+                                                        <div><?=$saldo_lancamento?></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            <div class="dashboard-group">
-                <table class="table-bordered">
-                    <thead>
-                        <tr>
-                            <h1>Contas a pagar</h1>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        
-                        <tr>
-                            <td>
-                                <table class="table-bordered" onclick="window.location.href='pagar.php?&filtro_data_final=<?= $data_ontem ?>&filtro_por=vencimento&opcao_filtro=abertos'">
-                                    <thead>
-                                        <tr class="tr-clientes-dash parcela_cor_vermelha">
-                                            <th>Vencidos</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr class="tr-clientes-dash">
-                                            <td>R$ <?=$total_pag_venceu?></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </td>
+            <div class="d-flex flex-column gap-4 w-100">
+                <div class="dashboard-group">
+                    <table class="table-bordered">
+                        <thead>
+                            <tr>
+                                <h1>Contas a pagar</h1>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            
+                            <tr>
+                                <td>
+                                    <table class="table-bordered" onclick="window.location.href='pagar.php?&filtro_data_final=<?= $data_ontem ?>&filtro_por=vencimento&opcao_filtro=abertos'">
+                                        <thead>
+                                            <tr class="tr-clientes-dash parcela_cor_vermelha">
+                                                <th>Vencidos</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="tr-clientes-dash">
+                                                <td>
+                                                    <div class="d-flex flex-row justify-content-between">
+                                                        <div>R$</div> 
+                                                        <div><?=$total_pag_venceu?></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
 
-                            <td>
-                                <table class="table-bordered" onclick="window.location.href='pagar.php?filtro_data_inicial=<?= $data_atual ?>&filtro_data_final=<?= $data_atual ?>&filtro_por=vencimento&opcao_filtro=abertos'">
-                                    <thead>
-                                        <tr class="tr-clientes-dash parcela_cor_amarela">
-                                            <th>Vence hoje</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr class="tr-clientes-dash">
-                                            <td>R$ <?=$total_pag_hoje?></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </td>
+                                <td>
+                                    <table class="table-bordered" onclick="window.location.href='pagar.php?filtro_data_inicial=<?= $data_atual ?>&filtro_data_final=<?= $data_atual ?>&filtro_por=vencimento&opcao_filtro=abertos'">
+                                        <thead>
+                                            <tr class="tr-clientes-dash parcela_cor_amarela">
+                                                <th>Vence hoje</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="tr-clientes-dash">
+                                                <td>
+                                                    <div class="d-flex flex-row justify-content-between">
+                                                        <div>R$</div> 
+                                                        <div><?=$total_pag_hoje?></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
 
-                            <td>
-                                <table class="table-bordered" onclick="window.location.href='pagar.php?&filtro_data_inicial=<?= $data_amanha ?>&filtro_por=vencimento&opcao_filtro=abertos'">
-                                    <thead>
-                                        <tr class="tr-clientes-dash parcela_cor_azul">
-                                            <th>A vencer</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr class="tr-clientes-dash">
-                                            <td>R$ <?=$total_pag_a_vencer?></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                                <td>
+                                    <table class="table-bordered" onclick="window.location.href='pagar.php?&filtro_data_inicial=<?= $data_amanha ?>&filtro_por=vencimento&opcao_filtro=abertos'">
+                                        <thead>
+                                            <tr class="tr-clientes-dash parcela_cor_azul">
+                                                <th>A vencer</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="tr-clientes-dash">
+                                                <td>
+                                                    <div class="d-flex flex-row justify-content-between">
+                                                        <div>R$</div> 
+                                                        <div><?=$total_pag_a_vencer?></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="dashboard-group">
+                    <table class="table-bordered">
+
+                                <p>Saldo Mensal por data de Pagamento</p>
+
+                        <tbody>
+                            
+                            <tr>
+                                <td>
+                                    <table class="table-bordered" >
+                                        <thead>
+                                            <tr class="tr-clientes-dash"  style="background-color: #ccc;">
+                                                <th>+</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="tr-clientes-dash">
+                                                <td>
+                                                    <div class="d-flex flex-row justify-content-between">
+                                                        <div>R$</div> 
+                                                        <div><?=$total_rec_pagamento?></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+
+                                <td>
+                                    <table class="table-bordered w-100">
+                                        <thead>
+                                            <tr class="tr-clientes-dash" style="background-color: #ccc;">
+                                                <th>-</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="tr-clientes-dash">
+                                                <td>
+                                                    <div class="d-flex flex-row justify-content-between">
+                                                        <div>R$</div> 
+                                                        <div><?=$total_pag_pagamento?></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+
+                                <td>
+                                    <table class="table-bordered w-100">
+                                        <thead>
+                                            <tr class="tr-clientes-dash" style="background-color: #ccc;">
+                                                <th>=</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="tr-clientes-dash">
+                                                <td>
+                                                    <div class="d-flex flex-row justify-content-between">
+                                                        <div>R$</div> 
+                                                        <div><?=$saldo_pagamento?></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 </div>
 </div>
-</div>
-            </div>
-        </div>
-    </div>
-</div>
-</div>
-</div>
+
 </body>
 
 <script>

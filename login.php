@@ -7,6 +7,7 @@ require_once  __DIR__ . '/db/entities/cargo.php';
 
 session_start();
 
+
 if(!isset($_POST['acao'])) {
 
 if (isset($_POST['email']) && isset($_POST['senha'])) {
@@ -16,7 +17,7 @@ if (isset($_POST['email']) && isset($_POST['senha'])) {
 
 
     if ($email && $senha) {
-        $usuario = Usuario::read(null, $email); // busca apenas 1 usuário
+        $usuario = Usuario::read(null, $email);
         
 
         if ($usuario && password_verify($senha, $usuario[0]->senha)) {
@@ -28,35 +29,39 @@ if (isset($_POST['email']) && isset($_POST['senha'])) {
 
     switch ($usuario[0]->cargo) {
         case 1:
-            header('Location: admin/index.php');
+            header('Location: admin/index.php'); 
             break;  
         case 2:
             $empresa = Empresa::read($usuario[0]->id_empresa);
-
+echo 'a';
            if ($empresa[0]->status == 1) {
     header('Location: gestor/index.php');
-} else {
-    $error = "Empresa inativa.";
-}
+    exit; 
+    } else {
+        header('Location: /index.php?erro=empresa_inativa');
+    }
             break;
         case 3:
-            header('Location: usuario/index.php');  
+            header('Location: usuario/index.php');
             break;
 
     }
     exit;
 
 } else {
-            $error = "Email ou senha inválidos.";
+            header('Location: index.php?erro=credenciais');
+            exit;
         }
     } else {
         $error = "Dados inválidos.";
+        header('Location: index.php?erro=dados');
+        exit;
     }
 } else {
     $error = "Por favor, preencha todos os campos.";
+    header('Location: index.php?erro=campos');
+    exit; 
 }
-
-echo $error;
 
 
 } else if (isset($_POST['acao']) && $_POST['acao'] == 'editar') {
@@ -81,36 +86,38 @@ echo $error;
             if ($usuario && password_verify($senha, $usuario[0]->senha)) {
                 $usuario[0]->senha = $nova_senha;
 
-                Usuario::update($usuario[0]);
+                Usuario::updateSenha($usuario[0]);
                 $_SESSION['usuario'] = $usuario[0];
                 $success = "Senha atualizada com sucesso.";
-
-                    switch ($usuario[0]->cargo) {
-                    case 1:
-                        header('Location: admin/index.php');
-                        break;  
-                    case 2:
-                        $empresa = Empresa::read($usuario[0]->id_empresa);
-
-                    if ($empresa[0]->status == 1) {
-                        header('Location: gestor/index.php');
-                    } else {
-                        $error = "Empresa inativa.";
-                    }
-                        break;
-                    
-                    case 3:
-                        $empresa = Empresa::read($usuario[0]->id_empresa);
-
-                    if ($empresa[0]->status == 1 && $usuario[0]->status == 1) {
-                        header('Location: usuario/index.php');  
-                    } else {
-                        $error = "Empresa ou usuario inativo.";
-                    }
-                        break;
-
-                }
+                header('Location: index.php?sucesso=1');
                 exit;
+
+                //     switch ($usuario[0]->cargo) {
+                //     case 1:
+                //         header('Location: admin/index.php');
+                //         break;  
+                //     case 2:
+                //         $empresa = Empresa::read($usuario[0]->id_empresa);
+
+                //     if ($empresa[0]->status == 1) {
+                //         header('Location: gestor/index.php');
+                //     } else {
+                //         $error = "Empresa inativa.";
+                //     }
+                //         break;
+                    
+                //     case 3:
+                //         $empresa = Empresa::read($usuario[0]->id_empresa);
+
+                //     if ($empresa[0]->status == 1 && $usuario[0]->status == 1) {
+                //         header('Location: usuario/index.php');  
+                //     } else {
+                //         $error = "Empresa ou usuario inativo.";
+                //     }
+                //         break;
+
+                // }
+                // exit;
                 
 
             } else {
@@ -125,5 +132,6 @@ echo $error;
 
     echo isset($success) ? $success : $error;
 }
-
+header('Location: index.php');
+exit;
 ?>
