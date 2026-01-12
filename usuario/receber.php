@@ -112,7 +112,7 @@ if ($get_filtro_nome != '')
     $filtros[] = 'filtro_nome=' . $get_filtro_nome;
 if ($get_filtro_opcao != '')
     $filtros[] = 'opcao_filtro=' . $get_filtro_opcao;
-if ($get_filtro_por != '' && $get_filtro_por != 'lancamento')
+if ($get_filtro_por != '')
     $filtros[] = 'filtro_por=' . $get_filtro_por;
 if ($get_filtro_pagamento != '')
     $filtros[] = 'forma_pagamento=' . $get_filtro_pagamento;
@@ -162,6 +162,8 @@ if ($filtros != []) {
 <link rel="stylesheet" href="/style.css">
 <link rel="stylesheet" href="/componentes/modais/lancamentos/modais.css">
 <link rel="stylesheet" href="../choices/choices.css"></link>
+<link rel="stylesheet" href="style/responsivo.css">
+
 
 <?php if($acao == 'visualizar' ) {?> 
 <style>
@@ -758,7 +760,8 @@ if ($filtros != []) {
                                 filtro_con02: $get_filtro_subtitulo,
                                 ordenar_por: $ordenar_por,
                                 direcao: $direcao,
-                                filtro_custos: $get_filtro_custo
+                                filtro_custos: $get_filtro_custo,
+                                read_totais: true,
                     );
                         
                         foreach ($parcelas_totais as $pt) {
@@ -883,7 +886,8 @@ if ($filtros != []) {
                                 filtro_con02: $get_filtro_subtitulo,
                                 ordenar_por: $ordenar_por,
                                 direcao: $direcao,
-                                filtro_custos: $get_filtro_custo
+                                filtro_custos: $get_filtro_custo,
+                                
                             );
                             if (!empty($parcelas)) {
 
@@ -947,13 +951,13 @@ if ($filtros != []) {
                                     <!-- style="<?php if ($ultima_parcela) { ?>border-bottom: 3px solid #5856d6;<?php } ?> border-inline: 1px solid #5856d6;" -->
                                     <!-- style="<?php if ($ultima_parcela) { ?>border-bottom: 2px solid #5856d6;<?php } else if ($rec02->parcela == 1) { ?> border-top: 3px solid #5856d6; <?php } ?> border-inline: 2px solid #5856d6;" -->
                                     <div class="avoid-page-break" style="page-break-inside:avoid; break-inside:avoid;">
-                                        <tr class="tr-clientes <?= $cor_parcela ?>" onclick="">
+                                        <tr class="tr-clientes avoid-page-break <?= $cor_parcela ?>" onclick="">
                                             <td><?php echo substr($centro_custos, 0, 9)?></td>
                                             <td><?= $rec01->documento; ?> </td>
                                             <td><?= $data_lanc; ?> </td>
                                             <td colspan="9" class="descricao-full" style="text-align:start;" id="td-descricao"><?= nl2br(htmlspecialchars($cadastro->razao_soc . ' - ' . $rec01->descricao, ENT_QUOTES, 'UTF-8')) ?></td>
                                         </tr>
-                                        <tr class="tr-clientes <?= $cor_parcela ?>" onclick="">
+                                        <tr class="tr-clientes avoid-page-break <?= $cor_parcela ?>" onclick="">
                                             <td></td>
                                             <td></td>
                                             <td></td>
@@ -1280,54 +1284,6 @@ if ($filtros != []) {
         localStorage.setItem('posicaoScroll', JSON.stringify(posicao));
     }
 
-    function encolher() {
-        let barra = document.getElementById('barra-lateral');
-        let container = document.getElementById('container');
-        let superior = document.getElementById('header');
-        let body = document.getElementById('body');
-
-
-
-
-
-
-        if (barra.style.animationName === 'encolher') {
-
-            superior.style.animationName = 'expandir-header'
-            superior.style.animationDuration = '0.5s';
-            superior.style.animationFillMode = 'backwards';
-
-            barra.style.animationName = 'expandir';
-            barra.style.animationDuration = '0.5s';
-            barra.style.animationFillMode = 'backwards';
-
-            container.style.animationName = 'expandir-container'
-            container.style.animationDuration = '0.5s';
-            container.style.animationFillMode = 'backwards';
-
-            body.style.animationName = 'expandir-container'
-            body.style.animationDuration = '0.5s';
-            body.style.animationFillMode = 'backwards';
-            return;
-        } else {
-
-            superior.style.animationName = 'encolher-header'
-            superior.style.animationDuration = '0.5s';
-            superior.style.animationFillMode = 'forwards';
-
-            barra.style.animationName = 'encolher';
-            barra.style.animationDuration = '0.5s';
-            barra.style.animationFillMode = 'forwards';
-
-            container.style.animationName = 'encolher'
-            container.style.animationDuration = '0.5s';
-            container.style.animationFillMode = 'forwards';
-
-            body.style.animationName = 'encolher'
-            body.style.animationDuration = '0.5s';
-            body.style.animationFillMode = 'forwards';
-        }
-    }
 
     document.addEventListener('DOMContentLoaded', function () {
         var modalQuitar = document.getElementById('modal_quitar');

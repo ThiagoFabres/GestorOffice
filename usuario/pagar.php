@@ -1,3 +1,36 @@
+<!DOCTYPE html>
+
+<head>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.3/html2pdf.bundle.min.js"
+    integrity="sha512-yu5WG6ewBNKx8svICzUA01vozhmiQCVfzjzW40eCHJdsDRaOifh9hPlWBDex5b32gWCzawTp1F3FJz60ps6TnQ=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+<script src=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js "></script>
+<link href=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css " rel="stylesheet">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dragscroll/0.0.8/dragscroll.min.js"></script>
+
+
+
+<link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/componentes/modais/lancamentos/modais.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<link rel="stylesheet" href="../choices/choices.css"></link>
+
+
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
+<title>Gestor Office Control</title>
+</head>
 <?php
 
 require_once __DIR__ . '/../db/entities/usuarios.php';
@@ -81,6 +114,8 @@ if(!isset($ordenar_por) || $ordenar_por === null){
 }
 
 
+
+
 $parcela_paginas = Pag02::read(
     id_empresa: $_SESSION['usuario']->id_empresa,
     filtro_data_inicial: $get_filtro_data_inicial ?? null,
@@ -114,7 +149,7 @@ if ($get_filtro_nome != '')
     $filtros[] = 'filtro_nome=' . $get_filtro_nome;
 if ($get_filtro_opcao != '')
     $filtros[] = 'opcao_filtro=' . $get_filtro_opcao;
-if ($get_filtro_por != '' && $get_filtro_por != 'lancamento')
+if ($get_filtro_por != '')
     $filtros[] = 'filtro_por=' . $get_filtro_por;
 if ($get_filtro_pagamento != '')
     $filtros[] = 'forma_pagamento=' . $get_filtro_pagamento;
@@ -140,30 +175,6 @@ if ($filtros != []) {
 ?>
 
 
-<!DOCTYPE html>
-
-
-
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.3/html2pdf.bundle.min.js"
-    integrity="sha512-yu5WG6ewBNKx8svICzUA01vozhmiQCVfzjzW40eCHJdsDRaOifh9hPlWBDex5b32gWCzawTp1F3FJz60ps6TnQ=="
-    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-
-<script src=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js "></script>
-<link href=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css " rel="stylesheet">
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dragscroll/0.0.8/dragscroll.min.js"></script>
-
-
-
-<link rel="stylesheet" href="/style.css">
-<link rel="stylesheet" href="/componentes/modais/lancamentos/modais.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
-<link rel="stylesheet" href="../choices/choices.css"></link>
 
 <?php if($acao == 'visualizar') {?> 
 <style>
@@ -177,13 +188,6 @@ if ($filtros != []) {
         }
 </style>
 <?php }?>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
-<title>Gestor Office Control</title>
-</head>
-
 <body id="body">
 
 
@@ -761,7 +765,8 @@ if ($filtros != []) {
                                 filtro_con02: $get_filtro_subtitulo,
                                 ordenar_por: $ordenar_por,
                                 direcao: $direcao,
-                                filtro_custos: $get_filtro_custo
+                                filtro_custos: $get_filtro_custo,
+                                read_totais:true,
                     );
                         
                         foreach ($parcelas_totais as $pt) {
@@ -817,6 +822,7 @@ if ($filtros != []) {
         </div>
 
         <div class=""style="display:none;">
+            
                 <table class="" id="tabela-pdf" >
                         <thead>
                             <?php
@@ -830,50 +836,20 @@ if ($filtros != []) {
                             ?>
                             <tr class="tr-clientes-header">
                                 <th>CENTRO</th>
-                                <th><a
-                                        href="<?= $caminho ?>?ordenar=documento&direcao=<?php echo ($ordenar_por === 'documento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">DOCUMENTO</a><?php if ($ordenar_por == 'documento') {
-                                                         echo $seta;
-                                                     } ?>
-                                </th>
-                                <th><a
-                                        href="<?= $caminho ?>?ordenar=data_lancamento&direcao=<?php echo ($ordenar_por === 'data_lancamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">DATA.LANC</a><?php if ($ordenar_por == 'data_lancamento') {
-                                            echo $seta;
-                                        } ?>
-                                </th>
-                                <th><a>DESCRIÇÃO</a></th>
-                                <th><a
-                                        href="<?= $caminho ?>?ordenar=valor&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'valor' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">VALOR</a><?php if ($ordenar_por == 'valor') {
-                                                         echo $seta;
-                                                     } ?>
-                                </th>
-                                <th><a>PARC.GERAL</a></th>
-                                <th><a>PARC.ATUAL</a></th>
-                                <th><a
-                                        href="<?= $caminho ?>?ordenar=valor_parcela&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'valor_parcela' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">VALOR.PARC</a><?php if ($ordenar_por == 'valor_parcela') {
-                                            echo $seta;
-                                        } ?></th>
-                                <th><a
-                                        href="<?= $caminho ?>?ordenar=data_vencimento&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'data_vencimento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">DATA.VENC</a><?php if ($ordenar_por == 'data_vencimento') {
-                                                         echo $seta;
-                                                     } ?>
-                                </th>
-                                <th><a
-                                        href="<?= $caminho ?>?ordenar=data_pagamento&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'data_pagamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">DATA.PAG</a><?php if ($ordenar_por == 'data_pagamento') {
-                                            echo $seta;
-                                        } ?>
-                                </th>
-                                <th><a
-                                        href="<?= $caminho ?>?ordenar=valor_pagamento&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'valor_pagamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">VALOR.PAG</a><?php if ($ordenar_por == 'valor_pagamento') {
-                                            echo $seta;
-                                        } ?></th>
-                                <th><a
-                                        href="<?= $caminho ?>?ordenar=tipo_pagamento&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'tipo_pagamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">TIPO.PAG</a><?php if ($ordenar_por == 'tipo_pagamento') {
-                                            echo $seta;
-                                        } ?>
-                                </th>
+                                <th>DOCUMENTO</th>
+                                <th>DATA.LANC</th>
+                                <th>DESCRIÇÃO</th>
+                                <th>VALOR</th>
+                                <th>PARC.GERAL</th>
+                                <th>PARC.ATUAL</th>
+                                <th>VALOR.PARC</th>
+                                <th>DATA.VENC</th>
+                                <th>DATA.PAG</th>
+                                <th>VALOR.PAG</th>
+                                <th>TIPO.PAG</th>
                             </tr>
                         </thead>
-<tbody>
+<tbody style="avoid-page-break">
                             <?php
                             $parcelas = Pag02::read(
                                 id_empresa: $_SESSION['usuario']->id_empresa,
@@ -888,7 +864,8 @@ if ($filtros != []) {
                                 filtro_con02: $get_filtro_subtitulo,
                                 ordenar_por: $ordenar_por,
                                 direcao: $direcao,
-                                filtro_custos: $get_filtro_custo
+                                filtro_custos: $get_filtro_custo,
+                                
                             );
                             if (!empty($parcelas)) {
                         
@@ -952,7 +929,7 @@ if ($filtros != []) {
                                     <!-- style="<?php if ($ultima_parcela) { ?>border-bottom: 3px solid #5856d6;<?php } ?> border-inline: 1px solid #5856d6;" -->
                                     <!-- style="<?php if ($ultima_parcela) { ?>border-bottom: 2px solid #5856d6;<?php } else if ($pag02->parcela == 1) { ?> border-top: 3px solid #5856d6; <?php } ?> border-inline: 2px solid #5856d6;" -->
                                 <div class="avoid-page-break">
-                                    <tr>
+                                    <tr class="avoid-page-break">
                                         
 
                                         <td><?php echo substr($centro_custos, 0, 9)?></td>
@@ -961,7 +938,7 @@ if ($filtros != []) {
                                         <td colspan="9" class="descricao-full" style="text-align:start;" id="td-descricao"><?= nl2br(htmlspecialchars($cadastro->razao_soc . ' - ' . $pag01->descricao, ENT_QUOTES, 'UTF-8')) ?></td>
                                         
                                     </tr>
-                                    <tr>
+                                    <tr class="avoid-page-break">
                                         
                                         <td></td>
                                         <td></td>
@@ -996,7 +973,7 @@ if ($filtros != []) {
                                 
                                 }  
                                 ?> 
-                                <tr id="tr-totais">
+                                <tr id="tr-totais" class="avoid-page-break">
                                     <td style="text-align: end; font-size: 100%;">Totais:</td>
                                     <td></td>
                                     <td></td>
@@ -1295,54 +1272,7 @@ if ($filtros != []) {
         localStorage.setItem('posicaoScroll', JSON.stringify(posicao));
     }
 
-    function encolher() {
-        let barra = document.getElementById('barra-lateral');
-        let container = document.getElementById('container');
-        let superior = document.getElementById('header');
-        let body = document.getElementById('body');
-
-
-
-
-
-
-        if (barra.style.animationName === 'encolher-lateral') {
-
-            superior.style.animationName = 'expandir-header'
-            superior.style.animationDuration = '0.5s';
-            superior.style.animationFillMode = 'backwards';
-
-            barra.style.animationName = 'expandir-lateral';
-            barra.style.animationDuration = '0.5s';
-            barra.style.animationFillMode = 'backwards';
-
-            container.style.animationName = 'expandir-container'
-            container.style.animationDuration = '0.5s';
-            container.style.animationFillMode = 'backwards';
-
-            body.style.animationName = 'expandir-container'
-            body.style.animationDuration = '0.5s';
-            body.style.animationFillMode = 'backwards';
-            return;
-        } else {
-
-            superior.style.animationName = 'encolher-header'
-            superior.style.animationDuration = '0.5s';
-            superior.style.animationFillMode = 'forwards';
-
-            barra.style.animationName = 'encolher-lateral';
-            barra.style.animationDuration = '0.5s';
-            barra.style.animationFillMode = 'forwards';
-
-            container.style.animationName = 'encolher-container'
-            container.style.animationDuration = '0.5s';
-            container.style.animationFillMode = 'forwards';
-
-            body.style.animationName = 'encolher'
-            body.style.animationDuration = '0.5s';
-            body.style.animationFillMode = 'forwards';
-        }
-    }
+    
 
     document.addEventListener('DOMContentLoaded', function () {
         var modalQuitar = document.getElementById('modal_quitar');
