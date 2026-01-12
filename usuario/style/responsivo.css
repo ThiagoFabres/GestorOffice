@@ -1,0 +1,214 @@
+@media (max-width: 900px) {
+    #barra-lateral {
+        position: fixed;
+        left: -255px;
+        z-index: 999;
+    }
+    .main {
+        left: 0;
+        width: 100%;
+    }
+    .card-header-borda {
+        min-width: 0;
+        width: 90%;
+
+    }
+    .form-pagamento {
+        display: flex;
+        flex-direction: column;
+    }
+    .inputs-pagamento-group {
+        width: 100%;
+    }
+    .selects-pagamento {
+        width: 100%;
+    }
+    .btn-filtro {
+        width: 100%;
+    }
+    #header {
+        left: 0;
+        width: 100%;
+    }
+    #dashboard-div-group {
+        display: flex;
+        flex-direction: column;
+    }
+    @keyframes encolher-header {
+      0% {
+        left: 255px;
+      }
+      100% {
+        left: 0;
+        width: 100%;
+
+      }
+    }
+
+@keyframes expandir-header {
+      0% {
+        
+        left: 0;
+        width: 100%;
+
+      }
+      100% {
+        left: 16em;
+        
+        
+      }
+    }
+
+@keyframes expandir-container {
+      0% {
+        
+        left: 0;
+        width: 100%;
+
+      }
+      50% {
+        left: 125px;
+        width: calc(100% - 255px)
+      }
+      100% {
+        left: 255px;
+        width: calc(100% - 255px);
+        
+      }
+    }
+
+    @keyframes encolher-container {
+      0% {
+        
+        left: 255px;
+        width: calc(100% - 255px);
+
+      }
+      100% {
+        left: 0;
+        width: 100%;
+        
+      }
+    }
+
+@keyframes encolher {
+    from {
+        left: 255px;
+        
+
+    }
+
+    to {
+        left: 0;
+        width: 100%;
+    }
+}
+
+@keyframes encolher-lateral {
+    from {
+        left: -255;
+        
+
+    }
+
+    to {
+        left: 0;
+    }
+}
+@keyframes expandir-lateral {
+    from {
+        left: 0;
+        
+
+    }
+
+    to {
+        left: -255
+    }
+}
+
+@keyframes expandir {
+    from {
+        left: -16em;
+
+    }
+
+    to {
+        left: 0;
+        
+    }
+}
+
+
+@keyframes forwards {
+    0% {
+
+        background-color: transparent;
+        border-radius: 0;
+
+    }
+
+    100% {
+        
+        background-color: #2a303d;
+        border-radius: 0.5em;
+    }
+}
+
+@keyframes forwards {
+    0% {
+
+        background-color: transparent;
+        border-radius: 0;
+
+    }
+
+    100% {
+        
+        background-color: #2a303d;
+        border-radius: 0.5em;
+    }
+}
+
+@keyframes forwards-mini {
+    0% {
+
+        background-color: transparent;
+        border-radius: 0;
+
+    }
+
+    100% {
+        
+        background-color: #212631b0;
+        border-radius: 0.5em;
+    }
+}
+
+
+@keyframes forwards-superior {
+    from {border: 2px solid #2a2f366c;
+        border-radius: 0;
+        font-size: 1.1em;
+    }
+    to {
+        border: 2px solid #2a2f366c;
+        border-radius: 1.5em;
+        font-size: 1.2em;
+    }
+
+    from {
+        border: 2px solid #2a2f366c;
+        border-radius: 1.5em;
+        font-size: 1.3em;
+    }
+
+    to {
+        border: 2px solid white;
+        background-color: #252b36;
+        border-radius: 1em;
+        font-size: 1em;
+    }
+}
+    
+}
