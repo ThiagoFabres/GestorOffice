@@ -191,7 +191,8 @@ class Pag02 {
         $filtro_con01 = null,
         $filtro_con02 = null,
         $filtro_cadastro = null,
-        $filtro_custos = null
+        $filtro_custos = null,
+        $read_totais = null,
 
     ) {
         $pdo = (new Database())->connect();
@@ -205,7 +206,11 @@ class Pag02 {
         } else if($ordenar_por === 'nome') {
                $query = 'SELECT p2.*, p1.documento, p1.id_con02, c.razao_soc FROM pag02 p2 INNER JOIN pag01 p1 ON p2.id_pag01 = p1.id INNER JOIN cadastro c ON p1.id_cadastro = c.id_cadastro';
             
-            } else {
+            }else if($read_totais) {
+                $query = 'SELECT p2.valor_par, p2.valor_pag, p1.documento, p1.id_con02
+                FROM pag02 p2
+                INNER JOIN pag01 p1 ON p2.id_pag01 = p1.id
+            ';} else {
                 $query = 'SELECT p2.*, p1.documento, p1.id_con02 
                 FROM pag02 p2
                 INNER JOIN pag01 p1 ON p2.id_pag01 = p1.id
@@ -254,7 +259,7 @@ class Pag02 {
                 $conditions[] = 'p2.vencimento = :filtro_data_inicial AND p2.valor_pag = 0';
                 break;
             case 'a_vencer':
-                $conditions[] = 'p2.vencimento > :filtro_data_inicial AND p2.valor_pag = 0';
+                $conditions[] = 'p2.vencimento > :filtro_data_inicial AND p2.vencimento <= :filtro_data_final AND p2.valor_pag <= 0';
                 break;
             case 'venceu':
                 $conditions[] = 'p2.vencimento < :filtro_data_inicial AND p2.valor_pag = 0';
