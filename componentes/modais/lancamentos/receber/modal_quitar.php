@@ -54,8 +54,9 @@
                             <label for="valor">Valor pago</label>
                             <input class="form-control" type="text" name="valor" id="modal_quitar_valor" placeholder="Valor pago">
                             <label for="forma_pagamento">Forma de pagamento</label>
+
                             <div class="input-pagamento-group">
-                                <div class="input-pagamento-div">
+                                <div class="input-pagamento-div" style="width:100%">
                                     <select class="form-control" name="forma_pagamento" required>
                                         <option value="">Selecione</option>
                                         <?php foreach (TipoPagamento::read(null, $_SESSION['usuario']->id_empresa) as $pagamento) { ?>
@@ -71,6 +72,7 @@
                                             class="bi bi-plus-lg"></i></button>
                                 </div>
                             </div> 
+
                             <div style="margin-bottom: 3em;" class="footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
                                     style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Fechar</button>

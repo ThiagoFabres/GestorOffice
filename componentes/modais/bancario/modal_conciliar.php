@@ -19,9 +19,9 @@ if($acao == 'conciliar') {
                 
                 <!-- Corpo -->
                 <div class="modal-body">
-                    <form method="post" action="movimentacao_manager.php">
+                    <form method="post" action="movimentacao_manager.php" id="form-conciliar">
 
-                    <input type="hidden" name="id" value="<?=$id?>">
+                    <input id="conciliar-id" type="hidden" name="id" value="<?=$id?>">
 
                     <div class="d-flex fd-row gap-3" >
                     <div class="modal-input-group w-50">
@@ -77,7 +77,12 @@ if($acao == 'conciliar') {
                             </div>
                         </div>
                     </div>   
-                </div>                             
+                </div>
+                <div class="d-flex flex-row justify-content-between">
+                    <div class="d-flex justify-content-start gap-2">
+                        <button type="submit" name="acao" value="conciliar_marcados" class="btn btn-primary">Conciliar Marcados</button>
+                        
+                    </div>                             
                     
                     <!-- Botões -->
                     <div class="d-flex justify-content-end gap-2">
@@ -85,9 +90,41 @@ if($acao == 'conciliar') {
                         <button type="submit" name="acao" value="conciliar" class="btn btn-success" style="background-color: #5856d6; border-color: #5856d6;">Salvar</button>
                         
                     </div>
+                </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+    var modalConciliar = document.getElementById('modal_conciliar');
+    if (!modalConciliar) return;
+    modalConciliar.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        // Se não houver um elemento relacionado (aberto via JS), não sobrescreve valores já preenchidos
+        if (!button) return;
+        // Os dados podem ser passados via data-* attributes no botão que abre o modal
+        document.getElementById('conciliar-id').value = button.getAttribute('data-id')
+    });
+});
+  const idsListaConciliar = []
+
+  document.addEventListener('show.bs.modal', function() {
+  const tabelaMov = document.getElementById('tabela-bancario')
+  formConciliar = document.getElementById('form-conciliar')
+  tabelaMov.querySelectorAll('tbody tr td input[type="checkbox"]:checked').forEach(function( i => el) {
+    if(el.value = 'on') {
+        var inputEl = document.createElement('input')
+        inputEl.setAttribute('name', el.getAttribute('name'))
+        inputEl.setAttribute('type', 'hidden')
+        formConciliar.appendChild(inputEl)
+        idsListaConciliar.push(el.getAttribute('name'))
+  }})
+    console.log(idsListaConciliar)
+  })
+
+  
+    </script>
+
 
