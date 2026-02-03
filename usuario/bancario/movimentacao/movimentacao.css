@@ -34,3 +34,8 @@
 .inputs-pagamento-text div label {
     font-weight: bold;
 }
+
+.titulos-receber div .choices,
+.titulos-receber div .choices__inner {
+    width: 100%;
+}
