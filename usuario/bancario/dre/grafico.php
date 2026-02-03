@@ -38,7 +38,16 @@ $primeiro_dia_periodo = DateTime::createFromFormat('d/m/Y', '1/' . $get_periodo)
 $ultimo_dia_periodo = DateTime::createFromFormat('m/Y', $get_periodo)->format('Y-m-t');
 // $get_periodo = new Datetime('first day of this month');
 
-                        $ban02_lista = Ban02::read(id_empresa: $_SESSION['usuario']->id_empresa, filtro_data_inicial: $primeiro_dia_periodo ?? null, filtro_data_final: $ultimo_dia_periodo ?? null, dre_read:true, filtro_tipo: $filtro_tipo ?? null);
+                        $ban02_lista = Ban02::read(
+                        id_empresa: $_SESSION['usuario']->id_empresa, 
+                        filtro_data_inicial: $primeiro_dia_periodo ?? null, 
+                        filtro_data_final: $ultimo_dia_periodo ?? null, 
+                        dre_read:true, 
+                        filtro_tipo: $filtro_tipo ?? null,
+                        ordenar_por: 'valor',
+                        direcao: $filtro_tipo == 'C' ? 'DESC' : 'ASC'
+                        
+                        );
                         $lista_tabela = [];
                         foreach($ban02_lista as $ban02) {
                             $idCon = $ban02->id_con02;
@@ -99,7 +108,7 @@ if($todas_empresas) {
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
+<link rel="shortcut icon" href="/gestor-office.png" type="image/x-icon">
 <title>Gestor Office Control</title>
 </head>
 
@@ -145,7 +154,7 @@ if($todas_empresas) {
                                             <div>
                                                 <label for="data_inicial">Período</label>:</label>
                                                 <input type="text" id="data_inicial" placeholder="mm/aaaa" name="periodo"
-                                                    value="<?= $get_periodo ?>" class="form-control">
+                                                    value="<?= $get_periodo ?>" class="form-control" style="border-radius: 0;">
                                             </div>
                                         <div>
                                                 <label for="filtro_tipo">Tipo:</label>
@@ -234,6 +243,7 @@ if($todas_empresas) {
                                 <tr>
                                     <th>Descrição</th>
                                     <th>Valor</th>
+                                    <?php if($filtro_tipo != null) {?> <th>Porcentagem</th> <?php } ?>
                                 </tr>
                             </thead>
                             <tbody>
@@ -256,6 +266,12 @@ if($todas_empresas) {
                                             </div>
                                         </div>  
                                     </td>
+                                    <td>
+                                        <?php if($filtro_tipo != null) {
+                                            $porcentagem = ($item['valor'] / array_sum(array_column($lista_tabela, 'valor'))) * 100;
+                                            echo number_format($porcentagem, 2, ',', '.') . '%';
+                                        } ?>
+                                    </td>
                                     
                                 <?php
                                 $total_tabela += $item['valor'];
@@ -271,6 +287,7 @@ if($todas_empresas) {
                                         <strong>R$</strong><strong><?php echo format_valor_alinhado($total_tabela); ?></strong>
                                         </div>
                                     </td>
+                                    <td></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -284,7 +301,7 @@ if($todas_empresas) {
         </div>
 
             
-
+<?php require_once __DIR__ . '/../../../componentes/footer/footer.php' ?> 
 </body>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />

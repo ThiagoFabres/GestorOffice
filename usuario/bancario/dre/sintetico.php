@@ -41,21 +41,17 @@ if($todas_empresas) {
 
 $lancamentos = [];
 $subtitulos = [];
-    $subtitulos_ids = [];
+$subtitulos_ids = [];
 foreach($empresa_lista as $empresa) {
-
-
-if ($get_data_final != '' || $get_data_inicial != '') {
     $lancamentos_empresa = Ban02::read(
-    id_empresa: $empresa->id,
-    filtro_data_inicial: $get_data_inicial ?? null,
-    filtro_data_final: $get_data_final ?? null,
-    filtro_titulo: $get_titulo ?? null,
-    filtro_subtitulo: $get_subtitulo ?? null,
-    dre_read: true,
-);
-$lancamentos[] = $lancamentos_empresa;
-}
+        id_empresa: $empresa->id,
+        filtro_data_inicial: $get_data_inicial ?? null,
+        filtro_data_final: $get_data_final ?? null,
+        filtro_titulo: $get_titulo ?? null,
+        filtro_subtitulo: $get_subtitulo ?? null,
+        dre_read: true,
+    );
+    $lancamentos[] = $lancamentos_empresa;
 }
     // Obter subtítulos únicos (con02) usados nos lançamentos
     
@@ -77,28 +73,30 @@ $lancamentos[] = $lancamentos_empresa;
         }
     }
     
-$titulos = [];
-    $titulos_ids = [];
-    foreach($empresa_lista as $empresa) {
+$titulos_array = [];
+$subtitulos_agrupados = [];
+foreach($empresa_lista as $empresa) {
+    foreach ($subtitulos as $sub) {
+        $c1 = Con01::read(
+            $sub->id_con01,
+            $empresa->id,
+            ordenar_por: 'tipo',
+            filtro_operacional: $get_operacional
+        );
 
-
-    // Obter títulos (con01) a partir dos subtítulos
-    
-        foreach ($subtitulos as $sub) {
-            $c1 = Con01::read(
-                $sub->id_con01,
-                $empresa->id,
-                ordenar_por: 'tipo',
-                filtro_operacional: $get_operacional
-            );
-
-
-            if ($c1 && isset($c1[0]) && !in_array($c1[0]->id, $titulos_ids)) {
-                $titulos_ids[] = $c1[0]->id;
-                $titulos[] = $c1[0];
+        if ($c1 && isset($c1[0])) {
+            $nome_titulo = $c1[0]->nome;
+            if (!isset($titulos_array[$nome_titulo])) {
+                $titulos_array[$nome_titulo] = $c1[0];
+                $subtitulos_agrupados[$nome_titulo] = [];
+            }
+            if (!in_array($sub, $subtitulos_agrupados[$nome_titulo])) {
+                $subtitulos_agrupados[$nome_titulo][] = $sub;
             }
         }
     }
+}
+$titulos = array_values($titulos_array);
 
 
 ?>
@@ -122,7 +120,7 @@ $titulos = [];
 <link rel="stylesheet" href="../../choices/choices.css">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
+<link rel="shortcut icon" href="/gestor-office.png" type="image/x-icon">
 <title>Gestor Office Control</title>
 </head>
 
@@ -221,22 +219,29 @@ $titulos = [];
                     </div>
 
                     <?php
-                    if (($get_data_inicial != '' || $get_data_final != '') && isset($titulos) && !empty($titulos)) {
+                    if (isset($titulos) && !empty($titulos)) {
                         $total_geral = [];
                         $total_receitas = [];
                         $total_despesas = [];
 
                         foreach ($titulos as $i => $titulo) {
-                            // filtrar subtítulos pertencentes a este título
-                            $subtitulos_filtrados = [];
-                            foreach ($subtitulos as $subtitulo) {
-                                if ($subtitulo->id_con01 == $titulo->id) {
-                                    $subtitulos_filtrados[] = $subtitulo;
+                            // filtrar subtítulos pertencentes a este título, agrupados por nome
+                            $subtitulos_do_titulo = $subtitulos_agrupados[$titulo->nome] ?? [];
+                            
+                            // Agrupar subtítulos por nome e consolidar IDs
+                            $subtitulos_consolidados_nomes = [];
+                            foreach ($subtitulos_do_titulo as $subtitulo) {
+                                if (!isset($subtitulos_consolidados_nomes[$subtitulo->nome])) {
+                                    $subtitulos_consolidados_nomes[$subtitulo->nome] = [
+                                        'primeiro_obj' => $subtitulo,
+                                        'ids' => []
+                                    ];
                                 }
+                                $subtitulos_consolidados_nomes[$subtitulo->nome]['ids'][] = $subtitulo->id;
                             }
                             ?>
 
-                            <div class="accordion custom-accordion avoid-page-break" style="border: 0;">
+                            <div class="accordion custom-accordion" style="border: 0;">
                                 <div class="accordion-item ">
                                     <h2 class="accordion-header" id="heading<?= $i ?>">
                                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
@@ -250,41 +255,38 @@ $titulos = [];
                                         class="accordion-collapse <?php if (!isset($con01) || $con01 != $titulo->id) { ?>collapse<?php } ?>"
                                         aria-labelledby="heading<?= $i ?>" data-bs-parent="#accordionExample">
                                         <div class="accordion-body">
-                                            <div class="inner-accordion avoid-page-break">
+                                            <div class="inner-accordion">
 
                                                 <table class="table table-striped table-bordered">
-                                                    <thead class="avoid-page-break">
+                                                    <thead>
                                                         <tr class="tr-dre-sintetico avoid-page-break avoid-page-break">
                                                             <!-- <th style="width:25%;">Centro de Custos</th> -->
                                                             <th style="width:50%;">Subtitulo</th>
                                                             <th style="width:25%;">Receita</th>
                                                         </tr>
                                                     </thead>
-                                                    <tbody class="avoid-page-break">
+                                                    <tbody>
                                                         <?php
                                                         $total_subtitulo = 0;
-                                                        foreach ($subtitulos_filtrados as $subtitulo) {
+                                                        
+                                                        foreach ($subtitulos_consolidados_nomes as $nome_subtitulo => $dados) {
+                                                            $ids_subtitulo = $dados['ids'];
                                                             $receita = 0;
 
-                                                            // calcular soma absoluta dos valores dos lançamentos que têm esse id_con02
-                                                            $soma_abs = 0.0;
+                                                            // calcular soma dos valores dos lançamentos que têm esses ids_con02
+                                                            $soma = 0.0;
                                                             if (!empty($lancamentos)) {
                                                                 foreach ($lancamentos as $lancamentos_lista) {
                                                                     foreach($lancamentos_lista as $lan) {
-                                                                    if ($lan->id_con02 == $subtitulo->id) {
-                                                                        $soma_abs += abs(floatval($lan->valor));
+                                                                        if (in_array($lan->id_con02, $ids_subtitulo)) {
+                                                                            $soma += floatval($lan->valor);
+                                                                        }
                                                                     }
-                                                                }
                                                                 }
                                                             }
 
-                                                            // garantir sinal conforme o tipo do título:
-                                                            // se título é Despesa (D) exibimos número negativo; se Receita (C) exibimos positivo.
-                                                            if ($titulo->tipo == 'D') {
-                                                                $receita = -1 * $soma_abs;
-                                                            } else {
-                                                                $receita = $soma_abs;
-                                                            }
+                                                            // Se título é Despesa (D), o valor já vem negativo; se Receita (C), vem positivo
+                                                            $receita = $soma;
 
                                                             $total_subtitulo += $receita;
                                                             $receita_formatada = format_valor_alinhado($receita);
@@ -292,12 +294,12 @@ $titulos = [];
 
                                                             <tr class="tr-dre-sintetico avoid-page-break">
                                                                 <!-- <td style="width:25%;"><?=$centro_custos?></td> -->
-                                                                <td style="width: 75%;"><?= htmlspecialchars($subtitulo->nome, ENT_QUOTES, 'UTF-8') ?></td>
+                                                                <td style="width: 75%;"><?= htmlspecialchars($nome_subtitulo, ENT_QUOTES, 'UTF-8') ?></td>
                                                                 <td style="width: 25%;"><div class="valor-monetario d-flex flex-row justify-content-between"><div>R$</div> <div> <?= $receita_formatada?> </div></div></td>
                                                             </tr>
 
                                                         <?php
-                                                        } // foreach subtitulos_filtrados
+                                                        }
                                                         ?>
                                                     <tbody>
                                                     <tr class="tr-dre-total avoid-page-break">
@@ -346,7 +348,7 @@ $titulos = [];
                 </div> <!-- card -->
         </div>
     </div>
-
+<?php require_once __DIR__ . '/../../../componentes/footer/footer.php' ?> 
 </body>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
