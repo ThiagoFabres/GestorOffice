@@ -70,7 +70,7 @@ if($todas_empresas) {
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
+<link rel="shortcut icon" href="/gestor-office.png" type="image/x-icon">
 <title>Gestor Office Control</title>
 </head>
 
@@ -265,14 +265,24 @@ if($todas_empresas) {
                                 }
                             }
                         }
+                        $titulos_array = [];
+                        $subtitulos_agrupados = [];
                         foreach ($subtitulos as $subtitulo) {
                             foreach($empresa_lista as $empresa) {
                                 $titulo = Con01::read($subtitulo->id_con01, $empresa->id, ordenar_por: 'tipo', filtro_operacional:$get_operacional);
-                                if ($titulo && isset($titulo[0]) && !in_array($titulo[0], $titulos)) {
-                                    $titulos[] = $titulo[0];
+                                if ($titulo && isset($titulo[0])) {
+                                    $nome_titulo = $titulo[0]->nome;
+                                    if(!isset($titulos_array[$nome_titulo])) {
+                                        $titulos_array[$nome_titulo] = $titulo[0];
+                                        $subtitulos_agrupados[$nome_titulo] = [];
+                                    }
+                                    if (!in_array($subtitulo, $subtitulos_agrupados[$nome_titulo])) {
+                                        $subtitulos_agrupados[$nome_titulo][] = $subtitulo;
+                                    }
                                 }
                             }
                         }
+                        $titulos = array_values($titulos_array);
 
                         // Exibir cada título como um accordion, e dentro dele, as contas separadas por categoria
 // ...existing code...
@@ -302,7 +312,18 @@ if($todas_empresas) {
                                             $totais_gerais = 0;
 
                                             $sub_idx = 1;
-                                            foreach ($subtitulos as $subtitulo) {
+                                            $subtitulos_do_titulo = $subtitulos_agrupados[$titulo->nome] ?? [];
+                                            
+                                            // Agrupar subtítulos por nome e consolidar parcelas
+                                            $subtitulos_agrupados_por_nome = [];
+                                            $parcelas_por_nome = [];
+                                            
+                                            foreach ($subtitulos_do_titulo as $subtitulo) {
+                                                if (!isset($subtitulos_agrupados_por_nome[$subtitulo->nome])) {
+                                                    $subtitulos_agrupados_por_nome[$subtitulo->nome] = $subtitulo;
+                                                    $parcelas_por_nome[$subtitulo->nome] = [];
+                                                }
+                                                
                                                 // Buscar todos os pagamentos/recebimentos desse subtítulo
                                                 $parcelas = [];
                                                 if ($titulo->tipo == 'D') {
@@ -312,7 +333,6 @@ if($todas_empresas) {
                                                             filtro_data_final: $get_data_final,
                                                             filtro_opcao: 'quitados',
                                                             filtro_por: 'pagamento',
-                                                            filtro_con01: $titulo->id,
                                                             filtro_con02: $subtitulo->id,
                                                             filtro_custos: $get_custos
                                                         );
@@ -323,13 +343,20 @@ if($todas_empresas) {
                                                             filtro_data_final: $get_data_final,
                                                             filtro_opcao: 'quitados',
                                                             filtro_por: 'pagamento',
-                                                            filtro_con01: $titulo->id,
                                                             filtro_con02: $subtitulo->id,
                                                             filtro_custos: $get_custos
                                                         );
-
-                                                    
                                                 }
+                                                
+                                                // Consolidar parcelas por nome do subtítulo
+                                                foreach ($parcelas as $parcela) {
+                                                    $parcelas_por_nome[$subtitulo->nome][] = $parcela;
+                                                }
+                                            }
+                                            
+                                            // Exibir subtítulos agrupados com suas parcelas consolidadas
+                                            foreach ($subtitulos_agrupados_por_nome as $nome_subtitulo => $subtitulo) {
+                                                $parcelas = $parcelas_por_nome[$nome_subtitulo] ?? [];
                                                 if (count($parcelas) > 0) { $total_subtitulo = 0;?>
                                                 <div>
                                                 <h5> <?=htmlspecialchars($subtitulo->nome)?> </h5>
@@ -338,7 +365,7 @@ if($todas_empresas) {
                                                     <table class="table table-striped table-bordered avoid-page-break" style="margin: none;">
                                                         <thead>
                                                             <tr class="tr-dre-analitico">
-                                                                <th>Centro de custos</th>
+                                                                <th>C. Custos</th>
                                                                 <th>Descrição</th>
                                                                 <th>Valor</th>
                                                             </tr>
@@ -444,7 +471,7 @@ if($todas_empresas) {
 
             <?php } ?>
             
-
+<?php require_once __DIR__ . '/../../componentes/footer/footer.php' ?> 
 </body>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />

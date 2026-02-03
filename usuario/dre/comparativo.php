@@ -188,7 +188,7 @@ $titulos = [];
 <link rel="stylesheet" href="../../choices/choices.css">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
+<link rel="shortcut icon" href="/gestor-office.png" type="image/x-icon">
 <title>Gestor Office Control</title>
 </head>
 
@@ -458,7 +458,7 @@ $titulos = [];
             </div>
     </div> 
                 <?php }  } ?>
-    
+<?php require_once __DIR__ . '/../../componentes/footer/footer.php' ?> 
 </body>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
