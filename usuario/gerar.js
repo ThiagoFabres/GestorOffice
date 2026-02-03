@@ -140,7 +140,6 @@ function getTabelaSemAcoes() {
             td.style.overflow = 'hidden';
             td.style.textOverflow = 'ellipsis';
 
-            td.style.fontSize = '95%';
             td.style.backgroundColor = cor;
 
             td.style.textAlign = 'center';
@@ -150,7 +149,7 @@ function getTabelaSemAcoes() {
             td.style.outline = '1px solid #ccc';
 
             td.style.padding = "6px 4px";
-            td.style.lineHeight = "1.2";
+            // td.style.lineHeight = "1.2";
         });
 
 
@@ -163,6 +162,7 @@ if (trTotais) {
 
     trTotais.style.backgroundColor = '#cececeff';
     trTotais.querySelectorAll('td').forEach(function(td) {
+        td.style.fontWeight = 'bold';
         td.style.backgroundColor = '#cececeff';
     });        
 }
@@ -222,9 +222,9 @@ function buildExportHeader(nome, nomeEmpresa) {
     function formatarDataBR(data) {
         if (!data) return '';
         console.log(data)
-        const data_formatada = new Date(Date(data))
-        console.log(data_formatada)
-        return data_formatada.toLocaleDateString('pt-BR');
+        const [ano, mes, dia] = data.split('-');
+        const data_formatada = `${dia}/${mes}/${ano}`;
+        return data_formatada;
     }
 
     if((di && di.value) && (df && df.value)) {
@@ -359,6 +359,7 @@ function gerarpdf(nome, nomeEmpresa = '') {
 
     // marca a tabela exportada com uma classe para aplicar CSS local sem depender de ID
     tabelaParaExport.classList.add('export-table');
+    console.log(tabelaParaExport.innerHTML)
     // aplica estilos que evitam quebra dentro das linhas/células
 
 
@@ -370,7 +371,7 @@ function gerarpdf(nome, nomeEmpresa = '') {
 
     // aplicar ajustes de célula ao clone que vamos exportar
     tabelaParaExport.querySelectorAll('th, td').forEach(function(cell) {
-        cell.style.fontSize = '10px';
+        // cell.style.fontSize = '20px';
         cell.style.padding = '2px 2px';
         cell.style.wordBreak = 'break-all';
         cell.style.whiteSpace = 'normal';
@@ -413,6 +414,19 @@ function gerarpdf(nome, nomeEmpresa = '') {
             #td-descricao {
             text-align: start !important;
             }
+        .export-table tbody #tr-totais td {
+            background-color: #cececeff !important;
+            font-weight: bold !important;
+            overflow: visible !important;
+            text-overflow: unset !important;
+            white-space: nowrap !important;
+            word-break: nowrap !important;
+            font-size: 17px !important;
+            width: auto !important;
+            padding: 0.8em !important;
+
+        }
+        
     `;
     container.appendChild(style);
 
@@ -486,91 +500,178 @@ tabelasPaginadas.forEach((tbl, index) => {
 
 
 
-function gerarexcel(nome) {
-    var tabela = getTabelaSemAcoes();
-    if (!tabela) return;
-
-
-
-    // Remove 'R$' de todos os elementos da tabela
-    tabela.querySelectorAll('td, th').forEach(function(el) {
-        if (el.textContent.includes('R$')) {
-            el.textContent = el.textContent.replace(/R\$\s?/g, '').trim();
+function gerarexcel(nome, nomeEmpresa = '') {
+    try {
+        var tabela = getTabelaSemAcoes();
+        if (!tabela) {
+            alert("Tabela não encontrada!");
+            return;
         }
-    });
 
-    // Formata datas para dd-mm-YYYY em todos os elementos
-    const dataRegex = /(\d{4})-(\d{2})-(\d{2})/g;
-    tabela.querySelectorAll('td, th, div, span, h3, h4, h5, h6, h1, h2').forEach(function(el) {
-        el.childNodes.forEach(function(node) {
-            if (node.nodeType === 3) { // text node
-                node.nodeValue = node.nodeValue.replace(dataRegex, function(_, y, m, d) {
-                    return d + '-' + m + '-' + y;
-                });
+        // Função auxiliar para formatar datas de yyyy-mm-dd para dd/mm/yyyy
+        function formatarData(dataStr) {
+            if (!dataStr || dataStr.trim() === '') return '';
+            
+            const regex = /(\d{4})-(\d{2})-(\d{2})/;
+            const match = dataStr.match(regex);
+            
+            if (match) {
+                return match[3] + '/' + match[2] + '/' + match[1];
+            }
+            return dataStr;
+        }
+
+        // Função para extrair valor do select
+        function getSelectValue(selector) {
+            var el = document.querySelector(selector);
+            if (!el) return '';
+            return (el.options && el.options[el.selectedIndex]) ? 
+                   el.options[el.selectedIndex].text.trim() : '';
+        }
+
+        // Função para extrair valor do radio button
+        function getRadioValue(name) {
+            var checked = document.querySelector('input[name="' + name + '"]:checked');
+            if (!checked) return '';
+            var parent = checked.parentElement;
+            var lbl = parent ? parent.querySelector('label') : null;
+            return lbl ? lbl.textContent.trim() : checked.value;
+        }
+
+        // Clona a tabela para não alterar o DOM original
+        var tabelaClone = tabela.cloneNode(true);
+
+        // Remove símbolos de moeda
+        tabelaClone.querySelectorAll('td, th').forEach(function(el) {
+            if (el.textContent.includes('R$')) {
+                el.textContent = el.textContent.replace(/R\$\s?/g, '').trim();
             }
         });
-    });
 
-    // Converte datas para texto antes de exportar
-    var trs = tabela.querySelectorAll('tbody tr');
-    trs.forEach(function(tr) {
-        [1, 8, 9].forEach(function(idx) {
-            var td = tr.children[idx];
-            if (td) {
-                td.textContent = "'" + td.textContent + "'";
+        // Converte tabela HTML para array de arrays
+        var dados = [];
+        
+        // Adiciona cabeçalho
+        var thElements = tabelaClone.querySelectorAll('thead tr:last-child th');
+        if (thElements.length > 0) {
+            var headerRow = [];
+            thElements.forEach(function(th) {
+                headerRow.push(th.textContent.trim());
+            });
+            dados.push(headerRow);
+        }
+
+        // Adiciona linhas do corpo
+        var rows = tabelaClone.querySelectorAll('tbody tr');
+        rows.forEach(function(tr) {
+            // Ignora a linha de totais
+            if (tr.id === 'tr-totais') return;
+            
+            var row = [];
+            var tds = tr.querySelectorAll('td');
+            
+            tds.forEach(function(td, idx) {
+                var valor = td.textContent.trim();
+                
+                // Formata datas
+                valor = formatarData(valor);
+                
+                row.push(valor);
+            });
+            
+            if (row.length > 0) {
+                dados.push(row);
             }
         });
-    });
 
-    // Build header AOA (array of arrays) and prepend to sheet data
-    function buildHeaderAoA() {
-        var aoa = [];
+        // Adiciona linha de totais se existir
+        var trTotais = tabelaClone.querySelector('#tr-totais');
+        if (trTotais) {
+            var totalRow = [];
+            var totalTds = trTotais.querySelectorAll('td');
+            totalTds.forEach(function(td) {
+                
+                var valor = td.textContent.trim();
+                valor = formatarData(valor);
+                totalRow.push(valor);
+            });
+            if (totalRow.length > 0) {
+                dados.push([]);
+                dados.push(totalRow);
+            }
+        }
+
+        // Constrói o header com filtros
+        var headerFiltros = [];
+        
+        // Título
         var titleEl = document.querySelector('.card .card-header h3') || document.querySelector('h3');
         var titleText = titleEl ? titleEl.textContent.trim() : ('Contas a ' + nome);
-        aoa.push([titleText]);
-        aoa.push([]);
+        
+        headerFiltros.push([nomeEmpresa + ' - ' + titleText]);
+        headerFiltros.push([]); // linha vazia
 
+        // Coleta os filtros aplicados
         var di = document.querySelector('#filtro_data_inicial');
         var df = document.querySelector('#filtro_data_final');
         var doc = document.querySelector('#filtro_nome');
-        var pagamento = document.querySelector('select[name="forma_pagamento"]');
-        var cadastro = document.querySelector('select[name="filtro_cadastro"]');
-        var titulo = document.querySelector('select[name="filtro_titulo"]') || document.querySelector('#titulo-filtro');
-        var subtitulo = document.querySelector('select[name="filtro_subtitulo"]') || document.querySelector('#subtitulo-filtro');
+        var pagamento = getSelectValue('select[name="forma_pagamento"]');
+        var cadastro = getSelectValue('select[name="filtro_cadastro"]');
+        var titulo = getSelectValue('select[name="filtro_titulo"]') || getSelectValue('#titulo-filtro');
+        var subtitulo = getSelectValue('select[name="filtro_subtitulo"]') || getSelectValue('#subtitulo-filtro');
+        var custo = getSelectValue('select[name="filtro_custo"]') || getSelectValue('#custo-filtro');
+        var opcao = getRadioValue('opcao_filtro');
+        var por = getRadioValue('filtro_por');
 
-        function addIf(label, value) { if (value && value !== '' && value !== 'Selecione') aoa.push([label, value]); }
-
-        addIf('Data Inicial', di && di.value);
-        addIf('Data Final', df && df.value);
-        addIf('Documento', doc && doc.value);
-        addIf('Pagamento', pagamento && (pagamento.options[pagamento.selectedIndex] && pagamento.options[pagamento.selectedIndex].text));
-        addIf('Cadastro', cadastro && (cadastro.options[cadastro.selectedIndex] && cadastro.options[cadastro.selectedIndex].text));
-        addIf('Titulo', titulo && (titulo.options[titulo.selectedIndex] && titulo.options[titulo.selectedIndex].text));
-        addIf('Subtitulo', subtitulo && (subtitulo.options[subtitulo.selectedIndex] && subtitulo.options[subtitulo.selectedIndex].text));
-
-        // radios
-        var opc = document.querySelector('input[name="opcao_filtro"]:checked');
-        if (opc) {
-            var p = opc.parentElement ? opc.parentElement.querySelector('label') : null;
-            addIf('Opção', p ? p.textContent.trim() : opc.value);
+        // Adiciona filtros não vazios
+        if ((di && di.value) || (df && df.value)) {
+            var dataInicialFmt = di && di.value ? formatarData(di.value) : '';
+            var dataFinalFmt = df && df.value ? formatarData(df.value) : '';
+            
+            if (dataInicialFmt && dataFinalFmt) {
+                headerFiltros.push(['Período', dataInicialFmt + ' até ' + dataFinalFmt]);
+            } else if (dataInicialFmt) {
+                headerFiltros.push(['Data Inicial', dataInicialFmt]);
+            } else if (dataFinalFmt) {
+                headerFiltros.push(['Data Final', dataFinalFmt]);
+            }
         }
-        var por = document.querySelector('input[name="filtro_por"]:checked');
-        if (por) {
-            var p2 = por.parentElement ? por.parentElement.querySelector('label') : null;
-            addIf('Filtro por', p2 ? p2.textContent.trim() : por.value);
-        }
+        
+        if (doc && doc.value) headerFiltros.push(['Documento', doc.value]);
+        if (pagamento && pagamento !== 'Selecione') headerFiltros.push(['Pagamento', pagamento]);
+        if (cadastro && cadastro !== 'Selecione') headerFiltros.push(['Cadastro', cadastro]);
+        if (titulo && titulo !== 'Selecione') headerFiltros.push(['Título', titulo]);
+        if (subtitulo && subtitulo !== 'Selecione') headerFiltros.push(['Subtítulo', subtitulo]);
+        if (custo && custo !== 'Selecione') headerFiltros.push(['Centro de Custos', custo]);
+        if (opcao) headerFiltros.push(['Opção', opcao]);
+        if (por) headerFiltros.push(['Filtro por', por]);
 
-        aoa.push([]);
-        return aoa;
+        headerFiltros.push([]); // linha vazia
+        headerFiltros.push([]); // linha vazia
+
+        // Combina header com dados
+        var aoaFinal = headerFiltros.concat(dados);
+
+        // Cria workbook
+        var ws = XLSX.utils.aoa_to_sheet(aoaFinal);
+        
+        // Define largura das colunas
+        var colWidths = [];
+        for (var i = 0; i < (dados[0] ? dados[0].length : 13); i++) {
+            colWidths.push({ wch: 18 });
+        }
+        ws['!cols'] = colWidths;
+
+        // Cria workbook e adiciona worksheet
+        var wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Contas a " + nome);
+
+        // Gera arquivo
+        var filename = "contas_a_" + nome + ".xlsx";
+        XLSX.writeFile(wb, filename);
+
+    } catch (error) {
+        console.error('Erro ao gerar Excel:', error);
+        alert('Erro ao gerar arquivo Excel. Verifique o console para mais detalhes.');
     }
-
-    var wb = XLSX.utils.table_to_book(tabela, {sheet: "Contas a"+nome});
-    var sheetName = wb.SheetNames[0];
-    var ws = wb.Sheets[sheetName];
-    var dataAoA = XLSX.utils.sheet_to_json(ws, {header:1});
-    var headerAoA = buildHeaderAoA();
-    var newAoA = headerAoA.concat(dataAoA);
-    var newWs = XLSX.utils.aoa_to_sheet(newAoA);
-    wb.Sheets[sheetName] = newWs;
-    XLSX.writeFile(wb, "contas_a_"+nome+".xlsx");
 }

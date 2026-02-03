@@ -288,7 +288,51 @@ function buildExportHeader(nome, nomeEmpresa) {
     return headerGeral;
 }
 
-// bloco logic removed — we will export the whole table and use CSS to avoid page breaks inside rows
+function ajustarUltimoBloco(blocos) {
+    if (blocos.length === 0) return;
+
+    const ultimo = blocos[blocos.length - 1];
+
+    if (ultimo.qtdLinhas === 1) {
+        const thead = ultimo.tabela.querySelector('thead');
+        if (thead) thead.remove();
+    }
+}
+
+
+function dividirTabelaEmBlocos(tabela, linhasPorBloco = 18) {
+    const blocos = [];
+
+    const thead = tabela.querySelector('thead');
+    const linhas = Array.from(tabela.querySelectorAll('tbody tr'));
+
+    for (let i = 0; i < linhas.length; i += linhasPorBloco) {
+        const blocoTabela = tabela.cloneNode(false);
+
+        // copia colgroup se existir
+        const colgroup = tabela.querySelector('colgroup');
+        if (colgroup) blocoTabela.appendChild(colgroup.cloneNode(true));
+
+        // copia thead
+        if (thead) blocoTabela.appendChild(thead.cloneNode(true));
+
+        const tbody = document.createElement('tbody');
+        linhas.slice(i, i + linhasPorBloco).forEach(tr => {
+            tbody.appendChild(tr.cloneNode(true));
+        });
+
+        blocoTabela.appendChild(tbody);
+        blocoTabela.classList.add('export-table');
+
+        blocos.push({
+            tabela: blocoTabela,
+            qtdLinhas: tbody.children.length
+        });
+    }
+
+    return blocos;
+}
+
 
 function gerarpdf(nome, nomeEmpresa = '') {
     var tabela = getTabelaSemAcoes();
@@ -401,15 +445,55 @@ function gerarpdf(nome, nomeEmpresa = '') {
             }
     `;
     container.appendChild(style);
+    const blocos = dividirTabelaEmBlocos(tabelaParaExport, 18);
+ajustarUltimoBloco(blocos);
+
+blocos.forEach((bloco, index) => {
+
+    const wrapper = document.createElement('div');
+    wrapper.classList.add('avoid-page-break');
+    wrapper.style.marginBottom = '16px';
+
+    // header apenas no início de cada página/bloco
+    const headerClone = buildExportHeader(nome, nomeEmpresa);
+    wrapper.appendChild(headerClone);
+
+    wrapper.appendChild(bloco.tabela);
+
+    // footer só no último bloco
+    if (index === blocos.length - 1) {
+        wrapper.appendChild(footer);
+    }
+
+    container.appendChild(wrapper);
+});
 
 
-    const headerEl = buildExportHeader(nome, nomeEmpresa);
-    container.appendChild(headerEl);
-    container.appendChild(tabelaParaExport);
-    container.appendChild(footer)
 
+    html2pdf()
+    .set(opt)
+    .from(container)
+    .toPdf()
+    .get('pdf')
+    .then(function (pdf) {
 
-    html2pdf().set(opt).from(container).save();
+        const totalPages = pdf.internal.getNumberOfPages();
+        const pageWidth = pdf.internal.pageSize.getWidth();
+
+        pdf.setFontSize(9);
+
+        for (let i = 1; i <= totalPages; i++) {
+            pdf.setPage(i);
+            pdf.text(
+                `Página ${i} de ${totalPages}`,
+                pageWidth - 10,
+                10,
+                { align: 'right' }
+            );
+        }
+    })
+    .save();
+
 }
 
 
@@ -429,91 +513,191 @@ function gerarpdf(nome, nomeEmpresa = '') {
 
 
 
-function gerarexcel(nome) {
-    var tabela = getTabelaSemAcoes();
-    if (!tabela) return;
-
-
-
-    // Remove 'R$' de todos os elementos da tabela
-    tabela.querySelectorAll('td, th').forEach(function(el) {
-        if (el.textContent.includes('R$')) {
-            el.textContent = el.textContent.replace(/R\$\s?/g, '').trim();
+function gerarexcel(nome, nomeEmpresa = '') {
+    try {
+        var tabela = getTabelaSemAcoes();
+        if (!tabela) {
+            alert("Tabela não encontrada!");
+            return;
         }
-    });
 
-    // Formata datas para dd-mm-YYYY em todos os elementos
-    const dataRegex = /(\d{4})-(\d{2})-(\d{2})/g;
-    tabela.querySelectorAll('td, th, div, span, h3, h4, h5, h6, h1, h2').forEach(function(el) {
-        el.childNodes.forEach(function(node) {
-            if (node.nodeType === 3) { // text node
-                node.nodeValue = node.nodeValue.replace(dataRegex, function(_, y, m, d) {
-                    return d + '-' + m + '-' + y;
-                });
+        // Função auxiliar para formatar datas de yyyy-mm-dd para dd/mm/yyyy
+        function formatarData(dataStr) {
+            if (!dataStr || dataStr.trim() === '') return '';
+            
+            const regex = /(\d{4})-(\d{2})-(\d{2})/;
+            const match = dataStr.match(regex);
+            
+            if (match) {
+                return match[3] + '/' + match[2] + '/' + match[1];
+            }
+            return dataStr;
+        }
+
+        // Função para extrair valor do select
+        function getSelectValue(selector) {
+            var el = document.querySelector(selector);
+            if (!el) return '';
+            return (el.options && el.options[el.selectedIndex]) ? 
+                   el.options[el.selectedIndex].text.trim() : '';
+        }
+
+        // Função para extrair valor do radio button
+        function getRadioValue(name) {
+            var checked = document.querySelector('input[name="' + name + '"]:checked');
+            if (!checked) return '';
+            var parent = checked.parentElement;
+            var lbl = parent ? parent.querySelector('label') : null;
+            return lbl ? lbl.textContent.trim() : checked.value;
+        }
+
+        // Clona a tabela para não alterar o DOM original
+        var tabelaClone = tabela.cloneNode(true);
+
+        // Remove símbolos de moeda
+        tabelaClone.querySelectorAll('td, th').forEach(function(el) {
+            if (el.textContent.includes('R$')) {
+                el.textContent = el.textContent.replace(/R\$\s?/g, '').trim();
             }
         });
-    });
 
-    // Converte datas para texto antes de exportar
-    var trs = tabela.querySelectorAll('tbody tr');
-    trs.forEach(function(tr) {
-        [1, 8, 9].forEach(function(idx) {
-            var td = tr.children[idx];
-            if (td) {
-                td.textContent = "'" + td.textContent + "'";
+        // Converte tabela HTML para array de arrays
+        var dados = [];
+        
+        // Adiciona cabeçalho
+        var thElements = tabelaClone.querySelectorAll('thead tr:last-child th');
+        if (thElements.length > 0) {
+            var headerRow = [];
+            thElements.forEach(function(th) {
+                headerRow.push(th.textContent.trim());
+            });
+            dados.push(headerRow);
+        }
+
+        // Adiciona linhas do corpo
+        var rows = tabelaClone.querySelectorAll('tbody tr');
+        rows.forEach(function(tr) {
+            // Ignora a linha de totais
+            if (tr.id === 'tr-totais') return;
+            
+            var row = [];
+            var tds = tr.querySelectorAll('td');
+            
+            tds.forEach(function(td, idx) {
+                var valor = td.textContent.trim();
+                
+                // Formata datas
+                valor = formatarData(valor);
+                
+                row.push(valor);
+            });
+            
+            if (row.length > 0) {
+                dados.push(row);
             }
         });
-    });
 
-    // Build header AOA (array of arrays) and prepend to sheet data
-    function buildHeaderAoA() {
-        var aoa = [];
+        // Adiciona linha de totais se existir
+        var trTotais = tabelaClone.querySelector('#tr-totais');
+        if (trTotais) {
+            var totalRow = [];
+            var totalTds = trTotais.querySelectorAll('td');
+            totalTds.forEach(function(td) {
+                var valor = td.textContent.trim();
+                valor = formatarData(valor);
+                totalRow.push(valor);
+            });
+            if (totalRow.length > 0) {
+                dados.push([]);
+                dados.push(totalRow);
+            }
+        }
+
+        // Constrói o header com filtros
+        var headerFiltros = [];
+        
+        // Título
         var titleEl = document.querySelector('.card .card-header h3') || document.querySelector('h3');
-        var titleText = titleEl ? titleEl.textContent.trim() : ("Relatorio de Movimentação Bancária");
-        aoa.push([titleText]);
-        aoa.push([]);
+        var titleText = titleEl ? titleEl.textContent.trim() : ('Relatório de Movimentação Bancária');
+        
+        headerFiltros.push([nomeEmpresa + ' - ' + titleText]);
+        headerFiltros.push([]); // linha vazia
 
+        // Coleta os filtros aplicados
         var di = document.querySelector('#filtro_data_inicial');
         var df = document.querySelector('#filtro_data_final');
-        var doc = document.querySelector('#filtro_nome');
-        var pagamento = document.querySelector('select[name="forma_pagamento"]');
-        var cadastro = document.querySelector('select[name="filtro_cadastro"]');
-        var titulo = document.querySelector('select[name="filtro_titulo"]') || document.querySelector('#titulo-filtro');
-        var subtitulo = document.querySelector('select[name="filtro_subtitulo"]') || document.querySelector('#subtitulo-filtro');
+        var titulo = getSelectValue('select[name="filtro_titulo"]') || getSelectValue('#titulo-filtro');
+        var subtitulo = getSelectValue('select[name="filtro_subtitulo"]') || getSelectValue('#subtitulo-filtro');
+        var tipo = getSelectValue('select[name="filtro_tipo"]');
+        var conta = getSelectValue('select[name="filtro_conta"]');
+        var conciliado = document.querySelector('input[name="filtro_conciliado"]');
+        var opcao = getRadioValue('opcao_filtro');
+        var por = getRadioValue('filtro_por');
 
-        function addIf(label, value) { if (value && value !== '' && value !== 'Selecione') aoa.push([label, value]); }
-
-        addIf('Data Inicial', di && di.value);
-        addIf('Data Final', df && df.value);
-        addIf('Documento', doc && doc.value);
-        addIf('Pagamento', pagamento && (pagamento.options[pagamento.selectedIndex] && pagamento.options[pagamento.selectedIndex].text));
-        addIf('Cadastro', cadastro && (cadastro.options[cadastro.selectedIndex] && cadastro.options[cadastro.selectedIndex].text));
-        addIf('Titulo', titulo && (titulo.options[titulo.selectedIndex] && titulo.options[titulo.selectedIndex].text));
-        addIf('Subtitulo', subtitulo && (subtitulo.options[subtitulo.selectedIndex] && subtitulo.options[subtitulo.selectedIndex].text));
-
-        // radios
-        var opc = document.querySelector('input[name="opcao_filtro"]:checked');
-        if (opc) {
-            var p = opc.parentElement ? opc.parentElement.querySelector('label') : null;
-            addIf('Opção', p ? p.textContent.trim() : opc.value);
-        }
-        var por = document.querySelector('input[name="filtro_por"]:checked');
-        if (por) {
-            var p2 = por.parentElement ? por.parentElement.querySelector('label') : null;
-            addIf('Filtro por', p2 ? p2.textContent.trim() : por.value);
+        // Adiciona saldo inicial se disponível
+        var saldoInicialEl = document.querySelector('#saldo-inicial-pdf');
+        if (saldoInicialEl) {
+            var saldoInicial = saldoInicialEl.textContent.replace(/Saldo Inicial: R\$\s?/g, '').trim();
+            if (saldoInicial) {
+                headerFiltros.push(['Saldo Inicial', saldoInicial]);
+            }
         }
 
-        aoa.push([]);
-        return aoa;
+        // Adiciona filtros não vazios
+        if ((di && di.value) || (df && df.value)) {
+            var dataInicialFmt = di && di.value ? formatarData(di.value) : '';
+            var dataFinalFmt = df && df.value ? formatarData(df.value) : '';
+            
+            if (dataInicialFmt && dataFinalFmt) {
+                headerFiltros.push(['Período', dataInicialFmt + ' até ' + dataFinalFmt]);
+            } else if (dataInicialFmt) {
+                headerFiltros.push(['Data Inicial', dataInicialFmt]);
+            } else if (dataFinalFmt) {
+                headerFiltros.push(['Data Final', dataFinalFmt]);
+            }
+        }
+        
+        if (tipo && tipo !== 'Selecione') headerFiltros.push(['Tipo', tipo]);
+        if (conta && conta !== 'Selecione') headerFiltros.push(['Conta', conta]);
+        if (titulo && titulo !== 'Selecione') headerFiltros.push(['Título', titulo]);
+        if (subtitulo && subtitulo !== 'Selecione') headerFiltros.push(['Subtítulo', subtitulo]);
+        if (conciliado && conciliado.checked) headerFiltros.push(['Conciliado', 'Sim']);
+        if (opcao) headerFiltros.push(['Opção', opcao]);
+        if (por) headerFiltros.push(['Filtro por', por]);
+
+        // Adiciona saldo final se disponível
+        var saldoFinalEl = document.querySelector('#saldo-final-pdf strong');
+        if (saldoFinalEl) {
+            headerFiltros.push([]);
+            headerFiltros.push([saldoFinalEl.textContent.trim()]);
+        }
+
+        headerFiltros.push([]); // linha vazia
+        headerFiltros.push([]); // linha vazia
+
+        // Combina header com dados
+        var aoaFinal = headerFiltros.concat(dados);
+
+        // Cria workbook
+        var ws = XLSX.utils.aoa_to_sheet(aoaFinal);
+        
+        // Define largura das colunas
+        var colWidths = [];
+        for (var i = 0; i < (dados[0] ? dados[0].length : 10); i++) {
+            colWidths.push({ wch: 18 });
+        }
+        ws['!cols'] = colWidths;
+
+        // Cria workbook e adiciona worksheet
+        var wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Relatório de " + nome);
+
+        // Gera arquivo
+        var filename = "relatorio_" + nome + ".xlsx";
+        XLSX.writeFile(wb, filename);
+
+    } catch (error) {
+        console.error('Erro ao gerar Excel:', error);
+        alert('Erro ao gerar arquivo Excel. Verifique o console para mais detalhes.');
     }
-
-    var wb = XLSX.utils.table_to_book(tabela, {sheet: "relatorio_"+nome});
-    var sheetName = wb.SheetNames[0];
-    var ws = wb.Sheets[sheetName];
-    var dataAoA = XLSX.utils.sheet_to_json(ws, {header:1});
-    var headerAoA = buildHeaderAoA();
-    var newAoA = headerAoA.concat(dataAoA);
-    var newWs = XLSX.utils.aoa_to_sheet(newAoA);
-    wb.Sheets[sheetName] = newWs;
-    XLSX.writeFile(wb, "relatorio_"+nome+".xlsx");
 }
