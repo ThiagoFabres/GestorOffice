@@ -1,3 +1,6 @@
+<!DOCTYPE html>
+
+
 <?php
 
 require_once __DIR__ . '/../db/entities/usuarios.php';
@@ -103,14 +106,14 @@ $total_rec_lancamento = number_format($total_rec_lancamento, 2, ',', '.');
 $receber_pagamento = Rec02::read(id_empresa: $_SESSION['usuario']->id_empresa, filtro_data_inicial:$data_inicial, filtro_data_final:$data_final, filtro_por:'pagamento');
 $total_rec_pagamento = 0;
 foreach($receber_pagamento as $rec02) {
-    $total_rec_pagamento += $rec02->valor_par;
+    $total_rec_pagamento += $rec02->valor_pag;
 }
 
 
 $pagar_pagamento = Pag02::read(id_empresa: $_SESSION['usuario']->id_empresa, filtro_data_inicial:$data_inicial, filtro_data_final:$data_final, filtro_por:'pagamento');
 $total_pag_pagamento = 0;
 foreach($pagar_pagamento as $pag02) {
-    $total_pag_pagamento += $pag02->valor_par;
+    $total_pag_pagamento += $pag02->valor_pag;
 }
 
 $saldo_pagamento = $total_rec_pagamento - $total_pag_pagamento;
@@ -119,10 +122,8 @@ $total_pag_pagamento = number_format($total_pag_pagamento, 2, ',', '.');
 $total_rec_pagamento = number_format($total_rec_pagamento, 2, ',', '.');
 ?>
 
-
-<!DOCTYPE html>
-
-
+<head>
+<?php require_once __DIR__ . '/../componentes/header/header.php' ?>
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.3/html2pdf.bundle.min.js" integrity="sha512-yu5WG6ewBNKx8svICzUA01vozhmiQCVfzjzW40eCHJdsDRaOifh9hPlWBDex5b32gWCzawTp1F3FJz60ps6TnQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -135,26 +136,28 @@ $total_rec_pagamento = number_format($total_rec_pagamento, 2, ',', '.');
     <link href=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css " rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
     <link rel="stylesheet" href="style/dash.css">
-    <link rel="stylesheet" href="style/responsivo.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
+    <link rel="shortcut icon" href="/gestor-office.png" type="image/x-icon">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dragscroll/0.0.8/dragscroll.min.js"></script>
+    <link rel="stylesheet" href="style/responsivo.css">
 
     <title>Gestor Office Control</title>
 </head>
+
 
 <body id="body" style="background-color: #d3d5d7ff;">
 
 
     <?php require_once __DIR__ . '/../componentes/lateral/lateral.php'?>
-    <?php require_once __DIR__ . '/../componentes/header/header.php' ?>
 
 
 
-    <div class="main d-flex justify-content-evenly align-items-center" id="container" style="padding-block:0; height: calc(100vh - 75px); background-color: #d3d5d7ff;">
-        <div class="d-flex flex-row gap-5 w-100 justify-content-evenly" id="dashboard-div-group">
-            <div class="d-flex flex-column w-100 ustify-content-evenly" style="gap:5em">
+    <div class="main d-flex justify-content-evenly align-items-center main-dash" id="container" >
+        <div class="d-flex w-100 flex-column justify-content-evenly" id="dashboard-div-group" style="gap:5em;">
+            
+
+            <div class="d-flex  w-100" style="gap:5em">
                 <div class="dashboard-group justify-content-evenly">
                     <table class="table-bordered">
 
@@ -226,81 +229,6 @@ $total_rec_pagamento = number_format($total_rec_pagamento, 2, ',', '.');
                         </tbody>
                     </table>
                 </div>
-
-                <div class="dashboard-group justify-content-evenly">
-                    <table class="table-bordered">
-
-                                <h1 style="white-space: nowrap;">Saldo Mensal Lançamento</h1>
-
-                        <tbody>
-                            
-                            <tr>
-                                <td>
-                                    <table class="table-bordered">
-                                        <thead>
-                                            <tr class="tr-clientes-dash"style="background-color: #ccc;" >
-                                                <th>+</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr class="tr-clientes-dash">
-                                                <td>
-                                                    <div class="d-flex flex-row justify-content-center">
-                                                         
-                                                        <div><?=$total_rec_lancamento?></div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </td>
-
-                                <td>
-                                    <table class="table-bordered w-100">
-                                        <thead>
-                                            <tr class="tr-clientes-dash" style="background-color: #ccc;">
-                                                <th>-</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr class="tr-clientes-dash">
-                                                <td>
-                                                    <div class="d-flex flex-row justify-content-center">
-                                                         
-                                                        <div><?=$total_pag_lancamento?></div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </td>
-
-                                <td>
-                                    <table class="table-bordered w-100">
-                                        <thead>
-                                            <tr class="tr-clientes-dash" style="background-color: #ccc;">
-                                                <th>=</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr class="tr-clientes-dash">
-                                                <td>
-                                                    <div class="d-flex flex-row justify-content-center">
-                                                         
-                                                        <div><?=$saldo_lancamento?></div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="d-flex flex-column w-100" style="gap:5em">
                 <div class="dashboard-group">
                     <table class="table-bordered">
                         <thead>
@@ -364,6 +292,80 @@ $total_rec_pagamento = number_format($total_rec_pagamento, 2, ',', '.');
                                                     <div class="d-flex flex-row justify-content-center">
                                                          
                                                         <div><?=$total_pag_a_vencer?></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+            </div>
+            <div class="d-flex w-100 justify-content-evenly" style="gap:5em">
+                <div class="dashboard-group justify-content-evenly">
+                    <table class="table-bordered">
+
+                                <h1 style="white-space: nowrap;">Saldo Mensal Lançamento</h1>
+
+                        <tbody>
+                            
+                            <tr>
+                                <td>
+                                    <table class="table-bordered">
+                                        <thead>
+                                            <tr class="tr-clientes-dash"style="background-color: #ccc;" >
+                                                <th>+</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="tr-clientes-dash">
+                                                <td>
+                                                    <div class="d-flex flex-row justify-content-center">
+                                                         
+                                                        <div><?=$total_rec_lancamento?></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+
+                                <td>
+                                    <table class="table-bordered w-100">
+                                        <thead>
+                                            <tr class="tr-clientes-dash" style="background-color: #ccc;">
+                                                <th>-</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="tr-clientes-dash">
+                                                <td>
+                                                    <div class="d-flex flex-row justify-content-center">
+                                                         
+                                                        <div><?=$total_pag_lancamento?></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+
+                                <td>
+                                    <table class="table-bordered w-100">
+                                        <thead>
+                                            <tr class="tr-clientes-dash" style="background-color: #ccc;">
+                                                <th>=</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="tr-clientes-dash">
+                                                <td>
+                                                    <div class="d-flex flex-row justify-content-center">
+                                                         
+                                                        <div><?=$saldo_lancamento?></div>
                                                     </div>
                                                 </td>
                                             </tr>

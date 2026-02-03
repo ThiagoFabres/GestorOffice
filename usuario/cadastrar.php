@@ -69,7 +69,10 @@ if(isset($id) && (isset($acao) && $acao == 'editar')) {
     } else if($get_cadastro == 'pagamento') {
     $cadastro_target = TipoPagamento::read($id)[0];
     $cadastros_empresa = TipoPagamento::read(null,$_SESSION['usuario']->id_empresa);
-    }   
+    } else if($get_cadastro == 'custo') {
+    $cadastro_target = CentroCustos::read($id)[0];
+    $cadastros_empresa = CentroCustos::read(null,$_SESSION['usuario']->id_empresa);
+    }
 
     foreach($cadastros_empresa as $cadastro_empresa) {
        
@@ -131,7 +134,7 @@ $estadosLista = [
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
+    <link rel="shortcut icon" href="/gestor-office.png" type="image/x-icon">
     <title>Gestor Office Control</title>
 </head>
 
@@ -140,6 +143,7 @@ $estadosLista = [
 
     <?php require_once __DIR__ . '/../componentes/lateral/lateral.php'?>
     <?php require_once __DIR__ . '/../componentes/header/header.php' ?>
+    <?php require_once __DIR__ . '/../componentes/footer/footer.php'?>
 
 
 
@@ -191,14 +195,14 @@ $estadosLista = [
                     <div class="col-md-2" style="width: 15%;">
                         <label for="dataInicio" class="form-label">Data inicial:</label>
                         <div class="input-group">
-                            <input name="dataInicial" value="<?= $get_data_inicial ?? "" ?>" type="date" class="form-control" id="dataInicio" placeholder="dd/mm/aaaa" style="border-radius: 0.25em;">
+                            <input name="data_inicial" value="<?= $get_data_inicial ?? "" ?>" type="date" class="form-control" id="dataInicio" placeholder="dd/mm/aaaa" style="border-radius: 0.25em;">
                             
                         </div>
                     </div>
                     <div class="col-md-2" style="width: 15%;">
                         <label for="dataFinal" class="form-label">Data final:</label>
                         <div class="input-group">
-                            <input name="dataFinal"  value="<?= $get_data_inicial ?? "" ?>" type="date" class="form-control" id="dataFinal" placeholder="dd/mm/aaaa" style="border-radius: 0.25em;">
+                            <input name="data_final"  value="<?= $get_data_final ?? "" ?>" type="date" class="form-control" id="dataFinal" placeholder="dd/mm/aaaa" style="border-radius: 0.25em;">
                             
                         </div>
                     </div>
@@ -887,7 +891,7 @@ $estadosLista = [
                 
 
                     <div class="card">
-                        <div class="card-header" style="display:flex; flex-direction: row; justify-content: space-between;"><h3><?= ucfirst($get_cadastro) . 's' ?></h3> <div class="botao">
+                        <div class="card-header" style="display:flex; flex-direction: row; justify-content: space-between;"><h3><?php if($get_cadastro != 'custo') {echo ucfirst($get_cadastro) . 's';} else {echo 'Centros de Custos';} ?></h3> <div class="botao">
                         <a href="cadastrar.php?cadastro=<?= $get_cadastro ?>&acao=adicionar" class="btn btn-primary btn-lg botao-adm-adicionar"> <?php if ($get_cadastro == 'cidade') {echo 'Nova';} else { echo 'Novo';} ?> <?= ucfirst($get_cadastro) ?></a>
                     </div></div>
                 
@@ -1009,7 +1013,7 @@ switch ($get_cadastro) {
 
 <?php } } 
 
- if(isset($acao) && $acao == 'editar' && ($get_cadastro == 'bairro' || $get_cadastro == 'cidade' || $get_cadastro == 'pagamento' || $get_cadastro == 'categoria')){  
+ if(isset($acao) && $acao == 'editar' && ($get_cadastro == 'bairro' || $get_cadastro == 'cidade' || $get_cadastro == 'pagamento' || $get_cadastro == 'categoria' || $get_cadastro == 'custo')) {  
  
 
     $cadastro = checar_cadastro($cadastros_empresa[0], $cadastro_target);
@@ -1017,6 +1021,7 @@ switch ($get_cadastro) {
     else if($get_cadastro == 'cidade'){$cadastro_titulo = 'a cidade';}
     else if($get_cadastro == 'pagamento'){$cadastro_titulo = 'o pagamento';}
     else if($get_cadastro == 'categoria'){$cadastro_titulo = 'a categoria';}
+    else if($get_cadastro == 'custo'){$cadastro_titulo = 'o centro de custos';}
     ?>
 
         
@@ -1165,6 +1170,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.location.href = 'cadastrar.php?cadastro=<?= $get_cadastro ?>';
             </script>
     <?php } }?>
+<?php if(isset($erro) && $erro == 'usado_e') { ?>
+    <script>
+        alert('Não é possivel Excluir esse cadastro, pois existem Lançamentos vinculados a ele.');
+        window.location.href = 'cadastrar.php?cadastro=cliente';
+    </script>
+<?php } ?>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>

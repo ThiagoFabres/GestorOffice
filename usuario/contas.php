@@ -25,6 +25,8 @@ if($target != 'titulo' && $target != 'subtitulo' && $target != null) {
     header('Location: contas.php');
     exit;
 }
+$lateral_target = 'cadastro';
+$get_cadastro = 'contas';
 
 $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
 
@@ -49,7 +51,7 @@ $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
     <link rel="stylesheet" href="/style.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
+    <link rel="shortcut icon" href="/gestor-office.png" type="image/x-icon">
     <title>Gestor Office Control</title>
 </head>
 

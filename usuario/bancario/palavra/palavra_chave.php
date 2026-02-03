@@ -44,6 +44,7 @@ $acao = filter_input(INPUT_GET, 'acao', FILTER_SANITIZE_STRING);
 
 
 <link rel="stylesheet" href="/style.css">
+<link rel="stylesheet" href="/style.css">
 <link rel="stylesheet" href="/componentes/modais/lancamentos/modais.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
 <link rel="stylesheet" href="../../choices/choices.css"></link>
@@ -55,7 +56,7 @@ $acao = filter_input(INPUT_GET, 'acao', FILTER_SANITIZE_STRING);
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
+<link rel="shortcut icon" href="/gestor-office.png" type="image/x-icon">
 <title>Gestor Office Control</title>
 </head>
 
@@ -114,7 +115,7 @@ $acao = filter_input(INPUT_GET, 'acao', FILTER_SANITIZE_STRING);
 
 <?php require_once __DIR__ . '/../../../componentes/modais/bancario/modal_cadastro_palavra.php'; ?>
 
-    
+<?php require_once __DIR__ . '/../../../componentes/footer/footer.php' ?>     
 </body>
 
 <script>
@@ -230,54 +231,7 @@ $acao = filter_input(INPUT_GET, 'acao', FILTER_SANITIZE_STRING);
     //     }
     // }
 
-    function encolher() {
-        let barra = document.getElementById('barra-lateral');
-        let container = document.getElementById('container');
-        let superior = document.getElementById('header');
-        let body = document.getElementById('body');
-
-
-
-
-
-
-        if (barra.style.animationName === 'encolher') {
-
-            superior.style.animationName = 'expandir-header'
-            superior.style.animationDuration = '0.5s';
-            superior.style.animationFillMode = 'backwards';
-
-            barra.style.animationName = 'expandir';
-            barra.style.animationDuration = '0.5s';
-            barra.style.animationFillMode = 'backwards';
-
-            container.style.animationName = 'expandir-container'
-            container.style.animationDuration = '0.5s';
-            container.style.animationFillMode = 'backwards';
-
-            body.style.animationName = 'expandir-container'
-            body.style.animationDuration = '0.5s';
-            body.style.animationFillMode = 'backwards';
-            return;
-        } else {
-
-            superior.style.animationName = 'encolher-header'
-            superior.style.animationDuration = '0.5s';
-            superior.style.animationFillMode = 'forwards';
-
-            barra.style.animationName = 'encolher';
-            barra.style.animationDuration = '0.5s';
-            barra.style.animationFillMode = 'forwards';
-
-            container.style.animationName = 'encolher'
-            container.style.animationDuration = '0.5s';
-            container.style.animationFillMode = 'forwards';
-
-            body.style.animationName = 'encolher'
-            body.style.animationDuration = '0.5s';
-            body.style.animationFillMode = 'forwards';
-        }
-    }
+    
 
     document.addEventListener('DOMContentLoaded', function () {
         var modalQuitar = document.getElementById('modal_quitar');

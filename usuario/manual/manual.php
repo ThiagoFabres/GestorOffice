@@ -29,12 +29,12 @@ if($target != 'titulo' && $target != 'subtitulo' && $target != null) {
 $titulos = [
     'Dashboard',
     'Cadastros',
-    'Plano de Contas',
-    'Lançamentos (Receber e Pagar)',
+    'Controle Financeiro',
     'Controle Bancário',
-    'DRE Financeiro',
-    'DRE Bancário',
-    'Lançamentos Recorrentes'
+    'Controle de Cartão',
+    'Recorrentes',
+    'DRE',
+    'Importação de arquivo OFX'
     
 ];
 $videos = [
@@ -61,7 +61,7 @@ $videos = [
     <link rel="stylesheet" href="/style.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
+    <link rel="shortcut icon" href="/gestor-office.png" type="image/x-icon">
     <title>Gestor Office Control</title>
 </head>
 
@@ -186,7 +186,7 @@ $videos = [
     </div>
     </div>
     </div>
-    
+<?php require_once __DIR__ . '/../../componentes/footer/footer.php' ?> 
 </body>
 
 <script>
