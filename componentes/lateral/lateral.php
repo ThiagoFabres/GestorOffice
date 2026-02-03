@@ -29,36 +29,35 @@
                                         class="bi bi-tag"></i>Categoria</a></li>
                             <li class=" menu-li <?php if(isset($get_cadastro) && $get_cadastro == 'custo') { ?> menu-li-atual <?php } ?>"><a href="/usuario/cadastrar.php?cadastro=custo" class="link-light text-decoration-none"><i 
                                         class="bi bi-bank"></i>Centro de custos</a></li>
+                            <li class=" menu-li <?php if(isset($get_cadastro) && $get_cadastro == 'contas') { ?> menu-li-atual <?php } ?>"><a href="/usuario/contas.php" class="link-light text-decoration-none">
+                                <i class="bi bi-journal-bookmark"></i>Plano de Contas</a></li>
 
                         </ul>
                     </div>
                 </div>
             <?php } ?>
 
-            <div class="menu-item <?php if($lateral_target == 'contas') {?>menu-item-atual<?php } ?>">
-                <a href="/usuario/contas.php">
-                    <div style=" align-items:center;"><i class="bi bi-journal-bookmark"></i></div> Plano
-                    de Contas
-                </a>
-            </div>
 
-            <div class="menu-item <?php if($lateral_target == 'receber') {?>menu-item-atual<?php } ?>">
-                <a href="/usuario/receber.php">
-                    <div style=" align-items:center;"><i class="bi bi-wallet"></i></div> Contas a Receber
+            <div class="menu-item accordion <?php if( isset($lateral_financeiro) && $lateral_financeiro ){ 
+                ?>menu-item-atual<?php } ?>">
+                <a class="nav-link text-white" data-bs-toggle="collapse" href="#fincanceiroMenu" role="button"
+                    aria-expanded="false" aria-controls="fincanceiroMenu">
+                    <div style=" align-items:center;"><i class="bi bi-briefcase"></i></div> Controle Financeiro
                 </a>
-            </div>
-
-            <div class="menu-item <?php if($lateral_target == 'pagar') {?>menu-item-atual<?php } ?>">
-                <a href="/usuario/pagar.php">
-                    <div style=" align-items:center;"><i class="bi bi-cash-stack"></i></div> Contas a
-                    Pagar
-                </a>
-            </div>
-
-            <div class="menu-item <?php if($lateral_target == 'dre'){ ?>menu-item-atual<?php } ?>">
-                <a href="/usuario/dre/sintetico.php">
-                    <div style=" align-items:center;"><i class="bi bi-file-earmark-text"></i></div>DRE Financeiro
-                </a>
+                <div class="<?php if( !isset($lateral_financeiro) || !$lateral_financeiro ){ ?>collapse<?php } ?>" id="fincanceiroMenu">
+                    <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
+                        <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'receber') { ?> menu-li-atual <?php } ?>"><a href="/usuario/receber.php" class="link-light text-decoration-none">
+                            <i class="bi bi-wallet"></i>
+                            Contas a Receber</a></li>
+                        <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'pagar') { ?> menu-li-atual <?php } ?>"><a href="/usuario/pagar.php" class="link-light text-decoration-none">
+                            <i class="bi bi-cash-stack"></i>
+                            Contas a Pagar</a></li>
+                        <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'dre') { ?> menu-li-atual <?php } ?>"><a href="/usuario/dre/sintetico.php" class="link-light text-decoration-none">
+                            <i class="bi bi-file-earmark-text"></i>
+                            DRE Financeiro</a></li>
+ 
+                    </ul>
+                </div>
             </div>
             <div class="menu-item accordion <?php if( isset($lateral_bancario) && $lateral_bancario ){ 
                 ?>menu-item-atual<?php } ?>">
@@ -80,10 +79,22 @@
                     </ul>
                 </div>
             </div>
-            <div class="menu-item <?php if($lateral_target == 'comparativo') {?>menu-item-atual<?php } ?>">
-                <a href="/usuario/dre/comparativo.php">
-                    <div style=" align-items:center;"><i class="bi bi-arrow-left-right"></i></div> DRE Comparativo
+            
+            <div class="menu-item accordion <?php if( isset($lateral_cartao) && $lateral_cartao ){ 
+                ?>menu-item-atual<?php } ?>">
+                <a class="nav-link text-white" data-bs-toggle="collapse" href="#cartaoMenu" role="button"
+                    aria-expanded="false" aria-controls="cartaoMenu">
+                    <div style=" align-items:center;"><i class="bi bi-credit-card"></i></div>Controle Cartão
                 </a>
+                <div class="<?php if( !isset($lateral_cartao) || !$lateral_cartao ){ ?>collapse<?php } ?>" id="cartaoMenu">
+                    <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
+                        <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'cadastro_cartao') { ?> menu-li-atual <?php } ?>"><a href="/usuario/cartao/cadastro_cartao.php" class="link-light text-decoration-none">
+                            <i class="bi bi-wallet"></i>Cadastro</a></li>
+                        <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'cartao_vendas') { ?> menu-li-atual <?php } ?>"><a href="/usuario/cartao/cadastro_vendas.php" class="link-light text-decoration-none">
+                            <i class="bi bi-coin"></i></i>Lançamento Vendas</a></li>
+ 
+                    </ul>
+                </div>
             </div>
             <div class="menu-item accordion <?php if( isset($lateral_recorrente) && $lateral_recorrente ){ 
                 ?>menu-item-atual<?php } ?>">
@@ -101,6 +112,11 @@
                     </ul>
                 </div>
             </div>
+            <div class="menu-item <?php if($lateral_target == 'comparativo') {?>menu-item-atual<?php } ?>">
+                <a href="/usuario/dre/comparativo.php">
+                    <div style=" align-items:center;"><i class="bi bi-arrow-left-right"></i></div> DRE Comparativo
+                </a>
+            </div>
 
             <div class="menu-item <?php if($lateral_target == 'manual') {?>menu-item-atual<?php } ?>">
                 <a href="/usuario/manual/manual.php">
@@ -113,5 +129,4 @@
         </div>
 
     </nav>
-
-    
+    <?php require_once __DIR__ . '/../../componentes/footer/footer.php'?>
