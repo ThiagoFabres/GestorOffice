@@ -6,7 +6,10 @@
     margin-right: auto;
     margin-bottom: 0.5em;
 }
-
+#custom-context-menu {
+    width: 220px;
+    height: 220px;
+}
 select[readonly] {
   pointer-events: none;
   touch-action: none;
@@ -29,6 +32,22 @@ label{
     white-space: nowrap;
     font-size: 90%;
 }
+.r-total-lanc {
+    display: flex;
+    flex-direction: row;
+    font-size: 10px;
+}
+.r-total-lanc div {
+    font-size: 30px !important; 
+}
+#dashboard-div-group {
+    display: flex;
+    flex-direction: column;
+}
+#dashboard-div-group div.d-flex{
+    display: flex;
+    flex-direction: row;
+}
 .descricao-full {
         white-space: pre-wrap;
         word-break: break-word;
@@ -39,7 +58,7 @@ label{
 #custom-context-menu {
     display: none;
     position:absolute; 
-    z-index:9999; 
+    z-index:21; 
     padding: 1em;
     background:#fff; 
     border:1px solid #ccc; 
@@ -153,7 +172,10 @@ input[type="checkbox"]:checked {
     background-color: #5856d6;
 }
 
-
+.card-footer {
+    background-color: #f1f3f6;
+    border: 1px solid #e1e2e4;
+}
 
 .form-pagamento {
     display: flex;
@@ -164,6 +186,9 @@ input[type="checkbox"]:checked {
 .inputs-pagamento-group {
     width: 60%;
     height: 100%;
+}
+.inputs-pagamento-text div {
+    width: 100%;
 }
 .selects-pagamento{
     width: 30%;
@@ -191,7 +216,14 @@ input[type="checkbox"]:checked {
     width: 100%;
 }
 
-
+.r-inputs-data {
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+}
+.r-inputs-data div {
+    width: 100%;
+}
 
 .inputs-pagamento-text {
     display: flex; 
@@ -349,13 +381,21 @@ input[type="checkbox"]:checked {
   color: black;
 }
 
+
 #tr-totais {
     background-color: #cececeff;
 }
 
 #tr-totais td {
-    background-color: #cececeff;
-    font-weight: bold;
+    background-color: #cececeff ;
+    font-weight: bold ;
+    overflow: visible ;
+    text-overflow: unset ;
+    white-space: normal ;
+    word-break: normal ;
+    font-size: 17px ;
+    width: fit-content ;
+    padding: 0.8em ;
 }
 
 
@@ -581,8 +621,12 @@ input[type="checkbox"]:checked {
 }
 
 html, body {
+    padding: 0;
+    border: 0;
+    margin: 0;
         background-color: #f1f3f6;
-
+    width: 100%;
+    height: 100%;
     font-family: Arial, sans-serif;
 }
 
@@ -599,6 +643,12 @@ html, body {
     padding-inline: 5%;
     padding-block: 2.5%;
     align-items: center;
+}
+
+.main-dash {
+    padding-block:0;
+    height: calc(100vh - 66px); 
+    background-color: #d3d5d7ff;
 }
 
 .main-edit {
