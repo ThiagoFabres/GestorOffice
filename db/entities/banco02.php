@@ -74,15 +74,17 @@ class Ban02 {
         $id_original = null,
         $read_desmembramento = null,
         $dre_read = null,
-        $filtro_operacional = null
+        $filtro_operacional = null,
+        $ordenar_por = null,
+        $direcao = ' ASC'
         ) {
 
         $pdo = (new Database())->connect();
         if($read_paginas != null && $read_paginas) {
-            $sql = 'SELECT COUNT(*)
+            $query = 'SELECT COUNT(*)
             FROM ban02';
         } else {
-            $sql = 'SELECT * FROM ban02';
+            $query = 'SELECT * FROM ban02';
         }
         $conditions = [];
 
@@ -155,19 +157,64 @@ class Ban02 {
         
 
         if ($conditions) {
-            $sql .= ' WHERE ' . implode(' AND ', $conditions);
+            $query .= ' WHERE ' . implode(' AND ', $conditions);
         }
 
-        $sql .= ' ORDER BY data DESC, documento DESC';
+        switch($ordenar_por) {
+    case 'documento':
+        if (strpos($query, 'pag01') === false) {
+            $query = str_replace(
+                'FROM pag02',
+                'FROM pag02 p2 INNER JOIN pag01 p1 ON p2.id_pag01 = p1.id',
+                $query
+            );
+        }
+        $query .= ' ORDER BY documento';
+        break;
+
+    case 'data':   
+        $query .= ' ORDER BY data asc';
+        break;
+    case 'nome':
+        $query .= ' ORDER BY razao_soc';
+        break;
+    case 'valor':
+        $query .= ' ORDER BY valor ' . $direcao;
+        break;
+    case 'valor_parcela':
+        $query .= ' ORDER BY valor_par';
+        break;
+
+    case 'data_vencimento':
+        $query .= ' ORDER BY vencimento';
+        break;
+
+    case 'data_pagamento':
+        $query .= ' ORDER BY data_pag';
+        break;
+
+    case 'valor_pagamento':
+        $query .= ' ORDER BY valor_pag';
+        break;
+    case 'tipo_pagamento':
+
+        break;
+    case 'parcela':
+
+        break;
+    default:
+        $query .= ' ORDER BY data desc, documento desc';
+        break;
+    }
 
         if($numero_exibir != null) {
-            $sql .= ' LIMIT ' . intval($numero_exibir);
+            $query .= ' LIMIT ' . intval($numero_exibir);
         }
         if($numero_pagina > 1) {
-            $sql .= ' OFFSET ' . intval($numero_exibir *( $numero_pagina - 1));
+            $query .= ' OFFSET ' . intval($numero_exibir *( $numero_pagina - 1));
         }
 
-        $stmt = $pdo->prepare($sql);
+        $stmt = $pdo->prepare($query);
 
         if ($id !== null) {
             $stmt->bindValue(':id', $id);
