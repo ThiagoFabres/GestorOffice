@@ -7,6 +7,7 @@ require_once __DIR__ . '/../../db/entities/recebimentos.php';
 require_once __DIR__ . '/../../db/entities/pagar.php';
 require_once __DIR__ . '/../../db/entities/pagamento.php';
 require_once __DIR__ . '/../../db/entities/centrocustos.php';
+
 session_start();
 
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
@@ -14,6 +15,8 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     exit;
 
 }
+require_once __DIR__ . '/../../db/buscar_documento_pag.php';
+require_once __DIR__ . '/../../db/buscar_documento_rec.php';
 
 $view = filter_input(INPUT_POST, 'view');
 $documento_inicial = filter_input(INPUT_POST, 'documento_inicial');
@@ -29,13 +32,16 @@ $valor = str_replace(',', '.', $valor);
 
 $descricao = filter_input(INPUT_POST, 'descricao') ?? '';
 
+
 if($view == 'receber') {
+    $documento_inicial = buscarDocumentoRec();
     if(Rec02::read(id_empresa:$_SESSION['usuario']->id_empresa, filtro_documento:$documento_inicial)) {
         header('Location:receber.php');
         exit;
     }
 }
 if($view == 'pagar') {
+    $documento_inicial = buscarDocumentoPag();
     if(Pag02::read(id_empresa:$_SESSION['usuario']->id_empresa, filtro_documento:$documento_inicial)) {
         header('Location:pagar.php');
         exit;

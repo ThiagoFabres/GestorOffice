@@ -8,9 +8,9 @@ require_once __DIR__ . '/../db/entities/categoria.php';
 require_once __DIR__ . '/../db/entities/usuarios.php';
 require_once __DIR__ . '/../db/entities/pagamento.php';
 require_once __DIR__ . '/../db/entities/contas.php';
-require_once __DIR__ . '/..//db/entities/recebimentos.php';
-require_once __DIR__ . '/..//db/entities/pagar.php';
-require_once __DIR__ . '/..//db/entities/centrocustos.php';
+require_once __DIR__ . '/../db/entities/recebimentos.php';
+require_once __DIR__ . '/../db/entities/pagar.php';
+require_once __DIR__ . '/../db/entities/centrocustos.php';
 
 session_start();
 
@@ -21,6 +21,9 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     exit;
 
 }
+require_once __DIR__ . '/../db/buscar_documento_pag.php';
+require_once __DIR__ . '/../db/buscar_documento_rec.php';
+
 
 $view = filter_input(INPUT_POST, 'view');
 if ($view == null) {
@@ -132,11 +135,14 @@ if (isset($view) && $view == 'cadastro') {
                         else header('Location: cadastrar.php?cadastro=cliente');
                         exit;
                     }
+                    header('Location:cadastrar.php?cadastro=cliente');
+                    exit;
                 }
                 
 
 
-
+                header('Location:cadastrar.php?cadastro=cliente');
+                exit;
                 break;
 
             case 'bairro':
@@ -303,9 +309,11 @@ if (isset($view) && $view == 'cadastro') {
             case 'custo':
                 $centrocusto = new CentroCustos(
                     $id,
-                    null,
+                    $_SESSION['usuario']->id_empresa,
                     $nome
                 );
+                CentroCustos::update($centrocusto);
+                break;
         }
     } else if ($acao == 'excluir') {
 
@@ -363,7 +371,7 @@ if (isset($view) && $view == 'cadastro') {
                 break;
             case 'cliente':
                 if(Rec02::read(filtro_cadastro:$id) || Pag02::read(filtro_cadastro:$id)) {
-                    header('Location:cadastrar.php?cadastro=cliente&erro=usado');
+                    header('Location:cadastrar.php?cadastro=cliente&erro=usado_e');
                     exit;
                 } else {
                     Cadastro::delete($id);
@@ -518,6 +526,7 @@ if (isset($view) && $view == 'cadastro') {
     $id = $_POST['id'] ?? [];
     $id_rec = filter_input(INPUT_POST, 'id_lancamento');
     $data_pag = filter_input(INPUT_POST, 'data');
+    $insta = filter_input(INPUT_POST, 'insta') ?? null;
     // $data_pag = new DateTime($data_pag);
     // $data_pag = $data_pag->format('d-m-Y');
     $forma_pagamento = filter_input(INPUT_POST, 'forma_pagamento');
@@ -550,6 +559,12 @@ if (isset($view) && $view == 'cadastro') {
 
     if(($id_rec == null || $id_rec == '' )&& $acao == 'editar') {
         $acao  = 'adicionar';
+    }
+
+    if($pagar) {
+        $documento = buscarDocumentoPag();
+    } else if(!$pagar) {
+        $documento = buscarDocumentoRec();
     }
 
     
@@ -638,15 +653,22 @@ if (isset($view) && $view == 'cadastro') {
 
 
         }
-        
-
-        if ($pagar) {
-            header('Location: pagar.php');
-            exit;
+        if(isset($insta)) {
+            if($insta == 'movimentacao') {
+                header('Location: /usuario/movimentacao/movimentacao.php');
+                exit;
+            }
         } else {
-            header('Location: receber.php');
-            exit;
+            if ($pagar) {
+                header('Location: pagar.php');
+                exit;
+            } else {
+                header('Location: receber.php');
+                exit;
+            }
         }
+
+        
     } else if (isset($acao) && $acao == 'editar') {
 
         if ($pagar) {
