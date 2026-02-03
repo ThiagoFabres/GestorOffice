@@ -4,7 +4,7 @@
                 
                 <!-- Cabeçalho -->
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalCadastroCidadeLabel">Nova Bairro</h5>
+                    <h5 class="modal-title" id="modalCadastroCidadeLabel">Novo Bairro</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
                 

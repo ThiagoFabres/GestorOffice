@@ -17,7 +17,7 @@ if($data_quitar_inicial != null || $data_quitar_final != null) {
             filtro_opcao:$quitados
             
         );
-        $link_adicionar = '/usuario/receber.php?acao=adicionar&id_ban='.$ban02->id;
+        $link_adicionar = 'movimentacao.php?acao=quitar_adicionar&tipo=C&id_ban='.$ban02->id;
         
     } else if($tipo == 'D') {
         $lancamentos = Pag02::read(
@@ -27,7 +27,7 @@ if($data_quitar_inicial != null || $data_quitar_final != null) {
             filtro_por:'vencimento',
             filtro_opcao:$quitados
         );
-        $link_adicionar = '/usuario/pagar.php?acao=adicionar&id_ban='.$ban02->id;
+        $link_adicionar = 'movimentacao.php?acao=quitar_adicionar&tipo=D&id_ban='.$ban02->id;
     }
 }
 ?>
@@ -45,6 +45,9 @@ if($data_quitar_inicial != null || $data_quitar_final != null) {
                 <div class="modal-body">
 
                     <form method="get" enctype="multipart/form-data" action="movimentacao.php">
+                        <?php foreach($filtros_get as $i => $filtro) { ?>
+                            <input type="hidden" name="<?=$i?>" value="<?=$filtro?>">
+                        <?php } ?>
                         <input type="hidden" name="acao" value="quitar_bancario"></input>
                         <input type="hidden" name="id" value="<?=$ban02->id?>"></input>
                         <div class="mb-3 gap-2 d-flex flex-row" style=justify-content:space-evenly;>
