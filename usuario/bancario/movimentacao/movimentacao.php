@@ -657,39 +657,40 @@ foreach($movimentacoes_totais as $mov) {
     window._mov_ctx_row = null;
 
     // global handler callable from oncontextmenu attribute on rows
-    window.openCustomContextMenu = function(e, row) {
-        try {
-            const menu = document.getElementById('custom-context-menu');
-            if (!menu) return false;
-            if (!row || !row.classList.contains('tr-bancario')) return false;
-            e.preventDefault();
-            e.stopPropagation();
-            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-            console.debug('openCustomContextMenu called', row);
-            window._mov_ctx_row = row;
-            const menuWidth = menu.offsetWidth || 220;
-            const menuHeight = menu.offsetHeight || 160;
-            let x = e.pageX - 260;
-            let y = e.pageY - 70;
+    // window.openCustomContextMenu = function(e, row) {
+    //     try {
+    //         const menu = document.getElementById('custom-context-menu');
+    //         if (!menu) return false;
+    //         if (!row || !row.classList.contains('tr-bancario')) return false;
+    //         e.preventDefault();
+    //         e.stopPropagation();
+    //         if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+    //         console.debug('openCustomContextMenu called', row);
+    //         window._mov_ctx_row = row;
+    //         const menuWidth = menu.offsetWidth || 220;
+    //         const menuHeight = menu.offsetHeight || 160;
+    //         let x = e.pageX - 260;
+    //         let y = e.pageY - 70;
 
-            menu.style.left = x + 'px';
-            menu.style.top = y + 'px';
-            menu.style.display = 'block';
-            const idOriginal = row.getAttribute('data-id-original') || '';
-            const idCon01 = row.getAttribute('data-id-con01') || '';
-            const idCon02 = row.getAttribute('data-id-con02') || '';
-            const btnConc = document.getElementById('menu-conciliar');
-            const btnDes = document.getElementById('menu-desmembrar');
-            const btnEd = document.getElementById('menu-editar-bancario');
-            const btnQ = document.getElementById('menu-quitar-bancario');
+    //         menu.style.left = x + 'px';
+    //         menu.style.top = y + 'px';
+    //         menu.style.display = 'block';
+    //         const idOriginal = row.getAttribute('data-id-original') || '';
+    //         const idCon01 = row.getAttribute('data-id-con01') || '';
+    //         const idCon02 = row.getAttribute('data-id-con02') || '';
+    //         const btnConc = document.getElementById('menu-conciliar');
+    //         const btnDes = document.getElementById('menu-desmembrar');
+    //         const btnEd = document.getElementById('menu-editar-bancario');
+    //         const btnQ = document.getElementById('menu-quitar-bancario');
 
-            row.classList.add('context-menu-open');
-            return false;
-        } catch (err) { console.error(err); return false; }
-    };
+    //         row.classList.add('context-menu-open');
+            
+    //         return false;
+    //     } catch (err) { console.error(err); return false; }
+    // };
 
     document.addEventListener('DOMContentLoaded', function(){
-        console.log('a')
+        
         const menu = document.getElementById('custom-context-menu');
         if (!menu) {
             console.warn('custom-context-menu not found');
@@ -701,15 +702,16 @@ foreach($movimentacoes_totais as $mov) {
             try {
                 let row = e.target.closest('.tr-bancario');
                 if (row && !row.classList.contains('tr-header')) {
+                    
                     e.preventDefault();
                     e.stopPropagation();
                     if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-                    console.debug('movimentacao contextmenu intercepted', row);
+                    // console.debug('movimentacao contextmenu intercepted', row);
                     window._mov_ctx_row = row;
                     const menuWidth = menu.offsetWidth || 220;
                     const menuHeight = menu.offsetHeight || 160;
-                    let x = e.pageX - 355;
-                    let y = e.pageY - 170;
+                    let x = e.pageX - 260;
+                    let y = e.pageY - 70;
                     menu.style.left = x + 'px';
                     menu.style.top = y + 'px';
                     menu.style.display = 'block';
@@ -723,6 +725,13 @@ foreach($movimentacoes_totais as $mov) {
                     const btnEd = document.getElementById('menu-editar-bancario');
                     const btnQ = document.getElementById('menu-quitar-bancario');
                     // visual highlight
+                    if(row.getAttribute('data-id-con01') == "" || row.getAttribute('data-id-con02') == "") {
+                        btnQ.disabled = 'true';
+
+                    } else {
+                        btnQ.removeAttribute('disabled');
+                    }
+                    
                     row.classList.add('context-menu-open');
                 } else {
                     menu.style.display = 'none';

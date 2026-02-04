@@ -145,31 +145,30 @@ if($acao == 'quitar_adicionar') {
 
                                             <div class="modal-input-group">
                                                 <label for="titulo">Titulo</label>
-                                            <div class="titulo-group">
-                                                <div class="input-titulo" style="width: 100%; height:98%; pointer-events: none;">
-                                                    <!--Nome: -->
-                                                    
-                                                    <select name="titulo" class="form-control form-select-titulo" style="height: 100%; border-radius: 0;" id="titulo" 
-                                                        style="border-top-right-radius: 0; border-bottom-right-radius: 0; ">
-                                                        <option value="">Selecione</option>
+                                                <div class="titulo-group">
+                                                    <div class="input-titulo" style="width: 100%; height:98%;">
+                                                        <!--Nome: -->
+                                                        
+                                                        <select name="titulo" class="form-control form-select-titulo" style="height: 100%; border-radius: 0;" id="titulo" 
+                                                            style="border-top-right-radius: 0; border-bottom-right-radius: 0; ">
+                                                            <option value="">Selecione</option>
 
-                                                        <?php $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
-                                                        foreach ($titulos as $titulo) { ?>
-                                                            <option value="<?= $titulo->id ?>" <?php if ($id_ban != null && $ban02->id_con01 == $titulo->id) { ?> selected <?php } ?> >
-                                                                <?= htmlspecialchars($titulo->nome, ENT_QUOTES, 'UTF-8') ?>
-                                                            </option>
-                                                        <?php } ?>
-                                                    </select>
+                                                            <?php $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
+                                                            foreach ($titulos as $titulo) { ?>
+                                                                <option value="<?= $titulo->id ?>" <?php if ($id_ban != null && $ban02->id_con01 == $titulo->id) { ?> selected <?php } ?> >
+                                                                    <?= htmlspecialchars($titulo->nome, ENT_QUOTES, 'UTF-8') ?>
+                                                                </option>
+                                                            <?php } ?>
+                                                        </select>
+                                                    </div>
+
                                                 </div>
-
-                                            </div>
-                                                
                                             </div>
                                             
                                             <div class="modal-input-group">
                                                 <label for="subtitulo">Sub-Titulo</label>
                                                 <div class="subtitulo-group">
-                                                    <div class="input-subtitulo-div" style="width: 100%; height:98%; pointer-events: none;" >
+                                                    <div class="input-subtitulo-div" style="width: 100%; height:98%;" >
 
                                                         <select id="subtitulo" name="subtitulo" class="form-control form-select-titulo" style="height: 100%; border-radius: 0;">
                                                             <option value="">Selecione</option>
@@ -187,6 +186,7 @@ if($acao == 'quitar_adicionar') {
                                                     
                                                 </div>
                                             </div>
+
                                                 <div class="modal-input-group">
                                                         <label for="valor">Valor:</label>         
                                                     <div class="input-valor">
@@ -551,7 +551,6 @@ if (document.readyState === 'loading') {
 
 
 
-<?php if($get_acao != 'visualizar'  && $id_ban == null) {?>
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -714,4 +713,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 </script>
-<?php }?>
