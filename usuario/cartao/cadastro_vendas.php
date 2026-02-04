@@ -166,11 +166,9 @@ if ($filtros != []) {
     <?php require_once __DIR__ . '/../../componentes/header/header.php' ?>
 
     <div class="main" id="container">
-        <div>
-            <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#modal_cadastro_vendas">Adicionar Vendas</button>
-        </div>
 
-        <div class="col-md-12" style="padding: 0; display:none ;">
+
+        <div class="col-md-12" style="padding: 0;">
 
 
                 <div class="card">
@@ -179,8 +177,7 @@ if ($filtros != []) {
                         <h3>Vendas (Contas a Receber)</h3>
 
                     <div>
-                        <button data-bs-toggle="modal" data-bs-target="#modal_receber"
-                        class="btn btn-primary btn-lg">Novo Lançamento</button>
+                        <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#modal_cadastro_vendas">Adicionar Vendas</button>
                     </div>
                         
                         </div>
@@ -188,7 +185,7 @@ if ($filtros != []) {
 
                     <div class="card-header-div">
 
-                        <div class="card-header-borda">
+                        <div class="card-header-borda" style="width:90%;">
                             <div class="tab-pane fade show active" id="vendas" role="tabpanel"
                                 aria-labelledby="vendas-tab">
                                 <h5 class="card-title">Filtros</h5>
@@ -207,7 +204,7 @@ if ($filtros != []) {
                                                             <input type="date" id="filtro_data_inicial"
                                                                 name="filtro_data_inicial"
                                                                 value="<?= $get_filtro_data_inicial; ?>"
-                                                                class="form-control" style="border-top-right-radius: 0;">
+                                                                class="form-control" style="border-radius: 0;">
                                                         </div>
 
                                                         <!-- Data final -->
@@ -222,35 +219,7 @@ if ($filtros != []) {
                                                     </div>
 
 
-                                                    <div class="r-inputs-data" >
-                                                        <div>
-                                                            <label for="filtro_nome"
-                                                            >Documento:</label>
-                                                            <input type="text" id="filtro_nome" name="filtro_nome"
-                                                                class="form-control" value="<?= $get_filtro_nome; ?>"
-                                                                placeholder="Documento" style="border-radius: 0;">
-                                                        </div>
-
-                                                        <!-- Tipo de pagamento -->
-                                                    
-                                                        <div >
-                                                            <label for="forma_pagamento">Pagamento:</label>
-                                                            <select class="form-control" name="forma_pagamento" style="border-top-left-radius: 0; border-bottom-left-radius: 0;
-                                                            border-top-right-radius: 0.25em; border-bottom-right-radius: 0.25em;">
-
-                                                                <option value="">Selecione</option>
-
-                                                                <?php foreach (TipoPagamento::read(null, $_SESSION['usuario']->id_empresa) as $pagamento) { ?>
-                                                                    <option value="<?= $pagamento->id ?>" <?php if ($get_filtro_pagamento == $pagamento->id) { ?> selected
-                                                                        <?php } ?>>
-                                                                        <?= $pagamento->nome ?>
-                                                                    </option>
-                                                                <?php } ?>
-
-                                                            </select>
-                                                        </div>
-                                                    </div>
-
+                                                   
                                                 </div>
                                                 <div class="inputs-pagamento-text inputs-pagamento-select input-select-geral" id="inputs-select">
 
@@ -288,38 +257,7 @@ if ($filtros != []) {
 
                                                     
                                                 </div>
-                                                <div class="r-inputs-data" style="width:100%;">
 
-                                                
-                                                    <div style="display:flex; flex-direction: column; width:100%;" >
-                                                        <label for="forma_pagamento"
-                                                        >Titulo:</label>
-                                                        <select class="form-control" name="filtro_titulo" 
-                                                            id="titulo-filtro" onchange="filtroSubtitulo(true)">
-                                                            <option value="">Selecione</option>
-                                                            <?php
-                                                            foreach (Con01::read(null, $_SESSION['usuario']->id_empresa, 'C') as $titulo) { ?>
-                                                                <option value="<?= $titulo->id ?>" <?php if ($get_filtro_titulo == $titulo->id) { ?> selected <?php } ?> >
-                                                                    <?= $titulo->nome ?>
-                                                                </option>
-                                                            <?php } ?>
-                                                        </select>
-                                                    </div>
-                                                    <div style="display:flex; flex-direction: column; width:100%;" >
-                                                        <label for="subtitulo-filtro">Subtitulo:</label>
-                                                        <select class="form-control" name="filtro_subtitulo"
-                                                            id="subtitulo-filtro">
-                                                            <?php
-                                                            $todosSubtitulos = Con02::read(null, $_SESSION['usuario']->id_empresa);
-                                                            foreach ($todosSubtitulos as $sub) { ?>
-                                                                <option value="<?= $sub->id ?>"
-                                                                    data-titulo-id="<?= $sub->id_con01 ?>" <?php if ($get_filtro_subtitulo == $sub->id) { ?> selected <?php } ?>>
-                                                                    <?= htmlspecialchars($sub->nome, ENT_QUOTES, 'UTF-8') ?>
-                                                                </option>
-                                                            <?php } ?>
-                                                        </select>
-                                                    </div>
-                                                </div>
 
                                                     
                                                 </div>
@@ -1322,7 +1260,7 @@ document.addEventListener('DOMContentLoaded', function () {
     <?php } ?>
     <?php if($erro == 'suporte'){?>
     <script>
-        alert('Operadora não suportada, entre em contato com a gestor office para adicionar um suporte, Operadoras suportadas: Stone, Getnet, Rede')
+        alert('Operadora não suportada, entre em contato com a gestor office para adicionar um suporte')
         window.location.href = 'cadastro_vendas.php'
     </script>
     <?php } ?>

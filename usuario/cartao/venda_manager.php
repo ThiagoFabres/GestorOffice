@@ -328,7 +328,11 @@ function parse_csv(string $caminhoCsv): array {
         $file_ext = 'csv';
     }
     
-    $operadora_sup = $operadoras[$operadora_descricao_preg][$file_ext];
+    $operadora_sup = $operadoras[$operadora_descricao_preg][$file_ext] ?? null;
+    if($operadora_sup == null) {
+        header('Location: cadastro_vendas.php?erro=suporte');
+        exit;
+    }
     
     $bandeiras = Band01::read(null, $_SESSION['usuario']->id_empresa, $id_operadora);
     $parcelas = [];
