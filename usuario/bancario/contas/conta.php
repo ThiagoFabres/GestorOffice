@@ -1,6 +1,3 @@
-
-
-<!DOCTYPE html>
 <?php 
 require_once __DIR__ . '/../../../db/entities/usuarios.php';
 session_start();
@@ -17,6 +14,7 @@ $lateral_bancario = true;
 $acao = filter_input(INPUT_GET, 'acao', FILTER_SANITIZE_STRING);
 
 ?>
+<!DOCTYPE html>
 <script>
     function abrirModalEdicao() {
     console.log('a')

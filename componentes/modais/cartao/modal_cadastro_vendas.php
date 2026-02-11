@@ -77,8 +77,8 @@
                                     <td><?= htmlspecialchars((new DateTime($transaction['data']))->format('d/m/Y') ?? '') ?></td>
                                     <td><div class="d-flex flex-row justify-content-between w-100"><div class="w-50"><?= number_format(htmlspecialchars($transaction['valor_b'] ?? ''), 2, ',','.') . '</div> | <div class="w-50" style="text-align:end">' . number_format(htmlspecialchars($transaction['valor_l'] ?? ''),2,',','.') ?></div></div></td>
                                     <td <?php if(in_array('parcela', $transaction['motivo'])) { ?> class="text-danger" <?php } ?>><?= htmlspecialchars($transaction['parcela'] ?? '') ?></td>
-                                    <td <?php if(in_array('bandeira', $transaction['motivo'])) { ?> class="text-danger" <?php } ?>><?= htmlspecialchars($transaction['bandeira'] ?? '') ?></td>
-                                    <td <?php if(in_array('tipo', $transaction['motivo'])) { ?> class="text-danger" <?php } ?>><?= htmlspecialchars($transaction['tipo'] ?? '') ?></td>
+                                    <td <?php if(in_array('bandeira', $transaction['motivo'])) { ?> class="text-danger" <?php } ?>><?= htmlspecialchars(ucfirst(strtolower($transaction['bandeira'])) ?? '') ?></td>
+                                    <td <?php if(in_array('tipo', $transaction['motivo'])) { ?> class="text-danger" <?php } ?>><?= htmlspecialchars(ucfirst(strtolower($transaction['tipo'])) ?? '') ?></td>
                                 </tr>
                             <?php } ?>
                             </table>
@@ -108,7 +108,9 @@
 
                                     <?php 
                                     $i = 0;
-                                    foreach ($_SESSION['vendas']['transactions'] as $linha){ ?>
+                                    foreach ($_SESSION['vendas']['transactions'] as $linha){ 
+                                        ?>
+                                    
                                             <input type="hidden" name="bandeira_id[<?=$i?>]" value="<?=$linha['bandeira_id']?>">
                                             
                                         <tr>
@@ -116,8 +118,8 @@
                                             <td><input class="form-control" readonly name="data[<?=$i?>]" value="<?= (new DateTime(htmlspecialchars($linha['data'] ?? '')))->format(('d/m/Y')) ?>"></input></td>
                                             <td><input class="form-control" readonly name="valor_b[<?=$i?>]" value="<?= number_format(htmlspecialchars($linha['valor_b'] ?? ''), 2, ',', '.') ?>"></input></td>
                                             <td><input class="form-control" readonly name="valor_l[<?=$i?>]" value="<?= number_format(htmlspecialchars($linha['valor_l'] ?? ''), 2, ',', '.') ?>"></input></td>
-                                            <td><input class="form-control" readonly name="bandeira[<?=$i?>]" value="<?= htmlspecialchars($linha['bandeira'] ?? '') ?>"></input></td>
-                                            <td><input class="form-control" readonly name="tipo[<?=$i?>]" value="<?= htmlspecialchars($linha['tipo'])?>"></input></td>
+                                            <td><input class="form-control" readonly name="bandeira[<?=$i?>]" value="<?= htmlspecialchars(ucfirst(strtolower($transaction['bandeira'])) ?? '') ?>"></input></td>
+                                            <td><input class="form-control" readonly name="tipo[<?=$i?>]" value="<?= htmlspecialchars(ucfirst(strtolower($transaction['tipo'])))?>"></input></td>
                                         </tr>
                                     
                                     <?php

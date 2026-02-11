@@ -18,6 +18,7 @@ if (isset($_POST['email']) && isset($_POST['senha'])) {
 
     if ($email && $senha) {
         $usuario = Usuario::read(null, $email);
+        
 
         if($usuario[0]->status == 0 && $usuario[0]->cargo == 3) {
             header('Location: /index.php?erro=usuario_inativo');
@@ -29,7 +30,11 @@ if (isset($_POST['email']) && isset($_POST['senha'])) {
     session_regenerate_id(true);
 
     $_SESSION['usuario'] = $usuario[0];
-
+    // var_dump(session_status());
+    // exit;
+    // var_dump(session_id());
+    // var_dump($_SESSION);
+    // die;
 
     switch ($usuario[0]->cargo) {
         case 1:

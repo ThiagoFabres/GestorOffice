@@ -1,5 +1,5 @@
 <?php 
-$operadoras = [
+$operadoras_suporte = [
     'stone' => [
         'xlsx' =>[
             'excluded_columns' => [
@@ -77,17 +77,37 @@ $operadoras = [
                 'estado' => 1
             ],
             'suporte_data' => false,
+            
         ],
+        'csv' => [
+            'colunas' => [
+                'data' =>'data da venda',
+                'status' => 'status da venda',
+                'valor_b' => 'valor da venda original',
+                'valor_l' => 'valor líquido',
+                'tipo' => 'modalidade',
+                'bandeira' => 'bandeira',
+                'parcela' => 'número de parcelas'
+            ],
+            'suporte_encoding' => false,
+            'linha_inicial' => null,
+            'suporte_status' => true,
+            'suporte_parcela' => true,
+            'suporte_data' => 'formatada',
+            
+            'separator' => ';',
+            'encoding' => 'UTF-8',
+        ]
     ],
 
 
     'sicredi' => [
         'xlsx' =>[
             'excluded_columns' => [
-                'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I','K', 'L'
+                'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'L', 'O', 'Q'
             ],
             'start_row' => 6,
-            'start_end_columns' => [ 'start' => 'A', 'end' => 'Q'],
+            'start_end_columns' => [ 'start' => 'A', 'end' => 'R'],
             'organizador' => [
                 'data' => 0,
                 'bandeira' => 3,
@@ -97,7 +117,26 @@ $operadoras = [
                 'valor_l' => 6,
                 'estado' => 4
             ],
-            'suporte_data' => 'formatado',
+            'suporte_data' => 'formatada',
+            'suporte_numero' => 'formatado',
+        ],
+        'xlsx2' =>[
+            'excluded_columns' => [
+                'B', 'F', 'H', 'J',
+            ],
+            'start_row' => 17,
+            'start_end_columns' => [ 'start' => 'A', 'end' => 'K'],
+            'organizador' => [
+                'data' => 0,
+                'bandeira' => 3,
+                'tipo' => 1,
+                'parcela' => 2,
+                'valor_b' => 4,
+                'valor_l' => 5,
+                'estado' => 6
+            ],
+            'suporte_data' => 'hora',
+            'suporte_numero' => 'formatado',
         ],
     ],
     'fazpay' => [
@@ -120,9 +159,64 @@ $operadoras = [
         ],
     ],
     
-    'infinite pay' => [
+    'infinitepay' => [
         'csv' => [
-            true
+            'colunas' => [
+                'data' =>'Data e hora',
+                'status' => 'Status',
+                'valor_b' => 'Valor (R$)',
+                'valor_l' => 'Líquido (R$)',
+                'tipo' => 'Meio - Meio',
+                'bandeira' => 'Meio - Bandeira',
+                'parcela' => 'Meio - Parcelas'
+            ],
+            'suporte_encoding' => false,
+            'linha_inicial' => null,
+            'suporte_status' => true,
+            'suporte_parcela' => true,
+            'suporte_data' => 'hora',
+            'separator' => ',',
+            'encoding' => 'UTF-8',
+        ]
+    ],
+    'safrapay' => [
+        'csv' => [
+            'colunas' => [
+                'data' => 'DATA VENDA',
+                'status' => null,
+                'valor_b' => 'VALOR BRUTO',
+                'valor_l' => 'VALOR LIQUIDO',
+                'tipo' => 'MODALIDADE',
+                'bandeira' => 'PRODUTO',
+                'parcela' => 'PL'
+            ],
+            'suporte_encoding' => false,
+            'linha_inicial' => null,
+            'suporte_status' => false,
+            'suporte_parcela' => true,
+            'suporte_data' => 'formatada',
+            'separator' => ';',
+            'encoding' => 'UTF-8',
+        ]
+    ],
+    'cielo' => [
+        'csv' => [
+            'colunas' => [
+                'data' => 'Data da venda',
+                'status' => 'Status da venda',
+                'valor_b' => 'Valor bruto',
+                'valor_l' => 'Valor líquido',
+                'tipo' => 'Forma de pagamento',
+                'bandeira' => 'Bandeira',
+                'parcela' => null
+            ],
+            'suporte_encoding' => true,
+            'linha_inicial' => 22,
+            'suporte_status' => true,
+            'suporte_parcela' => false,
+            'suporte_data' => 'formatada',
+            'separator' => ';',
+            'encoding' => 'ISO-8859-1',
         ]
     ]
 ]

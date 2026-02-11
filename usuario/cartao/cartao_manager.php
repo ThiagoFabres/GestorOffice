@@ -28,8 +28,6 @@ if($acao == 'adicionar') {
             $titulo,
             $subtitulo
         );
-
-        
         Ope01::create($operadora);
         header('Location: cadastro_cartao.php');
         exit;

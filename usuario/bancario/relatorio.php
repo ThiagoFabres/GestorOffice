@@ -1,6 +1,3 @@
-
-
-<!DOCTYPE html>
 <?php 
 require_once __DIR__ . '/../../db/entities/usuarios.php';
 
@@ -16,7 +13,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
 $lateral_target = 'relatorioBancario';
 $lateral_bancario = true;
 ?>
-
+<!DOCTYPE html>
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.3/html2pdf.bundle.min.js"

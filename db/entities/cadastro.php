@@ -18,9 +18,10 @@ class Cadastro {
     public $celular;
     public $fixo;
     public $id_categoria;
+    public $data_r;
 
 
-    public function __construct($id_empresa = null,$id_cadastro = '', $razao_soc = '', $nom_fant = '', $rua = '', $id_bairro = '', $id_cidade = '', $estado = '', $cpf = '',$cnpj = '', $email = '', $celular = '', $fixo = '',  $cep = '', $id_categoria = '') {
+    public function __construct($id_empresa = null,$id_cadastro = null, $razao_soc = null, $nom_fant = null, $rua = null, $id_bairro = null, $id_cidade = null, $estado = null, $cpf = null,$cnpj = null, $email = null, $celular = null, $fixo = null,  $cep = null, $id_categoria = null, $data_r = null) {
         $this->id_empresa = $id_empresa;
         $this->id_cadastro = $id_cadastro;
         $this->razao_soc = $razao_soc;
@@ -36,13 +37,13 @@ class Cadastro {
         $this->celular = $celular;
         $this->fixo = $fixo;
         $this->id_categoria= $id_categoria;
-        
+        $this->data_r= $data_r;
     }
 
     public static function create($cadastro) {
         $pdo = (new Database())->connect();
-        $sql = 'INSERT INTO cadastro (id_empresa, razao_soc, nom_fant, cep, rua, id_bairro, id_cidade, estado, cpf, cnpj, email, celular, fixo, id_categoria) 
-                            VALUES (:id_empresa, :razao_soc, :nom_fant, :cep, :rua, :bairro, :cidade, :estado, :cpf, :cnpj, :email, :celular, :fixo, :id_categoria)';
+        $sql = 'INSERT INTO cadastro (id_empresa, razao_soc, nom_fant, cep, rua, id_bairro, id_cidade, estado, cpf, cnpj, email, celular, fixo, id_categoria, data_r) 
+                            VALUES (:id_empresa, :razao_soc, :nom_fant, :cep, :rua, :bairro, :cidade, :estado, :cpf, :cnpj, :email, :celular, :fixo, :id_categoria, :data_r)';
         $stmt = $pdo->prepare($sql);
 
         $stmt->bindValue(':id_empresa', $cadastro->id_empresa);
@@ -59,6 +60,7 @@ class Cadastro {
         $stmt->bindValue(':fixo', $cadastro->fixo);
         $stmt->bindValue(':cep', $cadastro->cep);
         $stmt->bindvalue(':id_categoria', $cadastro->id_categoria);
+        $stmt->bindvalue(':data_r', $cadastro->data_r);
 
        return $stmt->execute(); 
     }

@@ -346,7 +346,7 @@ $estadosLista = [
                                             <td>
                                                 <?=htmlspecialchars($cadastro->celular, ENT_QUOTES, 'UTF-8')?>
                                                 <br>
-                                                <?php if($cadastro->fixo != ''){?> 
+                                                <?php if($cadastro->fixo != 0){?> 
                                                     <p> Fixo: <?=htmlspecialchars($cadastro->fixo, ENT_QUOTES, 'UTF-8')?></p>
                                                 <?php } ?>    
                                                     
@@ -375,7 +375,7 @@ $estadosLista = [
                                                     
                                                 ?>
                                                 <br>
-                                                 <?php if($cadastro->cep != '') {?>
+                                                 <?php if($cadastro->cep != 0) {?>
                                                     <p>CEP: <?= htmlspecialchars($cadastro->cep, ENT_QUOTES, 'UTF-8') ?></p>
                                                  <?php } ?>         
                                             </td>
@@ -454,26 +454,26 @@ $estadosLista = [
     </div>
 
     <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input type="text" class="form-control" id="cnpj" placeholder="CNPJ" name="cnpj" value="<?= htmlspecialchars($cadastro->cnpj, ENT_QUOTES, 'UTF-8') ?>" >
+        <input type="text" class="form-control" id="cnpj" placeholder="CNPJ" name="cnpj" value="<?= $cadastro->cnpj != 0 ? htmlspecialchars($cadastro->cnpj, ENT_QUOTES, 'UTF-8') : '' ?>" >
     </div>
 
     <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input type="text" class="form-control" id="cpf" placeholder="CPF" name="cpf" value="<?= htmlspecialchars($cadastro->cpf, ENT_QUOTES, 'UTF-8') ?>" >
+        <input type="text" class="form-control" id="cpf" placeholder="CPF" name="cpf" value="<?= $cadastro->cpf != 0 ? htmlspecialchars($cadastro->cpf, ENT_QUOTES, 'UTF-8') : '' ?>" >
     </div>
 
     <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input type="text" class="form-control" id="cep" placeholder="CEP" name="cep" value="<?= htmlspecialchars($cadastro->cep, ENT_QUOTES, 'UTF-8') ?>" >
+        <input type="text" class="form-control" id="cep" placeholder="CEP" name="cep" value="<?= $cadastro->cep != 0 ? htmlspecialchars($cadastro->cep, ENT_QUOTES, 'UTF-8') : '' ?>" >
     </div>
 
     <div style="display:flex; flex-direction:row;" class="mb-3">
         <input type="text" class="form-control" id="endereco" placeholder="Endereço" name="endereco" value="<?= htmlspecialchars($cadastro->rua, ENT_QUOTES, 'UTF-8') ?>" >
     </div>
 
-    <div class="input-form-adm-group input-form-adm">
+    <div class="input-form-adm-group input-form-adm w-100">
 
-    <div style="display:flex; flex-direction:row;" class="mb-3">
+    <div style="display:flex; flex-direction:row; width:100%" class="mb-3">
        <select style="border-top-right-radius: 0; border-bottom-right-radius: 0;" id="bairro" name="bairro" class="form-control"  style="border-radius:0;" >
-
+        <option value="" selected>Selecione</option>
                             <?php foreach ($bairrolista as $bairro) { ?>
                                 <option <?php if($bairro->id == $cadastro->id_bairro){?> selected <?php } ?> value="<?= htmlspecialchars($bairro->id, ENT_QUOTES, 'UTF-8') ?>">
                             <?= $bairro->nome ?>
@@ -482,9 +482,9 @@ $estadosLista = [
                         </select>
     </div>
 
-    <div style="display:flex; flex-direction:row;" class="mb-3">
+    <div style="display:flex; flex-direction:row; width:100%" class="mb-3">
         <select style="border-radius:0;" id="cidade" name="cidade" class="form-control"  style="border-radius:0;" >
-
+        <option value="" selected>Selecione</option>
                             <?php foreach ($cidadelista as $cidade) { ?>
                                 <option <?php if($cidade->id == $cadastro->id_cidade){?> selected <?php } ?> value="<?= htmlspecialchars($cidade->id, ENT_QUOTES, 'UTF-8') ?>">
                             <?= $cidade->nome ?>
@@ -493,12 +493,12 @@ $estadosLista = [
                         </select>
     </div>
 
-    <div style="display:flex; flex-direction:row;" class="mb-3">
+    <div style="display:flex; flex-direction:row; width:100%" class="mb-3">
         <select style="border-top-left-radius:0; border-bottom-left-radius:0;" id="estado" name="estado" class="form-control"  style="border-radius:0;" >
 
-                            <option value="" >Selecione um estado</option>
+                            <option value="" selected>Selecione</option>
                             <?php foreach ($estadosLista as $sigla => $estado) { ?>
-                                <option <?php if($sigla == $cadastro->estado){?> selected <?php } ?> value="<?= htmlspecialchars($sigla, ENT_QUOTES, 'UTF-8') ?>">
+                                <option <?php if($sigla == $cadastro->estado){?> selected <?php  } ?> value="<?= htmlspecialchars($sigla, ENT_QUOTES, 'UTF-8') ?>">
                             <?= $estado ?>
                             </option>
                             <?php } ?>
@@ -515,7 +515,7 @@ $estadosLista = [
     </div>
 
     <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input  style="border-top-left-radius: 0; border-bottom-left-radius: 0;" type="text" class="form-control" id="telefone" placeholder="Telefone fixo" name="fixo" value="<?= htmlspecialchars($cadastro->fixo, ENT_QUOTES, 'UTF-8') ?>" >
+        <input  style="border-top-left-radius: 0; border-bottom-left-radius: 0;" type="text" class="form-control" id="telefone" placeholder="Telefone fixo" name="fixo" value="<?= $cadastro->fixo != 0 ? htmlspecialchars($cadastro->fixo, ENT_QUOTES, 'UTF-8') : ''?>" >
     </div>
 
     </div>
@@ -526,7 +526,7 @@ $estadosLista = [
 
     <div class="input-categoria">
         <select style="margin-bottom:1em;" id="cidade" name="categoria" class="form-control"  style="border-radius:0;" >
-
+        <option value="" selected>Selecione</option>
                 <?php foreach ($categorialista as $categoria) { ?>
                     <option <?php if($categoria->id == $cadastro->id_categoria){?> selected <?php } ?> value="<?= $categoria->id ?>">
                      <?= htmlspecialchars($categoria->nome, ENT_QUOTES, 'UTF-8') ?>

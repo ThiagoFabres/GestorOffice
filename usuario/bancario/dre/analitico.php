@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <?php
 
 require_once __DIR__ . '/../../../db/base.php';
@@ -48,7 +47,7 @@ if($todas_empresas) {
 
 
 ?>
-
+<!DOCTYPE html>
 
 
 

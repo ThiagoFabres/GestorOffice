@@ -92,6 +92,7 @@ if (isset($view) && $view == 'cadastro') {
     if ($acao == 'adicionar') {
         switch ($target) {
             case 'cliente':
+                $data_r = (new DateTime())->format('Y-m-d');
                 $cadastro = new Cadastro(
                     $_SESSION['usuario']->id_empresa,
                     null,
@@ -107,12 +108,13 @@ if (isset($view) && $view == 'cadastro') {
                     $celular ?? null,
                     $fixo ?? null,
                     $cep ?? null,
-                    $categoria ?? null
+                    $categoria ?? null,
+                    $data_r,
                 );
-
 
                 if(isset($email) && $email != null) {
                     if (!Cadastro::read(null, $email)) {
+                        Cadastro::create($cadastro);
                     if(!isset($insta) || $insta == null) {
                         header('Location: cadastrar.php?cadastro=cliente');
                         exit;
@@ -128,6 +130,7 @@ if (isset($view) && $view == 'cadastro') {
                     exit;
                 }
                 } else {
+                    
                     Cadastro::create($cadastro);
                     if(isset($insta) && $insta != null) {
                         if($insta == 'pagar') header('Location: pagar.php?acao=adicionar');
@@ -142,7 +145,7 @@ if (isset($view) && $view == 'cadastro') {
 
 
                 header('Location:cadastrar.php?cadastro=cliente');
-                exit;
+                
                 break;
 
             case 'bairro':
@@ -585,7 +588,7 @@ if (isset($view) && $view == 'cadastro') {
             $valor,
             $parcelas_d,
             $data_lanc,
-            $_SESSION['usuario']->id_usuario,
+            $_SESSION['usuario']->id,
             $custo,
             $id_ban
         );
@@ -602,7 +605,7 @@ if (isset($view) && $view == 'cadastro') {
             }
             $rec01 = Pag01::read(null, $_SESSION['usuario']->id_empresa, id_cadastro: $cadastro, documento: $documento)[0];
         } else {
-            if (!Rec01::read(null, $_SESSION['usuario']->id_empresa, id_cadastro: $cadastro, documento: $documento)[0]) {
+            if (!Rec01::read(null, $_SESSION['usuario']->id_empresa, id_cadastro: $cadastro, documento: $documento)) {
                 Rec01::create($recebimento);
             } else {
                 header('Location:receber.php?erro=repetido');
@@ -689,7 +692,7 @@ if (isset($view) && $view == 'cadastro') {
             $valor,
             $parcelas_d,
             $data_lanc,
-            $_SESSION['usuario']->id_usuario,
+            $_SESSION['usuario']->id,
             $custo
         );
 

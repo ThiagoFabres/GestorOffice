@@ -1,3 +1,24 @@
+<?php
+
+require_once __DIR__ . '/../../db/entities/usuarios.php';
+session_start();
+if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
+    header('Location: /');
+    exit;
+}
+require_once __DIR__ . '/../../db/entities/ope01.php';
+require_once __DIR__ . '/../../db/entities/band01.php';
+require_once __DIR__ . '/../../db/entities/cadastro.php';
+require_once __DIR__ . '/../../db/entities/centrocustos.php';
+require_once __DIR__ . '/../../db/entities/pra01.php';
+require_once __DIR__ . '/../../db/entities/contas.php';
+$lateral_cartao = true;
+$lateral_target = 'cadastro_cartao';
+$operadoras = Ope01::read(null, $_SESSION['usuario']->id_empresa);
+$acao = filter_input(INPUT_GET, 'acao');
+$target = filter_input(INPUT_GET, 'target');
+
+?>
 <!DOCTYPE html>
 <head>
 
@@ -31,26 +52,6 @@
 <link rel="shortcut icon" href="/gestor-office.png" type="image/x-icon">
 <title>Gestor Office Control</title>
 </head>
-<?php
-
-require_once __DIR__ . '\..\..\db\entities\usuarios.php';
-session_start();
-if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
-    header('Location: /');
-    exit;
-}
-require_once __DIR__ . '\..\..\db\entities\ope01.php';
-require_once __DIR__ . '\..\..\db\entities\band01.php';
-require_once __DIR__ . '\..\..\db\entities\cadastro.php';
-require_once __DIR__ . '\..\..\db\entities\centrocustos.php';
-require_once __DIR__ . '\..\..\db\entities\pra01.php';
-require_once __DIR__ . '\..\..\db\entities\contas.php';
-
-$operadoras = Ope01::read(null, $_SESSION['usuario']->id_empresa);
-$acao = filter_input(INPUT_GET, 'acao');
-$target = filter_input(INPUT_GET, 'target');
-
-?>
 <body id="body">
 
 

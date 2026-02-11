@@ -1,6 +1,3 @@
-<!DOCTYPE html>
-
-
 <?php
 
 require_once __DIR__ . '/../db/entities/usuarios.php';
@@ -121,8 +118,9 @@ $saldo_pagamento = number_format($saldo_pagamento, 2, ',', '.');
 $total_pag_pagamento = number_format($total_pag_pagamento, 2, ',', '.');
 $total_rec_pagamento = number_format($total_rec_pagamento, 2, ',', '.');
 ?>
-
+<!DOCTYPE html>
 <head>
+
 <?php require_once __DIR__ . '/../componentes/header/header.php' ?>
 
 

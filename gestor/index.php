@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <?php
 
 require_once __DIR__ . '/../db/entities/usuarios.php';
@@ -18,8 +17,8 @@ require_once __DIR__ . '/gestor.php';
 $erro = filter_input(INPUT_GET, 'erro');
 
 ?>
-
-
+<!DOCTYPE html>
+<head>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.3/html2pdf.bundle.min.js" integrity="sha512-yu5WG6ewBNKx8svICzUA01vozhmiQCVfzjzW40eCHJdsDRaOifh9hPlWBDex5b32gWCzawTp1F3FJz60ps6TnQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"

@@ -16,12 +16,14 @@ $parcela_lista = $_POST['parcela'];
 $data_lista = $_POST['data'];
 $valor_b_lista = $_POST['valor_b'];
 $valor_l_lista = $_POST['valor_l'];
+
 $bandeira_lista = $_POST['bandeira'];
 $id_bandeira_lista = $_POST['bandeira_id'];
 $tipo_lista = $_POST['tipo'];
 $transactions = [];
 $i = 0;
 $tamanho = count($parcela_lista);
+
 
 while($tamanho != 0 ) {
     $transactions[$i] = [
@@ -106,11 +108,13 @@ foreach($grupos as $grupo) {
         $valor_l = $parcela['valor_l'];
         $valor_l = str_replace('.', '', $valor_l);
         $valor_l = str_replace(',', '.',$valor_l);
+        $parcela['valor_l'] = $valor_l;
 
         $valor_b = $parcela['valor_b'];
         $valor_b = str_replace('.', '', $valor_b);
         $valor_b = str_replace(',', '.',$valor_b);
         $valor_b = floatval($valor_b);
+        $parcela['valor_b'] = $valor_b;
 
         $valor_l_total += $valor_l;
         $valor_b_total += $valor_b;
@@ -136,7 +140,7 @@ foreach($grupos as $grupo) {
         $valor_l_total,
         $tamanho_grupo,
         $data,
-        $_SESSION['usuario']->id_usuario,
+        $_SESSION['usuario']->id,
         $operadora->id_custos,
         null,
         $valor_b_total,
@@ -166,7 +170,10 @@ foreach($grupos as $grupo) {
         $prazo = Pra01::read(id_empresa:$_SESSION['usuario']->id_empresa, id_bandeira: $parcela['id_bandeira'], direcao: 'DESC')[0];
         $data_venc = $data;
         $data_venc =( new DateTime($data))->modify(" +$prazo->prazo  Days")->format('Y-m-d');
-
+        $valor_l = $parcela['valor_l'];
+        $valor_l = str_replace('.', '', $valor_l);
+        $valor_l = str_replace(',', '.',$valor_l);
+        $parcela['valor_l'] = $valor_l;
         $rec02[$documento] = new Rec02 (
             null,
             $_SESSION['usuario']->id_empresa,

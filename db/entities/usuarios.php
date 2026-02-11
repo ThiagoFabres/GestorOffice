@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../base.php';
 
 class Usuario {
-    public $id_usuario;
+    public $id;
     public $id_empresa;
     public $nome;
     public $email;
@@ -14,8 +14,8 @@ class Usuario {
     
 
 
-    public function __construct($id_usuario = null, $id_empresa = null, $nome = '', $email = '', $senha = '', $processar = 0, $consultar = 0, $cargo = null, $status = 0) {
-        $this->id_usuario = $id_usuario;
+    public function __construct($id = null, $id_empresa = null, $nome = '', $email = '', $senha = '', $processar = 0, $consultar = 0, $cargo = null, $status = 0) {
+        $this->id = $id;
         $this->id_empresa = $id_empresa;
         $this->nome = $nome;
         $this->email = $email;
@@ -54,7 +54,7 @@ public static function create($usuario) {
     $query = 'SELECT * FROM usuario';
     $conditions = [];
 
-    if ($id != null) $conditions[] = 'id_usuario = :id_usuario';
+    if ($id != null) $conditions[] = 'id = :id';
     if ($email != null) $conditions[] = 'email = :email';
     if ($idempresa != null) $conditions[] = 'id_empresa = :id_empresa';
     if ($cargo != null) $conditions[] = 'cargo = :cargo';
@@ -73,7 +73,7 @@ public static function create($usuario) {
 
     $stmt = $pdo->prepare($query);
 
-    if ($id != null) $stmt->bindValue(':id_usuario', $id);
+    if ($id != null) $stmt->bindValue(':id', $id);
     if ($email != null) $stmt->bindValue(':email', $email);
     if ($idempresa != null) $stmt->bindValue(':id_empresa', $idempresa);
     if ($cargo != null) $stmt->bindValue(':cargo', $cargo);
@@ -96,7 +96,7 @@ return $stmt->fetchAll();
                 processar = :processar, 
                 consultar = :consultar, 
                 status = :status 
-            WHERE id_usuario = :id_usuario';
+            WHERE id = :id';
 
     $stmt = $pdo->prepare($sql);
 
@@ -107,7 +107,7 @@ return $stmt->fetchAll();
     $stmt->bindValue(':processar', $usuario->processar, PDO::PARAM_INT);
     $stmt->bindValue(':consultar', $usuario->consultar, PDO::PARAM_INT);
     $stmt->bindValue(':status', $usuario->status, PDO::PARAM_INT);
-    $stmt->bindValue(':id_usuario', $usuario->id_usuario, PDO::PARAM_INT);
+    $stmt->bindValue(':id', $usuario->id, PDO::PARAM_INT);
 
     return $stmt->execute();
 }
@@ -117,13 +117,13 @@ public static function updateSenha($usuario) {
 
     $sql = 'UPDATE usuario 
             SET senha = :senha,
-            WHERE id_usuario = :id_usuario';
+            WHERE id = :id';
 
     $stmt = $pdo->prepare($sql);
 
     
     $stmt->bindValue(':senha', password_hash($usuario->senha, PASSWORD_DEFAULT));
-    $stmt->bindValue(':id_usuario', $usuario->id_usuario, PDO::PARAM_INT);
+    $stmt->bindValue(':id', $usuario->id, PDO::PARAM_INT);
 
     return $stmt->execute();
 }
