@@ -77,6 +77,9 @@ if($quantidade != null) {
                 <div class="modal-body">
                     <form method="get" action="movimentacao.php">
 
+                    <?php foreach($filtros_get as $i => $filtro) { ?>
+                        <input type="hidden" name="<?=$i?>" value="<?=$filtro?>">
+                    <?php } ?>
                     <input type="hidden" name="id" value="<?=$ban02->id?>"> 
                     <input type="hidden" name="acao" value="desmembrar"> 
                     

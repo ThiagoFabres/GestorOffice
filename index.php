@@ -36,6 +36,8 @@ $erro = (!$sucesso) ? filter_input(INPUT_GET, 'erro') : null;
             <?php if(isset($erro) && $erro == 'credenciais') { ?><label style="width:100%; text-align: center; color: #ff3030ff;"> Email ou senha inválidos. </label><?php } ?>
             <?php if(isset($erro) && $erro == 'dados') { ?><label style="width:100%; text-align: center; color: #ff3030ff;"> Dados inválidos. </label><?php } ?>
             <?php if(isset($erro) && $erro == 'campos') { ?><label style="width:100%; text-align: center; color: #ff3030ff;"> Por favor, preencha todos os campos. </label><?php } ?>
+            <?php if(isset($erro) && $erro == 'usuario_inativo') { ?><label style="width:100%; text-align: center; color: #ff3030ff;"> Cliente impossibilitado de acessar o sistema.  Favor entrar em contato com a GestorOffice. </label><?php } ?>
+            <?php if(isset($erro) && $erro == 'empresa_inativa') { ?><label style="width:100%; text-align: center; color: #ff3030ff;"> Cliente impossibilitado de acessar o sistema.  Favor entrar em contato com a GestorOffice.</label><?php } ?>
             <form action="login.php" method="post">
                 <div id="input-login-card" style="<?php if(isset($erro) && $erro != null) { ?>border: 1px solid #ff30309d;<?php }  else if($sucesso) {?>border: 1px solid #30ff3aff;<?php } ?> ">
 

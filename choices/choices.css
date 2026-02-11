@@ -106,13 +106,27 @@ div input[type="number"]{
     width: 100%;
     font-size:95%;
     text-overflow: clip;
+    
 }
 
 /* CORREÇÃO: Dropdown aberto - permite texto em múltiplas linhas */
 .choices__list--dropdown {
+    min-width: 200px;
+    white-space: nowrap;
     white-space: normal !important;
-    overflow-y: hidden !important;
-    overflow-x: hidden !important;
+}
+.choices[data-type*="select"] .choices__list--dropdown {
+    /* Ensures the dropdown always appears below the input */
+    top: 100%; 
+    bottom: auto; 
+    /* The z-index may need adjustment based on your specific layout */
+    z-index: 20; 
+}
+
+.choices[data-type*="select"].is-flipped .choices__list--dropdown {
+    /* Reverts the 'is-flipped' class behavior which usually makes it go up */
+    top: 100%;
+    bottom: auto;
 }
 
 .choices__list--dropdown .choices__item {

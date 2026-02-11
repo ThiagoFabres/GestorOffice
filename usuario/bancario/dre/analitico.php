@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <?php
 
 require_once __DIR__ . '/../../../db/base.php';
@@ -48,7 +47,7 @@ if($todas_empresas) {
 
 
 ?>
-
+<!DOCTYPE html>
 
 
 
@@ -73,7 +72,7 @@ if($todas_empresas) {
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
+<link rel="shortcut icon" href="/gestor-office.png" type="image/x-icon">
 <title>Gestor Office Control</title>
 </head>
 
@@ -205,12 +204,9 @@ if($todas_empresas) {
 
                     </tbody>
                     <?php
-                    // Buscar títulos dinâmicos (baseados nos lançamentos pagos)
-                    $titulos = [];
-                    $subtitulos = [];
-                    $lancamentos_lista = [];
-                    if ($get_data_final != '' || $get_data_inicial != '' || $get_titulo != '' || $get_custos != '') {
-                        foreach($empresa_lista as $empresa) {
+                    // Buscar lançamentos de todas as empresas
+                    $lancamentos = [];
+                    foreach($empresa_lista as $empresa) {
                         $lancamentos_empresa = Ban02::read(
                             id_empresa: $empresa->id,
                             filtro_data_inicial: $get_data_inicial,
@@ -219,44 +215,54 @@ if($todas_empresas) {
                             filtro_subtitulo: $get_subtitulo,
                             dre_read: true
                         );
-                        $lancamentos_lista[] = $lancamentos_empresa;
+                        $lancamentos[] = $lancamentos_empresa;
                     }
-                        $recebimentos = [];
-                        foreach ($lancamentos_lista as $lancamentos) {
-                            foreach($lancamentos as $lancamento) {
-                            $recebimento = Ban02::read(id: $lancamento->id)[0]->id;
-                            if (!in_array($recebimento, $recebimentos)) {
-                                $recebimentos[] = $recebimento;
-                            }
-                        }   
-                    }
-                        
-                        foreach ($recebimentos as $item) {
-                            if (in_array($item, $recebimentos)) {
-
-                                $subtitulo = Ban02::read(id: $item)[0];
-                                $subtitulo = Con02::read(id: $subtitulo->id_con02)[0];
-
-                                if (!in_array($subtitulo, $subtitulos)) {
-                                    $subtitulos[] = $subtitulo;
+                    
+                    // Obter subtítulos únicos (con02) usados nos lançamentos
+                    $titulos = [];
+                    $subtitulos = [];
+                    $subtitulos_ids = [];
+                    
+                    if (!empty($lancamentos)) {
+                        foreach ($lancamentos as $lancamentos_lista) {
+                            foreach($lancamentos_lista as $lan) {
+                                if (!empty($lan->id_con02) && !in_array($lan->id_con02, $subtitulos_ids)) {
+                                    $subtitulos_ids[] = $lan->id_con02;
                                 }
-                            } 
-                        }
-                       
-                        foreach ($subtitulos as $subtitulo) {
-
-                            $titulo = Con01::read(
-                                id: $subtitulo->id_con01, 
-                                ordenar_por: 'tipo', 
-                                filtro_operacional:$get_operacional);
-                            if ($titulo && isset($titulo[0]) && !in_array($titulo[0], $titulos)) {
-                                $titulos[] = $titulo[0];
                             }
                         }
-                        
 
-                        // Exibir cada título como um accordion, e dentro dele, as contas separadas por categoria
-// ...existing code...
+                        // carregar objetos Con02
+                        foreach ($subtitulos_ids as $id_con02) {
+                            $c2 = Con02::read($id_con02);
+                            if ($c2 && isset($c2[0])) {
+                                $subtitulos[] = $c2[0];
+                            }
+                        }
+                    }
+                    
+                    // Agrupar subtítulos por título
+                    $titulos_array = [];
+                    $subtitulos_agrupados = [];
+                    foreach ($subtitulos as $subtitulo) {
+                        $titulo = Con01::read(
+                            id: $subtitulo->id_con01,
+                            ordenar_por: 'tipo',
+                            filtro_operacional: $get_operacional);
+                        if ($titulo && isset($titulo[0])) {
+                            $nome_titulo = $titulo[0]->nome;
+                            if(!isset($titulos_array[$nome_titulo])) {
+                                $titulos_array[$nome_titulo] = $titulo[0];
+                                $subtitulos_agrupados[$nome_titulo] = [];
+                            }
+                            if (!in_array($subtitulo, $subtitulos_agrupados[$nome_titulo])) {
+                                $subtitulos_agrupados[$nome_titulo][] = $subtitulo;
+                            }
+                        }
+                    }
+                    $titulos = array_values($titulos_array);
+                    
+                    // Exibir cada título como um accordion
                         if (isset($titulos)) { ?>
                             
                            <div class="accordion custom-accordion"style="border:0;" id="accordionTitulos">
@@ -269,7 +275,7 @@ if($todas_empresas) {
                                
                                 $collapseId = 'tituloCollapse' . $i;
                                 ?>
-                                <div class="accordion-item">
+                                <div class="accordion-item ">
                                     <h2 class="accordion-header" id="headingTitulo<?= $i ?>">
                                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                                             data-bs-target="#<?= $collapseId ?>" aria-expanded="false"
@@ -287,39 +293,53 @@ if($todas_empresas) {
                                             $totais_gerais = [];
 
                                             $sub_idx = 1;
-                                            foreach ($subtitulos as $subtitulo) {
-                                                 
-                                                // Buscar todos os pagamentos/recebimentos desse subtítulo
-                                                $parcelas = [];
-                                                if ($titulo->tipo == 'D') {
-                                                    $parcelas = Ban02::read(
-                                                        filtro_data_inicial: $get_data_inicial,
-                                                        filtro_data_final: $get_data_final,
-                                                        tipo: 'D',
-                                                        filtro_titulo: $titulo->id,
-                                                        filtro_subtitulo: $subtitulo->id,
-                                                    );
-                                                } else {
-                                                    $parcelas = Ban02::read(
-                                                        filtro_data_inicial: $get_data_inicial,
-                                                        filtro_data_final: $get_data_final,
-                                                        tipo: 'C',
-                                                        filtro_titulo: $titulo->id,
-                                                        filtro_subtitulo: $subtitulo->id,
-                                                    );
+                                            $subtitulos_do_titulo = $subtitulos_agrupados[$titulo->nome] ?? [];
+                                            
+                                            // Agrupar subtítulos por nome e consolidar IDs
+                                            $subtitulos_consolidados_nomes = [];
+                                            $parcelas_por_nome = [];
+                                            
+                                            foreach ($subtitulos_do_titulo as $subtitulo) {
+                                                if (!isset($subtitulos_consolidados_nomes[$subtitulo->nome])) {
+                                                    $subtitulos_consolidados_nomes[$subtitulo->nome] = [
+                                                        'primeiro_obj' => $subtitulo,
+                                                        'ids' => []
+                                                    ];
+                                                    $parcelas_por_nome[$subtitulo->nome] = [];
                                                 }
+                                                $subtitulos_consolidados_nomes[$subtitulo->nome]['ids'][] = $subtitulo->id;
+                                            }
+                                            
+                                            // Buscar parcelas para todos os subtítulos consolidados
+                                            foreach ($subtitulos_consolidados_nomes as $nome_subtitulo => $dados_subtitulo) {
+                                                $ids_subtitulo = $dados_subtitulo['ids'];
                                                 
-
-                                                
-                                                
-                                                if (count($parcelas) > 0) { $total_subtitulo = 0;?>
+                                                // Filtrar parcelas dos lançamentos pelos IDs dos subtítulos consolidados
+                                                if (!empty($lancamentos)) {
+                                                    foreach ($lancamentos as $lancamentos_lista) {
+                                                        foreach($lancamentos_lista as $lancamento) {
+                                                            if (in_array($lancamento->id_con02, $ids_subtitulo)) {
+                                                                $parcelas_por_nome[$nome_subtitulo][] = $lancamento;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            
+                                            // Exibir subtítulos agrupados com suas parcelas consolidadas
+                                            foreach ($subtitulos_consolidados_nomes as $nome_subtitulo => $dados_subtitulo) {
+                                                $subtitulo = $dados_subtitulo['primeiro_obj'];
+                                                $parcelas = $parcelas_por_nome[$nome_subtitulo] ?? [];
+                                                $total_subtitulo = 0;
+                                                if (count($parcelas) > 0) {
+                                                ?>
                                                 <div class="">
-                                                <h5 class="avoid-page-break"> <?=htmlspecialchars($subtitulo->nome)?> </h5>
+                                                <h5 class=""> <?=htmlspecialchars($subtitulo->nome)?> </h5>
                                                     
                                                     
-                                                    <table class="table table-striped table-bordered avoid-page-break" style="margin: none;">
+                                                    <table class="table table-striped table-bordered " style="margin: none;">
                                                         <thead>
-                                                            <tr class="tr-dre-analitico">
+                                                            <tr class="tr-dre-analitico avoid-page-break">
                                                                 <th>Descrição</th>
                                                                 <th>Valor</th>
                                                             </tr>
@@ -359,7 +379,6 @@ if($todas_empresas) {
                                                         <?php    
                                                             $totais_gerais[] = $total_subtitulo;
                                                 }
-                                                $sub_idx++;
                                             }
                                             // Exibir total geral do título
                                             if (count($totais_gerais) > 0) {
@@ -390,7 +409,7 @@ if($todas_empresas) {
 
                             </div>
                          <?php if (!empty($titulos)) { ?>
-                            <div class="card-footer" id="totais-dre">
+                            <div class="card-footer avoid-page-break" id="totais-dre">
 
                                 <?php
                                 $total_geral = array_sum($total_geral);
@@ -398,11 +417,11 @@ if($todas_empresas) {
                                 $total_despesas = array_sum($total_despesas);
 
                                 ?>
-                                <div style="margin-top:2em;" id="total-receitas">Total receitas: <br> R$
+                                <div style="margin-top:2em;" class="avoid-page-break" id="total-receitas">Total receitas: <br> R$
                                     <?= number_format($total_receitas, 2, ',', '.') ?> </div>
-                                <div style="margin-top:2em;" id="total-despesas">Total despesas: <br> R$
+                                <div style="margin-top:2em;" class="avoid-page-break" id="total-despesas">Total despesas: <br>  R$
                                     <?= number_format($total_despesas, 2, ',', '.') ?> </div>
-                                <div style="margin-top:2em;" id="total-dre">Saldo do DRE: <br> R$
+                                <div style="margin-top:2em;" class="avoid-page-break" id="total-dre">Saldo do DRE: <br>  R$
                                     <?= number_format($total_geral, 2, ',', '.') ?> </div>
 
                             </div>
@@ -413,10 +432,8 @@ if($todas_empresas) {
                     </div>
                 </div>
             </div>
-
-            <?php } ?>
             
-
+<?php require_once __DIR__ . '/../../../componentes/footer/footer.php' ?> 
 </body>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
@@ -540,58 +557,6 @@ if($todas_empresas) {
             document.querySelector('button[name="acao"]').disabled = true;
         }
     }
-
-    function encolher() {
-        let barra = document.getElementById('barra-lateral');
-        let container = document.getElementById('container');
-        let superior = document.getElementById('header');
-        let body = document.getElementById('body');
-
-
-
-
-
-
-        if (barra.style.animationName === 'encolher') {
-
-            superior.style.animationName = 'expandir-header'
-            superior.style.animationDuration = '0.5s';
-            superior.style.animationFillMode = 'backwards';
-
-            barra.style.animationName = 'expandir';
-            barra.style.animationDuration = '0.5s';
-            barra.style.animationFillMode = 'backwards';
-
-            container.style.animationName = 'expandir-container'
-            container.style.animationDuration = '0.5s';
-            container.style.animationFillMode = 'backwards';
-
-            body.style.animationName = 'expandir-container'
-            body.style.animationDuration = '0.5s';
-            body.style.animationFillMode = 'backwards';
-            return;
-        } else {
-
-            superior.style.animationName = 'encolher-header'
-            superior.style.animationDuration = '0.5s';
-            superior.style.animationFillMode = 'forwards';
-
-            barra.style.animationName = 'encolher';
-            barra.style.animationDuration = '0.5s';
-            barra.style.animationFillMode = 'forwards';
-
-            container.style.animationName = 'encolher'
-            container.style.animationDuration = '0.5s';
-            container.style.animationFillMode = 'forwards';
-
-            body.style.animationName = 'encolher'
-            body.style.animationDuration = '0.5s';
-            body.style.animationFillMode = 'forwards';
-
-        }
-    }
-
-
 
 </script>
 

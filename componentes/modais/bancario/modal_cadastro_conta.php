@@ -10,7 +10,7 @@ if ($acao == 'editar') {
                 
                 <!-- Cabeçalho -->
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modalCadastroCidadeLabel">Adicionar Nova Conta Bancária</h5>
+                    <h5 class="modal-title" id="modalCadastroCidadeLabel"><?php if($acao == 'editar') {echo 'Editar Conta Bancária';} else {echo 'Adicionar Nova Conta Bancária';}?></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
                 
@@ -38,6 +38,16 @@ if ($acao == 'editar') {
                         <div style="width:65%;">
                             <label for="numeroConta" class="form-label">Número da Conta</label>
                             <input type="text" id="numeroConta" name="numero_conta" class="form-control" maxlength="15" placeholder="Conta" required value="<?php if($acao == 'editar') {echo $conta->conta ?? '';}?>">
+                        </div>
+                    </div>
+                    <div class="mb-3 d-flex fd-row gap-2">
+                        <div style="width:65%;">
+                            <label for="agencia" class="form-label">Saldo</label>
+                            <input type="text" id="valor" name="valor" class="form-control" placeholder="Saldo" required value="<?php if($acao == 'editar') {echo number_format($conta->valor, 2, ',', '.') ?? '';}?>">
+                        </div>
+                        <div style="width:35%;">
+                            <label for="numeroConta" class="form-label">Data</label>
+                            <input type="date" id="data" name="data" class="form-control" placeholder="Data" required value="<?php if($acao == 'editar') {echo $conta->data ?? (new DateTime())->format('Y-m-d');}?>">
                         </div>
                     </div>
                     

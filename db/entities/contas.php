@@ -104,23 +104,26 @@ Class Con02 {
     public $id_empresa;
     public $id_con01;
     public $nome;
+    public $data_r;
 
-    public function __construct($id = null, $id_empresa = null,  $id_con01 = null, $nome = '') {
+    public function __construct($id = null, $id_empresa = null,  $id_con01 = null, $nome = null) {
         $this->id = $id;
         $this->id_empresa = $id_empresa;
         $this->id_con01 = $id_con01;
         $this->nome = $nome;
-
+        $this->data_r = (new DateTime)->format('Y-m-d');
     }
 
     public static function create($conta) {
         $pdo = (new Database())->connect();
-        $sql = 'INSERT INTO con02 (id_empresa, id_con01, nome) 
-                VALUES (:id_empresa, :id_con01, :nome)';
+        $sql = 'INSERT INTO con02 (id_empresa, id_con01, nome, data_r) 
+                VALUES (:id_empresa, :id_con01, :nome, :data_r)';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id_empresa', $conta->id_empresa);
         $stmt->bindValue(':id_con01', $conta->id_con01);
         $stmt->bindValue(':nome', $conta->nome);
+        $stmt->bindValue(':data_r', $conta->data_r);
+
 
         return $stmt->execute();
     }

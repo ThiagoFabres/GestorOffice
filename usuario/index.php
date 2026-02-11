@@ -17,13 +17,20 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
 $lateral_target = 'dashboard';
  
 $data = new DateTime();
+$data_mês = $data;
+$data_mês = $data->format('t-m-d');
 $data_atual = $data->format('Y-m-d');
+
 
 $data_ontem = $data->modify('-1 days');
 $data_ontem = $data_ontem->format('Y-m-d');
 
 $data_amanha = $data->modify('+2 days');
 $data_amanha = $data_amanha->format('Y-m-d');
+
+$data_final = DateTime::createFromFormat('Y-m-d', $data_atual)->format('Y-m-t');
+$data_inicial = DateTime::createFromFormat('Y-m-d', $data_atual)->format('Y-m-01');
+
 
 
 
@@ -42,7 +49,7 @@ foreach($pagamentos_hoje as $pag02) {
 }
 $total_pag_hoje = number_format($total_pag_hoje, 2, ',', '.');
 
-$pagamentos_a_vencer = Pag02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, null, null, null, null, null, true, 'a_vencer');
+$pagamentos_a_vencer = Pag02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, $data_final, null, null, null, null, true, 'a_vencer');
 $total_pag_a_vencer = 0;
 foreach($pagamentos_a_vencer as $pag02) {
     $total_pag_a_vencer += $pag02->valor_par;
@@ -64,7 +71,7 @@ foreach($recebimentos_hoje as $rec02) {
 }
 $total_rec_hoje = number_format($total_rec_hoje, 2, ',', '.');
 
-$recebimentos_a_vencer = Rec02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, null, null, null, null, null, true, 'a_vencer');
+$recebimentos_a_vencer = Rec02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, $data_final, null, null, null, null, true, 'a_vencer');
 $total_rec_a_vencer = 0;
 foreach($recebimentos_a_vencer as $rec02) {
     $total_rec_a_vencer += $rec02->valor_par;
@@ -72,8 +79,7 @@ foreach($recebimentos_a_vencer as $rec02) {
 $total_rec_a_vencer = number_format($total_rec_a_vencer, 2, ',', '.');
 
 
-$data_final = DateTime::createFromFormat('Y-m-d', $data_atual)->format('Y-m-t');
-$data_inicial = DateTime::createFromFormat('Y-m-d', $data_atual)->format('Y-m-01');
+
 
 $receber_lancamento = Rec02::read(id_empresa: $_SESSION['usuario']->id_empresa, filtro_data_inicial:$data_inicial, filtro_data_final:$data_final, filtro_por:'vencimento');
 $total_rec_lancamento = 0;
@@ -97,14 +103,14 @@ $total_rec_lancamento = number_format($total_rec_lancamento, 2, ',', '.');
 $receber_pagamento = Rec02::read(id_empresa: $_SESSION['usuario']->id_empresa, filtro_data_inicial:$data_inicial, filtro_data_final:$data_final, filtro_por:'pagamento');
 $total_rec_pagamento = 0;
 foreach($receber_pagamento as $rec02) {
-    $total_rec_pagamento += $rec02->valor_par;
+    $total_rec_pagamento += $rec02->valor_pag;
 }
 
 
 $pagar_pagamento = Pag02::read(id_empresa: $_SESSION['usuario']->id_empresa, filtro_data_inicial:$data_inicial, filtro_data_final:$data_final, filtro_por:'pagamento');
 $total_pag_pagamento = 0;
 foreach($pagar_pagamento as $pag02) {
-    $total_pag_pagamento += $pag02->valor_par;
+    $total_pag_pagamento += $pag02->valor_pag;
 }
 
 $saldo_pagamento = $total_rec_pagamento - $total_pag_pagamento;
@@ -112,11 +118,10 @@ $saldo_pagamento = number_format($saldo_pagamento, 2, ',', '.');
 $total_pag_pagamento = number_format($total_pag_pagamento, 2, ',', '.');
 $total_rec_pagamento = number_format($total_rec_pagamento, 2, ',', '.');
 ?>
-
-
 <!DOCTYPE html>
+<head>
 
-
+<?php require_once __DIR__ . '/../componentes/header/header.php' ?>
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.3/html2pdf.bundle.min.js" integrity="sha512-yu5WG6ewBNKx8svICzUA01vozhmiQCVfzjzW40eCHJdsDRaOifh9hPlWBDex5b32gWCzawTp1F3FJz60ps6TnQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -131,24 +136,27 @@ $total_rec_pagamento = number_format($total_rec_pagamento, 2, ',', '.');
     <link rel="stylesheet" href="style/dash.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
+    <link rel="shortcut icon" href="/gestor-office.png" type="image/x-icon">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dragscroll/0.0.8/dragscroll.min.js"></script>
+    <link rel="stylesheet" href="style/responsivo.css">
 
     <title>Gestor Office Control</title>
 </head>
 
-<body id="body" >
+
+<body id="body" style="background-color: #d3d5d7ff;">
 
 
     <?php require_once __DIR__ . '/../componentes/lateral/lateral.php'?>
-    <?php require_once __DIR__ . '/../componentes/header/header.php' ?>
 
 
 
-    <div class="main d-flex justify-content-center align-items-center" id="container" style="padding-block:0; height: 80vh;">
-        <div class="d-flex flex-row gap-5 w-100 justify-content-center">
-            <div class="d-flex flex-column gap-4 w-100" >
-                <div class="dashboard-group">
+    <div class="main d-flex justify-content-evenly align-items-center main-dash" id="container" >
+        <div class="d-flex w-100 flex-column justify-content-evenly" id="dashboard-div-group" style="gap:5em;">
+            
+
+            <div class="d-flex  w-100" style="gap:5em">
+                <div class="dashboard-group justify-content-evenly">
                     <table class="table-bordered">
 
                                 <h1>Contas a receber</h1>
@@ -166,8 +174,8 @@ $total_rec_pagamento = number_format($total_rec_pagamento, 2, ',', '.');
                                         <tbody>
                                             <tr class="tr-clientes-dash">
                                                 <td>
-                                                    <div class="d-flex flex-row justify-content-between">
-                                                        <div>R$</div> 
+                                                    <div class="d-flex flex-row justify-content-center">
+                                                         
                                                         <div><?=$total_rec_venceu?></div>
                                                     </div>
                                                 </td>
@@ -186,8 +194,8 @@ $total_rec_pagamento = number_format($total_rec_pagamento, 2, ',', '.');
                                         <tbody>
                                             <tr class="tr-clientes-dash">
                                                 <td>
-                                                    <div class="d-flex flex-row justify-content-between">
-                                                        <div>R$</div> 
+                                                    <div class="d-flex flex-row justify-content-center">
+                                                         
                                                         <div><?=$total_rec_hoje?></div>
                                                     </div>
                                                 </td>
@@ -206,8 +214,8 @@ $total_rec_pagamento = number_format($total_rec_pagamento, 2, ',', '.');
                                         <tbody>
                                             <tr class="tr-clientes-dash">
                                                 <td>
-                                                    <div class="d-flex flex-row justify-content-between">
-                                                        <div>R$</div> 
+                                                    <div class="d-flex flex-row justify-content-center">
+                                                         
                                                         <div><?=$total_rec_a_vencer?></div>
                                                     </div>
                                                 </td>
@@ -219,81 +227,6 @@ $total_rec_pagamento = number_format($total_rec_pagamento, 2, ',', '.');
                         </tbody>
                     </table>
                 </div>
-
-                <div class="dashboard-group">
-                    <table class="table-bordered">
-
-                                <p>Saldo Mensal por data de Lançamento</p>
-
-                        <tbody>
-                            
-                            <tr>
-                                <td>
-                                    <table class="table-bordered">
-                                        <thead>
-                                            <tr class="tr-clientes-dash"style="background-color: #ccc;" >
-                                                <th>+</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr class="tr-clientes-dash">
-                                                <td>
-                                                    <div class="d-flex flex-row justify-content-between">
-                                                        <div>R$</div> 
-                                                        <div><?=$total_rec_lancamento?></div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </td>
-
-                                <td>
-                                    <table class="table-bordered w-100">
-                                        <thead>
-                                            <tr class="tr-clientes-dash" style="background-color: #ccc;">
-                                                <th>-</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr class="tr-clientes-dash">
-                                                <td>
-                                                    <div class="d-flex flex-row justify-content-between">
-                                                        <div>R$</div> 
-                                                        <div><?=$total_pag_lancamento?></div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </td>
-
-                                <td>
-                                    <table class="table-bordered w-100">
-                                        <thead>
-                                            <tr class="tr-clientes-dash" style="background-color: #ccc;">
-                                                <th>=</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr class="tr-clientes-dash">
-                                                <td>
-                                                    <div class="d-flex flex-row justify-content-between">
-                                                        <div>R$</div> 
-                                                        <div><?=$saldo_lancamento?></div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="d-flex flex-column gap-4 w-100">
                 <div class="dashboard-group">
                     <table class="table-bordered">
                         <thead>
@@ -314,8 +247,8 @@ $total_rec_pagamento = number_format($total_rec_pagamento, 2, ',', '.');
                                         <tbody>
                                             <tr class="tr-clientes-dash">
                                                 <td>
-                                                    <div class="d-flex flex-row justify-content-between">
-                                                        <div>R$</div> 
+                                                    <div class="d-flex flex-row justify-content-center">
+                                                         
                                                         <div><?=$total_pag_venceu?></div>
                                                     </div>
                                                 </td>
@@ -334,8 +267,8 @@ $total_rec_pagamento = number_format($total_rec_pagamento, 2, ',', '.');
                                         <tbody>
                                             <tr class="tr-clientes-dash">
                                                 <td>
-                                                    <div class="d-flex flex-row justify-content-between">
-                                                        <div>R$</div> 
+                                                    <div class="d-flex flex-row justify-content-center">
+                                                         
                                                         <div><?=$total_pag_hoje?></div>
                                                     </div>
                                                 </td>
@@ -354,9 +287,83 @@ $total_rec_pagamento = number_format($total_rec_pagamento, 2, ',', '.');
                                         <tbody>
                                             <tr class="tr-clientes-dash">
                                                 <td>
-                                                    <div class="d-flex flex-row justify-content-between">
-                                                        <div>R$</div> 
+                                                    <div class="d-flex flex-row justify-content-center">
+                                                         
                                                         <div><?=$total_pag_a_vencer?></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+            </div>
+            <div class="d-flex w-100 justify-content-evenly" style="gap:5em">
+                <div class="dashboard-group justify-content-evenly">
+                    <table class="table-bordered">
+
+                                <h1 style="white-space: nowrap;">Saldo Mensal Lançamento</h1>
+
+                        <tbody>
+                            
+                            <tr>
+                                <td>
+                                    <table class="table-bordered">
+                                        <thead>
+                                            <tr class="tr-clientes-dash"style="background-color: #ccc;" >
+                                                <th>+</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="tr-clientes-dash">
+                                                <td>
+                                                    <div class="d-flex flex-row justify-content-center">
+                                                         
+                                                        <div><?=$total_rec_lancamento?></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+
+                                <td>
+                                    <table class="table-bordered w-100">
+                                        <thead>
+                                            <tr class="tr-clientes-dash" style="background-color: #ccc;">
+                                                <th>-</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="tr-clientes-dash">
+                                                <td>
+                                                    <div class="d-flex flex-row justify-content-center">
+                                                         
+                                                        <div><?=$total_pag_lancamento?></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+
+                                <td>
+                                    <table class="table-bordered w-100">
+                                        <thead>
+                                            <tr class="tr-clientes-dash" style="background-color: #ccc;">
+                                                <th>=</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="tr-clientes-dash">
+                                                <td>
+                                                    <div class="d-flex flex-row justify-content-center">
+                                                         
+                                                        <div><?=$saldo_lancamento?></div>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -370,23 +377,23 @@ $total_rec_pagamento = number_format($total_rec_pagamento, 2, ',', '.');
                 <div class="dashboard-group">
                     <table class="table-bordered">
 
-                                <p>Saldo Mensal por data de Pagamento</p>
+                                <h1 style="white-space: nowrap;">Saldo Mensal Pagamento</h1>
 
                         <tbody>
                             
                             <tr>
                                 <td>
-                                    <table class="table-bordered" >
+                                    <table class="table-bordered">
                                         <thead>
-                                            <tr class="tr-clientes-dash"  style="background-color: #ccc;">
+                                            <tr class="tr-clientes-dash"style="background-color: #ccc;" >
                                                 <th>+</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr class="tr-clientes-dash">
                                                 <td>
-                                                    <div class="d-flex flex-row justify-content-between">
-                                                        <div>R$</div> 
+                                                    <div class="d-flex flex-row justify-content-center">
+                                                         
                                                         <div><?=$total_rec_pagamento?></div>
                                                     </div>
                                                 </td>
@@ -405,8 +412,8 @@ $total_rec_pagamento = number_format($total_rec_pagamento, 2, ',', '.');
                                         <tbody>
                                             <tr class="tr-clientes-dash">
                                                 <td>
-                                                    <div class="d-flex flex-row justify-content-between">
-                                                        <div>R$</div> 
+                                                    <div class="d-flex flex-row justify-content-center">
+                                                         
                                                         <div><?=$total_pag_pagamento?></div>
                                                     </div>
                                                 </td>
@@ -425,8 +432,8 @@ $total_rec_pagamento = number_format($total_rec_pagamento, 2, ',', '.');
                                         <tbody>
                                             <tr class="tr-clientes-dash">
                                                 <td>
-                                                    <div class="d-flex flex-row justify-content-between">
-                                                        <div>R$</div> 
+                                                    <div class="d-flex flex-row justify-content-center">
+                                                         
                                                         <div><?=$saldo_pagamento?></div>
                                                     </div>
                                                 </td>
@@ -555,55 +562,7 @@ atualizarTotalParcelas();
     //     }
     // }
 
-    function encolher() {
-        let barra = document.getElementById('barra-lateral');
-        let container = document.getElementById('container');
-        let superior = document.getElementById('header');
-        let body = document.getElementById('body');
-
-
-
-
-
-
-
-
-if (barra.style.animationName === 'encolher') {
-
-            superior.style.animationName = 'expandir-header'
-            superior.style.animationDuration = '0.5s';
-            superior.style.animationFillMode = 'backwards';
-
-            barra.style.animationName = 'expandir';
-            barra.style.animationDuration = '0.5s';
-            barra.style.animationFillMode = 'backwards';
-            
-            container.style.animationName = 'expandir-container'
-            container.style.animationDuration = '0.5s';
-            container.style.animationFillMode = 'backwards';
-
-            body.style.animationName = 'expandir-container'
-            body.style.animationDuration = '0.5s';
-            body.style.animationFillMode = 'backwards';
-            return;
-        } else {
-
-        superior.style.animationName = 'encolher-header'
-        superior.style.animationDuration = '0.5s';
-        superior.style.animationFillMode = 'forwards';
-
-        barra.style.animationName = 'encolher';
-        barra.style.animationDuration = '0.5s';
-        barra.style.animationFillMode = 'forwards';
-
-        container.style.animationName = 'encolher'
-        container.style.animationDuration = '0.5s';
-        container.style.animationFillMode = 'forwards';
-
-        body.style.animationName = 'encolher'
-        body.style.animationDuration = '0.5s';
-        body.style.animationFillMode = 'forwards';
-    }}
+    
     
 
 </script>

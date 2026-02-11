@@ -1,11 +1,10 @@
 <?php 
 
-
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     header('Location: /');
     exit;
 }
-function buscarDocumento(){
+function buscarDocumentoRec(){
 
 $pdo = (new Database())->connect();
 $sql = "SELECT MAX(CAST(documento AS UNSIGNED)) AS ultimo 

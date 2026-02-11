@@ -1,7 +1,5 @@
 <?php
-echo '<pre>';
-print_r($_POST);
-echo '</pre>';
+
 
 require_once '../../../db/entities/usuarios.php';
 session_start();
@@ -34,9 +32,7 @@ if($acao == 'adicionar') {
     Pal01::create($palavra);
     header('Location: /usuario/bancario/palavra/palavra_chave.php?status=sucesso');
     exit;
-}
-
-else if($acao == 'editar') {
+} else if($acao == 'editar') {
     $id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_NUMBER_INT);
     $titulo_tipo = Con01::read($titulo)[0]->tipo;
     $palavra = new Pal01(
@@ -54,7 +50,13 @@ else if($acao == 'editar') {
         header('Location: /usuario/bancario/palavra/palavra_chave.php?status=erro');
         exit;
      }
-} else {
+} else if($acao == 'excluir') {
+    $id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_NUMBER_INT);
+    Pal01::delete($id);
+    header('Location:palavra_chave.php');
+    exit;
+}
+else {
     header('Location: /usuario/bancario/palavra/palavra_chave.php?status=acao_invalida');
     exit;
 }

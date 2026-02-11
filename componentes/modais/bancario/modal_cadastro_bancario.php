@@ -11,7 +11,11 @@
                 
                 <!-- Corpo -->
                 <div class="modal-body">
+                    <?php 
 
+
+                    ?>
+                    <?php if(empty($_SESSION['ofx_transactions'])) {?>
                     <form method="post" enctype="multipart/form-data" action="movimentacao_manager.php">
                         <input type="hidden" name="acao" value="processar"></input>
                         <div class="mb-3 gap-2">
@@ -28,15 +32,16 @@
                             </select>
                         </div>
                         <div class="mb-3 gap-2">
-                            <label for="agencia" class="form-label">Arquivo OFX</label>
+                            <label for="agencia" class="form-label">Arquivo OFX / Excel</label>
                             <input type="file"
                             onchange="this.form.submit()"
-                            accept=".ofx" id="agencia" name="ofx"
+                            accept=".ofx, .xlsx" id="agencia" name="ofx"
                             class="form-control" placeholder="Agência"
                             >
                         </div>
                         <button type="submit" class="btn-sm btn btn-primary">Gerar</button>
                     </form>
+                    <?php } ?>
 
                     <?php if (!empty($_SESSION['ofx_transactions']['transactions'])): ?>
                         <form action="movimentacao_manager.php" method="post">
@@ -46,6 +51,7 @@
 
                     <div class="mb-3 mt-3" style="max-height:30rem; overflow: auto;">
                         <h6>Pré-visualização do arquivo OFX:</h6>
+                        
                         <div class="table-responsive">
                             <table class="table table-bordered">
                                 <thead style="position:sticky;">
@@ -65,7 +71,7 @@
                                         
                                         ?>
                                         <tr>
-                                            <td><input class="form-control" readonly name="tipo[<?=$id_linha?>]" value="<?= htmlspecialchars($linha['tipo'] ?? '') ?>"></input></td>
+                                            <td><input class="form-control" readonly name="tipo[<?=$id_linha?>]" value="<?= htmlspecialchars($linha['tipo'] ?? $linha['valor'] > 0 ? 'Crédito' : 'Débito') ?>"></input></td>
                                             <td><input class="form-control" readonly name="data[<?=$id_linha?>]" value="<?= htmlspecialchars($linha['data'] ?? '') ?>"></input></td>
                                             <td><input class="form-control" readonly name="valor[<?=$id_linha?>]" value="<?= htmlspecialchars($linha['valor'] ?? '') ?>"></input></td>
                                             <td><input class="form-control" readonly name="documento[<?=$id_linha?>]" value="<?= htmlspecialchars($novo_documento ?? '')?>"></input></td>

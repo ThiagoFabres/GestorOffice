@@ -17,11 +17,12 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     exit;
 }
 
-require_once __DIR__ . '/../../db/buscar_documento_rec.php';
+require_once __DIR__ . '/../../db/buscar_documento_pag.php';
 
 $lateral_recorrente = true;
 $lateral_target = 'recorrente_pagar';
 
+$novo_documento = buscarDocumentoPag();
 ?>
 
 <!DOCTYPE html>
@@ -46,7 +47,7 @@ $lateral_target = 'recorrente_pagar';
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
+<link rel="shortcut icon" href="/gestor-office.png" type="image/x-icon">
 <title>Gestor Office Control</title>
 </head>
 
@@ -74,7 +75,8 @@ $lateral_target = 'recorrente_pagar';
                                     aria-labelledby="vendas-tab">
                                     <form method="post" action="recorrente_manager.php"
                                         onkeydown="return event.key != 'Enter';">
-                                    <input type="hidden" name="view" value="receber">
+                                    <input type="hidden" name="view" value="pagar">
+                                    <input type="hidden" name="documento_inicial" value="<?=$novo_documento?>">
                                     
 
                                             <div 
@@ -159,7 +161,7 @@ $lateral_target = 'recorrente_pagar';
                                                 </div>
 
                                                 <div class="input-data-lanc" style="width:calc(100%/3)">
-                                                    <label for="data_lanc">Vencimento inicial:</label>
+                                                    <label for="data_venc">Vencimento inicial:</label>
                                                     <input type="date" onchange="checar()" name="data_venc"
                                                         class="form-control" placeholder="Data de lançamento" style="border-radius:0;"
                                                         value="" required>
@@ -167,19 +169,20 @@ $lateral_target = 'recorrente_pagar';
 
                                                 <div class="input-parcelas" style="width:calc(100%/3)">
                                                     <!--Nome: -->
-                                                    <label for="parcelas">Parcelas:</label>
-                                                    <input type="number" onchange="checar()" name="parcelas"
-                                                        class="form-control" placeholder="Parcelas"
+                                                    <label for="parcelas">N. Lançamentos:</label>
+                                                    <input type="number" onchange="checar()" name="n_lanc"
+                                                        class="form-control" placeholder="N. Lançamentos"
                                                         value=""
                                                         style="border-radius:0;"
                                                         required>
                                                 </div>
                                             </div>
 
-
-
-
-
+                                            <div class="d-flex flex-column">
+                                                    <label>Descrição:</label>
+                                                    <input value="" name="descricao" placeholder="Descricao" class="form-control">
+                                                </div>
+                                            </div>
 
                                             <div style="width: 100%;">
                                                 <button type="submit" class="btn btn-primary mt-4"
@@ -196,7 +199,7 @@ $lateral_target = 'recorrente_pagar';
                     </div>
     </div>
 
-
+<?php require_once __DIR__ . '/../../componentes/footer/footer.php' ?> 
 </body>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />

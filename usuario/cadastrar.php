@@ -69,7 +69,10 @@ if(isset($id) && (isset($acao) && $acao == 'editar')) {
     } else if($get_cadastro == 'pagamento') {
     $cadastro_target = TipoPagamento::read($id)[0];
     $cadastros_empresa = TipoPagamento::read(null,$_SESSION['usuario']->id_empresa);
-    }   
+    } else if($get_cadastro == 'custo') {
+    $cadastro_target = CentroCustos::read($id)[0];
+    $cadastros_empresa = CentroCustos::read(null,$_SESSION['usuario']->id_empresa);
+    }
 
     foreach($cadastros_empresa as $cadastro_empresa) {
        
@@ -131,7 +134,7 @@ $estadosLista = [
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
+    <link rel="shortcut icon" href="/gestor-office.png" type="image/x-icon">
     <title>Gestor Office Control</title>
 </head>
 
@@ -140,6 +143,7 @@ $estadosLista = [
 
     <?php require_once __DIR__ . '/../componentes/lateral/lateral.php'?>
     <?php require_once __DIR__ . '/../componentes/header/header.php' ?>
+    <?php require_once __DIR__ . '/../componentes/footer/footer.php'?>
 
 
 
@@ -191,14 +195,14 @@ $estadosLista = [
                     <div class="col-md-2" style="width: 15%;">
                         <label for="dataInicio" class="form-label">Data inicial:</label>
                         <div class="input-group">
-                            <input name="dataInicial" value="<?= $get_data_inicial ?? "" ?>" type="date" class="form-control" id="dataInicio" placeholder="dd/mm/aaaa" style="border-radius: 0.25em;">
+                            <input name="data_inicial" value="<?= $get_data_inicial ?? "" ?>" type="date" class="form-control" id="dataInicio" placeholder="dd/mm/aaaa" style="border-radius: 0.25em;">
                             
                         </div>
                     </div>
                     <div class="col-md-2" style="width: 15%;">
                         <label for="dataFinal" class="form-label">Data final:</label>
                         <div class="input-group">
-                            <input name="dataFinal"  value="<?= $get_data_inicial ?? "" ?>" type="date" class="form-control" id="dataFinal" placeholder="dd/mm/aaaa" style="border-radius: 0.25em;">
+                            <input name="data_final"  value="<?= $get_data_final ?? "" ?>" type="date" class="form-control" id="dataFinal" placeholder="dd/mm/aaaa" style="border-radius: 0.25em;">
                             
                         </div>
                     </div>
@@ -342,7 +346,7 @@ $estadosLista = [
                                             <td>
                                                 <?=htmlspecialchars($cadastro->celular, ENT_QUOTES, 'UTF-8')?>
                                                 <br>
-                                                <?php if($cadastro->fixo != ''){?> 
+                                                <?php if($cadastro->fixo != 0){?> 
                                                     <p> Fixo: <?=htmlspecialchars($cadastro->fixo, ENT_QUOTES, 'UTF-8')?></p>
                                                 <?php } ?>    
                                                     
@@ -371,7 +375,7 @@ $estadosLista = [
                                                     
                                                 ?>
                                                 <br>
-                                                 <?php if($cadastro->cep != '') {?>
+                                                 <?php if($cadastro->cep != 0) {?>
                                                     <p>CEP: <?= htmlspecialchars($cadastro->cep, ENT_QUOTES, 'UTF-8') ?></p>
                                                  <?php } ?>         
                                             </td>
@@ -450,26 +454,26 @@ $estadosLista = [
     </div>
 
     <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input type="text" class="form-control" id="cnpj" placeholder="CNPJ" name="cnpj" value="<?= htmlspecialchars($cadastro->cnpj, ENT_QUOTES, 'UTF-8') ?>" >
+        <input type="text" class="form-control" id="cnpj" placeholder="CNPJ" name="cnpj" value="<?= $cadastro->cnpj != 0 ? htmlspecialchars($cadastro->cnpj, ENT_QUOTES, 'UTF-8') : '' ?>" >
     </div>
 
     <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input type="text" class="form-control" id="cpf" placeholder="CPF" name="cpf" value="<?= htmlspecialchars($cadastro->cpf, ENT_QUOTES, 'UTF-8') ?>" >
+        <input type="text" class="form-control" id="cpf" placeholder="CPF" name="cpf" value="<?= $cadastro->cpf != 0 ? htmlspecialchars($cadastro->cpf, ENT_QUOTES, 'UTF-8') : '' ?>" >
     </div>
 
     <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input type="text" class="form-control" id="cep" placeholder="CEP" name="cep" value="<?= htmlspecialchars($cadastro->cep, ENT_QUOTES, 'UTF-8') ?>" >
+        <input type="text" class="form-control" id="cep" placeholder="CEP" name="cep" value="<?= $cadastro->cep != 0 ? htmlspecialchars($cadastro->cep, ENT_QUOTES, 'UTF-8') : '' ?>" >
     </div>
 
     <div style="display:flex; flex-direction:row;" class="mb-3">
         <input type="text" class="form-control" id="endereco" placeholder="Endereço" name="endereco" value="<?= htmlspecialchars($cadastro->rua, ENT_QUOTES, 'UTF-8') ?>" >
     </div>
 
-    <div class="input-form-adm-group input-form-adm">
+    <div class="input-form-adm-group input-form-adm w-100">
 
-    <div style="display:flex; flex-direction:row;" class="mb-3">
+    <div style="display:flex; flex-direction:row; width:100%" class="mb-3">
        <select style="border-top-right-radius: 0; border-bottom-right-radius: 0;" id="bairro" name="bairro" class="form-control"  style="border-radius:0;" >
-
+        <option value="" selected>Selecione</option>
                             <?php foreach ($bairrolista as $bairro) { ?>
                                 <option <?php if($bairro->id == $cadastro->id_bairro){?> selected <?php } ?> value="<?= htmlspecialchars($bairro->id, ENT_QUOTES, 'UTF-8') ?>">
                             <?= $bairro->nome ?>
@@ -478,9 +482,9 @@ $estadosLista = [
                         </select>
     </div>
 
-    <div style="display:flex; flex-direction:row;" class="mb-3">
+    <div style="display:flex; flex-direction:row; width:100%" class="mb-3">
         <select style="border-radius:0;" id="cidade" name="cidade" class="form-control"  style="border-radius:0;" >
-
+        <option value="" selected>Selecione</option>
                             <?php foreach ($cidadelista as $cidade) { ?>
                                 <option <?php if($cidade->id == $cadastro->id_cidade){?> selected <?php } ?> value="<?= htmlspecialchars($cidade->id, ENT_QUOTES, 'UTF-8') ?>">
                             <?= $cidade->nome ?>
@@ -489,12 +493,12 @@ $estadosLista = [
                         </select>
     </div>
 
-    <div style="display:flex; flex-direction:row;" class="mb-3">
+    <div style="display:flex; flex-direction:row; width:100%" class="mb-3">
         <select style="border-top-left-radius:0; border-bottom-left-radius:0;" id="estado" name="estado" class="form-control"  style="border-radius:0;" >
 
-                            <option value="" >Selecione um estado</option>
+                            <option value="" selected>Selecione</option>
                             <?php foreach ($estadosLista as $sigla => $estado) { ?>
-                                <option <?php if($sigla == $cadastro->estado){?> selected <?php } ?> value="<?= htmlspecialchars($sigla, ENT_QUOTES, 'UTF-8') ?>">
+                                <option <?php if($sigla == $cadastro->estado){?> selected <?php  } ?> value="<?= htmlspecialchars($sigla, ENT_QUOTES, 'UTF-8') ?>">
                             <?= $estado ?>
                             </option>
                             <?php } ?>
@@ -511,7 +515,7 @@ $estadosLista = [
     </div>
 
     <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input  style="border-top-left-radius: 0; border-bottom-left-radius: 0;" type="text" class="form-control" id="telefone" placeholder="Telefone fixo" name="fixo" value="<?= htmlspecialchars($cadastro->fixo, ENT_QUOTES, 'UTF-8') ?>" >
+        <input  style="border-top-left-radius: 0; border-bottom-left-radius: 0;" type="text" class="form-control" id="telefone" placeholder="Telefone fixo" name="fixo" value="<?= $cadastro->fixo != 0 ? htmlspecialchars($cadastro->fixo, ENT_QUOTES, 'UTF-8') : ''?>" >
     </div>
 
     </div>
@@ -522,7 +526,7 @@ $estadosLista = [
 
     <div class="input-categoria">
         <select style="margin-bottom:1em;" id="cidade" name="categoria" class="form-control"  style="border-radius:0;" >
-
+        <option value="" selected>Selecione</option>
                 <?php foreach ($categorialista as $categoria) { ?>
                     <option <?php if($categoria->id == $cadastro->id_categoria){?> selected <?php } ?> value="<?= $categoria->id ?>">
                      <?= htmlspecialchars($categoria->nome, ENT_QUOTES, 'UTF-8') ?>
@@ -887,7 +891,7 @@ $estadosLista = [
                 
 
                     <div class="card">
-                        <div class="card-header" style="display:flex; flex-direction: row; justify-content: space-between;"><h3><?= ucfirst($get_cadastro) . 's' ?></h3> <div class="botao">
+                        <div class="card-header" style="display:flex; flex-direction: row; justify-content: space-between;"><h3><?php if($get_cadastro != 'custo') {echo ucfirst($get_cadastro) . 's';} else {echo 'Centros de Custos';} ?></h3> <div class="botao">
                         <a href="cadastrar.php?cadastro=<?= $get_cadastro ?>&acao=adicionar" class="btn btn-primary btn-lg botao-adm-adicionar"> <?php if ($get_cadastro == 'cidade') {echo 'Nova';} else { echo 'Novo';} ?> <?= ucfirst($get_cadastro) ?></a>
                     </div></div>
                 
@@ -1009,7 +1013,7 @@ switch ($get_cadastro) {
 
 <?php } } 
 
- if(isset($acao) && $acao == 'editar' && ($get_cadastro == 'bairro' || $get_cadastro == 'cidade' || $get_cadastro == 'pagamento' || $get_cadastro == 'categoria')){  
+ if(isset($acao) && $acao == 'editar' && ($get_cadastro == 'bairro' || $get_cadastro == 'cidade' || $get_cadastro == 'pagamento' || $get_cadastro == 'categoria' || $get_cadastro == 'custo')) {  
  
 
     $cadastro = checar_cadastro($cadastros_empresa[0], $cadastro_target);
@@ -1017,6 +1021,7 @@ switch ($get_cadastro) {
     else if($get_cadastro == 'cidade'){$cadastro_titulo = 'a cidade';}
     else if($get_cadastro == 'pagamento'){$cadastro_titulo = 'o pagamento';}
     else if($get_cadastro == 'categoria'){$cadastro_titulo = 'a categoria';}
+    else if($get_cadastro == 'custo'){$cadastro_titulo = 'o centro de custos';}
     ?>
 
         
@@ -1109,53 +1114,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 
-    function encolher() {
-        let barra = document.getElementById('barra-lateral');
-        let container = document.getElementById('container');
-        let superior = document.getElementById('header');
-        let body = document.getElementById('body');
 
-
-
-
-
-
-if (barra.style.animationName === 'encolher') {
-
-            superior.style.animationName = 'expandir-header'
-            superior.style.animationDuration = '0.5s';
-            superior.style.animationFillMode = 'backwards';
-
-            barra.style.animationName = 'expandir';
-            barra.style.animationDuration = '0.5s';
-            barra.style.animationFillMode = 'backwards';
-            
-            container.style.animationName = 'expandir-container'
-            container.style.animationDuration = '0.5s';
-            container.style.animationFillMode = 'backwards';
-
-            body.style.animationName = 'expandir-container'
-            body.style.animationDuration = '0.5s';
-            body.style.animationFillMode = 'backwards';
-            return;
-        } else {
-
-        superior.style.animationName = 'encolher-header'
-        superior.style.animationDuration = '0.5s';
-        superior.style.animationFillMode = 'forwards';
-
-        barra.style.animationName = 'encolher';
-        barra.style.animationDuration = '0.5s';
-        barra.style.animationFillMode = 'forwards';
-
-        container.style.animationName = 'encolher'
-        container.style.animationDuration = '0.5s';
-        container.style.animationFillMode = 'forwards';
-
-        body.style.animationName = 'encolher'
-        body.style.animationDuration = '0.5s';
-        body.style.animationFillMode = 'forwards';
-    }}
 </script>
 
 <?php if ( isset($acao) && $acao == 'adicionar') { 
@@ -1211,6 +1170,12 @@ if (barra.style.animationName === 'encolher') {
                 window.location.href = 'cadastrar.php?cadastro=<?= $get_cadastro ?>';
             </script>
     <?php } }?>
+<?php if(isset($erro) && $erro == 'usado_e') { ?>
+    <script>
+        alert('Não é possivel Excluir esse cadastro, pois existem Lançamentos vinculados a ele.');
+        window.location.href = 'cadastrar.php?cadastro=cliente';
+    </script>
+<?php } ?>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>

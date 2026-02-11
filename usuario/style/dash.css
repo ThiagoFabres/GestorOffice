@@ -28,6 +28,10 @@ html {
     white-space: nowrap;
     
 }
+#dashboard-div-group {
+    display: flex;
+    flex-direction: row;
+}
 
 .card table {
     overflow: auto;
@@ -181,7 +185,4 @@ html {
 .tr-clientes th,
 .tr-clientes td{
     overflow: hidden;
-}
-.tr-clientes-dash td{
-    height:70px;
 }

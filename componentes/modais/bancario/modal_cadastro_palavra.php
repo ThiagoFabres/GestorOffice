@@ -83,14 +83,22 @@ if($acao == 'editar') {
                             </div>
                         </div>
                     </div>   
+                </div>
+                <div class="d-flex flex-row justify-content-between w-100">
+                  
+                  <div>
+                    <?php if($acao == 'editar') {?><button type="submit" name="acao" value="excluir" class="btn btn-danger">Excluir</button> <?php } ?>
+                  </div>
+
+                  <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        <button type="submit" name="acao" value="<?php if(isset($acao) && $acao == 'editar') { ?>editar<?php } else {?>adicionar<?php } ?>" class="btn btn-success" style="background-color: #5856d6; border-color: #5856d6;">Salvar</button>
+                  </div>
+
                 </div>                             
                     
                     <!-- Botões -->
-                    <div class="d-flex justify-content-end gap-2">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                        <button type="submit" name="acao" value="<?php if(isset($acao) && $acao == 'editar') { ?>editar<?php } else {?>adicionar<?php } ?>" class="btn btn-success" style="background-color: #5856d6; border-color: #5856d6;">Salvar</button>
-                        
-                    </div>
+                    
                     </form>
                 </div>
             </div>
@@ -230,7 +238,7 @@ function initTituloSubtitulo(tituloId, subtituloId, subtituloSelecionado) {
       filtrarSubtitulosPorTitulo(tituloSelect.value, true);
     }
     aplicarPreSelecao();
-  }, 300);
+  }, 1);
 }
 
 

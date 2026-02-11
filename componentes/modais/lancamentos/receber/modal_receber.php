@@ -124,7 +124,7 @@
             $valor,
             $parcelas_d,
             null,
-            $_SESSION['usuario']->id_usuario,
+            $_SESSION['usuario']->id,
         );
 
         $parcelas = [];

@@ -1,7 +1,7 @@
 <?php
 
 class Database {
-    private $dsn = 'mysql:host=localhost;dbname=gestor_office';
+    private $dsn = 'mysql:host=localhost;dbname=gestor_office_control';
     private $username = 'root';
     private $password = '';
 

@@ -18,7 +18,10 @@ $codigo = filter_input(INPUT_POST, 'codigo', FILTER_SANITIZE_NUMBER_INT);
 $agencia = filter_input(INPUT_POST, 'agencia', FILTER_SANITIZE_NUMBER_INT);
 $numero_conta = filter_input(INPUT_POST, 'numero_conta', FILTER_SANITIZE_STRING);
 $acao = filter_input(INPUT_POST, 'acao', FILTER_SANITIZE_STRING);
-
+$data = filter_input(INPUT_POST, 'data', FILTER_SANITIZE_STRING);
+$valor = filter_input(INPUT_POST, 'valor', FILTER_SANITIZE_STRING);
+$valor = str_replace('.', '', $valor);
+$valor = str_replace(',', '.', $valor);
 if($acao == 'adicionar') {
     $nova_conta = new Ban01(
         null,
@@ -26,9 +29,12 @@ if($acao == 'adicionar') {
         $codigo,
         $agencia,
         $numero_conta,
-        $nome
+        $nome,
+        $valor,
+        $data
     );
     $resultado = Ban01::create($nova_conta);
+
     if ($resultado) {
         header('Location: /usuario/bancario/contas/conta.php?sucesso=sucesso.');
     } else {
@@ -43,8 +49,11 @@ else if($acao == 'editar') {
         $codigo,
         $agencia,
         $numero_conta,
-        $nome
+        $nome,
+        $valor,
+        $data
     );
+
     $resultado = Ban01::update($conta_existente);
     if ($resultado) {
         header('Location: /usuario/bancario/contas/conta.php?sucesso=sucesso.');

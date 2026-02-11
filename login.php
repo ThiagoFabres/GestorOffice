@@ -20,12 +20,21 @@ if (isset($_POST['email']) && isset($_POST['senha'])) {
         $usuario = Usuario::read(null, $email);
         
 
+        if($usuario[0]->status == 0 && $usuario[0]->cargo == 3) {
+            header('Location: /index.php?erro=usuario_inativo');
+            exit;
+        }
+
         if ($usuario && password_verify($senha, $usuario[0]->senha)) {
 
     session_regenerate_id(true);
 
     $_SESSION['usuario'] = $usuario[0];
-
+    // var_dump(session_status());
+    // exit;
+    // var_dump(session_id());
+    // var_dump($_SESSION);
+    // die;
 
     switch ($usuario[0]->cargo) {
         case 1:
@@ -33,7 +42,6 @@ if (isset($_POST['email']) && isset($_POST['senha'])) {
             break;  
         case 2:
             $empresa = Empresa::read($usuario[0]->id_empresa);
-echo 'a';
            if ($empresa[0]->status == 1) {
     header('Location: gestor/index.php');
     exit; 
@@ -42,7 +50,12 @@ echo 'a';
     }
             break;
         case 3:
+            $empresa = Empresa::read($usuario[0]->id_empresa);
+           if ($empresa[0]->status == 1) {
             header('Location: usuario/index.php');
+           } else {
+        header('Location: /index.php?erro=empresa_inativa');
+    }
             break;
 
     }

@@ -16,7 +16,9 @@ class Rec01 {
     public $id_usuario;
     public $centro_custos;
     public $id_convertido;
-    public function __construct($id = null, $id_empresa = null, $id_cadastro = null, $id_con01 = null, $id_con02 = null, $documento = '', $descricao = '', $valor = 0.0, $parcelas = 1, $data_lanc = null, $id_usuario = null, $centro_custos = null, $id_convertido = null) {
+    public $valor_b;
+    public $valor_liq_go;
+    public function __construct($id = null, $id_empresa = null, $id_cadastro = null, $id_con01 = null, $id_con02 = null, $documento = '', $descricao = '', $valor = 0.0, $parcelas = 1, $data_lanc = null, $id_usuario = null, $centro_custos = null, $id_convertido = null, $valor_b = null, $valor_liq_go = null) {
         $this->id = $id;
         $this->id_empresa = $id_empresa;
         $this->id_cadastro = $id_cadastro;
@@ -30,13 +32,15 @@ class Rec01 {
         $this->id_usuario = $id_usuario;
         $this->centro_custos = $centro_custos;
         $this->id_convertido = $id_convertido;
+        $this->valor_b = $valor_b;
+        $this->valor_liq_go = $valor_liq_go;
     }
 
     public static function create($rec01) {
         $pdo = (new Database())->connect();
 
-        $sql = 'INSERT INTO rec01 (centro_custos, id_empresa, id_cadastro, id_con01, id_con02, documento, descricao, valor, parcelas, data_lanc, id_usuario, id_convertido) 
-                VALUES (:centro_custos, :id_empresa, :id_cadastro, :id_con01, :id_con02, :documento, :descricao, :valor, :parcelas, :data_lanc, :id_usuario, :id_convertido)';
+        $sql = 'INSERT INTO rec01 (centro_custos, id_empresa, id_cadastro, id_con01, id_con02, documento, descricao, valor, parcelas, data_lanc, id_usuario, id_convertido, valor_b, valor_liq_go) 
+                VALUES (:centro_custos, :id_empresa, :id_cadastro, :id_con01, :id_con02, :documento, :descricao, :valor, :parcelas, :data_lanc, :id_usuario, :id_convertido, :valor_b, :valor_liq_go)';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id_empresa', $rec01->id_empresa);
         $stmt->bindValue(':id_cadastro', $rec01->id_cadastro);
@@ -50,6 +54,8 @@ class Rec01 {
         $stmt->bindValue(':id_usuario', $rec01->id_usuario);
         $stmt->bindValue(':centro_custos', $rec01->centro_custos);
         $stmt->bindValue(':id_convertido', $rec01->id_convertido);
+        $stmt->bindValue(':valor_b', $rec01->valor_b);
+        $stmt->bindValue(':valor_liq_go', $rec01->valor_liq_go);
 
         
 
@@ -91,7 +97,19 @@ class Rec01 {
         $pdo = (new Database())->connect();
 
         $sql = 'UPDATE rec01 
-                SET centro_custos = :centro_custos, id_cadastro = :id_cadastro, id_con01 = :id_con01, id_con02 = :id_con02, documento = :documento, descricao = :descricao, valor = :valor, parcelas = :parcelas, data_lanc = :data_lanc, id_usuario = :id_usuario 
+                SET 
+                centro_custos = :centro_custos, 
+                id_cadastro = :id_cadastro, 
+                id_con01 = :id_con01, 
+                id_con02 = :id_con02, 
+                documento = :documento, 
+                descricao = :descricao, 
+                valor = :valor, 
+                parcelas = :parcelas, 
+                data_lanc = :data_lanc, 
+                id_usuario = :id_usuario
+                valor_b = :valor_b
+                valor_liq_go = :valor_liq_go 
                 WHERE id = :id';
 
         $stmt = $pdo->prepare($sql);
@@ -106,6 +124,8 @@ class Rec01 {
         $stmt->bindValue(':data_lanc', $rec01->data_lanc->format('Y-m-d H:i:s'));
         $stmt->bindValue(':id_usuario', $rec01->id_usuario);
         $stmt->bindValue(':centro_custos', $rec01->centro_custos);
+        $stmt->bindValue(':valor_b', $rec01->valor_b);
+        $stmt->bindValue(':valor_liq_go', $rec01->valor_liq_go);
 
         
 
@@ -191,7 +211,9 @@ class Rec02 {
         $filtro_con01 = null,
         $filtro_con02 = null,
         $filtro_cadastro = null,
-        $filtro_custos = null
+        $filtro_custos = null,
+        $read_totais = null,
+        $read_vendas = null
     ) {
         $pdo = (new Database())->connect();
 
@@ -206,6 +228,11 @@ class Rec02 {
                FROM rec02 r2 INNER JOIN rec01 r1 ON r2.id_rec01 = r1.id 
                INNER JOIN cadastro c ON r1.id_cadastro = c.id_cadastro';
             
+            } else if($read_totais) {
+                $query = 'SELECT r2.valor_par, r2.valor_pag, r1.documento, r1.id_con02
+                FROM rec02 r2
+                INNER JOIN rec01 r1 ON r2.id_rec01 = r1.id
+            ';
             } else {
                 $query = 'SELECT r2.*, r1.documento, r1.id_con02
                 FROM rec02 r2
@@ -255,7 +282,7 @@ class Rec02 {
                 $conditions[] = 'r2.vencimento = :filtro_data_inicial';
                 break;
             case 'a_vencer':
-                $conditions[] = 'r2.vencimento > :filtro_data_inicial';
+                $conditions[] = 'r2.vencimento > :filtro_data_inicial AND r2.vencimento <= :filtro_data_final AND r2.valor_pag <= 0';
                 break;
             case 'venceu':
                 $conditions[] = 'r2.vencimento < :filtro_data_inicial';
@@ -267,6 +294,9 @@ class Rec02 {
     }
     if($filtro_con02 != null) {
         $conditions[] = 'r1.id_con02 = :filtro_con02';
+    }
+    if($read_vendas != null) {
+        $conditions[] = 'r1.valor_b IS NOT NULL';
     }
         
 
@@ -280,7 +310,7 @@ class Rec02 {
 }
 
 
-        
+        if($filtro_por == 'pagamento') $conditions[] = 'r2.id_pgto IS NOT NULL';
         if ($id_rec01 != null) $conditions[] = 'r2.id_rec01 = :id_rec01';
         if ($data != null) $conditions[] = 'MONTH(r2.vencimento) = MONTH(:data) AND YEAR(r2.vencimento) = YEAR(:data)';
         if ($parcela != null) $conditions[] = 'r2.parcela = :parcela';
@@ -445,5 +475,93 @@ public static function readPagos() {
         return $ids;
 
 }
+}
+
+class Rec03 {
+    public $id;
+    public $id_empresa;
+    public $data;
+    public $operadora_id;
+    public $bandeira_id;
+    public $tipo_id;
+    public $prazo_id;
+
+    public function __construct($id = null, $id_empresa = null, $data = null, $operadora_id = null, $bandeira_id = null, $tipo_id = null, $prazo_id = null) {
+        $this->id = $id;
+        $this->id_empresa = $id_empresa;
+        $this->data = $data;
+        $this->operadora_id = $operadora_id;
+        $this->bandeira_id = $bandeira_id;
+        $this->tipo_id = $tipo_id;
+        $this->prazo_id = $prazo_id;
+    }
+     public static function create($rec03) {
+        $pdo = (new Database())->connect();
+
+        $sql = "
+INSERT INTO rec03 (
+    id_empresa,
+    data_lanc,
+    operadora_id,
+    bandeira_id,
+    prazo_id
+) VALUES (
+    :id_empresa,
+    :data_lanc,
+    :operadora_id,
+    :bandeira_id,
+    :prazo_id
+)";
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindValue(':id_empresa', $rec03->id_empresa);
+        $stmt->bindValue(':data_lanc', $rec03->data);
+        $stmt->bindValue(':operadora_id', $rec03->operadora_id);
+        $stmt->bindValue(':bandeira_id', $rec03->bandeira_id);
+        $stmt->bindValue(':prazo_id', $rec03->prazo_id);
+        
+
+        return $stmt->execute();
+    }
+    public static function read(
+    $id = null, 
+    $id_empresa = null, 
+    $data = null, 
+    $operadora_id = null, 
+    $bandeira_id = null, 
+    $tipo_id = null,
+    $prazo_id = null,
+    ): array {
+
+        $pdo = (new Database())->connect();
+        $query = 'SELECT * FROM rec03';
+        $conditions = [];
+
+        if ($id != null) $conditions[] = 'id = :id';
+        if ($id_empresa != null) $conditions[] = 'id_empresa = :id_empresa';
+        if ($data != null) $conditions[] = 'data_lanc = :data_lanc';
+        if ($operadora_id != null) $conditions[] = 'operadora_id = :operadora_id';
+        if ($bandeira_id != null) $conditions[] = 'bandeira_id = :bandeira_id';
+        if ($tipo_id != null) $conditions[] = 'tipo_id = :tipo_id';
+        if ($prazo_id != null) $conditions[] = 'prazo_id = :prazo_id';
+
+
+        if ($conditions) {
+            $query .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+
+        $stmt = $pdo->prepare($query);
+
+        if ($id != null) $stmt->bindValue(':id', $id);
+        if ($id_empresa != null) $stmt->bindValue(':id_empresa', $id_empresa);
+        if ($data != null) $stmt->bindValue(':data_lanc', $data);
+        if ($operadora_id != null) $stmt->bindValue(':operadora_id', $operadora_id);
+        if ($bandeira_id != null) $stmt->bindValue(':bandeira_id', $bandeira_id);
+        if ($tipo_id != null) $stmt->bindValue(':tipo_id', $tipo_id);
+        if ($prazo_id != null) $stmt->bindValue(':prazo_id', $prazo_id);
+
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, self::class);
+    }
 }
 ?>

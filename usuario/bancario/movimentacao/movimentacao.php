@@ -1,6 +1,3 @@
-
-
-<!DOCTYPE html>
 <?php 
 require_once __DIR__ . '/../../../db/entities/usuarios.php';
 
@@ -18,7 +15,11 @@ require_once __DIR__ . '/../../../db/entities/recebimentos.php';
 require_once __DIR__ . '/../../../db/entities/pagar.php';
 require_once __DIR__ . '/../../../db/entities/pagamento.php';
 require_once __DIR__ . '/../../../db/entities/centrocustos.php';
+require_once __DIR__ . '/../../../db/entities/cadastro.php';
+require_once __DIR__ . '/../../../db/entities/pagamento.php';
 require_once __DIR__ . '/buscar_documento.php';
+require_once __DIR__ . '/../../../db/buscar_documento_rec.php';
+require_once __DIR__ . '/../../../db/buscar_documento_pag.php';
 
 $numero_exibir = filter_input(INPUT_POST, 'numero_exibido') ?? filter_input(INPUT_GET, 'numero_exibido') ?? 10;
 $numero_pagina = filter_input(INPUT_POST, 'pagina') ?? filter_input(INPUT_GET, 'pagina') ?? 1;
@@ -73,41 +74,105 @@ if($acao == null) $acao = filter_input(INPUT_POST, 'acao', FILTER_SANITIZE_STRIN
 $ofx = filter_input(INPUT_GET, 'ofx', FILTER_SANITIZE_NUMBER_INT);
 
 $filtros = [];
+$filtros_get = [];
 if ($get_filtro_data_inicial != '')
     $filtros[] = 'filtro_data_inicial=' . $get_filtro_data_inicial;
+    $filtros_get['filtro_data_incial']  = $get_filtro_data_inicial;
 if ($get_filtro_data_final != '')
     $filtros[] = 'filtro_data_final=' . $get_filtro_data_final;
+    $filtros_get['filtro_data_final']  = $get_filtro_data_final;
 if ($get_filtro_conciliado != '')
     $filtros[] = 'filtro_conciliado=on';
+    $filtros_get['filtro_conciliado']  = 'on';
 if($get_filtro_tipo != '')
     $filtros[] = 'filtro_tipo=' . $get_filtro_tipo;
+    $filtros_get['filtro_tipo']  = $get_filtro_tipo;
 if($get_filtro_titulo != '' ) 
     $filtros[] = 'filtro_titulo=' . $get_filtro_titulo;
+    $filtros_get['filtro_titulo']  = $get_filtro_titulo;
 if($get_filtro_subtitulo != '') 
     $filtros[] = 'filtro_subtitulo=' . $get_filtro_subtitulo;
+    $filtros_get['filtro_subtitulo']  = $get_filtro_subtitulo;
 if($get_filtro_conta != '')
     $filtros[] = 'filtro_conta=' . $get_filtro_conta;
+    $filtros_get['filtro_conta']  = $get_filtro_conta;
 if($numero_exibir != 10) 
     $filtros[] = 'numero_exibido=' . $numero_exibir;
+    $filtros_get['numero_exibir']  = $numero_exibir;
 if($numero_pagina != 1) 
     $filtros[] = 'pagina=' . $numero_pagina;
+    $filtros_get['numero_pagina']  = $numero_pagina;
 
 if ($filtros != []) {
     
-    $caminho = 'movimentacao.php?' . implode('&', $filtros);
-    $caminho_get = urlencode('movimentacao.php?' . implode('&', $filtros));
+    $caminho = 'movimentacao.php?' . implode('&', $filtros) . '&';
+    $caminho_get = urlencode('movimentacao.php?' . implode('&', $filtros) . '&');
     $caminho_sem_pag = $filtros;
     array_pop($caminho_sem_pag);
-    $caminho_sem_pag = 'movimentacao.php?' . implode('&', $caminho_sem_pag);
+    $caminho_sem_pag = 'movimentacao.php?' . implode('&', $caminho_sem_pag) . '&';
 } else {
-    $caminho = 'movimentacao.php';
-    $caminho_get = urlencode('movimentacao.php');
-    $caminho_sem_pag = 'movimentacao.php';
+    $caminho = 'movimentacao.php?';
+    $caminho_get = urlencode('movimentacao.php?');
+    $caminho_sem_pag = 'movimentacao.php?';
 }
+
+
+$movimentacoes_pdf = Ban02::read(
+                            id_empresa: $_SESSION['usuario']->id_empresa,
+                            filtro_data_inicial: $get_filtro_data_inicial ??null,
+                            filtro_data_final: $get_filtro_data_final ?? null,
+                            filtro_conciliado:$get_filtro_conciliado,
+                            filtro_titulo: $get_filtro_titulo ?? null,
+                            filtro_subtitulo: $get_filtro_subtitulo ?? null,
+                            filtro_conta: $get_filtro_conta ?? null,
+                            filtro_tipo: $get_filtro_tipo ?? null,
+                            ordenar_por: 'data'
+                        );
+$movimentacoes_totais = $movimentacoes_pdf;
+
+$saldo = 0;
+$saldo_inicial = 0;
+$saldo_final = 0;
+
+
+
+if($get_filtro_conta == null) {
+    $contas = Ban01::read(id_empresa:$_SESSION['usuario']->id_empresa);
+    foreach ($contas as $conta) {
+        $saldo += $conta->valor ?? 0;
+    }
+} else if($get_filtro_conta != null) {
+    $conta = Ban01::read(id: $get_filtro_conta, id_empresa:$_SESSION['usuario']->id_empresa)[0];
+    $saldo += $conta->valor ;
+    $saldo_inicial += $conta->valor;
+}
+if($get_filtro_data_inicial != null) {
+    $movimentacoes_iniciais = Ban02::read(
+        id_empresa: $_SESSION['usuario']->id_empresa,
+                            filtro_data_final: $get_filtro_data_inicial ?? null,
+                            filtro_conciliado:$get_filtro_conciliado,
+                            filtro_titulo: $get_filtro_titulo ?? null,
+                            filtro_subtitulo: $get_filtro_subtitulo ?? null,
+                            filtro_conta: $get_filtro_conta ?? null,
+                            filtro_tipo: $get_filtro_tipo ?? null,
+    );
+    foreach($movimentacoes_iniciais as $mov) {
+        $saldo_inicial += $mov->valor;
+    }
+} else {
+    $saldo_inicial = $saldo;
+}
+
+
+foreach($movimentacoes_totais as $mov) {
+    $saldo += $mov->valor;
+}
+
+
+
 ?>
-
-
-
+<!DOCTYPE html>
+<head>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.3/html2pdf.bundle.min.js"
     integrity="sha512-yu5WG6ewBNKx8svICzUA01vozhmiQCVfzjzW40eCHJdsDRaOifh9hPlWBDex5b32gWCzawTp1F3FJz60ps6TnQ=="
     crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -134,9 +199,11 @@ if ($filtros != []) {
 <link rel="stylesheet" href="movimentacao.css">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
+<link rel="shortcut icon" href="/gestor-office.png" type="image/x-icon">
 <title>Gestor Office Control</title>
 </head>
+
+
 
 <body id="body">
 
@@ -145,7 +212,7 @@ if ($filtros != []) {
     <?php require_once __DIR__ . '/../../../componentes/header/header.php' ?>
     <div class="main" id="container">
         <!-- <button class="btn btn-danger btn-sm" onclick="window.location.href='movimentacao_manager.php?acao=limpar_titulo'">Limpar Titulo</button> -->
-        <button  data-bs-toggle="modal" data-bs-target="#modal_cadastro_bancario" class="btn btn-primary" >Upload Arquivo OFX</button>
+        <button  data-bs-toggle="modal" data-bs-target="#modal_cadastro_bancario" class="btn btn-primary" >Upload Arquivo OFX / Excel</button>
         <div class="row">
         <div class="card">
             <form method="get" action="movimentacao.php">
@@ -272,9 +339,10 @@ if ($filtros != []) {
                 
             
             <div class="card-body dragscroll" style="padding:0;">
-                <table class="table table-hover tabela-bancario" >
+                <table class="table table-hover tabela-bancario" id="tabela-bancario">
                     <thead>
                         <tr class="tr-header">
+                            <th></th>
                             <th>Documento</th>
                             <th>Data de Lançamento</th>
                             <th>Tipo de Lançamento</th>
@@ -309,7 +377,7 @@ if ($filtros != []) {
 
                          if(!empty($movimentacoes)) {
                             
-                            foreach($movimentacoes as $movimentacao) {
+                            foreach($movimentacoes as $i => $movimentacao) {
                                 
                                 // echo '<pre>';
                                 // print_r($movimentacao);
@@ -347,16 +415,21 @@ if ($filtros != []) {
                              data-id-con01="<?= $movimentacao->id_con01 ?? '' ?>"
                              data-id-con02="<?= $movimentacao->id_con02 ?? '' ?>"
                          >
-                            <td onclick="window.location.href='<?=$link?>'"><?=$movimentacao->documento?></td>
-                            <td onclick="window.location.href='<?=$link?>'"><?=$data_lancamento?></td>
-                            <td onclick="window.location.href='<?=$link?>'"><?=$tipo?></td>
-                            <td onclick="window.location.href='<?=$link?>'">R$ <?=number_format($movimentacao->valor, 2, ',', '.', )?></td>
-                            <td onclick="window.location.href='<?=$link?>'"><?=$conta_nome?></td>
-                            <td onclick="window.location.href='<?=$link?>'"><?= isset($con01) ? $con01->nome : ''?></td>
-                            <td onclick="window.location.href='<?=$link?>'"><?= isset($con02) ? $con02->nome : ''?></td>
-                            <td onclick="window.location.href='<?=$link?>'"><?=$movimentacao->descricao?></td>
-                            <td onclick="window.location.href='<?=$link?>'"><?=$movimentacao->descricao_comp?></td>
-                            <td class="td-acoes"><button class="btn" type="button" onclick="window.location.href='<?php if(empty($filtros)) {echo $caminho . '?';} else {echo $caminho . '&';}?>acao=conciliar&id=<?= $movimentacao->id ?>'"><i class="bi bi-clipboard-check"></i></button></td>
+                         <td style=""><input type="checkbox" data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>"  name="id_check[<?=$movimentacao->id?>]" data-id="<?=$movimentacao->id?>"></td>
+                            <td data-bs-toggle="modal" data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-bs-target="#modal_conciliar" data-id="<?=$movimentacao->id?>"><?=$movimentacao->documento?></td>
+                            <td data-bs-toggle="modal" data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-bs-target="#modal_conciliar" data-id="<?=$movimentacao->id?>"><?=$data_lancamento?></td>
+                            <td data-bs-toggle="modal" data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-bs-target="#modal_conciliar" data-id="<?=$movimentacao->id?>"><?=$tipo?></td>
+                            <td data-bs-toggle="modal" data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-bs-target="#modal_conciliar" data-id="<?=$movimentacao->id?>">R$ <?=number_format($movimentacao->valor, 2, ',', '.', )?></td>
+                            <td data-bs-toggle="modal" data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-bs-target="#modal_conciliar" data-id="<?=$movimentacao->id?>"><?=$conta_nome?></td>
+                            <td data-bs-toggle="modal" data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-bs-target="#modal_conciliar" data-id="<?=$movimentacao->id?>"><?= isset($con01) ? $con01->nome : ''?></td>
+                            <td data-bs-toggle="modal" data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-bs-target="#modal_conciliar" data-id="<?=$movimentacao->id?>"><?= isset($con02) ? $con02->nome : ''?></td>
+                            <td data-bs-toggle="modal" data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-bs-target="#modal_conciliar" data-id="<?=$movimentacao->id?>"><?=$movimentacao->descricao?></td>
+                            <td data-bs-toggle="modal" data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-bs-target="#modal_conciliar" data-id="<?=$movimentacao->id?>"><?=$movimentacao->descricao_comp?></td>
+                            <td class="td-acoes">
+                                <button class="btn" type="button" data-bs-toggle="modal" data-bs-target="#modal_conciliar" data-id="<?=$movimentacao->id?>">
+                                    <i class="bi bi-clipboard-check"></i>
+                                </button>
+                            </td>
                             <td class="td-acoes">
                                 <button class="btn" type="button" 
                                 <?php if($movimentacao->id_original != null ) echo 'disabled'?> 
@@ -404,6 +477,14 @@ if ($filtros != []) {
                         </form>
                     </div>
 
+                    <div id="totais-lancamento">          
+
+                                <div id="total-parcela">Saldo: R$
+                                    <?= number_format($saldo, 2, ',', '.') ?> 
+                                </div>
+                            
+                        </div>
+
                     <div class="card-select-numero">
                         <div>
                             <form method="post" action="<?=$caminho_sem_pag?>">
@@ -439,24 +520,15 @@ if ($filtros != []) {
                             
                         </tr>
                     </thead>
-                    <tbody >
+                    <tbody>
                         <?php
 
                         
-                        $movimentacoes = Ban02::read(
-                            id_empresa: $_SESSION['usuario']->id_empresa,
-                            filtro_data_inicial: $get_filtro_data_inicial ??null,
-                            filtro_data_final: $get_filtro_data_final ?? null,
-                            filtro_conciliado:$get_filtro_conciliado,
-                            filtro_titulo: $get_filtro_titulo ?? null,
-                            filtro_subtitulo: $get_filtro_subtitulo ?? null,
-                            filtro_conta: $get_filtro_conta ?? null,
-                            filtro_tipo: $get_filtro_tipo,
-                        );
+                        
 
-                         if(!empty($movimentacoes)) {
+                         if(!empty($movimentacoes_pdf)) {
                             
-                            foreach($movimentacoes as $movimentacao) {
+                            foreach($movimentacoes_pdf as $movimentacao) {
                                 
                                 // echo '<pre>';
                                 // print_r($movimentacao);
@@ -516,24 +588,46 @@ if ($filtros != []) {
                     <button id="menu-desmembrar" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-code-slash"></i> Desmembrar</button>
                     <button id="menu-editar-bancario" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-pen-fill"></i> Editar</button>
                     <button id="menu-quitar-bancario" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-arrow-90deg-up"></i> Quitar</button>
-                </div>
+        </div>
         <div class="relatorios-botoes" style="float:left; width:100%">
             <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="gerarpdf('movimentacao', document.querySelector('#nome-empresa h1').innerHTML)">Gerar PDF</button>
             <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="gerarexcel('movimentacao', document.querySelector('#nome-empresa h1').innerHTML)">Gerar Excel</button>
         </div>
+
+        <div id="totais-lancamento-pdf" style="display:none;">
+            <?php
+            
+            ?>
+            <div class="total-parcela" id="saldo-inicial-pdf">
+                <?= number_format($saldo_inicial, 2, ',', '.') ?> 
+            </div>
+            <div class="total-parcela" id="saldo-final-pdf"> <strong>Saldo Final: R$
+                <?= number_format($saldo, 2, ',', '.') ?> </strong>
+            </div>
+        </div>
     
 
     <?php 
+    
+    
+
+
+    ?>
+    </div>
+    <?php 
+    
     require_once __DIR__ . '/../../../componentes/modais/bancario/modal_cadastro_bancario.php';
     require_once __DIR__ . '/../../../componentes/modais/bancario/modal_conciliar.php';
     require_once __DIR__ . '/../../../componentes/modais/bancario/modal_conciliar_palavra.php';
     require_once __DIR__ . '/../../../componentes/modais/bancario/modal_desmembrar.php';
     require_once __DIR__ . '/../../../componentes/modais/bancario/modal_visualizar.php';
+    
     require_once __DIR__ . '/../../../componentes/modais/bancario/modal_quitar_bancario.php';
+    
     require_once __DIR__ . '/../../../componentes/modais/bancario/modal_quitar.php';
+    require_once __DIR__ . '/../../../componentes/modais/bancario/modal_quitar_adicionar.php';
 
-    // Limpa a sessão após exibir a tabela para não mostrar em acessos futuros
-    if (isset($_SESSION['ofx_transactions'])) {
+        if (isset($_SESSION['ofx_transactions'])) {
         unset($_SESSION['ofx_transactions']);
     }
     if (isset($_SESSION['ofx_conta'])) {
@@ -546,11 +640,13 @@ if ($filtros != []) {
         unset($_SESSION['dias_usados']);
     }
     ?>
-    </div>
-
+<?php require_once __DIR__ . '/../../../componentes/footer/footer.php' ?> 
 </body>
 
 <script>
+
+
+        
 // Custom context menu for movimentacao table — initialize after DOM
 ;(function(){
     console.debug('init movimentacao contextmenu script');
@@ -558,42 +654,40 @@ if ($filtros != []) {
     window._mov_ctx_row = null;
 
     // global handler callable from oncontextmenu attribute on rows
-    window.openCustomContextMenu = function(e, row) {
-        try {
-            const menu = document.getElementById('custom-context-menu');
-            if (!menu) return false;
-            if (!row || !row.classList.contains('tr-bancario')) return false;
-            e.preventDefault();
-            e.stopPropagation();
-            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-            console.debug('openCustomContextMenu called', row);
-            window._mov_ctx_row = row;
-            const menuWidth = menu.offsetWidth || 220;
-            const menuHeight = menu.offsetHeight || 160;
-            let x = e.pageX - 260;
-            let y = e.pageY - 70;
+    // window.openCustomContextMenu = function(e, row) {
+    //     try {
+    //         const menu = document.getElementById('custom-context-menu');
+    //         if (!menu) return false;
+    //         if (!row || !row.classList.contains('tr-bancario')) return false;
+    //         e.preventDefault();
+    //         e.stopPropagation();
+    //         if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+    //         console.debug('openCustomContextMenu called', row);
+    //         window._mov_ctx_row = row;
+    //         const menuWidth = menu.offsetWidth || 220;
+    //         const menuHeight = menu.offsetHeight || 160;
+    //         let x = e.pageX - 260;
+    //         let y = e.pageY - 70;
 
-            menu.style.left = x + 'px';
-            menu.style.top = y + 'px';
-            menu.style.display = 'block';
-            const idOriginal = row.getAttribute('data-id-original') || '';
-            const idCon01 = row.getAttribute('data-id-con01') || '';
-            const idCon02 = row.getAttribute('data-id-con02') || '';
-            const btnConc = document.getElementById('menu-conciliar');
-            const btnDes = document.getElementById('menu-desmembrar');
-            const btnEd = document.getElementById('menu-editar-bancario');
-            const btnQ = document.getElementById('menu-quitar-bancario');
-            if (btnConc) btnConc.disabled = (idCon01 !== '' && idCon02 !== '');
-            if (btnDes) btnDes.disabled = (idOriginal !== '');
-            if (btnEd) btnEd.disabled = false;
-            if (btnQ) btnQ.disabled = (idCon01 === '' || idCon02 === '');
-            row.classList.add('context-menu-open');
-            return false;
-        } catch (err) { console.error(err); return false; }
-    };
+    //         menu.style.left = x + 'px';
+    //         menu.style.top = y + 'px';
+    //         menu.style.display = 'block';
+    //         const idOriginal = row.getAttribute('data-id-original') || '';
+    //         const idCon01 = row.getAttribute('data-id-con01') || '';
+    //         const idCon02 = row.getAttribute('data-id-con02') || '';
+    //         const btnConc = document.getElementById('menu-conciliar');
+    //         const btnDes = document.getElementById('menu-desmembrar');
+    //         const btnEd = document.getElementById('menu-editar-bancario');
+    //         const btnQ = document.getElementById('menu-quitar-bancario');
+
+    //         row.classList.add('context-menu-open');
+            
+    //         return false;
+    //     } catch (err) { console.error(err); return false; }
+    // };
 
     document.addEventListener('DOMContentLoaded', function(){
-        console.log('a')
+        
         const menu = document.getElementById('custom-context-menu');
         if (!menu) {
             console.warn('custom-context-menu not found');
@@ -605,15 +699,16 @@ if ($filtros != []) {
             try {
                 let row = e.target.closest('.tr-bancario');
                 if (row && !row.classList.contains('tr-header')) {
+                    
                     e.preventDefault();
                     e.stopPropagation();
                     if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-                    console.debug('movimentacao contextmenu intercepted', row);
+                    // console.debug('movimentacao contextmenu intercepted', row);
                     window._mov_ctx_row = row;
                     const menuWidth = menu.offsetWidth || 220;
                     const menuHeight = menu.offsetHeight || 160;
-                    let x = e.pageX - 355;
-                    let y = e.pageY - 170;
+                    let x = e.pageX - 260;
+                    let y = e.pageY - 70;
                     menu.style.left = x + 'px';
                     menu.style.top = y + 'px';
                     menu.style.display = 'block';
@@ -626,11 +721,14 @@ if ($filtros != []) {
                     const btnDes = document.getElementById('menu-desmembrar');
                     const btnEd = document.getElementById('menu-editar-bancario');
                     const btnQ = document.getElementById('menu-quitar-bancario');
-                    if (btnConc) btnConc.disabled = (idCon01 !== '' && idCon02 !== ''); // already conciliated
-                    if (btnDes) btnDes.disabled = (idOriginal !== '');
-                    if (btnEd) btnEd.disabled = false;
-                    if (btnQ) btnQ.disabled = (idCon01 === '' || idCon02 === '');
                     // visual highlight
+                    if(row.getAttribute('data-id-con01') == "" || row.getAttribute('data-id-con02') == "") {
+                        btnQ.disabled = 'true';
+
+                    } else {
+                        btnQ.removeAttribute('disabled');
+                    }
+                    
                     row.classList.add('context-menu-open');
                 } else {
                     menu.style.display = 'none';
@@ -657,7 +755,12 @@ if ($filtros != []) {
 
         function navigateTo(action, id) { window.location.href = base + 'acao=' + action + '&id=' + id; }
 
-        document.getElementById('menu-conciliar').addEventListener('click', function(){ if (!window._mov_ctx_row) return; navigateTo('conciliar', window._mov_ctx_row.getAttribute('data-id')); });
+        document.getElementById('menu-conciliar').addEventListener('click', function(){
+        document.getElementById('conciliar-id').value = window._mov_ctx_row.getAttribute('data-id')
+        document.getElementById('custom-context-menu').style.display = 'none';
+        Modal = new bootstrap.Modal(document.getElementById('modal_conciliar'));
+        Modal.show();
+         });
         document.getElementById('menu-desmembrar').addEventListener('click', function(){ if (!window._mov_ctx_row) return; navigateTo('desmembrar', window._mov_ctx_row.getAttribute('data-id')); });
         document.getElementById('menu-editar-bancario').addEventListener('click', function(){ if (!window._mov_ctx_row) return; navigateTo('visualizar', window._mov_ctx_row.getAttribute('data-id')); });
         document.getElementById('menu-quitar-bancario').addEventListener('click', function(){ if (!window._mov_ctx_row) return; navigateTo('quitar_bancario', window._mov_ctx_row.getAttribute('data-id')); });
@@ -715,6 +818,8 @@ if ($filtros != []) {
 
         subtituloSelect.value = ""; // Reseta seleção
     });
+
+
 
     function filtroSubtitulo(resetSubtitulo = true) {
         var tituloId = document.querySelector('select[name=filtro_titulo]').value;
@@ -786,54 +891,10 @@ if ($filtros != []) {
     //     }
     // }
 
-    function encolher() {
-        let barra = document.getElementById('barra-lateral');
-        let container = document.getElementById('container');
-        let superior = document.getElementById('header');
-        let body = document.getElementById('body');
 
 
 
 
-
-
-        if (barra.style.animationName === 'encolher') {
-
-            superior.style.animationName = 'expandir-header'
-            superior.style.animationDuration = '0.5s';
-            superior.style.animationFillMode = 'backwards';
-
-            barra.style.animationName = 'expandir';
-            barra.style.animationDuration = '0.5s';
-            barra.style.animationFillMode = 'backwards';
-
-            container.style.animationName = 'expandir-container'
-            container.style.animationDuration = '0.5s';
-            container.style.animationFillMode = 'backwards';
-
-            body.style.animationName = 'expandir-container'
-            body.style.animationDuration = '0.5s';
-            body.style.animationFillMode = 'backwards';
-            return;
-        } else {
-
-            superior.style.animationName = 'encolher-header'
-            superior.style.animationDuration = '0.5s';
-            superior.style.animationFillMode = 'forwards';
-
-            barra.style.animationName = 'encolher';
-            barra.style.animationDuration = '0.5s';
-            barra.style.animationFillMode = 'forwards';
-
-            container.style.animationName = 'encolher'
-            container.style.animationDuration = '0.5s';
-            container.style.animationFillMode = 'forwards';
-
-            body.style.animationName = 'encolher'
-            body.style.animationDuration = '0.5s';
-            body.style.animationFillMode = 'forwards';
-        }
-    }
 
     document.addEventListener('DOMContentLoaded', function () {
         var modalQuitar = document.getElementById('modal_quitar');
@@ -968,13 +1029,26 @@ if ($filtros != []) {
         });
     </script>
 <?php } ?>
+<?php if($acao == 'quitar_adicionar') {?>
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('quitar_adicionar');
+            var Modal = new bootstrap.Modal(modalEl);
+            Modal.show();
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                window.location.href = '<?=$caminho?>';
+            });
+        });
+    </script>
+<?php } ?>
 <script>
+    
     
 
         // ========== INICIALIZAÇÃO DO CHOICES.JS ==========
         const tituloFiltroElement = document.querySelector('#titulo-filtro');
         const subtituloFiltroElement = document.querySelector('#subtitulo-filtro');
-        const tituloModalElement = document.querySelector('#titulo');
+        tituloModalElement = document.querySelector('#titulo');
         const subtituloModalElement = document.querySelector('#subtitulo');
 
         // IMPORTANTE: Guarda os subtítulos ANTES de inicializar Choices.js
@@ -1186,9 +1260,47 @@ if ($filtros != []) {
                 carregarSubtitulosModal(tituloInicialModal);
             }
         }
-    
-    
+        
+document.addEventListener('DOMContentLoaded', function () {
 
+    const modalConciliar = document.getElementById('modal_conciliar');
+    if (!modalConciliar || !tituloModalChoice) return;
+
+    modalConciliar.addEventListener('show.bs.modal', function (event) {
+
+        const button = event.relatedTarget;
+        if (!button) return;
+
+        const tipo = button.getAttribute('data-tipo'); // 'C' ou 'D'
+        if (!tipo) return;
+
+        // 🔴 LIMPA COMPLETAMENTE O CHOICES
+        tituloModalChoice.clearStore();
+        tituloModalChoice.clearChoices();
+
+        // 🔵 opção padrão
+
+        // 🔎 filtra títulos por tipo
+        const titulosFiltrados = todosTitulosModal.filter(t =>
+            t.value === '' || t.tipo === tipo
+        );
+
+        if (titulosFiltrados.length) {
+            tituloModalChoice.setChoices(
+                titulosFiltrados.filter(t => t.value !== ''),
+                'value',
+                'label',
+                false
+            );
+        }
+
+        // 🔁 reseta seleção
+        tituloModalChoice.setChoiceByValue('');
+    });
+
+});
+
+  
 </script>
 <?php if($erro == 'valor') { ?>
     <script>

@@ -14,6 +14,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     exit;
 }
 $lateral_target = 'dre';
+$lateral_financeiro = true;
 function format_valor_alinhado($valor) {
     $formatado = number_format($valor, 2, ',', '.');
     // 12 caracteres para alinhar valores grandes e pequenos
@@ -89,14 +90,24 @@ if ($get_data_inicial != '' || $get_data_final != '' || $get_custos != '' || $ge
             }
         }
     }
+    $titulos_array = [];
+    $subtitulos_agrupados = [];
     foreach($empresa_lista as $empresa) {
         foreach ($subtitulos as $subtitulo) {
             $titulo = Con01::read($subtitulo->id_con01, $empresa->id, ordenar_por: 'tipo', filtro_operacional:$get_operacional);
-                            if ($titulo && isset($titulo[0]) && !in_array($titulo[0], $titulos)) {
-                                $titulos[] = $titulo[0];
-                            }
+            if($titulo && isset($titulo[0])) {
+                $nome_titulo = $titulo[0]->nome;
+                if(!isset($titulos_array[$nome_titulo])) {
+                    $titulos_array[$nome_titulo] = $titulo[0];
+                    $subtitulos_agrupados[$nome_titulo] = [];
+                }
+                if (!in_array($subtitulo, $subtitulos_agrupados[$nome_titulo])) {
+                    $subtitulos_agrupados[$nome_titulo][] = $subtitulo;
+                }
+            }
+        }
     }
-}
+    $titulos = array_values($titulos_array);
 }
 
 
@@ -123,7 +134,7 @@ if ($get_data_inicial != '' || $get_data_final != '' || $get_custos != '' || $ge
 <link rel="stylesheet" href="../../choices/choices.css">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
+<link rel="shortcut icon" href="/gestor-office.png" type="image/x-icon">
 <title>Gestor Office Control</title>
 </head>
 
@@ -236,12 +247,16 @@ if ($get_data_inicial != '' || $get_data_final != '' || $get_custos != '' || $ge
                         $total_receitas = [];
                         $total_despesas = [];
                             foreach ($titulos as $i => $titulo) {
-                                $subtitulos_filtrados = [];
-                                foreach ($subtitulos as $subtitulo) {
-                                    if ($subtitulo->id_con01 == $titulo->id) {
-                                        $subtitulos_filtrados[] = $subtitulo;
+                                $subtitulos_do_titulo = $subtitulos_agrupados[$titulo->nome] ?? [];
+                                
+                                // Agrupar subtítulos por nome
+                                $subtitulos_agrupados_por_nome = [];
+                                foreach ($subtitulos_do_titulo as $subtitulo) {
+                                    if (!isset($subtitulos_agrupados_por_nome[$subtitulo->nome])) {
+                                        $subtitulos_agrupados_por_nome[$subtitulo->nome] = $subtitulo;
                                     }
                                 }
+                                $subtitulos_filtrados = array_values($subtitulos_agrupados_por_nome);
 
                                 ?>
 
@@ -267,7 +282,7 @@ if ($get_data_inicial != '' || $get_data_final != '' || $get_custos != '' || $ge
                                                             <tr class="tr-dre-sintetico">
                                                                 <!-- <th style="width:25%;">Centro de Custos</th> -->
                                                                 <th style="width:50%;">Subtitulo</th>
-                                                                <th style="width:25%;">Receita</th>
+                                                                <th style="width:25%;">Valor</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -349,7 +364,7 @@ if ($get_data_inicial != '' || $get_data_final != '' || $get_custos != '' || $ge
             </div>
     </div> 
                 <?php }  } ?>
-    
+<?php require_once __DIR__ . '/../../componentes/footer/footer.php' ?> 
 </body>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
@@ -466,55 +481,7 @@ function prepararGeracao(target) {
     //     }
     // }
 
-    function encolher() {
-        let barra = document.getElementById('barra-lateral');
-        let container = document.getElementById('container');
-        let superior = document.getElementById('header');
-        let body = document.getElementById('body');
 
-
-
-
-
-
-        if (barra.style.animationName === 'encolher') {
-
-            superior.style.animationName = 'expandir-header'
-            superior.style.animationDuration = '0.5s';
-            superior.style.animationFillMode = 'backwards';
-
-            barra.style.animationName = 'expandir';
-            barra.style.animationDuration = '0.5s';
-            barra.style.animationFillMode = 'backwards';
-
-            container.style.animationName = 'expandir-container'
-            container.style.animationDuration = '0.5s';
-            container.style.animationFillMode = 'backwards';
-
-            body.style.animationName = 'expandir-container'
-            body.style.animationDuration = '0.5s';
-            body.style.animationFillMode = 'backwards';
-            return;
-        } else {
-
-            superior.style.animationName = 'encolher-header'
-            superior.style.animationDuration = '0.5s';
-            superior.style.animationFillMode = 'forwards';
-
-            barra.style.animationName = 'encolher';
-            barra.style.animationDuration = '0.5s';
-            barra.style.animationFillMode = 'forwards';
-
-            container.style.animationName = 'encolher'
-            container.style.animationDuration = '0.5s';
-            container.style.animationFillMode = 'forwards';
-
-            body.style.animationName = 'encolher'
-            body.style.animationDuration = '0.5s';
-            body.style.animationFillMode = 'forwards';
-
-        }
-    }
 
 </script>
 

@@ -1,11 +1,24 @@
-<!DOCTYPE html>
 <?php
+// if (
+//     isset($_SERVER['HTTP_X_FORWARDED_PROTO']) &&
+//     $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https'
+// ) {
+//     $_SERVER['HTTPS'] = 'on';
+// }
 
+// session_set_cookie_params([
+//     'lifetime' => 0,
+//     'path'     => '/',
+//     'domain'   => '.gestorofficecontrol.com.br',
+//     'secure'   => true,
+//     'httponly' => true,
+//     'samesite' => 'Lax'
+// ]);
 require_once __DIR__ . '/../db/entities/usuarios.php';
+session_start();
 require_once __DIR__ . '/../db/entities/empresas.php';
 require_once __DIR__ . '/../db/entities/cargo.php';
 
-session_start();
 
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 1) {
     header('Location: /');
@@ -18,6 +31,7 @@ $erro = filter_input(INPUT_GET, 'erro');
 
 
 ?>
+<!DOCTYPE html>
 
 
 
@@ -255,6 +269,9 @@ $erro = filter_input(INPUT_GET, 'erro');
                             <?php
                             $empresas = Empresa::read(null, null, $_GET['nome'] ?? null, $_GET['dataInicial'] ?? null, $_GET['dataFinal'] ?? null, $_GET['estado'] ?? null, $_GET['cidade'] ?? null, $_GET['bairro'] ?? null);
                             foreach ($empresas as $empresa) {
+                                if($empresa->id == 1) {
+                                    continue;
+                                }
                                 $status = ($empresa->status == 0) ? 'INATIVO' : 'ATIVO';
                                  $link = 'index.php?acao=editar&id=' . $empresa->id;
                                 ?>

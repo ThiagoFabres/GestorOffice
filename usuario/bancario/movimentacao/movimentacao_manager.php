@@ -1,7 +1,10 @@
 <?php
+require_once '../../../vendor/autoload.php';
 require_once '../../../db/entities/usuarios.php';
-session_start();
 
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
+session_start();
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     header('Location: /');
     exit;
@@ -9,11 +12,238 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
 
 require_once '../../../db/entities/banco02.php';
 require_once '../../../db/entities/banco01.php';
+require_once '../../../db/entities/pagar.php';
+require_once '../../../db/entities/recebimentos.php';
 require_once 'buscar_documento.php';
 
 
 $acao = filter_input(INPUT_POST, 'acao', FILTER_SANITIZE_STRING) ?? filter_input(INPUT_GET, 'acao', FILTER_SANITIZE_STRING);
+
 if($acao == 'processar') {
+    
+    function parse_excel($fileName, $filePath) {
+    
+
+        
+        try {
+            if ($fileName === 'csv') {
+                // return parse_csv($filePath);
+            } elseif ($fileName === 'xlsx' || $fileName === 'xls') {
+                
+                return parse_xlsx($filePath);
+            }
+            
+            return ['current' => [], 'debug' => ['error' => 'Formato de arquivo não suportado']];
+        } catch (Exception $e) {
+            error_log('Erro ao processar Excel: ' . $e->getMessage());
+            return ['current' => [], 'debug' => ['error' => $e->getMessage()]];
+        }
+    }
+
+    function parse_xlsx($filePath) {
+        $conta = filter_input(INPUT_POST, 'conta');
+        $data_atual = (new DateTime())->format('Y-m-d');
+        $ultima_data = buscarData($conta);
+        $importadas = Ban02Imp::read($_SESSION['usuario']->id_empresa, $conta);      
+        $importadas_set = [];
+        foreach ($importadas as $imp) {
+            $importadas_set[$imp->data] = true;
+            
+        }
+        
+        $conta_obj = Ban01::read($conta)[0];
+        $transactions = [];
+        $transactions['current'] = [];
+        $transactions['debug'] = [];
+        
+        try {
+            // Usar PhpSpreadsheet para ler XLSX
+            $spreadsheet = IOFactory::load($filePath);
+            $worksheet = $spreadsheet->getActiveSheet();
+            
+            // Começa a ler a partir da linha 2 (linha 1 é cabeçalho)
+            foreach ($worksheet->getRowIterator(2) as $row) {
+                $cellIterator = $row->getCellIterator('A', 'Z');
+                $cellIterator->setIterateOnlyExistingCells(false);
+                
+                $cells = [];
+                foreach ($cellIterator as $cell) {
+                    if($cell->getValue() !== null) {
+                        $cells[] = $cell->getValue();
+                        $transactions['debug']['cells'][] = $cell->getValue();
+                    }
+                }
+                if(count($cells) == 0 || count($cells) > 3) {
+                    return;
+                }
+                
+                if(empty($cells)) {
+                    continue;
+                }
+                // Verifica se a linha tem dados
+                if (empty($cells[0]) && empty($cells[1]) && empty($cells[2])) {
+                    continue;
+                }
+                
+                $data_raw = $cells[0];
+                $descricao = trim((string)$cells[1]);
+                $valor_str = $cells[2];
+
+                
+                // Se não houver data ou valor, pula a linha
+                if (empty($data_raw) || empty($valor_str)) {
+                    continue;
+                }
+                
+                // Converte data: pode ser número serial do Excel ou string
+                try {
+                    if (is_numeric($data_raw)) {
+                        // É número serial do Excel - converte para data
+                        $dateTime = ExcelDate::excelToDateTimeObject($data_raw);
+                        $data_analizada = $dateTime->format('Y-m-d');
+                        $data_formatada = $dateTime->format('d/m/Y');
+                    } else {
+                        // Tenta formato texto
+                        $data_str = trim((string)$data_raw);
+                        $data_obj = DateTime::createFromFormat('d/m/Y', $data_str);
+                        if (!$data_obj) {
+                            $data_obj = DateTime::createFromFormat('Y-m-d', $data_str);
+                        }
+                        if (!$data_obj) {
+                            continue;
+                        }
+                        $data_analizada = $data_obj->format('Y-m-d');
+                        $data_formatada = $data_obj->format('d/m/Y');
+                    }
+                } catch (Exception $e) {
+                    continue;
+                }
+                
+                // Valida se já foi importada
+                if (isset($importadas_set[$data_analizada])) {
+                    continue;
+                }
+                
+                if($ultima_data != null && ($data_analizada >= $data_atual || $data_analizada == $ultima_data) || $conta_obj->data > $data_analizada) {
+                    continue;
+                }
+                
+                // Converte valor para número (suporta formato brasileiro)
+                $valor = (float)$valor_str;
+                // if ($valor == 0) {
+                //     continue;
+                // }
+                
+                $current = [
+                    'data' => $data_formatada,
+                    'descricao' => $descricao,
+                    'valor' => number_format($valor, 2, ',', '.'),
+                ];
+                
+                $transactions['current'][] = $current;
+            }
+
+            return $transactions;
+        } catch (Exception $e) {
+            error_log('Erro ao processar XLSX: ' . $e->getMessage());
+            return ['current' => [], 'debug' => ['error' => $e->getMessage()]];
+        }
+    }
+
+    
+    // function parse_csv($filePath) {
+    //     $conta = filter_input(INPUT_POST, 'conta');
+    //     $data_atual = (new DateTime())->format('Y-m-d');
+    //     $ultima_data = buscarData($conta);
+    //     $importadas = Ban02Imp::read($_SESSION['usuario']->id_empresa, $conta);      
+    //     $importadas_set = [];
+    //     foreach ($importadas as $imp) {
+    //         $importadas_set[$imp->data] = true;
+    //     }
+        
+    //     $conta_obj = Ban01::read($conta)[0];
+    //     $transactions = [];
+    //     $transactions['current'] = [];
+    //     $transactions['debug'] = [];
+        
+    //     try {
+    //         $handle = fopen($filePath, 'r');
+    //         $row_number = 0;
+            
+    //         while (($row = fgetcsv($handle, 1000, ',')) !== false) {
+    //             $row_number++;
+                
+    //             // Pula cabeçalho
+    //             if ($row_number === 1) {
+    //                 continue;
+    //             }
+                
+    //             // Verifica se a linha tem dados
+    //             if (empty($row[0]) && empty($row[1]) && empty($row[2])) {
+    //                 continue;
+    //             }
+                
+    //             $data_str = trim($row[0] ?? '');
+    //             $descricao = trim($row[1] ?? '');
+    //             $valor_str = trim($row[2] ?? '');
+                
+    //             // Se não houver data ou valor, pula a linha
+    //             if (empty($data_str) || empty($valor_str)) {
+    //                 continue;
+    //             }
+                
+    //             // Converte data dd/mm/yyyy para Y-m-d
+    //             try {
+    //                 $data_obj = DateTime::createFromFormat('d/m/Y', $data_str);
+    //                 if (!$data_obj) {
+    //                     $data_obj = DateTime::createFromFormat('Y-m-d', $data_str);
+    //                 }
+    //                 if (!$data_obj) {
+    //                     continue;
+    //                 }
+    //                 $data_analizada = $data_obj->format('Y-m-d');
+    //                 $data_formatada = $data_obj->format('d/m/Y');
+    //             } catch (Exception $e) {
+    //                 continue;
+    //             }
+                
+    //             // Valida se já foi importada
+    //             if (isset($importadas_set[$data_analizada])) {
+    //                 continue;
+    //             }
+                
+    //             if($ultima_data != null && ($data_analizada >= $data_atual || $data_analizada == $ultima_data) || $conta_obj->data > $data_analizada) {
+    //                 continue;
+    //             }
+                
+    //             // Converte valor para número
+    //             $valor_str = str_replace('.', '', $valor_str);
+    //             $valor_str = str_replace(',', '.', $valor_str);
+    //             $valor = (float)$valor_str;
+                
+    //             if ($valor == 0) {
+    //                 continue;
+    //             }
+                
+    //             $current = [
+    //                 'data' => $data_formatada,
+    //                 'data_analizada' => $data_analizada,
+    //                 'descricao' => $descricao,
+    //                 'valor' => number_format($valor, 2, '.', ''),
+    //                 'tipo' => ($valor < 0) ? 'Débito' : 'Crédito',
+    //                 'documento' => ''
+    //             ];
+                
+    //             $transactions['current'][] = $current;
+    //         }
+            
+    //         fclose($handle);
+    //         return $transactions;
+    //     } catch (Exception $e) {
+    //         error_log('Erro ao processar CSV: ' . $e->getMessage());
+    //         return ['current' => [], 'debug' => ['error' => $e->getMessage()]];
+    //     }
+    // }
     
     function parse_ofx($filePath) {
         $content = file_get_contents($filePath);
@@ -26,6 +256,7 @@ if($acao == 'processar') {
         $lines = explode("\n", $content);
 
         $conta = filter_input(INPUT_POST, 'conta');
+        $conta_obj = Ban01::read($conta)[0];
         $data_atual = (new DateTime())->format('Y-m-d');
         $ultima_data = buscarData($conta);
         $importadas = Ban02Imp::read($_SESSION['usuario']->id_empresa, $conta);      
@@ -57,15 +288,19 @@ if($acao == 'processar') {
                 $current['data_analizada'] = date('Y-m-d', strtotime($date));
                 
             }
-            if(isset($current['data_analizada'])){;
+            if(isset($current['data_analizada'])){
 
             $data_analizada = $current['data_analizada'];
             
                 // if (isset($importadas_set[$data_analizada])) continue;
                 if (isset($importadas_set[$data_analizada])) continue;
                 // if(Ban02Imp::read($_SESSION['usuario']->id_empresa, $conta, $data_analizada)) continue;
+                // echo $conta_obj->data;
+                // echo '<br>';
+                // echo $data_analizada;
+                // exit;
 
-                if( $ultima_data != null && ($data_analizada >= $data_atual || $data_analizada == $ultima_data)) {
+                if($ultima_data != null && ($data_analizada >= $data_atual || $data_analizada == $ultima_data ) || $conta_obj->data > $data_analizada) {
                     continue;
                 }
             
@@ -112,23 +347,37 @@ if($acao == 'processar') {
     }
 
     if (isset($_FILES['ofx']) && $_FILES['ofx']['error'] === UPLOAD_ERR_OK) {
-        $ofxPath = $_FILES['ofx']['tmp_name'];
-        $transactions = parse_ofx($ofxPath);
+        $filePath = $_FILES['ofx']['tmp_name'];
+        $fileName = $_FILES['ofx']['name'];
+        $fileExt = str_ends_with($fileName, '.ofx') ? 'ofx' : 'xlsx';
+        
+        // Detecta o tipo de arquivo pela extensão
+        if ($fileExt === 'ofx') {
+            $transactions = parse_ofx($filePath);
+        } elseif ($fileExt === 'xlsx' || $fileExt === 'xls' || $fileExt === 'csv') {
+            $transactions = parse_excel($fileExt, $filePath);
+        } else {
+            // Tenta OFX por padrão
+            $transactions = parse_ofx($filePath);
+        }
+        
+
+        
         $transactions_current = $transactions['current'];
-
         $transactions_debug = $transactions['debug'];
-
-        // echo '<pre>';
-        // print_r($transactions_debug['current']['valor']);
-        // exit;
 
         if(empty($transactions_current)) {
             header('Location: movimentacao.php?erro=cadastrado');
             exit;
         }
+        
         $_SESSION['ofx_transactions']['transactions'] = $transactions_current;
         $_SESSION['ofx_transactions']['ofx_conta'] = $_POST['conta'];
-        $_SESSION['ofx_transactions']['file_name'] = $ofxPath;
+        $_SESSION['ofx_transactions']['file_name'] = $fileName;
+        $_SESSION['ofx_transactions']['file_extension'] = $fileExt;
+
+
+
         header('Location: movimentacao.php?ofx=1');
         exit;
     } else {
@@ -219,6 +468,7 @@ if($acao == 'processar') {
     $subtitulo = filter_input(INPUT_POST, 'subtitulo');
     $id = filter_input(INPUT_POST, 'id');
     $movimentacao_antiga = Ban02::read($id)[0];
+    $caminho = filter_input(INPUT_POST, 'caminho');
 
     $movimentacao = new Ban02(
         $id,
@@ -235,14 +485,9 @@ if($acao == 'processar') {
         $movimentacao_antiga->ativo,
     );
     Ban02::update($movimentacao);
-    echo '<pre>';
-    print_r($movimentacao_antiga);
-    echo '</pre>';
-    echo '<pre>';
-    print_r($movimentacao);
-    echo '</pre>';
 
-    header('Location: movimentacao.php?sucesso=sucesso');
+
+    header('Location: '. $caminho . 'status=sucesso');
     exit;
 } else if($acao == 'conciliar_palavra') {
 
@@ -278,7 +523,41 @@ if($acao == 'processar') {
 
 
     header('Location: movimentacao.php');
-} else if($acao == 'conciliar_todas'){
+} 
+
+else if($acao == 'conciliar_marcados') {
+
+    $lista_ban = $_POST['id_check'];
+    $titulo = filter_input(INPUT_POST, 'titulo');
+    $subtitulo = filter_input(INPUT_POST, 'subtitulo');
+
+    if(empty($lista_ban) || $lista_ban == '' || $titulo == '' || $subtitulo == '' ) {
+        header('Location: movimentacao.php?status=erro_dados');
+        exit;
+    }
+    foreach($lista_ban as $id) {
+        $ban02 = Ban02::read($id, $_SESSION['usuario']->id_empresa)[0];
+        $novo_ban02 = new Ban02 (
+            $ban02->id,
+            $ban02->id_empresa,
+            $ban02->id_ban01,
+            $ban02->data,
+            $ban02->documento,
+            $titulo,
+            $subtitulo,
+            $ban02->descricao,
+            $ban02->descricao_comp,
+            $ban02->valor,
+            $ban02->id_original,
+            $ban02->ativo
+        );
+        Ban02::update($novo_ban02);
+    }
+    header('Location: movimentacao.php?status=sucesso');
+    exit;
+}
+
+else if($acao == 'conciliar_todas'){
     require_once '../../../db/entities/palavra_chave.php';
     require_once '../../../db/entities/contas.php';
 
@@ -312,26 +591,6 @@ if($acao == 'processar') {
 
     
 
-} else if ($acao == 'limpar_titulo') {
-    $ban02_lista = Ban02::read(null, $_SESSION['usuario']->id_empresa);
-    foreach($ban02_lista as $ban02) {
-        $novo_ban02 = new Ban02 (
-            $ban02->id,
-            $ban02->id_empresa,
-            $ban02->id_ban01,
-            $ban02->data,
-            $ban02->documento,
-            null,
-            null,
-            $ban02->descricao,
-            $ban02->descricao_comp,
-            $ban02->valor,
-            $ban02->id_original,
-            $ban02->ativo
-        );
-        Ban02::update($novo_ban02);
-    }
-    header('Location: movimentacao.php');
 } else if($acao == 'desmembrar') {
     $id = filter_input(INPUT_POST, 'id');
     $id = intval($id);
@@ -518,7 +777,86 @@ if($acao == 'processar') {
     Ban02::update($ban02_atualizado);
     header('Location:'. $caminho);
 
+} else if($acao == 'mov_pagar' || $acao == 'mov_receber') {
+
+    $documento = filter_input(INPUT_POST, 'documento');
+    $custo = filter_input(INPUT_POST, 'custo');
+    $cadastro = filter_input(INPUT_POST, 'cadastro');
+    $data_lanc = filter_input(INPUT_POST, 'data_lanc');
+    $titulo = filter_input(INPUT_POST, 'titulo');
+    $subtitulo = filter_input(INPUT_POST, 'subtitulo');
+    $valor = filter_input(INPUT_POST, 'valor');
+    $tipo_pagamento = filter_input(INPUT_POST, 'tipo_pagamento');
+    $descricao = filter_input(INPUT_POST, 'descricao');
+    $id_ban = filter_input(INPUT_POST, 'id_ban');
+
+    $lanc01 = new Rec01 (
+        null,
+        $_SESSION['usuario']->id_empresa,
+        $cadastro,
+        $titulo,
+        $subtitulo,
+        $documento,
+        $descricao,
+        $valor,
+        1,
+        $data_lanc,
+        $_SESSION['usuario']->id_usuario,
+        $custo,
+        $id_ban,
+    );
+    echo '<pre>';
+    print_r($lanc01);
+    echo '</pre>';
+    echo '<pre>';
+    print_r($_POST);
+    echo '</pre>';
+    
+    if($acao == 'mov_receber') {
+        if(!Rec01::read(id_empresa:$_SESSION['usuario']->id_empresa, documento: $documento)) {
+            Rec01::create($lanc01);
+            $lanc_criado = Rec01::read(id_empresa:$_SESSION['usuario']->id_empresa, documento: $documento)[0];
+        } else {
+            header('Location:movimentacao.php?erro=cadastrado');
+            exit;
+        }
+    } else if($acao == 'mov_pagar') {
+        if(!Pag01::read(id_empresa:$_SESSION['usuario']->id_empresa, documento: $documento)) {
+            Pag01::create($lanc01);
+            $lanc_criado = Pag01::read(id_empresa:$_SESSION['usuario']->id_empresa, documento: $documento)[0];
+        }else {
+            header('Location:movimentacao.php?erro=cadastrado');
+            exit;
+        }
+    }
+    $lanc02 = new Rec02(
+        null,
+        $_SESSION['usuario']->id_empresa,
+        $lanc_criado->id,
+        $valor,
+        1,
+        $data_lanc,
+        $valor,
+        $data_lanc,
+        null,
+        $tipo_pagamento,
+    );
+    if($acao == 'mov_receber') {
+        Rec02::create($lanc02);
+    } else if($acao == 'mov_pagar') {
+        Pag02::create($lanc02);
+    }
+
+    header('Location:movimentacao.php');
+    exit;
+    
+    
+
+
+    
 }
+
+
 
     
 
