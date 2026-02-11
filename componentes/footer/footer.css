@@ -1,9 +1,8 @@
 #footer {
     position: fixed;
     top: calc(96vh + 3px);
-    left: 79.5vw;
+    right: 1em;
     float: right;
-    display: flex;
     min-width: 20vw;
     height: calc(3vh - 2px);
     justify-content: end;
@@ -11,6 +10,7 @@
     overflow: hidden;
     border-top-left-radius: 10px;
     z-index: 20;
+    width: calc(100% - 1em);
 }
 #footer-btn {
     border: none;
