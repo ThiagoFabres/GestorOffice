@@ -62,9 +62,30 @@ class Rec01 {
         return $stmt->execute();
     }
 
-    public static function read($id = null, $id_empresa = null, $id_cadastro = null, $documento = null, $con01 = null, $con02 = null): array {
+    public static function read(
+        $id = null, 
+        $id_empresa = null, 
+        $id_cadastro = null, 
+        $documento = null, 
+        $con01 = null, 
+        $con02 = null,
+        $read_vendas = null,
+        $read_diferencas = null,
+        $read_paginas = null,
+        $numero_exibir = null,
+        $numero_pagina = null,
+        $filtro_data_inicial = null,
+        $filtro_data_final = null,
+        $filtro_custos = null,
+        ) {
+
         $pdo = (new Database())->connect();
-        $query = 'SELECT * FROM rec01';
+        if($read_paginas === true) {
+            $query = 'SELECT COUNT(*) FROM rec01';
+        }else {
+            $query = 'SELECT * FROM rec01';
+        }
+        
         $conditions = [];
 
         if ($id != null) $conditions[] = 'id = :id';
@@ -73,12 +94,22 @@ class Rec01 {
         if ($documento != null) $conditions[] = 'documento = :documento';
         if ($con01 != null) $conditions[] = 'id_con01 = :con01';
         if ($con02 != null) $conditions[] = 'id_con02 = :con02';
+        if ($read_vendas) $conditions[] = 'valor_b IS NOT NULL';
+        if ($read_diferencas) $conditions[] = '(valor - valor_liq_go > 0.01 OR valor - valor_liq_go < -0.01)';
+        if ($filtro_data_inicial != null) $conditions[] = 'data_lanc >= :filtro_data_inicial';
+        if ($filtro_data_final != null) $conditions[] = 'data_lanc <= :filtro_data_final';
+        if ($filtro_custos != null) $conditions[] = 'centro_custos = :centro_custos';
 
 
         if ($conditions) {
             $query .= ' WHERE ' . implode(' AND ', $conditions);
         }
-
+        if($numero_exibir != null) {
+            $query .= ' LIMIT ' . $numero_exibir;
+        }
+        if($numero_pagina > 1) {
+            $query .= ' OFFSET ' . $numero_exibir *( $numero_pagina - 1);
+        }
         $stmt = $pdo->prepare($query);
 
         if ($id != null) $stmt->bindValue(':id', $id);
@@ -87,10 +118,20 @@ class Rec01 {
         if ($documento != null) $stmt->bindValue(':documento', $documento);
         if ($con01 != null) $stmt->bindValue(':con01', $con01);
         if ($con02 != null) $stmt->bindValue(':con02', $con02);
-
+        if ($filtro_data_inicial != null) $stmt->bindValue(':filtro_data_inicial', $filtro_data_inicial);
+        if ($filtro_data_final != null) $stmt->bindValue(':filtro_data_final', $filtro_data_final);
+        if ($filtro_custos != null) $stmt->bindValue(':centro_custos', $filtro_custos);
+        // if ($read_paginas === null){
+        //     echo $query;
+        //     exit;
+        // }   
         $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, self::class);
+        if(isset($read_paginas)) {
+            return $stmt->fetchColumn();
+        } else {
+            return $stmt->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, self::class);
+        }
     }
 
     public static function update($rec01) {
