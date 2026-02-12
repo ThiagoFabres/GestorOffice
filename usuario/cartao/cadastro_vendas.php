@@ -516,9 +516,22 @@ if ($filtros != []) {
                     </div>
                 </div>
             </div>
+        <div class="relatorios-botoes" style="float:left; width:100%">
+            <button type="button" class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="gerarpdf('movimentacao', document.querySelector('#nome-empresa h1').innerHTML)">Gerar PDF</button>
+            <button type="button" class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="gerarexcel('movimentacao', document.querySelector('#nome-empresa h1').innerHTML)">Gerar Excel</button>
         </div>
-    </div>           
-    
+    </div>
+</div>
+           
+<div style="display:none">
+    <?php 
+    if($exibir_detalhes){
+        require_once __DIR__ . '/tabelas/tabela_detalhada_pdf.php';
+    } else if($exibir_detalhes === false) {
+        require_once __DIR__ . '/tabelas/tabela_comum_pdf.php';
+    }
+    ?>
+</div>
     
 
     <?php require_once __DIR__ . '/../../componentes/modais/cartao/modal_cadastro_vendas.php' ?>
@@ -557,106 +570,106 @@ if ($filtros != []) {
             });
         });
     <?php } ?>
-    ;(function(){
-    const menu = document.getElementById('custom-context-menu');
-    let currentRow = null;
+//     ;(function(){
+//     const menu = document.getElementById('custom-context-menu');
+//     let currentRow = null;
 
-    document.addEventListener('contextmenu', function(e){
-        // target any table data row (including clicks inside cells or buttons)
-        let row = e.target.closest('.tr-clientes');
-        // ignore header rows or other non-data rows
-        if (row && !row.classList.contains('tr-clientes-header')) {
-            // stop browser menu and any propagation; run in capture to beat other handlers
-            e.preventDefault();
-            e.stopPropagation();
-            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-            console.debug('custom contextmenu intercept', row);
-            currentRow = row;
-            // compute menu size and position to keep within viewport
-            const menuWidth = menu.offsetWidth || 220;
-            const menuHeight = menu.offsetHeight || 160;
-            let x = e.pageX - 260;
-            let y = e.pageY - 70;
+//     document.addEventListener('contextmenu', function(e){
+//         // target any table data row (including clicks inside cells or buttons)
+//         let row = e.target.closest('.tr-clientes');
+//         // ignore header rows or other non-data rows
+//         if (row && !row.classList.contains('tr-clientes-header')) {
+//             // stop browser menu and any propagation; run in capture to beat other handlers
+//             e.preventDefault();
+//             e.stopPropagation();
+//             if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+//             console.debug('custom contextmenu intercept', row);
+//             currentRow = row;
+//             // compute menu size and position to keep within viewport
+//             const menuWidth = menu.offsetWidth || 220;
+//             const menuHeight = menu.offsetHeight || 160;
+//             let x = e.pageX - 260;
+//             let y = e.pageY - 70;
            
-            menu.style.left = x + 'px';
-            menu.style.top = y + 'px';
-            menu.style.display = 'block';
-            // enable/disable items based on data attrs
-            const valorPag = parseFloat(row.getAttribute('data-valor-pag') || '0');
-            const recebido = row.getAttribute('data-id-rec01-recebido') === '1';
-            const btnQ = document.getElementById('menu-quitar');
-            const btnE = document.getElementById('menu-estornar');
-            const btnEd = document.getElementById('menu-editar');
-            if (btnQ) btnQ.disabled = valorPag > 0;
-            if (btnE) btnE.disabled = valorPag == 0;
-            if (btnEd) btnEd.disabled = recebido;
-        } else {
-            // allow browser context menu when not on a data row
-            menu.style.display = 'none';
-        }
-    }, true);
+//             menu.style.left = x + 'px';
+//             menu.style.top = y + 'px';
+//             menu.style.display = 'block';
+//             // enable/disable items based on data attrs
+//             const valorPag = parseFloat(row.getAttribute('data-valor-pag') || '0');
+//             const recebido = row.getAttribute('data-id-rec01-recebido') === '1';
+//             const btnQ = document.getElementById('menu-quitar');
+//             const btnE = document.getElementById('menu-estornar');
+//             const btnEd = document.getElementById('menu-editar');
+//             if (btnQ) btnQ.disabled = valorPag > 0;
+//             if (btnE) btnE.disabled = valorPag == 0;
+//             if (btnEd) btnEd.disabled = recebido;
+//         } else {
+//             // allow browser context menu when not on a data row
+//             menu.style.display = 'none';
+//         }
+//     }, true);
 
-    document.addEventListener('click', function(e){
-        if (!menu.contains(e.target)) menu.style.display = 'none';
-    });
-    window.addEventListener('scroll', ()=> menu.style.display = 'none');
+//     document.addEventListener('click', function(e){
+//         if (!menu.contains(e.target)) menu.style.display = 'none';
+//     });
+//     window.addEventListener('scroll', ()=> menu.style.display = 'none');
 
-    // actions
-    document.getElementById('menu-quitar').addEventListener('click', function(){
-        if (!currentRow) return;
-        const id = currentRow.getAttribute('data-id');
-        const valorRestante = currentRow.getAttribute('data-valor-restante');
-        const parcelaAtual = currentRow.getAttribute('data-parcela-atual');
-        const parcelaGeral = currentRow.getAttribute('data-parcela-geral');
-        const vencimento = currentRow.getAttribute('data-vencimento');
-        const documento = currentRow.getAttribute('data-documento');
-        const modalEl = document.getElementById('modal_quitar');
-        if (modalEl) {
-            document.getElementById('modal_quitar_id').value = id;
-            const vr = document.getElementById('modal_quitar_valor_restante'); if (vr) vr.textContent = 'Valor restante da parcela: R$ ' + valorRestante;
-            const pa = document.getElementById('modal_quitar_parcela_atual'); if (pa) pa.textContent = parcelaAtual || '';
-            const pg = document.getElementById('modal_quitar_parcela_geral'); if (pg) pg.textContent = parcelaGeral || '';
-            const vv = document.getElementById('modal_quitar_vencimento'); if (vv) vv.textContent = vencimento || '';
-            const doc = document.getElementById('modal_quitar_documento'); if (doc) doc.textContent = documento || '';
-            const modalVal = document.getElementById('modal_quitar_valor'); if (modalVal) modalVal.placeholder = valorRestante || '';
-            const bsModal = new bootstrap.Modal(modalEl); bsModal.show();
-        }
-        menu.style.display = 'none';
-    });
+//     // actions
+//     document.getElementById('menu-quitar').addEventListener('click', function(){
+//         if (!currentRow) return;
+//         const id = currentRow.getAttribute('data-id');
+//         const valorRestante = currentRow.getAttribute('data-valor-restante');
+//         const parcelaAtual = currentRow.getAttribute('data-parcela-atual');
+//         const parcelaGeral = currentRow.getAttribute('data-parcela-geral');
+//         const vencimento = currentRow.getAttribute('data-vencimento');
+//         const documento = currentRow.getAttribute('data-documento');
+//         const modalEl = document.getElementById('modal_quitar');
+//         if (modalEl) {
+//             document.getElementById('modal_quitar_id').value = id;
+//             const vr = document.getElementById('modal_quitar_valor_restante'); if (vr) vr.textContent = 'Valor restante da parcela: R$ ' + valorRestante;
+//             const pa = document.getElementById('modal_quitar_parcela_atual'); if (pa) pa.textContent = parcelaAtual || '';
+//             const pg = document.getElementById('modal_quitar_parcela_geral'); if (pg) pg.textContent = parcelaGeral || '';
+//             const vv = document.getElementById('modal_quitar_vencimento'); if (vv) vv.textContent = vencimento || '';
+//             const doc = document.getElementById('modal_quitar_documento'); if (doc) doc.textContent = documento || '';
+//             const modalVal = document.getElementById('modal_quitar_valor'); if (modalVal) modalVal.placeholder = valorRestante || '';
+//             const bsModal = new bootstrap.Modal(modalEl); bsModal.show();
+//         }
+//         menu.style.display = 'none';
+//     });
 
-    document.getElementById('menu-estornar').addEventListener('click', function(){
-        if (!currentRow) return;
-        const id = currentRow.getAttribute('data-id');
-        const url = 'cadastros_manager.php?view=receber&target=parcela&acao=estornar&id=' + id + '&caminho=<?= $caminho_get ?>&pagina=<?php if (empty($filtros)) {?>
-                                                     <?='?pagina=' . $numero_pagina;?>
-                                                <?php } else { ?>
-                                                     <?='?pagina=' . $numero_pagina;?>
-                                                <?php } ?>&numero_exibido=<?= 'knumero_exibido=' . $numero_exibir ?>';
+//     document.getElementById('menu-estornar').addEventListener('click', function(){
+//         if (!currentRow) return;
+//         const id = currentRow.getAttribute('data-id');
+//         const url = 'cadastros_manager.php?view=receber&target=parcela&acao=estornar&id=' + id + '&caminho=<?= $caminho_get ?>&pagina=<?php if (empty($filtros)) {?>
+//                                                      <?='?pagina=' . $numero_pagina;?>
+//                                                 <?php } else { ?>
+//                                                      <?='?pagina=' . $numero_pagina;?>
+//                                                 <?php } ?>&numero_exibido=<?= 'knumero_exibido=' . $numero_exibir ?>';
         
-                                                window.location.href = url;
-    });
+//                                                 window.location.href = url;
+//     });
 
-    document.getElementById('menu-editar').addEventListener('click', function(){
-        if (!currentRow) return;
-        const idRec01 = currentRow.getAttribute('data-id-rec01');
-        window.location.href = 'receber.php?id=' + idRec01 + '&acao=editar';
-    });
+//     document.getElementById('menu-editar').addEventListener('click', function(){
+//         if (!currentRow) return;
+//         const idRec01 = currentRow.getAttribute('data-id-rec01');
+//         window.location.href = 'receber.php?id=' + idRec01 + '&acao=editar';
+//     });
 
-    document.getElementById('menu-visualizar').addEventListener('click', function(){
-        if (!currentRow) return;
-        const idRec01 = currentRow.getAttribute('data-id-rec01');
-        window.location.href = 'receber.php?id=' + idRec01 + '&acao=visualizar';
-    });
+//     document.getElementById('menu-visualizar').addEventListener('click', function(){
+//         if (!currentRow) return;
+//         const idRec01 = currentRow.getAttribute('data-id-rec01');
+//         window.location.href = 'receber.php?id=' + idRec01 + '&acao=visualizar';
+//     });
 
-})();
-    window.addEventListener('DOMContentLoaded', function () {
-            var modalEl = document.getElementById('modal_cadastro_vendas');
-            var Modal = new bootstrap.Modal(modalEl);
-            Modal.show();
-            modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'cadastro_vendas.php';
-            });
-        });
+// })();
+//     window.addEventListener('DOMContentLoaded', function () {
+//             var modalEl = document.getElementById('modal_cadastro_vendas');
+//             var Modal = new bootstrap.Modal(modalEl);
+//             Modal.show();
+//             modalEl.addEventListener('hidden.bs.modal', function () {
+//                 window.location.href = 'cadastro_vendas.php';
+//             });
+//         });
         <?php if(isset($modal_quitar_id)){
     // try to load the parcela to compute the remaining value so modal shows it when opened via GET
     $parcela_for_modal = null;
