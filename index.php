@@ -20,7 +20,9 @@ $erro = (!$sucesso) ? filter_input(INPUT_GET, 'erro') : null;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <title>Gestor Office</title>
+
 </head>
+
 
 <body style="background-color: #f3f4f7;">
     <!-- Login -->
