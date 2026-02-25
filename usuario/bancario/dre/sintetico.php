@@ -179,7 +179,7 @@ $titulos = array_values($titulos_array);
 
                                                 <div>
                                                 <label for="data_final">Tipo:</label>
-                                                <select class="form-control" name="filtro_operacional" style="height: 50%; border-radius: 0;">
+                                                <select id="filtro_operacional" class="form-control" name="filtro_operacional" style="height: 50%; border-radius: 0;">
                                                     <option value=""  <?php if($get_operacional == null)  echo 'selected' ?>>Todos</option>
                                                     <option value="1" <?php if($get_operacional == 1)  echo 'selected' ?> >Operacional</option>
                                                     <option value="2" <?php if($get_operacional == 2)  echo 'selected' ?>>Não Operacional</option>
@@ -241,9 +241,9 @@ $titulos = array_values($titulos_array);
                             }
                             ?>
 
-                            <div class="accordion custom-accordion" style="border: 0;">
+                            <div class="accordion custom-accordion avoid-page-break" style="border: 0;">
                                 <div class="accordion-item ">
-                                    <h2 class="accordion-header" id="heading<?= $i ?>">
+                                    <h2 class="accordion-header avoid-page-break" id="heading<?= $i ?>">
                                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                                             data-bs-target="#collapse<?= $i ?>" aria-expanded="false"
                                             aria-controls="collapse<?= $i ?>">
@@ -309,8 +309,7 @@ $titulos = array_values($titulos_array);
                                                     </tr>
                                                     </tbody>
                                                 </tbody>
-                                                </table>
-
+                                                </table>                                               
                                             </div>
                                         </div>
                                     </div>

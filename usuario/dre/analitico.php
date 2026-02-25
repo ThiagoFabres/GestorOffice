@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <?php
 
 require_once __DIR__ . '/../../db/base.php';
@@ -45,7 +44,7 @@ if($todas_empresas) {
 
 
 ?>
-
+<!DOCTYPE html>
 
 
 
@@ -117,7 +116,7 @@ if($todas_empresas) {
                                                     </div>
                                                 <div style="max-width: calc(30% - (160px/4));">
                                                         <label for="data_final" >Tipo:</label>
-                                                        <select class="form-control" name="filtro_operacional" style="height: 53%; border-radius: 0;">
+                                                        <select id="filtro_operacional" class="form-control" name="filtro_operacional" style="height: 53%; border-radius: 0;">
                                                             <option value=""  <?php if($get_operacional == null)  echo 'selected' ?>>Todos</option>
                                                             <option value="1" <?php if($get_operacional == 1)  echo 'selected' ?> >Operacional</option>
                                                             <option value="2" <?php if($get_operacional == 2)  echo 'selected' ?>>Não Operacional</option>
@@ -287,7 +286,7 @@ if($todas_empresas) {
                         // Exibir cada título como um accordion, e dentro dele, as contas separadas por categoria
 // ...existing code...
                         if (isset($titulos)) {
-                            echo '<div class="accordion custom-accordion"style="border:0;" id="accordionTitulos">';
+                            echo '<div class="accordion custom-accordion avoid-page-break"style="border:0;" id="accordionTitulos">';
                             $total_geral = 0;
                             $total_receitas = 0;
                             $total_despesas = 0;
@@ -295,7 +294,7 @@ if($todas_empresas) {
                                 $collapseId = 'tituloCollapse' . $i;
                                 ?>
                                 <div class="accordion-item">
-                                    <h2 class="accordion-header" id="headingTitulo<?= $i ?>">
+                                    <h2 class="accordion-header avoid-page-break" id="headingTitulo<?= $i ?>">
                                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                                             data-bs-target="#<?= $collapseId ?>" aria-expanded="false"
                                             aria-controls="<?= $collapseId ?>">
@@ -423,6 +422,9 @@ if($todas_empresas) {
                                                 $sub_idx++;
                                             }
                                             // Exibir total geral do título
+                                            if ($totais_gerais != 0) {
+                                                echo '<div style="font-size:1.2em; margin-top:2em;" id="total-titulo-'.$i.'">Total do Titulo: R$ ' . number_format($totais_gerais, 2, ',', '.') . '</div>';
+                                            }
                                             echo '</div></div></div>';
                                             if ($titulo->tipo == 'D') {
                                                 $total_despesas += $totais_gerais;
@@ -469,7 +471,9 @@ if($todas_empresas) {
                 </div>
         </div>
 
-            <?php } ?>
+            <?php } 
+            
+            ?>
             
 <?php require_once __DIR__ . '/../../componentes/footer/footer.php' ?> 
 </body>
