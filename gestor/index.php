@@ -155,11 +155,8 @@ $erro = filter_input(INPUT_GET, 'erro');
 
             if (!empty($cadastros_reg)) { ?>
                         <?php foreach ($cadastros_reg as $cadastro) {?>
-
-
-                            
-                                                            <tr onclick="window.location.href='index.php?acao=editar&id=<?=$cadastro->id_usuario?>'" data-id="<?= htmlspecialchars($cadastro->id, ENT_QUOTES, 'UTF-8') ?>" style="cursor: pointer;">
-                                <td>
+                                        <tr onclick="window.location.href='index.php?acao=editar&id=<?=$cadastro->id?>'" data-id="<?= htmlspecialchars($cadastro->id, ENT_QUOTES, 'UTF-8') ?>" style="cursor: pointer;">
+                                            <td>
                                                 <?=htmlspecialchars($cadastro->nome, ENT_QUOTES, 'UTF-8')?>
                                                 <p>E-mail: <?=htmlspecialchars($cadastro->email, ENT_QUOTES, 'UTF-8')?></p>
                                             </td>
@@ -171,10 +168,7 @@ $erro = filter_input(INPUT_GET, 'erro');
                                                 <?php if($cadastro->status == 1) {echo 'ATIVO';} else {echo 'INATIVO';} ?>
                                                 <p>Data de registro: <?= date('d/m/Y', strtotime(htmlspecialchars($cadastro->data_r, ENT_QUOTES, 'UTF-8'))) ?></p>
                                             </td>
-                                
-                            
-                                
-                            </tr>
+                                        </tr>
                         <?php } ?>
                     <?php } else { ?>
                         <tr>
@@ -274,7 +268,7 @@ $erro = filter_input(INPUT_GET, 'erro');
                         
 
                         <div class="input-email input-form-adm">
-                            <!--Nome email-->
+
                             <input type="text" onchange="checar()" name="email"
                                 class="form-control" placeholder="E-mail" value="" required>
                         </div>
@@ -367,6 +361,9 @@ document.addEventListener('DOMContentLoaded', function() {
 // } else {
 //   document.querySelector('button[name="acao"]').disabled = true;
 // }
+const consultar = document.querySelector('input[name="consultar"]');
+
+const processar = document.querySelector('input[name="processar"]');
 
 if (!consultar.checked) {
             processar.checked = false;

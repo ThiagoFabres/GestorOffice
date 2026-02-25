@@ -68,10 +68,12 @@
                                     <?php 
                                     $id_linha = 0;
                                     foreach ($_SESSION['ofx_transactions']['transactions'] as $linha){ 
-                                        
+                                        $valor = str_replace('.', '', $linha['valor']);
+                                        $valor = str_replace(',', '.', $valor);
+                                        $tipo = $valor > 0 ? 'Crédito' : 'Débito';
                                         ?>
                                         <tr>
-                                            <td><input class="form-control" readonly name="tipo[<?=$id_linha?>]" value="<?= htmlspecialchars($linha['tipo'] ?? $linha['valor'] > 0 ? 'Crédito' : 'Débito') ?>"></input></td>
+                                            <td><input class="form-control" readonly name="tipo[<?=$id_linha?>]" value="<?= $tipo ?>"></input></td>
                                             <td><input class="form-control" readonly name="data[<?=$id_linha?>]" value="<?= htmlspecialchars($linha['data'] ?? '') ?>"></input></td>
                                             <td><input class="form-control" readonly name="valor[<?=$id_linha?>]" value="<?= htmlspecialchars($linha['valor'] ?? '') ?>"></input></td>
                                             <td><input class="form-control" readonly name="documento[<?=$id_linha?>]" value="<?= htmlspecialchars($novo_documento ?? '')?>"></input></td>

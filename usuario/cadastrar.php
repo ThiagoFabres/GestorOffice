@@ -171,10 +171,12 @@ $estadosLista = [
                 <div class="col-md-12" style="padding: 0;">
                 
 
-                    <div class="card"   >
-                        <div class="card-header" style="display: flex; flex-direction: row; justify-content: space-between;"><h3>Clientes / Fornecedores</h3> <div class="botao">
-        <button data-bs-toggle="modal" data-bs-target="#modal_empresa" class="btn btn-primary btn-lg botao-adm-adicionar">Novo Cadastro</button>
-    </div></div>
+            <div class="card">
+                <div class="card-header" style="display: flex; flex-direction: row; justify-content: space-between;"><h3>Clientes / Fornecedores</h3> <div class="botao">
+                <?php if($_SESSION['usuario']->processar === 1) {?>
+                    <button data-bs-toggle="modal" data-bs-target="#modal_empresa" class="btn btn-primary btn-lg botao-adm-adicionar">Novo Cadastro</button>
+                <?php } ?>
+            </div></div>
 
                         <div class="card-header-div">
         <div class="card-header-borda">
@@ -321,7 +323,9 @@ $estadosLista = [
                         <th>Estado</th>
                         <th>Bairro</th>
                         <th>Data de registro</th>
+                        <?php if($_SESSION['usuario']->processar === 1) {?>
                         <th>Ação</th>
+                        <?php } ?>
                     </tr>
                 </thead>
                 <tbody>
@@ -333,7 +337,11 @@ $estadosLista = [
                              ?>
 
 
-                            <tr class="tr-clientes" onclick="window.location.href='<?= $link ?>'" style="cursor: pointer;">
+                            <tr class="tr-clientes"
+                            <?php if($_SESSION['usuario']->processar === 1) {?>
+                             onclick="window.location.href='<?= $link ?>'" 
+                             <?php } ?>
+                             style="cursor: pointer;">
                                 <td>
                                                 <?=htmlspecialchars($cadastro->razao_soc, ENT_QUOTES, 'UTF-8')?>
                                                 <?php if($cadastro->nom_fant != '') {?>
@@ -346,7 +354,7 @@ $estadosLista = [
                                             <td>
                                                 <?=htmlspecialchars($cadastro->celular, ENT_QUOTES, 'UTF-8')?>
                                                 <br>
-                                                <?php if($cadastro->fixo != 0){?> 
+                                                <?php if($cadastro->fixo != ''){?> 
                                                     <p> Fixo: <?=htmlspecialchars($cadastro->fixo, ENT_QUOTES, 'UTF-8')?></p>
                                                 <?php } ?>    
                                                     
@@ -375,7 +383,7 @@ $estadosLista = [
                                                     
                                                 ?>
                                                 <br>
-                                                 <?php if($cadastro->cep != 0) {?>
+                                                 <?php if($cadastro->cep != '') {?>
                                                     <p>CEP: <?= htmlspecialchars($cadastro->cep, ENT_QUOTES, 'UTF-8') ?></p>
                                                  <?php } ?>         
                                             </td>
@@ -396,9 +404,11 @@ $estadosLista = [
                                             <td>
                                                 <?= date('d/m/Y', strtotime(htmlspecialchars($cadastro->data_r, ENT_QUOTES, 'UTF-8'), )) ?>
                                             </td>
+                                            <?php if($_SESSION['usuario']->processar === 1) {?>
                                             <td>
                                                <a class="btn btn-danger btn-sm" href="cadastros_manager.php?view=cadastro&target=cliente&acao=excluir&id=<?=$cadastro->id_cadastro?>">Excluir</a>
                                             </td>
+                                            <?php } ?>
                                 
                             </tr>
                                 
@@ -454,19 +464,19 @@ $estadosLista = [
     </div>
 
     <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input type="text" class="form-control" id="cnpj" placeholder="CNPJ" name="cnpj" value="<?= $cadastro->cnpj != 0 ? htmlspecialchars($cadastro->cnpj, ENT_QUOTES, 'UTF-8') : '' ?>" >
+        <input type="text" class="form-control" id="cnpj" placeholder="CNPJ" name="cnpj" value="<?= htmlspecialchars($cadastro->cnpj, ENT_QUOTES, 'UTF-8') ?>" >
     </div>
 
     <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input type="text" class="form-control" id="cpf" placeholder="CPF" name="cpf" value="<?= $cadastro->cpf != 0 ? htmlspecialchars($cadastro->cpf, ENT_QUOTES, 'UTF-8') : '' ?>" >
+        <input type="text" class="form-control" id="cpf" placeholder="CPF" name="cpf" value="<?=htmlspecialchars($cadastro->cpf, ENT_QUOTES, 'UTF-8')?>" >
     </div>
 
     <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input type="text" class="form-control" id="cep" placeholder="CEP" name="cep" value="<?= $cadastro->cep != 0 ? htmlspecialchars($cadastro->cep, ENT_QUOTES, 'UTF-8') : '' ?>" >
+        <input type="text" class="form-control" id="cep" placeholder="CEP" name="cep" value="<?=htmlspecialchars($cadastro->cep, ENT_QUOTES, 'UTF-8')?>" >
     </div>
 
     <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input type="text" class="form-control" id="endereco" placeholder="Endereço" name="endereco" value="<?= htmlspecialchars($cadastro->rua, ENT_QUOTES, 'UTF-8') ?>" >
+        <input type="text" class="form-control" id="endereco" placeholder="Endereço" name="endereco" value="<?=htmlspecialchars($cadastro->rua, ENT_QUOTES, 'UTF-8') ?>" >
     </div>
 
     <div class="input-form-adm-group input-form-adm w-100">
@@ -892,7 +902,9 @@ $estadosLista = [
 
                     <div class="card">
                         <div class="card-header" style="display:flex; flex-direction: row; justify-content: space-between;"><h3><?php if($get_cadastro != 'custo') {echo ucfirst($get_cadastro) . 's';} else {echo 'Centros de Custos';} ?></h3> <div class="botao">
-                        <a href="cadastrar.php?cadastro=<?= $get_cadastro ?>&acao=adicionar" class="btn btn-primary btn-lg botao-adm-adicionar"> <?php if ($get_cadastro == 'cidade') {echo 'Nova';} else { echo 'Novo';} ?> <?= ucfirst($get_cadastro) ?></a>
+                        <?php if($_SESSION['usuario']->processar === 1) { ?>
+                        <a href="cadastrar.php?cadastro=<?= $get_cadastro ?>&acao=adicionar" class="btn btn-primary btn-lg botao-adm-adicionar"> <?php if ($get_cadastro == 'cidade') {echo 'Nova';} else { echo 'Novo';} ?> <?php if($get_cadastro == 'custo') {echo 'Centro de Custos';} else {echo ucfirst($get_cadastro);} ?></a>
+                        <?php } ?>
                     </div></div>
                 
 
@@ -901,7 +913,9 @@ $estadosLista = [
                         <thead>
                             <tr>
                                 <th style="width:95%;">Nome</th>
+                                <?php if($_SESSION['usuario']->processar === 1) { ?>
                                 <th>Ação</th>
+                                <?php } ?>
                             </tr>
 
                             
@@ -921,13 +935,18 @@ $estadosLista = [
                                  $link = 'cadastrar.php?cadastro='. $get_cadastro .'&acao=editar&id=' . $cadastro->id;
                                 ?>
                                     
-                                        <tr class="tr-clientes" onclick="window.location.href='<?= $link ?>'" style="cursor: pointer;">
+                                        <tr class="tr-clientes" 
+                                        <?php if($_SESSION['usuario']->processar === 1) {?>
+                                        onclick="window.location.href='<?= $link ?>'"
+                                        <?php } ?> style="cursor: pointer;">
                                             <td>
                                                <?=htmlspecialchars($cadastro->nome, ENT_QUOTES, 'UTF-8')?>
                                             </td>
+                                            <?php if($_SESSION['usuario']->processar === 1) { ?>
                                             <td>
                                                <a class="btn btn-danger btn-sm" href="cadastros_manager.php?view=cadastro&target=<?=$get_cadastro?>&acao=excluir&id=<?=$cadastro->id?>">Excluir</a>
                                             </td>
+                                            <?php } ?>
                                             
                                         </tr>
 

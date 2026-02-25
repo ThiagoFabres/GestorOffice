@@ -38,9 +38,11 @@
                                 <th>
                                     Taxa
                                 </th>
+                                <?php if($exibir_diferencas) { ?>
                                 <th>
                                     Taxa Aplicada
                                 </th>
+                                <?php } ?>
                                 <th>
                                     Valor Liquido
                                 </th>
@@ -100,10 +102,12 @@
                                             <td><?= $rec01->parcelas ?></td>
                                             <td>R$ <?= number_format($rec01->valor_b, 2, ',', '.') ?></td>
                                             <td><?= number_format($taxa, 2, ',', '.')?></td>
+                                            <?php if ($exibir_diferencas) { ?>
                                             <td><?= number_format($taxa_aplicada, 2, ',', '.') ?></td>
-                                            <td><?= $rec01->valor ?></td>
-                                            <td><?= $rec01->valor_liq_go?></td>
-                                            <td><?= number_format($rec01->valor - $rec01->valor_liq_go, 2, ',', '.')?></td>
+                                            <?php } ?>
+                                            <td>R$ <?= number_format($rec01->valor, 2, ',', '.') ?></td>
+                                            <td>R$ <?= number_format($rec01->valor_liq_go, 2, ',', '.') ?></td>
+                                            <td>R$ <?= number_format($rec01->valor - $rec01->valor_liq_go, 2, ',', '.')?></td>
                                         </tr>
                                     </div>
 
@@ -126,7 +130,9 @@
                                     <td></td>
                                     <td style="text-align: center; font-size: 100%;">R$</td>
                                     <td style="text-align: center; font-size: 100%;"><?= number_format($total_valor_b, '2', ',', '.')?></td>
+                                    <?php if($exibir_diferencas) { ?>
                                     <td></td>
+                                    <?php } ?>
                                     <td></td>
                                     <td style="text-align: center; font-size: 100%;"><?= number_format($total_valor_l, '2', ',', '.')?></td>
                                     <td style="text-align: center; font-size: 100%;"><?= number_format($total_valor_l_go, '2', ',', '.')?></td>

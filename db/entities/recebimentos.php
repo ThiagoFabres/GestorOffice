@@ -95,7 +95,12 @@ class Rec01 {
         if ($con01 != null) $conditions[] = 'id_con01 = :con01';
         if ($con02 != null) $conditions[] = 'id_con02 = :con02';
         if ($read_vendas) $conditions[] = 'valor_b IS NOT NULL';
-        if ($read_diferencas) $conditions[] = '(valor - valor_liq_go > 0.01 OR valor - valor_liq_go < -0.01)';
+        if ($read_diferencas) {
+            // compara taxa usada vs taxa calculada arredondadas a 2 casas e evita divisão por zero
+            $conditions[] =
+                'ROUND((((valor_b - valor_liq_go) * 100) / NULLIF(valor_b,0)),2) <> '
+                . 'ROUND((((valor_b - valor) / NULLIF(valor_b,0)) * 100),2)';
+        }
         if ($filtro_data_inicial != null) $conditions[] = 'data_lanc >= :filtro_data_inicial';
         if ($filtro_data_final != null) $conditions[] = 'data_lanc <= :filtro_data_final';
         if ($filtro_custos != null) $conditions[] = 'centro_custos = :centro_custos';
@@ -351,7 +356,7 @@ class Rec02 {
 }
 
 
-        if($filtro_por == 'pagamento') $conditions[] = 'r2.id_pgto IS NOT NULL';
+        if($filtro_por == 'pagamento') $conditions[] = 'r2.data_pag IS NOT NULL';
         if ($id_rec01 != null) $conditions[] = 'r2.id_rec01 = :id_rec01';
         if ($data != null) $conditions[] = 'MONTH(r2.vencimento) = MONTH(:data) AND YEAR(r2.vencimento) = YEAR(:data)';
         if ($parcela != null) $conditions[] = 'r2.parcela = :parcela';

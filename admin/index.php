@@ -55,33 +55,24 @@ $erro = filter_input(INPUT_GET, 'erro');
 <body id="body" >
 
 
-
-
-    <nav id="barra-lateral">
-        <div id="logo-container">
-            <img width="100%" height="100%" src="/gestor-office.png" alt="Logo" class="logo">
-        </div>
-
-        <div id="Adicionar empresa-lateral" class="menu-item">
-            <a href="/admin/"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-building"></i></div> Adicionar Empresas</a>
-        </div>
-
-        
-        </div>
-
-    </nav>
-
     <nav id="barra-lateral">
         <div id="logo-container">
             <img width="220px" height="220px" src="/gestor-office.png" alt="Logo" class="logo">
         </div>
     <div id="itens-menu">
 
-        <div class="menu-item">
-            <a href="/admin/"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-building"></i></div> Adicionar Empresas </a>
+        <div class="menu-item menu-item-atual">
+                <a href="/admin/">
+                    <div style=" align-items:center;"><i class="bi bi-building"></i></div> Empresas
+                </a>
+        </div>
+        <div class="menu-item ">
+                <a href="/admin/acao_adm.php">
+                    <div style=" align-items:center;"><i class="bi bi-clipboard"></i></div> Ação Administrativa
+                </a>
         </div>
 
-        </div>
+    </div>
 
     </nav>
 

@@ -66,15 +66,20 @@ foreach($desmembramentos as $desmembramento) {
                 
                 <!-- Corpo -->
                 <div class="modal-body">
+                    <?php if($_SESSION['usuario']->processar === 1) { ?>
                     <form method="get" action="movimentacao.php">
+                    <?php } ?>
                     
                     
                     <input type="hidden" name="id" value="<?=$ban02->id?>"> 
                     <input type="hidden" name="acao" value="desmembrar">
                     
-                    
+                <?php if($_SESSION['usuario']->processar === 1) { ?>
                 </form>
+                <?php } ?>
+                <?php if($_SESSION['usuario']->processar === 1) { ?>
                 <form method="post" action="movimentacao_manager.php">
+                    <?php } ?>
                     <input type="hidden" name="id" value="<?=$get_id?>">
                     <input type="hidden" name="valor" value="<?=$ban02->valor?>">
                     <input type="hidden" name="caminho" value="<?=$caminho?>">
@@ -107,7 +112,7 @@ foreach($desmembramentos as $desmembramento) {
                 
                     
                     <!-- Botões -->
-                     
+                    <?php if($_SESSION['usuario']->processar === 1) { ?>
                     <div class="d-flex flex-row" style="justify-content: space-between;">
                         <?php if($desmembramentos != null) {?>
                         <div>
@@ -115,12 +120,16 @@ foreach($desmembramentos as $desmembramento) {
                         </div>
                         <?php } ?>
 
+                        
                         <div style="<?php if($desmembramentos == null) echo 'display:flex; justify-content: end; width:100%;'?>">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
                             <button type="submit" name="acao" value="editar_desmembramento" class="btn btn-primary">Salvar</button>
                         </div>
                     </div>
+                    <?php } ?>
+                    <?php if($_SESSION['usuario']->processar === 1) { ?>
                     </form>
+                    <?php } ?>
 
                 </div>
             </div>

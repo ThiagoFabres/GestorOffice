@@ -21,8 +21,19 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     exit;
 
 }
+$caminho = filter_input(INPUT_POST, 'caminho');
+$caminho = urldecode($caminho);
+if ($caminho == null) {
+    $caminho = filter_input(INPUT_GET, 'caminho');
+}
+if(!isset($_SESSION['usuario']->processar) || $_SESSION['usuario']->processar != 1) {
+    header('Location: receber.php?erro=permissao');
+    exit;
+}
 require_once __DIR__ . '/../db/buscar_documento_pag.php';
 require_once __DIR__ . '/../db/buscar_documento_rec.php';
+
+
 
 
 $view = filter_input(INPUT_POST, 'view');
@@ -33,11 +44,7 @@ $acao = filter_input(INPUT_POST, 'acao');
 if ($acao == null) {
     $acao = filter_input(INPUT_GET, 'acao');
 }
-$caminho = filter_input(INPUT_POST, 'caminho');
-$caminho = urldecode($caminho);
-if ($caminho == null) {
-    $caminho = filter_input(INPUT_GET, 'caminho');
-}
+
 
 
 
@@ -115,7 +122,7 @@ if (isset($view) && $view == 'cadastro') {
                 if(isset($email) && $email != null) {
                     if (!Cadastro::read(null, $email)) {
                         Cadastro::create($cadastro);
-                    if(!isset($insta) || $insta == null) {
+                    if(!isset($insta) || $insta == null || $insta == 'cadastro') {
                         header('Location: cadastrar.php?cadastro=cliente');
                         exit;
                     } else {
@@ -593,11 +600,8 @@ if (isset($view) && $view == 'cadastro') {
             $id_ban
         );
 
-        echo '<pre>';
-        print_r($recebimento);  
-
         if ($pagar) {
-            if(!Pag01::read(null, $_SESSION['usuario']->id_empresa, null, $documento)[0]) {
+            if(!Pag01::read(null, $_SESSION['usuario']->id_empresa, null, $documento)) {
                 Pag01::create($recebimento);
             } else {
                 header('Location:pagar.php?erro=repetido');
@@ -814,12 +818,9 @@ if (isset($view) && $view == 'cadastro') {
         $valor_parcela = str_replace(',', '.', $valor);
         $valor_parcela = floatval($valor_parcela);
         }
-
-        var_dump($valor) . '<br>';
         
         if ($target == 'parcela') {
             if ($pagar) {
-                echo 'a';
                 $parcela_antiga = Pag02::read($id)[0];
                 
             } else {
@@ -853,7 +854,7 @@ if (isset($view) && $view == 'cadastro') {
             }
             header('Location:' . $caminho.$numero_pagina.$numero_exibir);
             exit;
-
+    
 
         }
     } else if (isset($acao) && $acao == 'estornar') {

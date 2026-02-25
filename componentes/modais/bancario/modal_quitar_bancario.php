@@ -1,10 +1,11 @@
 <?php
-
+if($acao == 'quitar_bancario') {
 $quitar_id = filter_input(INPUT_GET, 'id');
 $ban02 = Ban02::read($quitar_id, $_SESSION['usuario']->id_empresa)[0];
 $data_quitar_inicial = filter_input(INPUT_GET, 'data_quitar_inicial') ?? ($ban02->data) ?? null;
 $data_quitar_final = filter_input(INPUT_GET, 'data_quitar_final') ?? ($ban02->data) ?? null;
 $quitados = filter_input(INPUT_GET, 'quitados') == 'on' ? null  : 'abertos';
+$tipo = null;
 $tipo = $ban02->valor < 0 ? 'D' : 'C';
 
 if($data_quitar_inicial != null || $data_quitar_final != null) {
@@ -29,6 +30,7 @@ if($data_quitar_inicial != null || $data_quitar_final != null) {
         );
         $link_adicionar = 'movimentacao.php?acao=quitar_adicionar&tipo=D&id_ban='.$ban02->id;
     }
+}
 }
 ?>
 <div class="modal fade" id="modal_quitar_bancario" tabindex="-1" role="dialog" aria-labelledby="modalCadastroCidadeLabel">

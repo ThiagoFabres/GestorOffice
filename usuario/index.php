@@ -306,7 +306,7 @@ $total_rec_pagamento = number_format($total_rec_pagamento, 2, ',', '.');
                 <div class="dashboard-group justify-content-evenly">
                     <table class="table-bordered">
 
-                                <h1 style="white-space: nowrap;">Saldo Mensal Lançamento</h1>
+                                <h1 style="white-space: nowrap;">Saldo Mensal Vencimento</h1>
 
                         <tbody>
                             

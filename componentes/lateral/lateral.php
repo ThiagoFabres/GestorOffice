@@ -8,7 +8,6 @@
                     <div style=" align-items:center;"><i class="bi bi-layers"></i></div> Dashboard
                 </a>
             </div>
-            <?php if ($_SESSION['usuario']->processar == 1) { ?>
                 <div class="menu-item accordion <?php if($lateral_target == 'cadastro') {?> menu-item-atual<?php } ?>">
 
                     <a class="nav-link text-white" data-bs-toggle="collapse" href="#cadastrosMenu" role="button"
@@ -35,7 +34,6 @@
                         </ul>
                     </div>
                 </div>
-            <?php } ?>
 
 
             <div class="menu-item accordion <?php if( isset($lateral_financeiro) && $lateral_financeiro ){ 

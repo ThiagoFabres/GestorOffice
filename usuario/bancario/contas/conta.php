@@ -12,6 +12,8 @@ require_once __DIR__ . '/../../../db/entities/banco01.php';
 $lateral_target = 'contaBancario';
 $lateral_bancario = true;
 $acao = filter_input(INPUT_GET, 'acao', FILTER_SANITIZE_STRING);
+$erro = filter_input(INPUT_GET, 'erro');
+
 
 ?>
 <!DOCTYPE html>
@@ -62,9 +64,11 @@ $acao = filter_input(INPUT_GET, 'acao', FILTER_SANITIZE_STRING);
     ?>
     <div class="main" id="container">
         <card class="card">
+            <?php if($_SESSION['usuario']->processar === 1) { ?>
             <div class="card-header">
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal_cadastro_conta">Adicionar Conta Bancária</button>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal_cadastro_conta">Adicionar Conta Bancária</button>
             </div>
+            <?php } ?>
             <div class="card-body card-contas-lista">
             <?php foreach($contas as $conta) { ?>
                 
@@ -468,8 +472,7 @@ document.addEventListener('DOMContentLoaded', function () {
     ;}, 100);
 });
 </script>
-<?php
-if($acao == 'editar') {?>
+<?php if($acao == 'editar') {?>
     <script>
         window.addEventListener('DOMContentLoaded', function () {
             var modalEl = document.getElementById('modal_cadastro_conta');
@@ -479,6 +482,18 @@ if($acao == 'editar') {?>
                 window.location.href = 'conta.php';
             });
         });
+    </script>
+<?php } ?>
+<?php if($erro == 'uso') {?>
+    <script>
+        alert('Conta em uso');
+        window.location.href="conta.php"
+    </script>
+<?php } ?>
+<?php if($erro == 'permissao') {?>
+    <script>
+        alert('Você não tem permissão para realizar essa ação');
+        window.location.href="conta.php"
     </script>
 <?php } ?>
 

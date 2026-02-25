@@ -52,7 +52,7 @@ $numero_pagina = intval($numero_pagina);
 $direcao_var = $direcao;
 $get_filtro_data_inicial = filter_input(INPUT_GET, 'filtro_data_inicial') ?? null;
 $get_filtro_data_final = filter_input(INPUT_GET, 'filtro_data_final') ?? null;
-
+$erro = filter_input(INPUT_GET, 'erro') ?? null;
 $get_filtro_nome = filter_input(INPUT_GET, 'filtro_nome') ?? null;
 $get_filtro_opcao = filter_input(INPUT_GET, 'opcao_filtro') ?? null;
 $get_filtro_por = filter_input(INPUT_GET, 'filtro_por') ?? null;
@@ -203,11 +203,12 @@ if ($filtros != []) {
                     <div class="card-header">
                         <div class="card-header-lancamento">
                         <h3>Contas a Receber</h3>
-
+                <?php if($_SESSION['usuario']->processar === 1) {?>
                     <div>
                         <button data-bs-toggle="modal" data-bs-target="#modal_receber"
                         class="btn btn-primary btn-lg">Novo Lançamento</button>
                     </div>
+                <?php } ?>
                         
                         </div>
                     </div>
@@ -511,9 +512,11 @@ if ($filtros != []) {
                                         } ?>
                                 </th>
                                 <th>OBS</th>
+                                <?php if($_SESSION['usuario']->processar === 1) {?>
                                 <th>Quitar</th>
                                 <th>Estornar</th>
                                 <th>Editar</th>
+                                <?php } ?>
                                 <th>Visualizar</th>
                             </tr>
                         </thead>
@@ -632,6 +635,7 @@ if ($filtros != []) {
                                         } ?></td>
                                         <td><?= $pagamento->nome ?? '' ?></td>
                                         <td><?= $rec02->obs ?></td>
+                                        <?php if($_SESSION['usuario']->processar === 1) {?>
                                         <td class="td-acoes">
                                             <?php $valor_restante = number_format($rec02->valor_par - $rec02->valor_pag, 2, ',', '.') ?>
                                             <button class="btn btn-primary" data-bs-toggle="modal" <?php if ($rec02->valor_pag > 0) { ?> disabled <?php } ?> data-bs-target="#modal_quitar"
@@ -656,6 +660,7 @@ if ($filtros != []) {
                                                 onclick="window.location.href='receber.php?id=<?= $rec01->id ?>&acao=editar'"><i
                                                     class="bi bi-pen-fill"></i></button>
                                         </td>
+                                        <?php } ?>
                                         <td class="td-acoes">
                                             <button class="btn btn-primary"
                                                 onclick="window.location.href='receber.php?id=<?= $rec01->id ?>&acao=visualizar'"><i class="bi bi-eye"></i></button>
@@ -686,9 +691,11 @@ if ($filtros != []) {
                                     <td style="text-align: end; font-size: 100%;">R$</td>
                                     <td style="text-align: center; font-size: 100%;"><?= number_format($total_valor_pago, '2', ',', '.')?></td>
                                     <td></td>
+                                    <?php if($_SESSION['usuario']->processar === 1) {?>
                                     <td></td>
                                     <td></td>
                                     <td></td>
+                                    <?php } ?>
                                     <td></td>
                                     <td></td>
                                     
@@ -877,6 +884,7 @@ if ($filtros != []) {
                                 ordenar_por: $ordenar_por,
                                 direcao: $direcao,
                                 filtro_custos: $get_filtro_custo,
+                                numero_exibir: 500,
                                 
                             );
                             if (!empty($parcelas)) {
@@ -1031,9 +1039,11 @@ if ($filtros != []) {
 
                 <!-- Context menu for table rows -->
                 <div id="custom-context-menu" style="display:none; position:absolute; z-index:9999; background:#fff; border:1px solid #ccc; box-shadow:0 2px 8px rgba(0,0,0,0.2); min-width:180px; border-radius:6px; overflow:hidden;">
+                    <?php if($_SESSION['usuario']->processar === 1) { ?>
                     <button id="menu-quitar" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-cash-stack"></i> Quitar</button>
                     <button id="menu-estornar" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-wallet2"></i> Estornar</button>
                     <button id="menu-editar" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-pen-fill"></i> Editar</button>
+                    <?php } ?>
                     <button id="menu-visualizar" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-eye"></i> Visualizar</button>
                 </div>
 
@@ -1590,6 +1600,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 window.location.href = 'receber.php';
             });
         });
+<?php } ?>
+
+
+<?php if(isset($erro) && $erro == 'permissao') { ?>
+    alert('Você não tem permissão para acessar essa funcionalidade.');
+    window.location.href = 'receber.php';
 <?php } ?>
 </script>
 

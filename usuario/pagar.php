@@ -201,12 +201,12 @@ if ($filtros != []) {
                     <div class="card-header">
                         <div class="card-header-lancamento">
                         <h3>Contas a Pagar</h3>
-
+                    <?php if($_SESSION['usuario']->processar === 1) {?>
                     <div>
                         <button data-bs-toggle="modal" data-bs-target="#modal_receber"
                         class="btn btn-primary btn-lg">Novo Lançamento</button>
                     </div>
-                        
+                    <?php } ?>
                         </div>
                     </div>
 
@@ -509,9 +509,11 @@ if ($filtros != []) {
                                         } ?>
                                 </th>
                                 <th>OBS</th>
+                                <?php if($_SESSION['usuario']->processar === 1) {?>
                                 <th>Quitar</th>
                                 <th>Estornar</th>
                                 <th>Editar</th>
+                                <?php } ?>
                                 <th>Visualizar</th>
                             </tr>
                         </thead>
@@ -630,6 +632,7 @@ if ($filtros != []) {
                                         } ?></td>
                                         <td><?= $pagamento->nome ?? '' ?></td>
                                         <td><?= $pag02->obs ?></td>
+                                        <?php if($_SESSION['usuario']->processar === 1) {?>
                                         <td class="td-acoes">
                                             <?php $valor_restante = number_format($pag02->valor_par - $pag02->valor_pag, 2, ',', '.') ?>
                                             <button class="btn btn-primary" data-bs-toggle="modal" <?php if ($pag02->valor_pag > 0) { ?> disabled <?php } ?> data-bs-target="#modal_quitar"
@@ -654,6 +657,7 @@ if ($filtros != []) {
                                                 onclick="window.location.href='pagar.php?id=<?= $pag01->id ?>&acao=editar'"><i
                                                     class="bi bi-pen-fill"></i></button>
                                         </td>
+                                        <?php } ?>
                                         <td class="td-acoes">
                                             <button class="btn btn-primary"
                                                 onclick="window.location.href='pagar.php?id=<?= $pag01->id ?>&acao=visualizar'"><i class="bi bi-eye"></i></button>
@@ -684,9 +688,11 @@ if ($filtros != []) {
                                     <td style="text-align: end; font-size: 100%;">R$</td>
                                     <td style="text-align: center; font-size: 100%;"><?= number_format($total_valor_pago, '2', ',', '.')?></td>
                                     <td></td>
+                                    <?php if($_SESSION['usuario']->processar === 1) {?>
                                     <td></td>
                                     <td></td>
                                     <td></td>
+                                    <?php } ?>
                                     <td></td>
                                     <td></td>
                                     
@@ -1549,6 +1555,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 window.location.href = 'pagar.php';
             });
         });
+    
     <?php } else if(!isset($target) || $target == 'cadastro') {?>
         window.addEventListener('DOMContentLoaded', function () {
             var modalEl = document.getElementById('modal_receber');
@@ -1588,6 +1595,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 window.location.href = 'pagar.php';
             });
         });
+<?php } ?>
+
+
+
+<?php if(isset($erro) && $erro == 'permissao') { ?>
+    alert('Você não tem permissão para acessar essa funcionalidade.');
+    window.location.href = 'receber.php';
 <?php } ?>
 </script>
 

@@ -533,6 +533,14 @@ if ($filtros != []) {
     ?>
 </div>
     
+    <div id="custom-context-menu" style="display:none; position:absolute; z-index:9999; background:#fff; border:1px solid #ccc; box-shadow:0 2px 8px rgba(0,0,0,0.2); min-width:180px; border-radius:6px; overflow:hidden;">
+                    <?php if($_SESSION['usuario']->processar === 1) {?>
+                    <button id="menu-quitar" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-cash-stack"></i> Quitar</button>
+                    <button id="menu-estornar" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-wallet2"></i> Estornar</button>
+                    <button id="menu-editar" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-pen-fill"></i> Editar</button>
+                    <?php } ?>
+                    <button id="menu-visualizar" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-eye"></i> Visualizar</button>
+    </div>
 
     <?php require_once __DIR__ . '/../../componentes/modais/cartao/modal_cadastro_vendas.php' ?>
 
@@ -652,13 +660,13 @@ if ($filtros != []) {
 //     document.getElementById('menu-editar').addEventListener('click', function(){
 //         if (!currentRow) return;
 //         const idRec01 = currentRow.getAttribute('data-id-rec01');
-//         window.location.href = 'receber.php?id=' + idRec01 + '&acao=editar';
+//         window.location.href = 'cadastro_vendas.php?id=' + idRec01 + '&acao=editar';
 //     });
 
 //     document.getElementById('menu-visualizar').addEventListener('click', function(){
 //         if (!currentRow) return;
 //         const idRec01 = currentRow.getAttribute('data-id-rec01');
-//         window.location.href = 'receber.php?id=' + idRec01 + '&acao=visualizar';
+//         window.location.href = 'cadastro_vendas.php?id=' + idRec01 + '&acao=visualizar';
 //     });
 
 // })();
@@ -684,7 +692,7 @@ if ($filtros != []) {
     }
 ?>
     
-        // set the modal id and the displayed remaining value when the page was opened with ?quitar_id=
+        set the modal id and the displayed remaining value when the page was opened with ?quitar_id=
         var modalQInput = document.getElementById('modal_quitar_id');
         if (modalQInput) modalQInput.value = <?= $modal_quitar_id ?>;
         var vrEl = document.getElementById('modal_quitar_valor_restante');
@@ -697,10 +705,20 @@ if ($filtros != []) {
             var Modal = new bootstrap.Modal(modalEl);
             Modal.show();
             modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'receber.php';
+                window.location.href = 'cadastro_vendas.php';
             });
         });
     <?php } ?>
+    <?php if(isset($acao) && $acao == 'editar') { ?>
+        window.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('modal_receber');
+            var Modal = new bootstrap.Modal(modalEl);
+            Modal.show();
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                window.location.href = 'cadastro_vendas.php';
+            });
+        });
+<?php } ?>
 
 
     document.addEventListener('DOMContentLoaded', function () {
@@ -909,7 +927,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         }
 
-        console.log('Choices.js inicializado em receber.php:', {
+        console.log('Choices.js inicializado em cadastro_vendas.php:', {
             tituloFiltro: !!tituloFiltroChoice,
             subtituloFiltro: !!subtituloFiltroChoice,
             tituloModal: !!tituloModalChoice,
@@ -1041,6 +1059,56 @@ document.addEventListener('DOMContentLoaded', function () {
     
     ;}, 100);
 });
+<?php } ?>
+<?php if (isset($acao) && ($acao == 'adicionar' || $acao == 'visualizar' || $acao == 'editar')) { 
+    if($acao == 'visualizar') {?>
+        window.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('modal_receber');
+            var Modal = new bootstrap.Modal(modalEl);
+            Modal.show();
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                window.location.href = 'cadastro_vendas.php';
+            });
+        });
+    <?php } else if(!isset($target) || $target == 'cadastro') {?>
+        window.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('modal_receber');
+            var Modal = new bootstrap.Modal(modalEl);
+            Modal.show();
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                window.location.href = 'cadastro_vendas.php';
+            });
+        });
+    <?php } else if($target == 'quitar') { ?>
+
+        window.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('modal_quitar');
+            var Modal = new bootstrap.Modal(modalEl);
+            Modal.show();
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                window.location.href = 'cadastro_vendas.php';
+            });
+        });
+    <?php } else if (isset($target) && $target != 'cadastro' && $target != 'quitar'){ ?>
+        window.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('modal_cadastro');
+            var Modal = new bootstrap.Modal(modalEl);
+            Modal.show();
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                window.location.href = 'cadastro_vendas.php';
+            });
+        });
+<?php }}?>
+
+<?php if(isset($acao) && $acao == 'editar') { ?>
+        window.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('modal_receber');
+            var Modal = new bootstrap.Modal(modalEl);
+            Modal.show();
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                window.location.href = 'cadastro_vendas.php';
+            });
+        });
 <?php } ?>
 </script>
 

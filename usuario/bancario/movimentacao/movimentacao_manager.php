@@ -9,6 +9,10 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     header('Location: /');
     exit;
 }
+if($_SESSION['usuario']->processar !== 1) {
+    header('Location: movimentacao.php?erro=permissao');
+    exit;
+}
 
 require_once '../../../db/entities/banco02.php';
 require_once '../../../db/entities/banco01.php';
@@ -86,6 +90,7 @@ if($acao == 'processar') {
                 }
                 
                 $data_raw = $cells[0];
+                
                 $descricao = trim((string)$cells[1]);
                 $valor_str = $cells[2];
 
@@ -105,6 +110,7 @@ if($acao == 'processar') {
                     } else {
                         // Tenta formato texto
                         $data_str = trim((string)$data_raw);
+                        $data_str = str_replace('-', '/', $data_str);
                         $data_obj = DateTime::createFromFormat('d/m/Y', $data_str);
                         if (!$data_obj) {
                             $data_obj = DateTime::createFromFormat('Y-m-d', $data_str);
@@ -130,10 +136,10 @@ if($acao == 'processar') {
                 
                 // Converte valor para número (suporta formato brasileiro)
                 $valor = (float)$valor_str;
-                // if ($valor == 0) {
-                //     continue;
-                // }
-                
+                if ($valor == 0) {
+                    continue;
+                }
+                $data_formatada = str_replace('-', '/', $data_formatada);
                 $current = [
                     'data' => $data_formatada,
                     'descricao' => $descricao,
@@ -311,9 +317,10 @@ if($acao == 'processar') {
             if ((strpos($line, '<TRNAMT>')) !== false) {
                 
                 $line = str_replace(',', '.', $line);
-                $valor = $line;
                 $current['valor'] = number_format((float)substr($line, strlen('<TRNAMT>')), 2, '.', '');
                 $current['tipo'] = ($current['valor'] < 0) ? 'Débito' : 'Crédito';
+                $current['valor'] = number_format((float)substr($line, strlen('<TRNAMT>')), 2, ',', '.');
+                
                 $transactions['debug']['current']['valor'][] = $current['valor'];
             }
             if (strpos($line, '<CHECKNUM>') !== false) {
@@ -362,9 +369,12 @@ if($acao == 'processar') {
         }
         
 
-        
-        $transactions_current = $transactions['current'];
-        $transactions_debug = $transactions['debug'];
+        if(!empty($transactions['current'])){
+            $transactions_current = $transactions['current'];
+        }
+        if(!empty($transactions['debug'])){
+            $transactions_debug = $transactions['debug'];
+        }
 
         if(empty($transactions_current)) {
             header('Location: movimentacao.php?erro=cadastrado');
@@ -387,7 +397,6 @@ if($acao == 'processar') {
         exit;
     }
 } else if($acao == 'adicionar') {
-    
 
 
 
@@ -396,6 +405,7 @@ if($acao == 'processar') {
     $valor = $_POST['valor'];
     $descricao = $_POST['descricao'];
     $descricao_comp = $_POST['descricao_comp'];
+    $tamanho = $_POST['total_linhas'] ?? count($_POST['valor']);
     $conta = $_POST['conta'];
     $imp_lista = [];
     $dias_usados = [];
@@ -407,10 +417,14 @@ if($acao == 'processar') {
         if(Ban02::read( id_empresa:$_SESSION['usuario']->id_empresa,documento:$documento)) {
             $cadastrado = true;
         }
-   if($cadastrado === false) {
 
-    for($i = 0; $i < $_POST['total_linhas']; $i++) {
-         $data_formatada = DateTime::createFromFormat('d/m/Y', $data[$i])->format('Y-m-d');
+   if($cadastrado === false) {
+    for($i = 0; $i < $tamanho; $i++) {
+        $valor[$i] = str_replace('.', '', $valor[$i]);
+        $valor[$i] = str_replace(',', '.', $valor[$i]);
+        
+        $data_formatada = DateTime::createFromFormat('d/m/Y', $data[$i])->format('Y-m-d');
+        
         if(!Ban02Imp::read($_SESSION['usuario']->id_empresa,$conta,$data_formatada)) {
             $nova_movimentacao = new Ban02(
             null,
@@ -426,6 +440,8 @@ if($acao == 'processar') {
             null,
             1
         );
+
+        
         $novo_imp = new Ban02Imp (
             $_SESSION['usuario']->id_empresa,
             $conta,
@@ -433,16 +449,20 @@ if($acao == 'processar') {
         );
 
         Ban02::create($nova_movimentacao);
+
         if(!in_array($novo_imp, $imp_lista)) {
             $imp_lista[] = $novo_imp;
         }
-        
+
         } else {
-            $_SESSION['dias_usados'][$i] = DateTime::createFromFormat('Y-m-d', $data_formatada)->format('d-m-Y');
+            $_SESSION['dias_usados'][$i] = $data_formatada;
         }
         $documento++;
     }
+
+
     if(!empty($imp_lista)) {
+        
         
         foreach($imp_lista as $imp) {
         if(!Ban02Imp::create($imp)) {
@@ -455,6 +475,8 @@ if($acao == 'processar') {
         header('Location: movimentacao.php?sucesso=sucesso');
         exit;
     } else {
+        header('Location: movimentacao.php?sucesso=sucesso2');
+        exit;
     }
     
     
