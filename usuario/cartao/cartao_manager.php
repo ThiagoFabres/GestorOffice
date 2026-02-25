@@ -6,6 +6,11 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     exit;
 
 }
+if($_SESSION['usuario']->processar !== 1) {
+    header('Location: /usuario/cartao/cadastro_cartao.php?erro=permissao');
+    exit;
+}
+
 require_once __DIR__ . '/../../db/entities/ope01.php';
 require_once __DIR__ . '/../../db/entities/band01.php';
 require_once __DIR__ . '/../../db/entities/pra01.php';

@@ -59,10 +59,11 @@ $target = filter_input(INPUT_GET, 'target');
     <?php require_once __DIR__ . '/../../componentes/header/header.php' ?>
 
     <div class="main" id="container">
-
-                <div class="botao">
+    <?php if($_SESSION['usuario']->processar === 1) { ?>
+    <div class="botao">
         <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#modal_adicionar_operadora">Adicionar Operadora</button>
     </div>
+    <?php } ?>
 
         
 
@@ -81,10 +82,12 @@ $target = filter_input(INPUT_GET, 'target');
         <div id="collapse<?=$i?>" class="accordion-collapse collapse" aria-labelledby="heading<?=$i?>">
             <div class="accordion-body">
                 <div class="inner-accordion">
+                    <?php if($_SESSION['usuario']->processar === 1) { ?>
                     <div class="botoes-contas">
                         <button data-bs-toggle="modal" data-bs-target="#modal_adicionar_bandeira" data-operadora-id="<?=$operadora->id?>"  class="btn btn-primary btn-sm">Adicionar Bandeiras</button>
                         <a href="cadastro_cartao.php?target=operadora&acao=editar&id_ope01=<?=$operadora->id?>" class="btn btn-primary btn-sm">Editar Operadora</a>
                     </div>
+                    <?php } ?>
                         <?php foreach($bandeiras as $j => $bandeira) { 
                             $prazos = Pra01::read(null, $operadora->id, $_SESSION['usuario']->id_empresa, id_bandeira: $bandeira->id);
                             ?>
@@ -98,10 +101,12 @@ $target = filter_input(INPUT_GET, 'target');
                                         <div id="collapseb<?=$j?>" class="accordion-collapse collapse" aria-labelledby="headingb<?=$j?>">
                                             <div class="accordion-body">
                                                 <div class="inner-accordion">
+                                                    <?php if($_SESSION['usuario']->processar === 1) { ?>
                                                     <div class="botoes-contas">
                                                         <button data-bs-toggle="modal" data-bs-target="#modal_adicionar_prazo" data-operadora-id="<?=$operadora->id?>" data-bandeira-id="<?=$bandeira->id?>" class="btn btn-primary btn-sm">Adicionar Tarifa</button>
                                                         <a href="cadastro_cartao.php?target=bandeira&acao=editar&id_band01=<?=$bandeira->id?>" class="btn btn-primary btn-sm">Editar Bandeira</a>
                                                     </div>
+                                                    <?php } ?>
                                                     <table class="table table-striped">
                                                         <tr>
                                                             <th>Parcela</th>
@@ -113,9 +118,21 @@ $target = filter_input(INPUT_GET, 'target');
                                                             $link = 'cadastro_cartao.php?target=prazo&acao=editar&id_pra01=' . $prazo->id;
                                                             ?>
                                                             <tr>
-                                                                <td onclick="window.location.href='<?=$link?>'"><?= htmlspecialchars($prazo->parcela, ENT_QUOTES, 'UTF-8') ?></td>
-                                                                <td onclick="window.location.href='<?=$link?>'"><?= htmlspecialchars($prazo->prazo, ENT_QUOTES, 'UTF-8') ?></td>
-                                                                <td onclick="window.location.href='<?=$link?>'"><?= number_format(htmlspecialchars($prazo->taxa, ENT_QUOTES, 'UTF-8'), 2, ',', '.') ?></td>
+                                                                <td 
+                                                                <?php if($_SESSION['usuario']->processar === 1) { ?>
+                                                                    onclick="window.location.href='<?=$link?>'"
+                                                                <?php } ?>
+                                                                ><?= htmlspecialchars($prazo->parcela, ENT_QUOTES, 'UTF-8') ?></td>
+                                                                <td 
+                                                                <?php if($_SESSION['usuario']->processar === 1) { ?>
+                                                                onclick="window.location.href='<?=$link?>'"
+                                                                <?php } ?>
+                                                                ><?= htmlspecialchars($prazo->prazo, ENT_QUOTES, 'UTF-8') ?></td>
+                                                                <td 
+                                                                <?php if($_SESSION['usuario']->processar === 1) { ?>
+                                                                onclick="window.location.href='<?=$link?>'"
+                                                                <?php } ?>
+                                                                ><?= number_format(htmlspecialchars($prazo->taxa, ENT_QUOTES, 'UTF-8'), 2, ',', '.') ?></td>
                                                             </tr>
                                                         <?php } ?>
                                                     </table>

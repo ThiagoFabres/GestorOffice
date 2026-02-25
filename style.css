@@ -8,7 +8,7 @@
 }
 #custom-context-menu {
     width: 220px;
-    height: 220px;
+    height: auto;
 }
 select[readonly] {
   pointer-events: none;
@@ -1522,4 +1522,10 @@ width: 100%;
 .menu-li:hover a i,
 .menu-li-atual a i{
     filter: brightness(100%);
+}
+
+@media (max-width: 900px) {
+ .login-card {
+    width: 95%;
+ }
 }

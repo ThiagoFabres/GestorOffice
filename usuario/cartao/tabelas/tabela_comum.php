@@ -63,9 +63,11 @@
                                         } ?>
                                 </th>
                                 <th>OBS</th>
+                                <?php if($_SESSION['usuario']->processar === 1) {?>
                                 <th>Quitar</th>
                                 <th>Estornar</th>
                                 <th>Editar</th>
+                                <?php } ?>
                                 <th>Visualizar</th>
                             </tr>
                         </thead>
@@ -185,6 +187,7 @@
                                         } ?></td>
                                         <td><?= $pagamento->nome ?? '' ?></td>
                                         <td><?= $rec02->obs ?></td>
+                                        <?php if($_SESSION['usuario']->processar === 1) {?>
                                         <td class="td-acoes">
                                             <?php $valor_restante = number_format($rec02->valor_par - $rec02->valor_pag, 2, ',', '.') ?>
                                             <button class="btn btn-primary" data-bs-toggle="modal" <?php if ($rec02->valor_pag > 0) { ?> disabled <?php } ?> data-bs-target="#modal_quitar"
@@ -209,6 +212,7 @@
                                                 onclick="window.location.href='cadastro_vendas.php?id=<?= $rec01->id ?>&acao=editar'"><i
                                                     class="bi bi-pen-fill"></i></button>
                                         </td>
+                                        <?php } ?>
                                         <td class="td-acoes">
                                             <button class="btn btn-primary"
                                                 onclick="window.location.href='cadastro_vendas.php?id=<?= $rec01->id ?>&acao=visualizar'"><i class="bi bi-eye"></i></button>
@@ -240,9 +244,11 @@
                                     <td style="text-align: center; font-size: 100%;"><?= number_format($total_valor_pago, '2', ',', '.')?></td>
                                     <td></td>
                                     <td></td>
+                                    <?php if($_SESSION['usuario']->processar === 1) {?>
                                     <td></td>
                                     <td></td>
                                     <td></td>
+                                    <?php } ?>
                                     <td></td>
                                     
                                 </tr>
@@ -262,9 +268,11 @@
                                     <td></td>
                                     <td></td>
                                     <td></td>
+                                    <?php if($_SESSION['usuario']->processar === 1) {?>
                                     <td></td>
                                     <td></td>
                                     <td></td>
+                                    <?php } ?>
                                     <td></td>
 
                                 </tr>

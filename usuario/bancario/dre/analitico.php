@@ -1,5 +1,4 @@
 <?php
-
 require_once __DIR__ . '/../../../db/base.php';
 require_once __DIR__ . '/../../../db/entities/usuarios.php';
 require_once __DIR__ . '/../../../db/entities/contas.php';
@@ -131,7 +130,7 @@ if($todas_empresas) {
 
                                         <div>
                                                 <label for="data_final">Tipo:</label>
-                                                <select class="form-control" name="filtro_operacional" style="height: 53%; border-radius: 0;">
+                                                <select id="filtro_operacional" class="form-control" name="filtro_operacional" style="height: 53%; border-radius: 0;">
                                                     <option value=""  <?php if($get_operacional == null)  echo 'selected' ?>>Todos</option>
                                                     <option value="1" <?php if($get_operacional == 1)  echo 'selected' ?> >Operacional</option>
                                                     <option value="2" <?php if($get_operacional == 2)  echo 'selected' ?>>Não Operacional</option>
@@ -265,7 +264,7 @@ if($todas_empresas) {
                     // Exibir cada título como um accordion
                         if (isset($titulos)) { ?>
                             
-                           <div class="accordion custom-accordion"style="border:0;" id="accordionTitulos">
+                           <div class="accordion custom-accordion avoid-page-break"style="border:0;" id="accordionTitulos">
                             <?php 
                             $total_geral = [];
                             $total_receitas = [];
@@ -276,7 +275,7 @@ if($todas_empresas) {
                                 $collapseId = 'tituloCollapse' . $i;
                                 ?>
                                 <div class="accordion-item ">
-                                    <h2 class="accordion-header" id="headingTitulo<?= $i ?>">
+                                    <h2 class="accordion-header avoid-page-break" id="headingTitulo<?= $i ?>">
                                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                                             data-bs-target="#<?= $collapseId ?>" aria-expanded="false"
                                             aria-controls="<?= $collapseId ?>">
@@ -356,7 +355,12 @@ if($todas_empresas) {
                                                                 }
                                                             
                                                                 $data = $rec->data ? (new DateTime($rec->data))->format('d/m/Y') : '';
-                                                                $descricao = $rec->descricao . ' - ' .$data;
+                                                                if($rec->descricao_comp != null && $rec->descricao_comp != '') {
+                                                                    $descricao = $rec->descricao . ' / ' . $rec->descricao_comp .  ' - ' .$data;
+                                                                } else {
+                                                                    $descricao = $rec->descricao . ' - ' .$data;
+                                                                }
+                                                                
                                                                 $valor = $rec->valor;
                                                                 $total_subtitulo += $valor;
                                                                 echo '<tr class="tr-dre-analitico avoid-page-break">';
@@ -383,7 +387,10 @@ if($todas_empresas) {
                                             // Exibir total geral do título
                                             if (count($totais_gerais) > 0) {
                                                 $total_titulo = array_sum($totais_gerais);
-                                                // echo '<div style="font-size:1.2em; margin-top:2em;" id="total-titulo-'.$i.'">Total do Titulo: R$ ' . number_format($total_titulo, 2, ',', '.') . '</div>';
+                                                // mostra total imediatamente após subtítulos
+                                                echo '<div style="font-size:1.2em; margin-top:2em;" id="total-titulo-'.$i.'">Total do Titulo: R$ ' . number_format($total_titulo, 2, ',', '.') . '</div>';
+                                            } else {
+                                                $total_titulo = 0;
                                             }
                                             echo '</div></div></div>';
                                             if ($titulo->tipo == 'D') {

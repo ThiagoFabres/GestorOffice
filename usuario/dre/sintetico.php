@@ -186,7 +186,7 @@ if ($get_data_inicial != '' || $get_data_final != '' || $get_custos != '' || $ge
                                             </div>
                                              <div>
                                                 <label for="data_final">Tipo:</label>
-                                                <select class="form-control" name="filtro_operacional" style="height: 53%; border-radius: 0;">
+                                                <select class="form-control" id="filtro_operacional" name="filtro_operacional" style="height: 53%; border-radius: 0;">
                                                     <option value=""  <?php if($get_operacional == null)  echo 'selected' ?>>Todos</option>
                                                     <option value="1" <?php if($get_operacional == 1)  echo 'selected' ?> >Operacional</option>
                                                     <option value="2" <?php if($get_operacional == 2)  echo 'selected' ?>>Não Operacional</option>
@@ -262,7 +262,7 @@ if ($get_data_inicial != '' || $get_data_final != '' || $get_custos != '' || $ge
 
                                 <div class="accordion custom-accordion avoid-page-break" style="border: 0;">
                                     <div class="accordion-item">
-                                        <h2 class="accordion-header" id="heading<?= $i ?>">
+                                        <h2 class="accordion-header avoid-page-break" id="heading<?= $i ?>">
                                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                                                 data-bs-target="#collapse<?= $i ?>" aria-expanded="false"
                                                 aria-controls="collapse<?= $i ?>">
@@ -334,9 +334,11 @@ if ($get_data_inicial != '' || $get_data_final != '' || $get_custos != '' || $ge
                                                             </tbody>
                                                         </tbody>
                                                     </table>
-                                                </div>
-                                            </div>
-                                        </div>
+                                                    
+
+                                    </div>
+                                    </div>
+                                    </div>
                                     </div>
                                     </div>
                                     <?php

@@ -286,7 +286,7 @@ class Pag02 {
 }
 
 
-        if($filtro_por == 'pagamento') $conditions[] = 'p2.id_pgto IS NOT NULL';
+        if($filtro_por == 'pagamento') $conditions[] = 'p2.data_pag IS NOT NULL';
         if ($id_pag01 != null) $conditions[] = 'p2.id_pag01 = :id_pag01';
         if ($data != null) $conditions[] = 'MONTH(p2.vencimento) = MONTH(:data) AND YEAR(p2.vencimento) = YEAR(:data)';
         if ($parcela != null) $conditions[] = 'p2.parcela = :parcela';

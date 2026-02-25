@@ -16,8 +16,9 @@ if ($acao == 'editar') {
                 
                 <!-- Corpo -->
                 <div class="modal-body">
+                    <?php if($_SESSION['usuario']->processar === 1) { ?>
                     <form method="post" action="conta_manager.php">
-                    
+                    <?php } ?>
                     <?php if($acao == 'editar') { ?><input type="hidden" name="id" value="<?=$conta->id ?? ''?>"> <?php } ?>
 
                     <div class="mb-3 d-flex fd-row gap-2">
@@ -27,13 +28,13 @@ if ($acao == 'editar') {
                         </div>
                         <div style="width: 35%;">
                             <label for="codigoBanco" class="form-label">Código do banco</label>
-                            <input type="number" id="codigoBanco" name="codigo" class="form-control" maxlength="3" placeholder="Código" value="<?php if($acao == 'editar'){echo $conta->banco ?? '';}?>" required>
+                            <input type="text" id="codigoBanco" name="codigo" class="form-control" maxlength="3" placeholder="Código" value="<?php if($acao == 'editar'){echo $conta->banco ?? '';}?>" required>
                         </div>
                     </div>
                     <div class="mb-3 d-flex fd-row gap-2">
                         <div style="width:35%;">
                             <label for="agencia" class="form-label">Agência</label>
-                            <input type="number" id="agencia" name="agencia" class="form-control" maxlength="15" placeholder="Agência" required value="<?php if($acao == 'editar') {echo $conta->agencia ?? '';}?>">
+                            <input type="text" id="agencia" name="agencia" class="form-control" maxlength="15" placeholder="Agência" required value="<?php if($acao == 'editar') {echo $conta->agencia ?? '';}?>">
                         </div>
                         <div style="width:65%;">
                             <label for="numeroConta" class="form-label">Número da Conta</label>
@@ -52,12 +53,20 @@ if ($acao == 'editar') {
                     </div>
                     
                     <!-- Botões -->
-                    <div class="d-flex justify-content-end gap-2">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                        <button type="submit" name="acao" value="<?php if(isset($acao) && $acao == 'editar') { ?>editar<?php } else {?>adicionar<?php } ?>" class="btn btn-success" style="background-color: #5856d6; border-color: #5856d6;">Salvar</button>
-                        
-                    </div>
+                    <?php if($_SESSION['usuario']->processar === 1) { ?>
+                        <div class="d-flex flex-row justify-content-between">
+                            <div>
+                                <button type="submit" name="acao" value="excluir" class="btn btn-danger">Excluir</button>
+                            </div>
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                                <button type="submit" name="acao" value="<?php if(isset($acao) && $acao == 'editar') { ?>editar<?php } else {?>adicionar<?php } ?>" class="btn btn-success" style="background-color: #5856d6; border-color: #5856d6;">Salvar</button>
+                            </div>
+                        </div>
+                    <?php } ?>
+                    <?php if($_SESSION['usuario']->processar === 1) { ?>
                     </form>
+                    <?php } ?>
                 </div>
             </div>
         </div>

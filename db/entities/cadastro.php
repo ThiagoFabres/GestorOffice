@@ -36,7 +36,7 @@ class Cadastro {
         $this->email = $email;
         $this->celular = $celular;
         $this->fixo = $fixo;
-        $this->id_categoria= $id_categoria;
+        $this->id_categoria = $id_categoria != '' ? $id_categoria : null;
         $this->data_r= $data_r;
     }
 

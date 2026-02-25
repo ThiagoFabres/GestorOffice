@@ -55,7 +55,7 @@ if($acao == 'editar' && $target == 'operadora') {
                                 <label for="cadastro_operadora">Titulo:</label>
                                 <select name="titulo" id="titulo">
                                     <option value="" selected>Selecione</option>
-                                    <?php foreach(Con01::read(idempresa: $_SESSION['usuario']->id_empresa) as $cad) { ?>
+                                    <?php foreach(Con01::read(idempresa: $_SESSION['usuario']->id_empresa, tipo: 'C') as $cad) { ?>
                                         <option value="<?=$cad->id?>" <?php if(isset($ope01) && $cad->id == $ope01->id_con01) {echo 'selected';}?>>
                                             <?=$cad->nome?>
                                         </option>

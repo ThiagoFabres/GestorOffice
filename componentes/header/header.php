@@ -19,7 +19,11 @@ if($_SESSION['usuario']->status == 0 && $_SESSION['usuario']->cargo == 3) {
         </div>
 
         <div id="nome-empresa">
+            <?php if(isset($todas_empresas) && $todas_empresas) {?>
+            <h1>TODAS AS EMPRESAS</h1>
+            <?php } else {?>
             <h1><?=$nomeEmpresa?></h1>
+            <?php } ?>
         </div>
 
             <div id="conta-header">

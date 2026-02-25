@@ -26,11 +26,8 @@ if($acao == 'adicionar') {
         $subtitulo,
         $titulo_tipo
     );
-    echo '<pre>';
-    print_r($palava);
-    echo '</pre>';
     Pal01::create($palavra);
-    header('Location: /usuario/bancario/palavra/palavra_chave.php?status=sucesso');
+    header('Location: palavra_chave.php?status=sucesso1');
     exit;
 } else if($acao == 'editar') {
     $id = filter_input(INPUT_POST, 'id', FILTER_SANITIZE_NUMBER_INT);
@@ -44,10 +41,10 @@ if($acao == 'adicionar') {
         $titulo_tipo
     );
      if(Pal01::update($palavra)) {
-        header('Location: /usuario/bancario/palavra/palavra_chave.php?status=sucesso1');
+        header('Location: palavra_chave.php?status=sucesso1');
         exit;
      } else {
-        header('Location: /usuario/bancario/palavra/palavra_chave.php?status=erro');
+        header('Location: palavra_chave.php?status=erro');
         exit;
      }
 } else if($acao == 'excluir') {
@@ -57,7 +54,7 @@ if($acao == 'adicionar') {
     exit;
 }
 else {
-    header('Location: /usuario/bancario/palavra/palavra_chave.php?status=acao_invalida');
+    header('Location: palavra_chave.php?status=acao_invalida');
     exit;
 }
 

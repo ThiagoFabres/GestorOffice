@@ -126,7 +126,8 @@ $movimentacoes_pdf = Ban02::read(
                             filtro_subtitulo: $get_filtro_subtitulo ?? null,
                             filtro_conta: $get_filtro_conta ?? null,
                             filtro_tipo: $get_filtro_tipo ?? null,
-                            ordenar_por: 'data'
+                            ordenar_por: 'data',
+                            numero_exibir: 500
                         );
 $movimentacoes_totais = $movimentacoes_pdf;
 
@@ -211,8 +212,10 @@ foreach($movimentacoes_totais as $mov) {
     <?php require_once __DIR__ . '/../../../componentes/lateral/lateral.php'?>
     <?php require_once __DIR__ . '/../../../componentes/header/header.php' ?>
     <div class="main" id="container">
-        <!-- <button class="btn btn-danger btn-sm" onclick="window.location.href='movimentacao_manager.php?acao=limpar_titulo'">Limpar Titulo</button> -->
+
+        <?php if($_SESSION['usuario']->processar === 1) { ?>
         <button  data-bs-toggle="modal" data-bs-target="#modal_cadastro_bancario" class="btn btn-primary" >Upload Arquivo OFX / Excel</button>
+        <?php } ?>
         <div class="row">
         <div class="card">
             <form method="get" action="movimentacao.php">
@@ -352,10 +355,18 @@ foreach($movimentacoes_totais as $mov) {
                             <th>Subtítulo</th>
                             <th>Descrição</th>
                             <th>Descrição Complementar</th>
+                            <?php if($_SESSION['usuario']->processar === 1) { ?>
                             <th class="td-acoes">Conciliar</th>
                             <th class="td-acoes">Desmembrar</th>
+                            <?php } ?>
+                            <?php if($_SESSION['usuario']->processar === 1) { ?>
                             <th class="td-acoes">Editar</th>
+                            <?php } else{ ?>
+                            <th class="td-acoes">Visualizar</th>
+                            <?php } ?>
+                            <?php if($_SESSION['usuario']->processar === 1) { ?>
                             <th class="td-acoes">Quitar</th>
+                            <?php } ?>
                         </tr>
                     </thead>
                     <tbody >
@@ -416,34 +427,43 @@ foreach($movimentacoes_totais as $mov) {
                              data-id-con02="<?= $movimentacao->id_con02 ?? '' ?>"
                          >
                          <td style=""><input type="checkbox" data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>"  name="id_check[<?=$movimentacao->id?>]" data-id="<?=$movimentacao->id?>"></td>
-                            <td data-bs-toggle="modal" data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-bs-target="#modal_conciliar" data-id="<?=$movimentacao->id?>"><?=$movimentacao->documento?></td>
-                            <td data-bs-toggle="modal" data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-bs-target="#modal_conciliar" data-id="<?=$movimentacao->id?>"><?=$data_lancamento?></td>
-                            <td data-bs-toggle="modal" data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-bs-target="#modal_conciliar" data-id="<?=$movimentacao->id?>"><?=$tipo?></td>
-                            <td data-bs-toggle="modal" data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-bs-target="#modal_conciliar" data-id="<?=$movimentacao->id?>">R$ <?=number_format($movimentacao->valor, 2, ',', '.', )?></td>
-                            <td data-bs-toggle="modal" data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-bs-target="#modal_conciliar" data-id="<?=$movimentacao->id?>"><?=$conta_nome?></td>
-                            <td data-bs-toggle="modal" data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-bs-target="#modal_conciliar" data-id="<?=$movimentacao->id?>"><?= isset($con01) ? $con01->nome : ''?></td>
-                            <td data-bs-toggle="modal" data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-bs-target="#modal_conciliar" data-id="<?=$movimentacao->id?>"><?= isset($con02) ? $con02->nome : ''?></td>
-                            <td data-bs-toggle="modal" data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-bs-target="#modal_conciliar" data-id="<?=$movimentacao->id?>"><?=$movimentacao->descricao?></td>
-                            <td data-bs-toggle="modal" data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-bs-target="#modal_conciliar" data-id="<?=$movimentacao->id?>"><?=$movimentacao->descricao_comp?></td>
-                            <td class="td-acoes">
-                                <button class="btn" type="button" data-bs-toggle="modal" data-bs-target="#modal_conciliar" data-id="<?=$movimentacao->id?>">
-                                    <i class="bi bi-clipboard-check"></i>
-                                </button>
-                            </td>
-                            <td class="td-acoes">
-                                <button class="btn" type="button" 
-                                <?php if($movimentacao->id_original != null ) echo 'disabled'?> 
-                                onclick="window.location.href='<?php if(empty($filtros)) {echo $caminho . '?';} else {echo $caminho . '&';}?>acao=desmembrar&id=<?= $movimentacao->id ?>'">
-                                    <i class="bi bi-code-slash"></i>
-                                </button>
-                            </td>
-                            <td class="td-acoes"><button class="btn" type="button" onclick="window.location.href='<?php if(empty($filtros)) {echo $caminho . '?';} else {echo $caminho . '&';}?>acao=visualizar&id=<?= $movimentacao->id ?>'"><i class="bi bi-pen-fill"></i></button></td>
-
-                            <td class="td-acoes">
-                                <button class="btn" type="button" <?php if($movimentacao->id_con01 == null || $movimentacao->id_con02 == null) echo 'disabled'?> onclick="window.location.href='<?php if(empty($filtros)) {echo $caminho . '?';} else {echo $caminho . '&';}?>acao=quitar_bancario&id=<?=$movimentacao->id?>'" >
-                                    <i class="bi bi-arrow-90deg-up" ></i>
-                                </button>
-                            </td>
+                            <td <?php if($_SESSION['usuario']->processar === 1) {?> data-bs-toggle="modal" data-bs-target="#modal_conciliar" <?php } ?>data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-id="<?=$movimentacao->id?>"><?=$movimentacao->documento?></td>
+                            <td <?php if($_SESSION['usuario']->processar === 1) {?> data-bs-toggle="modal" data-bs-target="#modal_conciliar" <?php } ?>data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-id="<?=$movimentacao->id?>"><?=$data_lancamento?></td>
+                            <td <?php if($_SESSION['usuario']->processar === 1) {?> data-bs-toggle="modal" data-bs-target="#modal_conciliar" <?php } ?>data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-id="<?=$movimentacao->id?>"><?=$tipo?></td>
+                            <td <?php if($_SESSION['usuario']->processar === 1) {?> data-bs-toggle="modal" data-bs-target="#modal_conciliar" <?php } ?>data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-id="<?=$movimentacao->id?>">R$ <?=number_format($movimentacao->valor, 2, ',', '.', )?></td>
+                            <td <?php if($_SESSION['usuario']->processar === 1) {?> data-bs-toggle="modal" data-bs-target="#modal_conciliar" <?php } ?>data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-id="<?=$movimentacao->id?>"><?=$conta_nome?></td>
+                            <td <?php if($_SESSION['usuario']->processar === 1) {?> data-bs-toggle="modal" data-bs-target="#modal_conciliar" <?php } ?>data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-id="<?=$movimentacao->id?>"><?= isset($con01) ? $con01->nome : ''?></td>
+                            <td <?php if($_SESSION['usuario']->processar === 1) {?> data-bs-toggle="modal" data-bs-target="#modal_conciliar" <?php } ?>data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-id="<?=$movimentacao->id?>"><?= isset($con02) ? $con02->nome : ''?></td>
+                            <td <?php if($_SESSION['usuario']->processar === 1) {?> data-bs-toggle="modal" data-bs-target="#modal_conciliar" <?php } ?>data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-id="<?=$movimentacao->id?>"><?=$movimentacao->descricao?></td>
+                            <td <?php if($_SESSION['usuario']->processar === 1) {?> data-bs-toggle="modal" data-bs-target="#modal_conciliar" <?php } ?>data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-id="<?=$movimentacao->id?>"><?=$movimentacao->descricao_comp?></td>
+                            <?php if($_SESSION['usuario']->processar === 1) { ?>
+                                <td class="td-acoes">
+                                    <button class="btn" type="button" data-bs-toggle="modal" data-bs-target="#modal_conciliar" data-id="<?=$movimentacao->id?>">
+                                        <i class="bi bi-clipboard-check"></i>
+                                    </button>
+                                </td>
+                                <td class="td-acoes">
+                                    <button class="btn" type="button" 
+                                    <?php if($movimentacao->id_original != null ) echo 'disabled'?> 
+                                    onclick="window.location.href='<?php if(empty($filtros)) {echo $caminho . '?';} else {echo $caminho . '&';}?>acao=desmembrar&id=<?= $movimentacao->id ?>'">
+                                        <i class="bi bi-code-slash"></i>
+                                    </button>
+                                </td>
+                            <?php } ?>
+                                <td class="td-acoes"><button class="btn" type="button" onclick="window.location.href='<?php if(empty($filtros)) {echo $caminho . '?';} else {echo $caminho . '&';}?>acao=visualizar&id=<?= $movimentacao->id ?>'"><i class="bi 
+                                <?php if($_SESSION['usuario']->processar === 1) { ?>
+                                bi-pen-fill
+                                <?php } else { ?>
+                                bi-eye-fill
+                                <?php } ?>
+                                "></i></button></td>
+                            <?php if($_SESSION['usuario']->processar === 1) { ?>
+                                <td class="td-acoes">
+                                    <button class="btn" type="button" <?php if($movimentacao->id_con01 == null || $movimentacao->id_con02 == null) echo 'disabled'?> onclick="window.location.href='<?php if(empty($filtros)) {echo $caminho . '?';} else {echo $caminho . '&';}?>acao=quitar_bancario&id=<?=$movimentacao->id?>'" >
+                                        <i class="bi bi-arrow-90deg-up" ></i>
+                                    </button>
+                                </td>
+                            <?php } ?>
                         </tr>
                         <?php } } }?>
                     </tbody>
@@ -584,10 +604,26 @@ foreach($movimentacoes_totais as $mov) {
 
                 </div>
         <div id="custom-context-menu" style="display:none; position:absolute; z-index:9999; background:#fff; border:1px solid #ccc; box-shadow:0 2px 8px rgba(0,0,0,0.2); min-width:200px; border-radius:6px; overflow:hidden;">
+            <?php if($_SESSION['usuario']->processar === 1) { ?>
                     <button id="menu-conciliar" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-clipboard-check"></i> Conciliar</button>
                     <button id="menu-desmembrar" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-code-slash"></i> Desmembrar</button>
-                    <button id="menu-editar-bancario" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-pen-fill"></i> Editar</button>
+            <?php } ?>
+                    <button id="menu-editar-bancario" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi 
+                    <?php if($_SESSION['usuario']->processar === 1) { ?>
+                        bi-pen-fill
+                        <?php } else { ?>
+                        bi-eye-fill
+                        <?php } ?>
+                        "></i> 
+                        <?php if($_SESSION['usuario']->processar === 1) { ?>
+                        Editar
+                        <?php } else { ?>
+                        Visualizar
+                        <?php } ?>
+                    </button>
+            <?php if($_SESSION['usuario']->processar === 1) { ?>
                     <button id="menu-quitar-bancario" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-arrow-90deg-up"></i> Quitar</button>
+            <?php } ?>
         </div>
         <div class="relatorios-botoes" style="float:left; width:100%">
             <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="gerarpdf('movimentacao', document.querySelector('#nome-empresa h1').innerHTML)">Gerar PDF</button>
@@ -1311,6 +1347,12 @@ document.addEventListener('DOMContentLoaded', function () {
 <?php if($erro == 'valor_total') { ?>
     <script>
         alert('O valor total é maior do que o valor inicial')
+        window.location.href="<?=$caminho?>"
+    </script>
+<?php } ?>
+<?php if($erro == 'permissao') { ?>
+    <script>
+        alert('Você não tem permissão para realizar essa ação')
         window.location.href="<?=$caminho?>"
     </script>
 <?php } ?>

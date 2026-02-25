@@ -146,13 +146,21 @@ function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=null) {
     // Header com nome, data e titulo (se passados) - formatados
     const formattedDate = _formatDateToDDMMYYYY(data);
     const headerDiv = document.createElement('div');
+    const tipoSelec = document.querySelector('#filtro_operacional').value;
+    if(tipoSelec == 1) {
+        tipoFiltro = ' (Operacional)'
+    } else if(tipoSelec == 2) {
+        tipoFiltro = ' (Não Operacional)'
+    } else {
+        tipoFiltro = ''
+    }
     headerDiv.style.marginBottom = '12px';
     headerDiv.innerHTML = `
     <div style=" display:flex; flex-direction:row; justify-content:start  align-itens:start; height:100%; ;">
         <div style="display:flex; justify-content:start; align-itens:start; height:100%; width:100%;" >
             <div style="display:flex; justify-content:start; align-itens:start; height:100%; width:100%;">
                 <p style="font-size:25px; text-align:start; margin:0;  white-space: nowrap; overflow:hidden; text-overflow:hidden;  padding-right:9px;">
-                    ${nomeEmpresa.substr(0, 22)}  - 
+                    ${nomeEmpresa.substr(0, 22)} ${tipoFiltro} -
                 </p>
 
             <p style="  font-size:20px; padding-top:5px; text-align:start; margin:0;  white-space: nowrap; overflow:hidden; text-overflow:hidden;">` 

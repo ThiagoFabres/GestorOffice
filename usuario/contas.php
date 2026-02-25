@@ -65,8 +65,10 @@ $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
     
 <div class="main" id="container">   
 
-                <div class="botao">
+    <div class="botao">
+    <?php if($_SESSION['usuario']->processar === 1) { ?>
         <a href="contas.php?acao=adicionar&target=titulo" class="btn btn-primary btn-lg botao-adm-adicionar">Adicionar Título</a>
+    <?php } ?>
     </div>
 
         
@@ -88,10 +90,12 @@ $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
         <div id="collapse<?=$i?>" class="accordion-collapse <?php if(!isset($con01) || $con01 != $titulo->id ) {?>collapse<?php } else { ?>show<?php } ?>" aria-labelledby="heading<?=$i?>">
             <div class="accordion-body">
                 <div class="inner-accordion">
+                    <?php if($_SESSION['usuario']->processar === 1) { ?>
                     <div class="botoes-contas">
                         <a href="contas.php?target=subtitulo&acao=adicionar&con01id=<?=$titulo->id?>" class="btn btn-primary btn-sm botao-adm-adicionar">Adicionar Subtitulo</a>
                         <a href="contas.php?target=titulo&acao=editar&con01id=<?=$titulo->id?>" class="btn btn-primary btn-sm botao-adm-adicionar">Editar Titulo</a>
                     </div>
+                    <?php } ?>
                      
 
                      <table class="table table-striped table-bordered">
@@ -103,7 +107,10 @@ $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
                         <tbody>
                         <?php foreach($subtitulos as $subtitulo) { ?>
                             
-                            <tr onclick="window.location='contas.php?target=subtitulo&acao=editar&con01id=<?=$titulo->id?>&con02id=<?=$subtitulo->id?>'">
+                            <tr 
+                            <?php if($_SESSION['usuario']->processar === 1) { ?>
+                                onclick="window.location='contas.php?target=subtitulo&acao=editar&con01id=<?=$titulo->id?>&con02id=<?=$subtitulo->id?>'"
+                            <?php } ?>>
                                 <td><?= htmlspecialchars($subtitulo->nome, ENT_QUOTES, 'UTF-8') ?></td>
                                 
                             </tr>

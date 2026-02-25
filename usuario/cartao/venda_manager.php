@@ -4,7 +4,10 @@ session_start();
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     header('Location: /');
     exit;
-
+}
+if($_SESSION['usuario']->processar !== 1) {
+    header('Location: /usuario/cartao/cadastro_vendas.php?erro=permissao');
+    exit;
 }
 require_once __DIR__ . '/../../db/entities/ope01.php';
 require_once __DIR__ . '/../../db/entities/band01.php';
@@ -39,7 +42,8 @@ function parse_excel($numero_arquivo = null) {
         exit;
     }
     $arquivos_multi = [
-        'sicredi' => 2
+        'sicredi' => 2,
+        'getnet' => 2
     ];
     $operadoras_suportadas = [
         'stone',
@@ -84,10 +88,13 @@ function parse_excel($numero_arquivo = null) {
 
     foreach($bandeiras as $bandeira) {
         $bandeiras_obj[] = $bandeira; 
-        $prazo_bandeira = $prazos[$bandeira->id];
+        $prazo_bandeira = $prazos[$bandeira->id] ?? null;
         $prazo_bandeira_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $bandeira->descricao)));
         $prazo_tipo_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $bandeira->tipo)));
         $bandeiras_parcelas[] = $prazo_bandeira_preg;
+        if($prazo_bandeira == null) {
+            continue;
+        }
         foreach($prazo_bandeira as $prazo) {
             
             $prazo_lista[$bandeira->id][] = $prazo;
@@ -134,6 +141,8 @@ function parse_excel($numero_arquivo = null) {
         $cells = [];
         $cells_p = [];
         $cellIndex = 0;
+        $bandeira_id = null;
+        $prazo_id = null;
 
         foreach ($cellIterator as $cell) {
             if(in_array($cell->getColumn(), $excluded_columns)) {
@@ -165,9 +174,17 @@ function parse_excel($numero_arquivo = null) {
                 6 => $cells_p[$operadora_sup_org['estado']]
             ];
         }
+        if(isset($operadora_sup['suporte_pix']) && $operadora_sup['suporte_pix'] == true) {
+            
+            $cells[2] = 'pix';
+            $cells[1] = 'pix';
+        }
+        if(isset($operadora_sup['suporte_valor_taxa']) && $operadora_sup['suporte_valor_taxa'] == true) {
+           $cells[4] = $cells[5] + $cells[4];   
+        }
         
 
-        if(($tipo_arquivo == 'personalizado' && isset($cells[6])) || ($tipo_arquivo == 'padrao' && !isset($cells[6]))) {
+        if(($tipo_arquivo == 'personalizado' && isset($cells[6])) || ($tipo_arquivo == 'padrao' && !isset($cells[6])) ) {
             $multi = false;
             foreach($arquivos_multi as $i => $num) {
                 if($operadora_descricao_preg == $i && $numero_arquivo <= $num) {
@@ -255,7 +272,7 @@ function parse_excel($numero_arquivo = null) {
         $cells[4] = floatval($cells[4]);
         $cells[5] = floatval($cells[5]);
 
-        if($cells[4] == 0 || $cells[5] == 0) {
+        if( $cells[4] == 0 || $cells[5] == 0) {
             continue;
         }
    
@@ -268,16 +285,21 @@ function parse_excel($numero_arquivo = null) {
         if(str_starts_with($tipo_preg, 'credito')) {
             $cells[2] = 'credito';
         }
+        // if(str_starts_with($tipo_preg, 'voucher')) {
+        //     $cells[2] = 'voucher';
+        // }
         if($cells[3] == null || $cells[3] == '-' || $cells[3] == 0) {
             $cells[3] = 1;
         }
+        $cells[2] = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $cells[2])));
+        $tipo_preg = $cells[2];        
         
-        ;
         if(!empty($bandeiras_obj)){
             foreach($bandeiras_obj as $obj) {
 
                 $obj_nome_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $obj->descricao)));
                 $obj_tipo_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $obj->tipo)));
+
 
                 if($bandeira_preg == $obj_nome_preg && $tipo_preg == $obj_tipo_preg) {
                     $bandeira_id = $obj->id; 
@@ -286,11 +308,14 @@ function parse_excel($numero_arquivo = null) {
         }
 
             if(!empty($prazo_lista) && isset($bandeira_id)){
+                if($prazo_lista == null || !isset($prazo_lista[$bandeira_id])) {
+                    $prazo_id = null;
+                } else {
                 foreach($prazo_lista[$bandeira_id] as $obj) {
                     if($obj->parcela == $cells[3]) {
-                        echo $cells[3];
                         $prazo_id = $obj->id;
                     }
+                }
                 }
             }
         
@@ -320,12 +345,12 @@ function parse_excel($numero_arquivo = null) {
         
         $bandeira_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $transactions['lancamentos'][$i]['bandeira'])));
         $tipo_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $transactions['lancamentos'][$i]['tipo'])));
-        if($transactions['lancamentos'][$i]['bandeira_id'] == null && $tipo_preg != 'pix' )  {
+        if($transactions['lancamentos'][$i]['bandeira_id'] == null )  {
             $transactions['lancamentos'][$i]['motivo'][] = 'bandeira';
         }
         if(isset($parcelas_bandeira[$bandeira_preg][$tipo_preg])) {
                 $parcelas_esperadas = $parcelas_bandeira[$bandeira_preg][$tipo_preg];
-                if(!in_array($transactions['lancamentos'][$i]['parcela'], $parcelas_esperadas) && $tipo_preg != 'pix') {
+                if(!in_array($transactions['lancamentos'][$i]['parcela'], $parcelas_esperadas)) {
                     $transactions['lancamentos'][$i]['motivo'][] = 'parcela';
                 }
             } else {
@@ -333,13 +358,13 @@ function parse_excel($numero_arquivo = null) {
                     $transactions['lancamentos'][$i]['motivo'][] = 'parcela';
                 }
             }
-        if(!in_array($bandeira_preg, $bandeiras_parcelas) && $tipo_preg != 'pix') {
+        if(!in_array($bandeira_preg, $bandeiras_parcelas)) {
             $transactions['lancamentos'][$i]['motivo'][] = 'parcela';
             $transactions['lancamentos'][$i]['motivo'][] = 'bandeira';
             $transactions['lancamentos'][$i]['motivo'][] = 'tipo';
         } 
         if((!in_array($tipo_preg, $bandeiras_tipo) ||
-            !in_array($bandeira_preg, $bandeiras_parcelas)) && $tipo_preg != 'pix' ) {
+            !in_array($bandeira_preg, $bandeiras_parcelas)) ) {
             if(isset($tipos_bandeira[$bandeira_preg][$tipo_preg])) {
                 $tipos_esperados = $tipos_bandeira[$bandeira_preg][$tipo_preg];
                 if(!in_array($tipo_preg, $tipos_esperados)) {
@@ -375,7 +400,9 @@ function parse_csv(string $caminhoCsv): array {
     $operadora = Ope01::read($id_operadora, $_SESSION['usuario']->id_empresa )[0];
     $operadora_descricao_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $operadora->descricao)));
 
-        if(str_ends_with($_FILES['vendas_excel']['name'], '.csv')) {
+    // sempre inicializar file_ext para evitar 'undefined variable'
+    $file_ext = null;
+    if(str_ends_with($_FILES['vendas_excel']['name'], '.csv')) {
         $file_ext = 'csv';
     }
 
@@ -389,6 +416,13 @@ function parse_csv(string $caminhoCsv): array {
         header('Location: cadastro_vendas.php?erro=suporte');
         exit;
     }
+
+    // preparar estrutura retornada antes de processar linhas
+    $transactions = [
+        'lancamentos' => [],
+        'invalido'    => []
+    ];
+
     $dados = [];
 
     if (!file_exists($caminhoCsv)) {
@@ -492,15 +526,18 @@ function parse_csv(string $caminhoCsv): array {
         $bandeira_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', mb_convert_encoding($linha[$mapa[$operadora_sup['colunas']['bandeira']]], 'UTF-8', $operadora_sup['encoding']))));
         $tipo_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', mb_convert_encoding($linha[$mapa[$operadora_sup['colunas']['tipo']]], 'UTF-8', $operadora_sup['encoding']))));
         $tipo = $linha[$mapa[$operadora_sup['colunas']['tipo']]];
+        $tipo = $tipo_preg;
         if(str_starts_with($tipo_preg, 'debito')) {
-            $tipo = substr($tipo, 0, 7 );
+            $tipo = 'debito';
         } 
         if(str_starts_with($tipo_preg, 'credito') || str_starts_with($tipo_preg, 'cred')) {
             $tipo = 'credito';
         }
+
         foreach($bandeiras_obj as $obj) {
             $obj_nome_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $obj->descricao)));
-            if($bandeira_preg == $obj_nome_preg) {
+            $obj_tipo_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $obj->tipo)));
+            if($bandeira_preg == $obj_nome_preg && $tipo == $obj_tipo_preg) {
                 $bandeira_id = $obj->id;
             }
         }

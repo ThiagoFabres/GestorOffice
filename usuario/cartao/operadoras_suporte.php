@@ -38,6 +38,26 @@ $operadoras_suporte = [
                 'estado' => 3
             ],
             'suporte_data' => 'hora',
+            'suporte_multi' => true
+        ],
+        'xlsx2' => [
+            'excluded_columns' => [
+                'E', 'F', 'G', 'H', 'I', 'J', 'O', 'Q'
+            ],
+            'start_row' => 9,
+            'start_end_columns' => ['start' => 'D', 'end' => 'N'],
+            'organizador' => [
+                'data' => 0,
+                'bandeira' => 4,
+                'tipo' => 4,
+                'parcela' => 4,
+                'valor_b' => 2,
+                'valor_l' => 1,
+                'estado' => 3
+            ],
+            'suporte_data' => 'hora',
+            'suporte_pix' => true,
+            'suporte_valor_taxa' => true
         ],
         'xls' => [
             'excluded_columns' => [
