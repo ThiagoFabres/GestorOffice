@@ -44,6 +44,7 @@ class Pal01 {
         if ($id_empresa !== null) {
             $sql .= ' AND id_empresa = :id_empresa';
         }
+        $sql .= ' ORDER BY palavra ASC';
 
         $stmt = $pdo->prepare($sql);
 
