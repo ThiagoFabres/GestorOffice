@@ -685,20 +685,22 @@ if (isset($view) && $view == 'cadastro') {
             $rec01 = Rec01::read($id_rec, $_SESSION['usuario']->id_empresa, null)[0];
         }
         $data_lanc = filter_input(INPUT_POST, 'data_lanc') ?? $rec01->data_lanc;
+
         $recebimento = new Rec01(
             $id_rec,
             $_SESSION['usuario']->id_empresa,
             $cadastro,
             $titulo,
             $subtitulo,
-            $documento,
+            $rec01->documento,
             $descricao,
             $valor,
             $parcelas_d,
             $data_lanc,
             $_SESSION['usuario']->id,
-            $custo
+            $custo,
         );
+
 
         if ($pagar) {
             if ($rec01->documento == $recebimento->documento || !Pag01::read(null, $_SESSION['usuario']->id_empresa, id_cadastro: $cadastro, documento: $documento)[0]) {
@@ -913,8 +915,13 @@ if (isset($view) && $view == 'cadastro') {
                     exit;
                 }
                 if($parcelas_pagas == false) {
+                    $pag02_lista = Pag02::read(id_pag01:$id_rec, id_empresa:$_SESSION['usuario']->id_empresa);
+                    foreach($pag02_lista as $pag02) {
+                        Pag02::delete($pag02->id);
+                    }
                     Pag01::delete($id_rec);
                     header('Location: pagar.php');
+                    exit;
                 }
             }
         } else if($pagar == false) {
@@ -926,8 +933,10 @@ if (isset($view) && $view == 'cadastro') {
                     exit;
                 }
                 if($parcelas_pagas == false) {
+                    Rec02::deletebyrec01($id_rec);
                     Rec01::delete($id_rec);
                     header('Location: receber.php');
+                    exit;
                 }
             }
         }

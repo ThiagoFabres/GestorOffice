@@ -154,8 +154,6 @@ class Rec01 {
                 parcelas = :parcelas, 
                 data_lanc = :data_lanc, 
                 id_usuario = :id_usuario
-                valor_b = :valor_b
-                valor_liq_go = :valor_liq_go 
                 WHERE id = :id';
 
         $stmt = $pdo->prepare($sql);
@@ -170,8 +168,6 @@ class Rec01 {
         $stmt->bindValue(':data_lanc', $rec01->data_lanc->format('Y-m-d H:i:s'));
         $stmt->bindValue(':id_usuario', $rec01->id_usuario);
         $stmt->bindValue(':centro_custos', $rec01->centro_custos);
-        $stmt->bindValue(':valor_b', $rec01->valor_b);
-        $stmt->bindValue(':valor_liq_go', $rec01->valor_liq_go);
 
         
 
@@ -505,6 +501,7 @@ switch($ordenar_por) {
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id', $id);
 
+        return $stmt->execute();
 }
 public static function deletebyrec01($id) {
         $pdo = (new Database())->connect();
