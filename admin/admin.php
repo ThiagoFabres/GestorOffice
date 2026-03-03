@@ -57,7 +57,7 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'editar') {
 $gestor_atual = Usuario::read(idempresa:$id, cargo:Cargo::GESTOR)[0];
 
 $gestor = new Usuario(
-    $gestor_atual->id_usuario, // id_usuario
+    $gestor_atual->id, // id_usuario
     $id, // id_empresa
     $nome,
     $email,
