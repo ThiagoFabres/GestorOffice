@@ -1,6 +1,9 @@
 <nav id="barra-lateral">
         <div id="logo-container">
-            <img width="220px" height="220px" src="/gestor-office.png" alt="Logo" class="logo">
+            <div class="d-flex flex-column">
+                <img width="220px" height="220px" src="/gestor-office.png" alt="Logo" class="logo">
+                <p id="versao-lateral" class="text-center position-absolute" style="color: #ffffff7c; top: 170px; left: 110px;">V.2.2</p>
+            </div>
         </div>
         <div id="itens-menu">
             <div class="menu-item <?php if($lateral_target == 'dashboard') {?>menu-item-atual<?php } ?>">
@@ -110,6 +113,7 @@
                     </ul>
                 </div>
             </div>
+            
             <div class="menu-item <?php if($lateral_target == 'comparativo') {?>menu-item-atual<?php } ?>">
                 <a href="/usuario/dre/comparativo.php">
                     <div style=" align-items:center;"><i class="bi bi-arrow-left-right"></i></div> DRE Comparativo
