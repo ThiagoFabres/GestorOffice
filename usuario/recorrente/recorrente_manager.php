@@ -29,9 +29,30 @@ $data_venc = filter_input(INPUT_POST, 'data_venc');
 $valor = filter_input(INPUT_POST, 'valor');
 $valor = str_replace('.', '', $valor);
 $valor = str_replace(',', '.', $valor);
-
+if($cadastro == '') $cadastro = null;
+if($titulo == '') $titulo = null;
+if($subtitulo == '') $subtitulo = null;
+if($custo == '') $custo = null;
+if($cadastro == '' || $data_venc == '' || $valor == '' || $n_lanc == '' || $custo == '') {
+    if($view == 'receber') {
+        header('Location: receber.php?erro=campos_obrigatorios');
+    } else if($view == 'pagar') {
+        header('Location: pagar.php?erro=campos_obrigatorios');
+    } else {
+        header('Location: /index.php?erro=view');
+    }
+    exit;
+}
 $descricao = filter_input(INPUT_POST, 'descricao') ?? '';
-
+if($n_lanc < 1) {
+    if($view == 'receber') {
+        header('Location: receber.php?erro=n_lanc_invalido');
+    } else if($view == 'pagar') {
+        header('Location: pagar.php?erro=n_lanc_invalido');
+    } else {
+        header('Location: /index.php?erro=view');
+    }
+}
 
 if($view == 'receber') {
     $documento_inicial = buscarDocumentoRec();
@@ -63,7 +84,7 @@ for($i = 1, $documento = $documento_inicial ;  $i < $n_lanc + 1; $i++, $document
             $valor,
             1,
             $data->format('Y-m-d'),
-            $_SESSION['usuario']->id_usuario,
+            $_SESSION['usuario']->id,
             $custo,
             null
         );

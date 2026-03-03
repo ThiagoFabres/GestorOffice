@@ -219,6 +219,7 @@ foreach($movimentacoes_totais as $mov) {
         <div class="row">
         <div class="card">
             <form method="get" action="movimentacao.php">
+                <input type="hidden" name="numero_exibido" value="<?=$numero_exibir?>">
             <div class="card-header d-flex fd-row  align-items-center"> 
                     <!-- <div class="card-header-borda d-flex flex-row align-items-center" style="justify-content: space-between;"> -->
                         <div style=" display: flex; flex-direction: column;" class="input-movimentacao-text-group">    
@@ -1356,7 +1357,30 @@ document.addEventListener('DOMContentLoaded', function () {
         window.location.href="<?=$caminho?>"
     </script>
 <?php } ?>
-
+<?php if($erro == 'uso') { ?>
+    <script>
+        alert('Movimentação já cadastrada')
+        window.location.href="<?=$caminho?>"
+    </script>
+<?php } ?>
+<?php if($erro == 'documento') { ?>
+    <script>
+        alert('O número do documento já existe')
+        window.location.href="<?=$caminho?>"
+    </script>
+<?php } ?>
+<?php if($erro == 'data_conta') { ?>
+    <script>
+        alert('As datas importadas são menores do que a data da conta bancária. Por favor, corrija a data da conta e tente novamente.')
+        window.location.href="<?=$caminho?>"
+    </script>
+<?php } ?>
+<?php if($erro == 'cadastrado') { ?>
+    <script>
+        alert('Movimentação vazia ou já cadastrada')
+        window.location.href="<?=$caminho?>"
+    </script>
+<?php } ?>
 
 
 </html>

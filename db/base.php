@@ -2,8 +2,8 @@
 
 class Database {
     private $dsn = 'mysql:host=localhost;dbname=adri1000_gestor_office_control';
-    private $username = 'adri1000_gestoroff_app';
-    private $password = 'Sup@085951';
+    private $username = 'root';
+    private $password = '';
 
     public function connect() {
         try {

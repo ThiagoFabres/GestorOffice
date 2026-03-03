@@ -286,7 +286,7 @@ if($acao == 'processar') {
             $line =  preg_replace('/\s\s+/', '', $line);
             
             
-            $transactions['debug']['line'][] = $line;
+            // $transactions['debug']['line'][] = $line;
             if (strpos($line, '<DTPOSTED>') !== false) {
                 $date = substr($line, strlen('<DTPOSTED>'), 8);
                 $current['data'] = date('d/m/Y', strtotime($date));
@@ -299,14 +299,31 @@ if($acao == 'processar') {
             $data_analizada = $current['data_analizada'];
             
                 // if (isset($importadas_set[$data_analizada])) continue;
-                if (isset($importadas_set[$data_analizada])) continue;
+                if (isset($importadas_set[$data_analizada])){
+                     $erro = 'importada';
+                     $transactions['debug']['erro'][] = $erro ?? null;
+                     continue;
+                     }
                 // if(Ban02Imp::read($_SESSION['usuario']->id_empresa, $conta, $data_analizada)) continue;
                 // echo $conta_obj->data;
                 // echo '<br>';
                 // echo $data_analizada;
                 // exit;
 
-                if($ultima_data != null && ($data_analizada >= $data_atual || $data_analizada == $ultima_data ) || $conta_obj->data > $data_analizada) {
+                // echo 'conta_obj->data: ' . $conta_obj->data . ' - data_analizada: ' . $data_analizada ;
+                // exit;
+                
+                if(
+                    $ultima_data != null 
+                && ($data_analizada >= $data_atual || $data_analizada == $ultima_data )
+                 ) {
+                    $erro = 'uso';
+                    $transactions['debug']['erro'][] = $erro ?? null;
+                    continue;
+                }
+                if($conta_obj->data > $data_analizada) {
+                    $erro = 'data_conta';
+                    $transactions['debug']['erro'][] = $erro ?? null;
                     continue;
                 }
             
@@ -321,7 +338,7 @@ if($acao == 'processar') {
                 $current['tipo'] = ($current['valor'] < 0) ? 'Débito' : 'Crédito';
                 $current['valor'] = number_format((float)substr($line, strlen('<TRNAMT>')), 2, ',', '.');
                 
-                $transactions['debug']['current']['valor'][] = $current['valor'];
+                // $transactions['debug']['current']['valor'][] = $current['valor'];
             }
             if (strpos($line, '<CHECKNUM>') !== false) {
                 $doc = substr($line, strlen('<CHECKNUM>'));
@@ -348,7 +365,8 @@ if($acao == 'processar') {
                 $transactions['current'][] = $current;
             }
         } 
-            $transactions['debug']['current'][] = $current;
+            // $transactions['debug']['current'][] = $current;
+            
         }
         return $transactions;
     }
@@ -356,8 +374,8 @@ if($acao == 'processar') {
     if (isset($_FILES['ofx']) && $_FILES['ofx']['error'] === UPLOAD_ERR_OK) {
         $filePath = $_FILES['ofx']['tmp_name'];
         $fileName = $_FILES['ofx']['name'];
-        $fileExt = str_ends_with($fileName, '.ofx') ? 'ofx' : 'xlsx';
-        
+
+        $fileExt = str_ends_with(strtolower($fileName), '.ofx') ? 'ofx' : 'xlsx';
         // Detecta o tipo de arquivo pela extensão
         if ($fileExt === 'ofx') {
             $transactions = parse_ofx($filePath);
@@ -375,10 +393,18 @@ if($acao == 'processar') {
         if(!empty($transactions['debug'])){
             $transactions_debug = $transactions['debug'];
         }
+        // echo '<pre>';
+        // print_r($transactions);
+        // exit;
 
         if(empty($transactions_current)) {
+            if(isset($transactions_debug['erro'][0])) {
+                header('Location: movimentacao.php?erro=' . $transactions_debug['erro'][0]);
+                exit;
+            } else {
             header('Location: movimentacao.php?erro=cadastrado');
             exit;
+        }
         }
         
         $_SESSION['ofx_transactions']['transactions'] = $transactions_current;
@@ -823,16 +849,11 @@ else if($acao == 'conciliar_todas'){
         $valor,
         1,
         $data_lanc,
-        $_SESSION['usuario']->id_usuario,
+        $_SESSION['usuario']->id,
         $custo,
         $id_ban,
     );
-    echo '<pre>';
-    print_r($lanc01);
-    echo '</pre>';
-    echo '<pre>';
-    print_r($_POST);
-    echo '</pre>';
+
     
     if($acao == 'mov_receber') {
         if(!Rec01::read(id_empresa:$_SESSION['usuario']->id_empresa, documento: $documento)) {

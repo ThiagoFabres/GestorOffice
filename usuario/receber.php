@@ -656,7 +656,7 @@ if ($filtros != []) {
                                                     class="bi bi-wallet2"></i></button>
                                         </td>
                                         <td class="td-acoes">
-                                            <button class="btn btn-primary" <?php if (in_array($rec02->id_rec01, $recebimentos_pagos) ) { ?> disabled <?php } ?>
+                                            <button class="btn btn-primary" <?php if (in_array($rec02->id_rec01, $recebimentos_pagos) || (isset($rec01->valor_b) && $rec01->valor_b !== 0)) { ?> disabled <?php } ?>
                                                 onclick="window.location.href='receber.php?id=<?= $rec01->id ?>&acao=editar'"><i
                                                     class="bi bi-pen-fill"></i></button>
                                         </td>

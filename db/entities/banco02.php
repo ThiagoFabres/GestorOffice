@@ -343,18 +343,35 @@ class Ban02Imp {
 
         return $stmt->execute();
     }
-    public static function read($id_empresa = null, $id_ban01 = null, $data = null) {
+    public static function read(
+        $id_empresa = null, 
+        $id_ban01 = null, 
+        $data = null,
+        $data_inicial = null,
+        $data_final = null
+        ) {
+
+
         $pdo = (new Database())->connect();
-        $sql = 'SELECT * FROM ban02_imp WHERE 1=1';
-        
+        $sql = 'SELECT * FROM ban02_imp';
+        $conditions = [];
         if ($id_ban01 !== null) {
-            $sql .= ' AND id_ban01 = :id_ban01';
+            $conditions[] = ' id_ban01 = :id_ban01';
         }
         if ($id_empresa !== null) {
-            $sql .= ' AND id_empresa = :id_empresa';
+            $conditions[] = ' id_empresa = :id_empresa';
         }
-        if($data != null){
-            $sql .= ' AND data = :data';
+        if($data !== null){
+            $conditions[] = ' data = :data';
+        }
+        if($data_inicial !== null) {
+            $conditions[] = ' data >= :data_inicial';
+        }
+        if($data_final !== null) {
+            $conditions[] = ' data <= :data_final';
+        }
+        if ($conditions) {
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
         }
 
         $sql .= ' ORDER BY data DESC';
@@ -372,11 +389,24 @@ class Ban02Imp {
         if ($data !== null) {
             $stmt->bindValue(':data', $data);
         }
+        if ($data_inicial !== null) {
+            $stmt->bindValue(':data_inicial', $data_inicial);
+        }
+        if ($data_final !== null) {
+            $stmt->bindValue(':data_final', $data_final);
+        }
 
         
 
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, self::class);
+    }
+    public static function delete($id) {
+        $pdo = (new Database())->connect();
+        $sql = 'DELETE FROM ban02_imp WHERE id = :id';
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindValue(':id', $id);
+        return $stmt->execute();
     }
 }
 

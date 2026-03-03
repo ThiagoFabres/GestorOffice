@@ -157,7 +157,9 @@ $novo_documento = buscarDocumentoRec();
                                                 <div class="input-valor" style="width:calc(100%/3)">
                                                     <!--Nome: -->
                                                     <label for="valor">Valor:</label>
-                                                    <input type="text" onchange="checar()" name="valor" style="border-radius:0;"
+                                                    <input type="text" onchange="checar()"
+                                                    onkeypress="return /[0-9,]/.test(event.key)" 
+                                                    name="valor" style="border-radius:0;"
                                                         class="form-control" placeholder="Valor" value="" required>
                                                 </div>
 
@@ -173,6 +175,7 @@ $novo_documento = buscarDocumentoRec();
                                                     <label for="parcelas">N. Lançamentos:</label>
                                                     <input type="number" onchange="checar()" name="n_lanc"
                                                         class="form-control" placeholder="N. Lançamentos"
+                                                        onkeypress="return /[0-9]/.test(event.key)"
                                                         value=""
                                                         style="border-radius:0;"
                                                         required>

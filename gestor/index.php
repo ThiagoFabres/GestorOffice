@@ -205,7 +205,7 @@ $erro = filter_input(INPUT_GET, 'erro');
 
 <form action="index.php" method="post">
 
-    <input type="hidden" name="id" value="<?=$usuario->id_usuario?>">
+    <input type="hidden" name="id" value="<?=$usuario->id?>">
  
     <div style="display:flex; flex-direction:row;" class="mb-3">
         <input type="text" class="form-control" id="input-nome" placeholder="Nome" name="nome" value="<?= htmlspecialchars($usuario->nome, ENT_QUOTES, 'UTF-8') ?>" required>

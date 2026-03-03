@@ -196,7 +196,17 @@
                 <div class="col-md-12" style="padding: 0;">
                     <div class="card" style="padding: 0;">
                 <?php ?>
+                <form method="post" action>
                         <div class="card-header-div">
+                            <div class="mb-3 gap-2">
+                            <label for="agencia" class="form-label">Arquivo Excel</label>
+                            <input type="file"
+                            onchange="this.form.submit()"
+                            accept=".xlsx, .xls, .csv" id="agencia" name="vendas_excel"
+                            class="form-control" placeholder="Agência"
+                            >
+                        </div>
+                </form>
                             <div class="card-header-borda">
                                 <div class="tab-pane fade show active" id="vendas" role="tabpanel"
                                     aria-labelledby="vendas-tab">
@@ -387,7 +397,7 @@
 
 
 
-                                        <?php if($get_acao != 'visualizar'){ ?>                            
+                                        <?php if($get_acao != 'visualizar' && !isset($recebimento->valor_b) || $recebimento->valor_b == 0){ ?>                            
                                             <div style="width: 100%;">
                                                 <button type="submit" class="btn btn-primary mt-4"
                                                     style="float:right; background-color: #5856d6; border: 0;">Gerar
@@ -476,7 +486,7 @@
                                 </table>
                             </div>
                             <div class="card-footer" style="display:flex; flex-direction: row; width: 100%; justify-content: space-between;">
-                            <?php if(!empty($parcelas) && $get_acao != 'visualizar'){ ?>
+                            <?php if((!empty($parcelas) && $get_acao != 'visualizar') && !isset($recebimento->valor_b) || $recebimento->valor_b == 0){ ?>
                                 <button name="acao"
                                     value="excluir"
                                     class="btn btn-danger" type="submit" id="botao-excluir-parcela"
