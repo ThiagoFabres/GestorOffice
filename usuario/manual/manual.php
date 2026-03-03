@@ -38,8 +38,14 @@ $titulos = [
     
 ];
 $videos = [
-    'Dashboard' => '<iframe width="100%" height="700px" src="https://www.youtube.com/embed/OXPsQ3-QVck" title="DASHBOARD" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>'
-];
+    'Dashboard' => '<iframe width="100%" height="700px" src="https://www.youtube.com/embed/OXPsQ3-QVck" title="DASHBOARD" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>',
+    'Cadastros' => '<iframe width="100%" height="700px" src="https://youtu.be/-WLAPH795zU" title="CADASTROS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>',
+    'Controle Financeiro' => '<iframe width="100%" height="700px" src="https://youtu.be/1w0CcZs0ZTE" title="CONTROLE FINANCEIRO" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>',   
+    'Controle Bancário' => '<iframe width="100%" height="700px" src="https://youtu.be/zVdaOzBbs-Q" title="CONTROLE BANCÁRIO" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>',
+    'Controle de Cartão' => '<iframe width="100%" height="700px" src="https://youtu.be/jnVvwGpgxPw" title="CONTROLE DE CARTÃO" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>',
+    'Recorrentes' => '<iframe width="100%" height="700px" src="https://youtu.be/nyoZ798Q-Tw" title="CONTROLE DE CARTÃO" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>',
+    'DRE' => '<iframe width="100%" height="700px" src="https://youtu.be/ek9I0S5aW5I" title="DRE" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>',
+        ];
  
 
 

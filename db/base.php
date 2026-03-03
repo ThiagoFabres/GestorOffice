@@ -1,9 +1,9 @@
 <?php
 
 class Database {
-    private $dsn = 'mysql:host=localhost;dbname=gestor_office_control';
-    private $username = 'root';
-    private $password = '';
+    private $dsn = 'mysql:host=localhost;dbname=adri1000_gestor_office_control';
+    private $username = 'adri1000_gestoroff_app';
+    private $password = 'Sup@085951';
 
     public function connect() {
         try {
@@ -16,4 +16,3 @@ class Database {
     }
 
 }
-   

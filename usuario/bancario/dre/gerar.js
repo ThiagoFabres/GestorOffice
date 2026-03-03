@@ -1,4 +1,4 @@
-
+// Utilities
 function _formatDateToDDMMYYYY(input) {
     if (!input && input !== 0) return '';
     if (input instanceof Date) {
@@ -97,157 +97,142 @@ function _rewriteTextNodesInElement(root) {
                 if (ph !== el.getAttribute('placeholder')) el.setAttribute('placeholder', ph);
             }
         } catch (e) {
-
+            // ignore conversion errors
         }
     });
 }
 
-function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=null) {
-    console.log(titulo);
-    const accordionItems = document.querySelectorAll('.accordion-item');
+// gerarpdf: generates PDF using jsPDF + jspdf-autotable
+async function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=null) {
+    console.log('Rendering')
+    if (typeof jsPDF === 'undefined' && !(window.jspdf && window.jspdf.jsPDF)) {
+        alert('Biblioteca jsPDF não encontrada. Adicione jsPDF e jspdf-autotable ao seu HTML.');
+        return;
+    }
+
+    const PDFClass = (typeof jsPDF !== 'undefined') ? jsPDF : window.jspdf.jsPDF;
+    const pdf = new PDFClass({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    const margin = 12;
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const usableWidth = pageWidth - margin * 2;
+
+    if (typeof pdf.autoTable !== 'function') {
+        alert('jspdf-autotable não detectado. Adicione o plugin jspdf-autotable ao seu HTML.');
+        return;
+    }
+
+    const accordionItems = Array.from(document.querySelectorAll('.accordion-item'));
     if (accordionItems.length === 0) {
         alert('Nenhum conteúdo para exportar.');
         return;
     }
 
-    const pdfContainer = document.createElement('div');
-    pdfContainer.style.padding = '20px';
-
+    // Header
+    pdf.setFontSize(14);
     const formattedDate = _formatDateToDDMMYYYY(data);
-    const headerDiv = document.createElement('div');
-    const tipoSelec = document.querySelector('#filtro_operacional').value;
-     if(tipoSelec == 1) {
-        tipoFiltro = ' (Operacional)'
-    } else if(tipoSelec == 2) {
-        tipoFiltro = ' (Não Operacional)'
-    } else {
-        tipoFiltro = ''
+    const headerTitle = nomeEmpresa ? nomeEmpresa.substr(0, 60) : '';
+    const headerLines = pdf.splitTextToSize(headerTitle + (formattedDate ? ' — ' + formattedDate : ''), usableWidth);
+    let cursorY = margin;
+    pdf.text(headerLines, margin, cursorY);
+    cursorY += headerLines.length * 7;
+
+    if (titulo) {
+        pdf.setFontSize(11);
+        const titleLines = pdf.splitTextToSize(String(titulo), usableWidth);
+        pdf.text(titleLines, margin, cursorY);
+        cursorY += titleLines.length * 6;
     }
-    headerDiv.style.marginBottom = '1px';
-    headerDiv.innerHTML = `
-    <div style=" display:flex; flex-direction:row; justify-content:start  align-itens:start; height:100%; ;">
-        <div style="display:flex; justify-content:start; align-itens:start; height:100%; width:100%;" >
-            <div style="display:flex; justify-content:start; align-itens:start; height:100%; width:100%;">
-                <p style="font-size:25px; text-align:start; margin:0;  white-space: nowrap; overflow:hidden; text-overflow:hidden;  padding-right:9px;">
-                    ${nomeEmpresa.substr(0, 22)} ${tipoFiltro} -
-                </p>
 
-            <p style="  font-size:20px; padding-top:5px; text-align:start; margin:0;  white-space: nowrap; overflow:hidden; text-overflow:hidden;">` 
-                +
-                
-                    ((formattedDate || titulo) ?  `${ formattedDate ? formattedDate + '</p>' : '</p>'}` : '</div>') + '</div>  </div> </p>' 
-                +
-            `</div>
-        </div> 
-        <div style="display:flex; flex-direction:column;"> 
-       `     
-    +
-    `<p style="text-align:center; font-size:1.5em; margin:0; padding:0;">Relatório demonstrativo de resultado (DRE)</p>` 
-    +
-    '</div></div><hr>'
+    pdf.setFontSize(12);
+    pdf.text('Relatório demonstrativo de resultado (DRE)', margin, cursorY);
+    cursorY += 8;
 
-    pdfContainer.appendChild(headerDiv);
+    // Iterate accordions and convert tables using autoTable
+    for (let i = 0; i < accordionItems.length; i++) {
+        const item = accordionItems[i];
+        const headerSpan = item.querySelector('.accordion-header .accordion-button span');
+        const title = headerSpan ? headerSpan.textContent.trim() : (item.querySelector('.accordion-header') ? item.querySelector('.accordion-header').textContent.trim() : '');
 
-    accordionItems.forEach(item => {
-        const mainContainer = document.createElement("div")
-        const headerOriginal = item.querySelector('.accordion-header');
-        const header = headerOriginal.cloneNode(true);
-
-        if(nome == 'sintetico'){
-        header.style.fontSize = '95%'
-        }   else {
-        header.style.fontSize = '120%'
-        header.style.fontWeight = 'bold'
-        }
-        const bodyOriginal = item.querySelector('.accordion-body');
-        const body = bodyOriginal.cloneNode(true);
-
-        body.style.background = 'white';
-        body.style.backgroundColor = 'white';
-        body.style.boxShadow = 'none';
-        body.style.filter = 'none';
-
-        body.querySelectorAll('*').forEach(function(el) {
-            el.style.background = 'transparent';
-            el.style.backgroundColor = 'transparent';
-            el.style.boxShadow = 'none';
-            el.style.filter = 'none';
-        });
-
-        header.style.backgroundColor = 'white';
-
-        body.querySelectorAll('table').forEach(function(el) {
-            el.classList.remove('table-striped');
-        });
-        body.querySelectorAll('table tr').forEach(function(tr, index) {
-            const cor = (index % 2 === 0) ? '#f2f2f2'  : '#ffffff';
-            tr.querySelectorAll('td').forEach(td => td.style.backgroundColor = cor);
-        });
-
-        body.querySelectorAll('.tr-dre-total').forEach(function(tr) {
-            tr.style.backgroundColor = '#e1e1e2';
-            tr.querySelectorAll('td').forEach(td => td.style.backgroundColor = '#e1e1e2');
-        });
-
-        mainContainer.appendChild(header);
-        mainContainer.appendChild(body);
-
-        if (mainContainer) pdfContainer.appendChild(mainContainer.cloneNode(true));
-        pdfContainer.appendChild(document.createElement('hr'));
-    });
-const totaisContainer = document.createElement("div");
-totaisContainer.classList.add('avoid-page-break');
-totaisContainer.style.display = "flex";
-totaisContainer.style.justifyContent = "space-between";  
-totaisContainer.style.gap = "10px"; 
-totaisContainer.style.marginTop = "20px"; 
-
-
-const totalReceitasDiv = document.querySelector('#total-receitas');
-if (totalReceitasDiv) {
-    totaisContainer.appendChild(totalReceitasDiv.cloneNode(true));
-    totaisContainer.style.fontSize = '75%'
-}
-
-const totalDespesasDiv = document.querySelector('#total-despesas');
-if (totalDespesasDiv) totaisContainer.appendChild(totalDespesasDiv.cloneNode(true));
-
-const totalDreDiv = document.querySelector('#total-dre');
-if (totalDreDiv) totaisContainer.appendChild(totalDreDiv.cloneNode(true));
-
-
-pdfContainer.appendChild(totaisContainer);
-
-    _rewriteTextNodesInElement(pdfContainer);
-
-    
-
-    html2pdf()
-        .set({
-            margin: 0,
-            filename: 'dre-'+nome+'.pdf',
-            image: { type: 'jpeg', quality: 0.8 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            width: 1366
-        })
-        .from(pdfContainer)
-        .save();
-
-        body.querySelectorAll('table tr').forEach(function(tr) {
-            tr.querySelectorAll('td').forEach(td => td.style.backgroundColor = 'white')
-        })
+        pdf.setFontSize(11);
+        const titleLines = pdf.splitTextToSize(title, usableWidth);
+        if (cursorY + titleLines.length * 6 > pdf.internal.pageSize.getHeight() - margin) pdf.addPage(), cursorY = margin;
+        pdf.text(titleLines, margin, cursorY);
+        cursorY += titleLines.length * 6 + 4;
 
         const body = item.querySelector('.accordion-body');
-        body.querySelectorAll('table').forEach(function(el) {
-            el.classList.add (
-                'table-striped'
-            )
-        })
-        
+        if (!body) continue;
+
+        const tables = Array.from(body.querySelectorAll('table'));
+        for (let t = 0; t < tables.length; t++) {
+            const table = tables[t];
+            let headers = Array.from(table.querySelectorAll('thead th')).map(th => _convertIsoToDDMMYYYY(th.textContent.trim()));
+            if (!headers || headers.length === 0) {
+                const firstRow = table.querySelector('tbody tr');
+                if (firstRow) headers = Array.from(firstRow.querySelectorAll('td')).map((_, idx) => 'Col ' + (idx + 1));
+            }
+
+            const rows = Array.from(table.querySelectorAll('tbody tr')).map(tr =>
+                Array.from(tr.querySelectorAll('td')).map(td => _convertIsoToDDMMYYYY(td.textContent.trim()))
+            );
+
+            if (!rows || rows.length === 0) continue;
+
+            pdf.autoTable({
+                startY: cursorY,
+                head: headers.length ? [headers] : [],
+                body: rows,
+                margin: { left: margin, right: margin },
+                styles: { fontSize: 9, cellPadding: 3 },
+                headStyles: { fillColor: [230, 230, 230], textColor: 20, halign: 'left' },
+                theme: 'striped'
+            });
+
+            cursorY = (pdf.lastAutoTable && pdf.lastAutoTable.finalY) ? pdf.lastAutoTable.finalY + 6 : pdf.internal.pageSize.getHeight() - margin;
+            if (cursorY > pdf.internal.pageSize.getHeight() - margin) {
+                pdf.addPage();
+                cursorY = margin;
+            }
+        }
+
+        cursorY += 4;
+        if (cursorY > pdf.internal.pageSize.getHeight() - margin) {
+            pdf.addPage();
+            cursorY = margin;
+        }
+    }
+
+    // Totals
+    const totalReceitasDiv = document.querySelector('#total-receitas');
+    const totalDespesasDiv = document.querySelector('#total-despesas');
+    const totalDreDiv = document.querySelector('#total-dre');
+
+    pdf.setFontSize(11);
+    if (totalReceitasDiv && totalReceitasDiv.textContent.trim()) {
+        if (cursorY > pdf.internal.pageSize.getHeight() - margin) pdf.addPage(), cursorY = margin;
+        pdf.text(_convertIsoToDDMMYYYY(totalReceitasDiv.textContent.trim()), margin, cursorY);
+        cursorY += 6;
+    }
+    if (totalDespesasDiv && totalDespesasDiv.textContent.trim()) {
+        if (cursorY > pdf.internal.pageSize.getHeight() - margin) pdf.addPage(), cursorY = margin;
+        pdf.text(_convertIsoToDDMMYYYY(totalDespesasDiv.textContent.trim()), margin, cursorY);
+        cursorY += 6;
+    }
+    if (totalDreDiv && totalDreDiv.textContent.trim()) {
+        if (cursorY > pdf.internal.pageSize.getHeight() - margin) pdf.addPage(), cursorY = margin;
+        pdf.text(_convertIsoToDDMMYYYY(totalDreDiv.textContent.trim()), margin, cursorY);
+        cursorY += 6;
+    }
+
+    try {
+        pdf.save('dre-' + nome + '.pdf');
+    } catch (e) {
+        console.error('Erro ao salvar PDF gerado por jsPDF:', e);
+        alert('Erro ao salvar PDF. Veja o console para detalhes.');
+    }
 }
 
+// gerarexcel: export tables to Excel
 function gerarexcel(nome, data=null, hora=null, nomeEmpresa='') {
-    if (nome == 'analitico') {
     if (typeof XLSX === 'undefined') {
         alert('Biblioteca XLSX não carregada. Adicione <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script> ao seu HTML.');
         return;
@@ -260,14 +245,13 @@ function gerarexcel(nome, data=null, hora=null, nomeEmpresa='') {
     }
 
     let allData = [];
-
     const headerTitle = nomeEmpresa + '  -  ' + 'Relatório demonstrativo de resultado - ' + String(nome).toUpperCase();
     const formattedDate = _formatDateToDDMMYYYY(data);
     const titulo = _formatTimeToHHMM(hora);
     const headerDateTime = (formattedDate ? 'Data: ' + formattedDate : '') + (titulo ? (formattedDate ? '<br>' : '') + 'Titulo: ' + titulo : '');
     allData.push([headerTitle]);
     if (headerDateTime.trim()) allData.push([headerDateTime]);
-    allData.push([]); 
+    allData.push([]);
 
     accordionItems.forEach((item) => {
         let title = '';
@@ -282,9 +266,7 @@ function gerarexcel(nome, data=null, hora=null, nomeEmpresa='') {
             const category = catElem.textContent.trim();
 
             let table = catElem.nextElementSibling;
-            while (table && table.tagName !== 'TABLE') {
-                table = table.nextElementSibling;
-            }
+            while (table && table.tagName !== 'TABLE') table = table.nextElementSibling;
             if (!table) return;
 
             const headers = Array.from(table.querySelectorAll('thead th')).map(th => _convertIsoToDDMMYYYY(th.textContent.trim()));
@@ -307,118 +289,35 @@ function gerarexcel(nome, data=null, hora=null, nomeEmpresa='') {
                 next = next.nextElementSibling;
             }
             if (saldoSubtitulo) allData.push([_convertIsoToDDMMYYYY(saldoSubtitulo)]);
-
             allData.push([]);
         });
 
-        let totalGeral = '';
         const totalGeralDiv = body.querySelector('div[id^="total-subtitulo-"]');
         if (totalGeralDiv) {
-            totalGeral = _convertIsoToDDMMYYYY(totalGeralDiv.textContent.trim());
+            const totalGeral = _convertIsoToDDMMYYYY(totalGeralDiv.textContent.trim());
             if (totalGeral) allData.push([totalGeral]);
         }
         allData.push([]);
     });
 
-    let totalReceitasDiv = document.querySelector('#total-receitas');
+    const totalReceitasDiv = document.querySelector('#total-receitas');
     if (totalReceitasDiv) {
-        let totalReceitas = _convertIsoToDDMMYYYY(totalReceitasDiv.textContent.trim());
+        const totalReceitas = _convertIsoToDDMMYYYY(totalReceitasDiv.textContent.trim());
         if (totalReceitas) allData.push([totalReceitas]);
     }
-    let totalDespesasDiv = document.querySelector('#total-despesas');
+    const totalDespesasDiv = document.querySelector('#total-despesas');
     if (totalDespesasDiv) {
-        let totalDespesas = _convertIsoToDDMMYYYY(totalDespesasDiv.textContent.trim());
+        const totalDespesas = _convertIsoToDDMMYYYY(totalDespesasDiv.textContent.trim());
         if (totalDespesas) allData.push([totalDespesas]);
     }
-    let totalDreDiv = document.querySelector('#total-dre');
+    const totalDreDiv = document.querySelector('#total-dre');
     if (totalDreDiv) {
-        let totalDre = _convertIsoToDDMMYYYY(totalDreDiv.textContent.trim());
+        const totalDre = _convertIsoToDDMMYYYY(totalDreDiv.textContent.trim());
         if (totalDre) allData.push([totalDre]);
     }
 
     const ws = XLSX.utils.aoa_to_sheet(allData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Demonstrativo');
-
     XLSX.writeFile(wb, 'dre-' + nome + '.xlsx');
-}
-    
-    
-    
-    
-    
-    else if(nome == 'sintetico') {
-        console.log(nomeEmpresa)
-        if (typeof XLSX === 'undefined') {
-            alert('Biblioteca XLSX não carregada. Adicione <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script> ao seu HTML.');
-            return;
-        }
-
-        const accordionItems = document.querySelectorAll('.accordion-item');
-        if (accordionItems.length === 0) {
-            alert('Nenhum conteúdo para exportar.');
-            return;
-        }
-
-        let allData = [];
-
-    const headerTitle = nomeEmpresa +'  -  ' + 'Relatório demonstrativo de resultado - ' + String(nome).toUpperCase();
-    const formattedDate = _formatDateToDDMMYYYY(data);
-    const titulo = _formatTimeToHHMM(hora);
-    const headerDateTime = (formattedDate ? formattedDate : '') + (titulo ? (formattedDate ? ' — ' : '') + 'Titulo: ' + titulo : '');
-        allData.push([headerTitle]);
-        if (headerDateTime.trim()) allData.push([headerDateTime]);
-        allData.push([]);
-
-        accordionItems.forEach((item) => {
-            let title = '';
-            const header = item.querySelector('.accordion-header .accordion-button span');
-            if (header) title = header.textContent.trim();
-
-            const body = item.querySelector('.accordion-body');
-            if (!body) return;
-
-            const table = body.querySelector('table');
-            if (title) allData.push([title]);
-            if (table) {
-                const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
-                if (headers.length) allData.push(headers);
-
-                const rows = Array.from(table.querySelectorAll('tbody tr')).map(tr =>
-                    Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim())
-                );
-                rows.forEach(row => allData.push(row));
-            }
-
-            const totalTituloDiv = body.querySelector('div[id^="total-subtitulo-"]');
-            if (totalTituloDiv) {
-                let totalTitulo = totalTituloDiv.textContent.trim();
-                if (totalTitulo) allData.push([totalTitulo]);
-            }
-
-            allData.push([]);
-        });
-
-        let totalReceitasDiv = document.querySelector('#total-receitas');
-            if (totalReceitasDiv) {
-                let totalReceitas = totalReceitasDiv.textContent.trim();
-                if (totalReceitas) allData.push([totalReceitas]);
-            }
-        let totalDespesasDiv = document.querySelector('#total-despesas');
-            if (totalDespesasDiv) {
-                let totalDespesas = totalDespesasDiv.textContent.trim();
-                if (totalDespesas) allData.push([totalDespesas]);
-            }
-
-        let totalDreDiv = document.querySelector('#total-dre');
-            if (totalDreDiv) {
-                let totalDre = totalDreDiv.textContent.trim();
-                if (totalDre) allData.push([totalDre]);
-            }
-
-        const ws = XLSX.utils.aoa_to_sheet(allData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'DRE Sintético');
-        XLSX.writeFile(wb, 'dre-sintetico.xlsx');
-    }
 }

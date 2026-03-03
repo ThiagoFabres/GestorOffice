@@ -111,7 +111,8 @@ $titulos = array_values($titulos_array);
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
     integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/5.0.2/jspdf.plugin.autotable.min.js" integrity="sha512-JizZOUNesiGhMcp9fsA/9W31FOat6QysBM8hSj6ir8iIANIUJ2mhko7Lo1+j0ErftmJ8SebMZLm9iielKjeIEQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js "></script>
 <link href=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css " rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
@@ -293,7 +294,6 @@ $titulos = array_values($titulos_array);
                                                             ?>
 
                                                             <tr class="tr-dre-sintetico avoid-page-break">
-                                                                <!-- <td style="width:25%;"><?=$centro_custos?></td> -->
                                                                 <td style="width: 75%;"><?= htmlspecialchars($nome_subtitulo, ENT_QUOTES, 'UTF-8') ?></td>
                                                                 <td style="width: 25%;"><div class="valor-monetario d-flex flex-row justify-content-between"><div>R$</div> <div> <?= $receita_formatada?> </div></div></td>
                                                             </tr>
