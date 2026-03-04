@@ -25,6 +25,8 @@ $filtro_custos = filter_input(INPUT_GET, 'custos', FILTER_SANITIZE_STRING) ?? ''
 $filtro_titulo = filter_input(INPUT_GET, 'titulo', FILTER_SANITIZE_STRING) ?? '';
 $filtro_subtitulo = filter_input(INPUT_POST, 'subtitulo', FILTER_SANITIZE_STRING) ?? '';
 
+$erro = filter_input(INPUT_GET, 'erro') ?? '';
+
 $novo_documento = buscarDocumentoRec();
 ?>
 
@@ -162,11 +164,11 @@ $novo_documento = buscarDocumentoRec();
                                             <div class="d-flex flex-row justify-content-between w-25">
                                                 
                                                     <div class="d-flex flex-column">
-                                                        <label>Pagar</label>
+                                                        <label>A Pagar</label>
                                                                 <input type="radio" class="form-control" name="tipo_lancamento" value="pagar" style="width:15px; height:15px; border-radius: 100%;" <?php if ($filtro_tipo_lancamento == 'pagar') echo 'checked'; ?> >
                                                             </div>
                                                     <div class="d-flex flex-column">
-                                                        <label>Receber</label>
+                                                        <label>A Receber</label>
                                                         <input type="radio" class="form-control" name="tipo_lancamento" value="receber" style="width:15px; height:15px; border-radius: 100%;" <?php if ($filtro_tipo_lancamento == 'receber') echo 'checked'; ?> >
                                                     </div>
                                             </div>
@@ -185,14 +187,9 @@ $novo_documento = buscarDocumentoRec();
                         </div>
                     </div>
 <?php require_once __DIR__ . '/../../componentes/modais/lancamentos/importar/modal_adicionar_lancamentos.php' ?> 
-<?php if(isset($_SESSION['excel_transactions'])): ?>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const modal = new bootstrap.Modal(document.getElementById('modal_adicionar_lancamento'));
-            modal.show();
-        });
-    </script>
-<?php endif; ?>
+<?php if(isset($_SESSION['excel_transactions'])){
+    unset($_SESSION['excel_transactions']); 
+    }?>
 
 <?php require_once __DIR__ . '/../../componentes/footer/footer.php' ?> 
 </body>
@@ -371,6 +368,10 @@ subtituloFiltroChoice.clearStore();
         modalAdicionar.show();
     });
 
+<?php } ?>
+<?php if($erro == 'selecao') {?>
+    alert('Selecione Todos os campos')
+    window.location.href='importar.php'
 <?php } ?>
 </script>
 

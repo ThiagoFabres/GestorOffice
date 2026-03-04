@@ -21,6 +21,15 @@ require_once '../../db/entities/recebimentos.php';
 
 $acao = filter_input(INPUT_POST, 'acao', FILTER_SANITIZE_STRING) ?? filter_input(INPUT_GET, 'acao', FILTER_SANITIZE_STRING);
 if($acao == 'processar') {
+    if(
+        $_POST['cadastro'] == '' ||
+        $_POST['custos'] == '' ||
+        $_POST['titulo'] == '' ||
+        $_POST['subtitulo'] == '' 
+    ) {
+        header('Location: importar.php?erro=selecao');
+        exit;
+    }
     
     function parse_excel($fileName, $filePath) {
     
@@ -42,8 +51,30 @@ if($acao == 'processar') {
     }
 
     function parse_xlsx($filePath) {
+        $tipo_lancamento = filter_input(INPUT_POST, 'tipo_lancamento');
+        if($tipo_lancamento == 'receber'){
+            $rec02_lista = Rec02::read(null, $_SESSION['usuario']->id_empresa);
+            $current_cadastado = [];
+            foreach($rec02_lista as $rec02) {
+                $current_cadastado[] = [
+                    'data' => $rec02->vencimento,
+                    'valor' => $rec02->valor_par,
+                    'descricao' => $rec02->descricao
+                ];
+            }
+        } else if($tipo_lancamento == 'pagar') {
+            $pag02_lista = Pag02::read(null, $_SESSION['usuario']->id_empresa);
+            $current_cadastado = [];
+            foreach($pag02_lista as $pag02) {
+                $pag01 = Pag01::read($pag02->id_pag01, $_SESSION['usuario']->id_empresa )[0];
+                $current_cadastado[] = [
+                    'data' => $pag02->vencimento,
+                    'valor' => $pag02->valor_par,
+                    'descricao' => $pag01->descricao
+                ];
+            }
+        }
         $data_atual = (new DateTime())->format('Y-m-d');
-        $importadas_set = [];
         $transactions = [];
         $transactions['current'] = [];
         $transactions['debug'] = [];
@@ -101,6 +132,7 @@ if($acao == 'processar') {
                     try {
                         if (is_numeric($vencimento_raw)) {
                             $dt = ExcelDate::excelToDateTimeObject($vencimento_raw);
+                            $data_excel_analizada = $dt->format('Y-m-d');
                             $vencimento_formatado = $dt->format('d/m/Y');
                         } else {
                             $vstr = trim((string)$vencimento_raw);
@@ -117,6 +149,7 @@ if($acao == 'processar') {
                 // Documento e descrição
                 $documento = trim((string)$documento_raw);
                 $descricao = trim((string)$descricao_raw);
+                $documento_descricao = $documento . ' - ' . $descricao;
 
                 // Valor - aceita formatos com ponto e vírgula
                 $valor = null;
@@ -137,13 +170,16 @@ if($acao == 'processar') {
                 }
 
                 // Valida se já foi importada pela data (mantendo lógica anterior)
-                if (isset($importadas_set[$data_analizada])) {
-                    continue;
-                }
 
-                if($ultima_data != null && ($data_analizada >= $data_atual || $data_analizada == $ultima_data)) {
+                $current_analizado = [
+                    'data' => $data_excel_analizada,
+                    'valor' => number_format($valor, 2, '.', ''),
+                    'descricao' => $documento_descricao,
+                ];
+                if(in_array($current_analizado, $current_cadastado)) {
                     continue;
                 }
+                
 
                 $current = [
                     'data' => $data_formatada,
@@ -153,6 +189,7 @@ if($acao == 'processar') {
                     'valor' => number_format($valor, 2, ',', '.'),
                     'vencimento' => $vencimento_formatado
                 ];
+                
 
                 $transactions['current'][] = $current;
             }
@@ -186,9 +223,6 @@ if($acao == 'processar') {
         if(!empty($transactions['debug'])){
             $transactions_debug = $transactions['debug'];
         }
-        // echo '<pre>';
-        // print_r($transactions);
-        // exit;
 
         if(empty($transactions_current)) {
             if(isset($transactions_debug['erro'][0])) {
@@ -204,6 +238,10 @@ if($acao == 'processar') {
         $_SESSION['excel_transactions']['file_name'] = $fileName;
         $_SESSION['excel_transactions']['file_extension'] = $fileExt;
         $_SESSION['excel_transactions']['tipo_lancamento'] = filter_input(INPUT_POST, 'tipo_lancamento');
+        $_SESSION['excel_transactions']['cadastro'] = filter_input(INPUT_POST, 'cadastro');
+        $_SESSION['excel_transactions']['custos'] = filter_input(INPUT_POST, 'custos');
+        $_SESSION['excel_transactions']['titulo'] = filter_input(INPUT_POST, 'titulo');
+        $_SESSION['excel_transactions']['subtitulo'] = filter_input(INPUT_POST, 'subtitulo');
 
 
 
@@ -217,9 +255,107 @@ if($acao == 'processar') {
     }
 }
 if($acao == 'adicionar') {
-    $total_linhas = filter_input(INPUT_POST, 'total_linhas', FILTER_SANITIZE_NUMBER_INT);
+    $total_linhas = filter_input(INPUT_POST, 'total_linhas');
+    $tipo = filter_input(INPUT_POST, 'tipo');
     $valores = $_POST['valor'];
-    $datas = $_POST['data'];
-    $documentos = $_POST['documento'];
+    $vencimentos = $_POST['vencimento'];
+    $descricoes = $_POST['descricao'];
+    $cadastro = filter_input(INPUT_POST, 'cadastro');
+    $custos = filter_input(INPUT_POST, 'custos');
+    $titulo = filter_input(INPUT_POST, 'titulo');
+    $subtitulo = filter_input(INPUT_POST, 'subtitulo');
+    $vencimentos_formatados = [];
+    foreach($vencimentos as $i => $data) {
+        $vencimentos_formatados[$i] = DateTime::createFromFormat('d/m/Y', $data)->format('Y-m-d');
+    }
+    $vencimentos = $vencimentos_formatados;
+    if($tipo == 'pagar') {
+        require_once '../../db/buscar_documento_pag.php';
+        $documento = buscarDocumentoPag();
+       for($i = 0; $i < $total_linhas; $i++) {
+            $valor = str_replace('.', '', $valores[$i]);
+            $valor = str_replace(',', '.', $valor);
+            if(is_numeric($valor)) {
+               $pag01 = new Pag01(
+                    null,
+                    $_SESSION['usuario']->id_empresa,
+                    $cadastro,
+                    $titulo,
+                    $subtitulo,
+                    $documento,
+                    $descricoes[$i],
+                    $valor,
+                    1,
+                    $vencimentos[$i],
+                    $_SESSION['usuario']->id,
+                    $custos,
+                );
+                
+                Pag01::create($pag01);
+                $pag01_criado = Pag01::read(id_empresa: $_SESSION['usuario']->id_empresa, documento: $documento)[0];
+
+                $pag02 = new Pag02(
+                    null,
+                    $_SESSION['usuario']->id_empresa,
+                    $pag01_criado->id,
+                    $valor,
+                    1,
+                    $vencimentos[$i],
+                    $valor,
+                    $vencimentos[$i],
+                    null,
+                    null,
+                );
+                Pag02::create($pag02);
+
+            }
+            
+            $documento++;
+        }
+    } else if($tipo == 'receber') {
+        require_once '../../db/buscar_documento_rec.php';
+        $documento = buscarDocumentoRec();
+        for($i = 0; $i < $total_linhas; $i++) {
+            $valor = str_replace('.', '', $valores[$i]);
+            $valor = str_replace(',', '.', $valor);
+            if(is_numeric($valor)) {
+               $rec01 = new Rec01(
+                    null,
+                    $_SESSION['usuario']->id_empresa,
+                    $cadastro,
+                    $titulo,
+                    $subtitulo,
+                    $documento,
+                    $descricoes[$i],
+                    $valor,
+                    1,
+                    $vencimentos[$i],
+                    $_SESSION['usuario']->id,
+                    $custos,
+                );
+                
+                Rec01::create($rec01);
+                $rec01_criado = Rec01::read(id_empresa: $_SESSION['usuario']->id_empresa, documento: $documento)[0];
+
+                $rec02 = new Rec02(
+                    null,
+                    $_SESSION['usuario']->id_empresa,
+                    $rec01_criado->id,
+                    $valor,
+                    1,
+                    $vencimentos[$i],
+                    $valor,
+                    $vencimentos[$i],
+                    null,
+                    null,
+                );
+                Rec02::create($rec02);
+            }
+            
+            $documento++;
+        }
+    }
+    header('Location: importar.php?status=sucesso');
+    exit;
 }
 ?>
