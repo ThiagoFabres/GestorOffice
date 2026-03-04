@@ -43,7 +43,7 @@ $get_filtro_conta = filter_input(INPUT_GET, 'filtro_conta');
 if($get_filtro_conta == '') $get_filtro_conta = null;
 
 $get_filtro_conciliado = filter_input(INPUT_GET, 'filtro_conciliado') == 'on' ? true : false;
-
+$get_filtro_descricao = filter_input(INPUT_GET, 'descricao');
 $erro = filter_input(INPUT_GET, 'erro');
 
 
@@ -61,6 +61,7 @@ $bancario_paginas = Ban02::read(
     filtro_subtitulo: $get_filtro_subtitulo ?? null,
     filtro_conta: $get_filtro_conta ?? null,
     filtro_tipo: $get_filtro_tipo,
+    palavra: $get_filtro_descricao
 ); 
 
 $total_paginas = ceil($bancario_paginas / $numero_exibir);
@@ -102,7 +103,9 @@ if($numero_exibir != 10)
 if($numero_pagina != 1) 
     $filtros[] = 'pagina=' . $numero_pagina;
     $filtros_get['numero_pagina']  = $numero_pagina;
-
+if($get_filtro_descricao != '')
+    $filtros[] = 'descricao=' . $get_filtro_descricao;
+    $filtros_get['descricao']  = $get_filtro_descricao;
 if ($filtros != []) {
     
     $caminho = 'movimentacao.php?' . implode('&', $filtros) . '&';
@@ -127,6 +130,7 @@ $movimentacoes_pdf = Ban02::read(
                             filtro_conta: $get_filtro_conta ?? null,
                             filtro_tipo: $get_filtro_tipo ?? null,
                             ordenar_por: 'data',
+                            palavra: $get_filtro_descricao,
                             numero_exibir: 500
                         );
 $movimentacoes_totais = $movimentacoes_pdf;
@@ -156,6 +160,7 @@ if($get_filtro_data_inicial != null) {
                             filtro_subtitulo: $get_filtro_subtitulo ?? null,
                             filtro_conta: $get_filtro_conta ?? null,
                             filtro_tipo: $get_filtro_tipo ?? null,
+                            palavra: $get_filtro_descricao,
     );
     foreach($movimentacoes_iniciais as $mov) {
         $saldo_inicial += $mov->valor;
@@ -256,7 +261,7 @@ foreach($movimentacoes_totais as $mov) {
                                 </div>
                                 <div class="inputs-pagamento-text ai-start">
                                 
-                                    <div>
+                                    <div class="w-25">
                                         <label for="filtro_documento">Conta:</label>
                                         <select id="conta-filtro" name="filtro_conta">
                                             <option value="">Selecione</option>
@@ -272,7 +277,7 @@ foreach($movimentacoes_totais as $mov) {
                                         </select>
                                     </div>
 
-                                    <div>
+                                    <div class="w-25">
                                         <label for="filtro_data_final">Titulo:</label>
                                         <select id="titulo-filtro" name="filtro_titulo">
                                             <option value="">Selecione</option>
@@ -285,7 +290,7 @@ foreach($movimentacoes_totais as $mov) {
                                         </select>
                                     </div>
 
-                                    <div>
+                                    <div class="w-25">
                                         <label for="filtro_documento">Subtitulo:</label>
                                         <select id="subtitulo-filtro" name="filtro_subtitulo">
                                             <?php
@@ -300,6 +305,12 @@ foreach($movimentacoes_totais as $mov) {
                                     <?php } ?>
                                             
                                         </select>
+                                    </div>
+                                    <div class="d-flex flex-column w-25">
+                                        <label for="filtro_documento">Descrição:</label>
+                                        <div class="h-100" style="top:1em; position: block;">
+                                        <input name="descricao" class="form-control" value="<?=$get_filtro_descricao?>" style="height:100%; top:1em; margin:0; padding:0;">
+                                        </div>
                                     </div>
 
                                     
@@ -385,6 +396,7 @@ foreach($movimentacoes_totais as $mov) {
                             filtro_subtitulo: $get_filtro_subtitulo ?? null,
                             filtro_conta: $get_filtro_conta ?? null,
                             filtro_tipo: $get_filtro_tipo,
+                            palavra: $get_filtro_descricao,
                         );
 
                          if(!empty($movimentacoes)) {

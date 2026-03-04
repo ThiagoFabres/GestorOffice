@@ -113,7 +113,11 @@
                     </ul>
                 </div>
             </div>
-            
+            <div class="menu-item <?php if($lateral_target == 'importar') {?>menu-item-atual<?php } ?>">
+                <a href="/usuario/financeiro/importar.php">
+                    <div style=" align-items:center;"><i class="bi bi-file-excel"></i></div> Importar
+                </a>
+            </div>
             <div class="menu-item <?php if($lateral_target == 'comparativo') {?>menu-item-atual<?php } ?>">
                 <a href="/usuario/dre/comparativo.php">
                     <div style=" align-items:center;"><i class="bi bi-arrow-left-right"></i></div> DRE Comparativo

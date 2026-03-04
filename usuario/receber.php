@@ -657,13 +657,13 @@ if ($filtros != []) {
                                         </td>
                                         <td class="td-acoes">
                                             <button class="btn btn-primary" <?php if (in_array($rec02->id_rec01, $recebimentos_pagos) || (isset($rec01->valor_b) && $rec01->valor_b !== 0)) { ?> disabled <?php } ?>
-                                                onclick="window.location.href='receber.php?id=<?= $rec01->id ?>&acao=editar'"><i
+                                                onclick="window.location.href='receber.php?id=<?= $rec01->id ?>&acao=editar&pagina=<?= $numero_pagina ?>&numero_exibido=<?= $numero_exibir ?>'"><i
                                                     class="bi bi-pen-fill"></i></button>
                                         </td>
                                         <?php } ?>
                                         <td class="td-acoes">
                                             <button class="btn btn-primary"
-                                                onclick="window.location.href='receber.php?id=<?= $rec01->id ?>&acao=visualizar'"><i class="bi bi-eye"></i></button>
+                                                onclick="window.location.href='receber.php?id=<?= $rec01->id ?>&acao=visualizar&pagina=<?= $numero_pagina ?>&numero_exibido=<?= $numero_exibir ?>'"><i class="bi bi-eye"></i></button>
                                         </td>
                                         
                                     </tr>
@@ -1558,7 +1558,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var Modal = new bootstrap.Modal(modalEl);
             Modal.show();
             modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'receber.php';
+                window.location.href = 'receber.php?pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>';
             });
         });
     <?php } else if(!isset($target) || $target == 'cadastro') {?>
@@ -1567,7 +1567,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var Modal = new bootstrap.Modal(modalEl);
             Modal.show();
             modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'receber.php';
+                window.location.href = 'receber.php?pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>';
             });
         });
     <?php } else if($target == 'quitar') { ?>
@@ -1577,7 +1577,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var Modal = new bootstrap.Modal(modalEl);
             Modal.show();
             modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'receber.php';
+                window.location.href = 'receber.php?pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>';
             });
         });
     <?php } else if (isset($target) && $target != 'cadastro' && $target != 'quitar'){ ?>
@@ -1586,7 +1586,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var Modal = new bootstrap.Modal(modalEl);
             Modal.show();
             modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'receber.php';
+                window.location.href = 'receber.php?pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>';
             });
         });
 <?php }}?>
@@ -1597,7 +1597,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var Modal = new bootstrap.Modal(modalEl);
             Modal.show();
             modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'receber.php';
+                window.location.href = 'receber.php?pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>';
             });
         });
 <?php } ?>
