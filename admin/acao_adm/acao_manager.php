@@ -33,10 +33,6 @@ else if($target == 'bancario') {
         data_inicial: $filtro_data_inicial ?? null,
         data_final: $filtro_data_final ?? null
     );
-    if(empty($ban02_lista) || empty($ban02_imp_lista)) {
-        header('Location: bancario.php?erro=1');
-        exit;
-    }
     
     foreach($ban02_lista as $ban02) {
         Ban02::delete($ban02->id);

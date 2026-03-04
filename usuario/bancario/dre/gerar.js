@@ -43,7 +43,7 @@ function _formatTimeToHHMM(input) {
 function _convertIsoToDDMMYYYY(text) {
     if (!text || typeof text !== 'string') return text;
     return text.replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g, function(_, y, m, d) {
-        return d + '-' + m + '-' + y;
+        return d + '/' + m + '/' + y;
     });
 }
 
@@ -129,7 +129,8 @@ async function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=nu
 
     // Header
     pdf.setFontSize(14);
-    const formattedDate = _formatDateToDDMMYYYY(data);
+    const formattedDate = _convertIsoToDDMMYYYY(data);
+    console.log(data + ' - ' +formattedDate);
     const headerTitle = nomeEmpresa ? nomeEmpresa.substr(0, 60) : '';
     const headerLines = pdf.splitTextToSize(headerTitle + (formattedDate ? ' — ' + formattedDate : ''), usableWidth);
     let cursorY = margin;
@@ -201,27 +202,45 @@ async function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=nu
         }
     }
 
+    function escreverLinhaTotal(label, valor) {
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const rightMargin = 130;
+
+    pdf.text(label, margin, cursorY);
+
+    pdf.text(valor, pageWidth - rightMargin, cursorY, {
+        align: 'right'
+    });
+
+    cursorY += 6;
+}
+
     // Totals
     const totalReceitasDiv = document.querySelector('#total-receitas');
+    
     const totalDespesasDiv = document.querySelector('#total-despesas');
     const totalDreDiv = document.querySelector('#total-dre');
-
+    totalReceitasDiv.style.whiteSpace = 'nowrap';
+    totalDespesasDiv.style.whiteSpace = 'nowrap';
+    totalDreDiv.style.whiteSpace = 'nowrap';
     pdf.setFontSize(11);
-    if (totalReceitasDiv && totalReceitasDiv.textContent.trim()) {
-        if (cursorY > pdf.internal.pageSize.getHeight() - margin) pdf.addPage(), cursorY = margin;
-        pdf.text(_convertIsoToDDMMYYYY(totalReceitasDiv.textContent.trim()), margin, cursorY);
-        cursorY += 6;
-    }
-    if (totalDespesasDiv && totalDespesasDiv.textContent.trim()) {
-        if (cursorY > pdf.internal.pageSize.getHeight() - margin) pdf.addPage(), cursorY = margin;
-        pdf.text(_convertIsoToDDMMYYYY(totalDespesasDiv.textContent.trim()), margin, cursorY);
-        cursorY += 6;
-    }
-    if (totalDreDiv && totalDreDiv.textContent.trim()) {
-        if (cursorY > pdf.internal.pageSize.getHeight() - margin) pdf.addPage(), cursorY = margin;
-        pdf.text(_convertIsoToDDMMYYYY(totalDreDiv.textContent.trim()), margin, cursorY);
-        cursorY += 6;
-    }
+    if (totalReceitasDiv) {
+    const texto = totalReceitasDiv.textContent.trim();
+    const partes = texto.split('R$');
+    escreverLinhaTotal(partes[0] + 'R$', partes[1]?.trim() || '');
+}
+
+if (totalDespesasDiv) {
+    const texto = totalDespesasDiv.textContent.trim();
+    const partes = texto.split('R$');
+    escreverLinhaTotal(partes[0] + 'R$', partes[1]?.trim() || '');
+}
+
+if (totalDreDiv) {
+    const texto = totalDreDiv.textContent.trim();
+    const partes = texto.split('R$');
+    escreverLinhaTotal(partes[0] + 'R$', partes[1]?.trim() || '');
+}
 
     try {
         pdf.save('dre-' + nome + '.pdf');
