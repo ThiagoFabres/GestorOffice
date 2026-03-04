@@ -15,6 +15,10 @@
                         <form action="financeiro_manager.php" method="post">
                     <input type="hidden" name="acao" value="adicionar"></input>
                     <input type="hidden" name="tipo" value="<?=$_SESSION['excel_transactions']['tipo_lancamento']?>"></input>
+                    <input type="hidden" name="cadastro" value="<?=$_SESSION['excel_transactions']['cadastro']?>"></input>
+                    <input type="hidden" name="custos" value="<?=$_SESSION['excel_transactions']['custos']?>"></input>
+                    <input type="hidden" name="titulo" value="<?=$_SESSION['excel_transactions']['titulo']?>"></input>
+                    <input type="hidden" name="subtitulo" value="<?=$_SESSION['excel_transactions']['subtitulo']?>"></input>
 
                     <div class="mb-3 mt-3" style="max-height:30rem; overflow: auto;">
                         <h6>Pré-visualização do arquivo Excel:</h6>
