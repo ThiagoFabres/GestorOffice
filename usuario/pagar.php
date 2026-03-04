@@ -654,7 +654,7 @@ if ($filtros != []) {
                                         </td>
                                         <td class="td-acoes">
                                             <button class="btn btn-primary" <?php if (in_array($pag02->id_pag01, $recebimentos_pagos) ) { ?> disabled <?php } ?>
-                                                onclick="window.location.href='pagar.php?id=<?= $pag01->id ?>&acao=editar'"><i
+                                                onclick="window.location.href='pagar.php?id=<?= $pag01->id ?>&acao=editar&pagina=<?= $numero_pagina ?>&numero_exibido=<?= $numero_exibir ?>'"><i
                                                     class="bi bi-pen-fill"></i></button>
                                         </td>
                                         <?php } ?>
@@ -1552,7 +1552,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var Modal = new bootstrap.Modal(modalEl);
             Modal.show();
             modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'pagar.php';
+                window.location.href = 'pagar.php?pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>';
             });
         });
     
@@ -1562,7 +1562,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var Modal = new bootstrap.Modal(modalEl);
             Modal.show();
             modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'pagar.php';
+                window.location.href = 'pagar.php?pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>';
             });
         });
     <?php } else if($target == 'quitar') { ?>
@@ -1572,7 +1572,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var Modal = new bootstrap.Modal(modalEl);
             Modal.show();
             modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'pagar.php';
+                window.location.href = 'pagar.php?pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>';
             });
         });
     <?php } else if (isset($target) && $target != 'cadastro' && $target != 'quitar'){ ?>
@@ -1581,7 +1581,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var Modal = new bootstrap.Modal(modalEl);
             Modal.show();
             modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'pagar.php';
+                window.location.href = 'pagar.php?pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>';
             });
         });
 <?php }}?>
@@ -1592,7 +1592,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var Modal = new bootstrap.Modal(modalEl);
             Modal.show();
             modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'pagar.php';
+                window.location.href = 'pagar.php?pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>';
             });
         });
 <?php } ?>
