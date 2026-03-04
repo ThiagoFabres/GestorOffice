@@ -71,6 +71,7 @@ class Ban02 {
         $filtro_subtitulo = null,
         $filtro_conta = null,
         $filtro_tipo = null,
+        $filtro_descricao = null,
         $id_original = null,
         $read_desmembramento = null,
         $dre_read = null,
@@ -110,6 +111,9 @@ class Ban02 {
             $conditions[] = ' id_con01 IS NULL';
             $conditions[] = ' id_con02 IS NULL';
             $conditions[] = ' descricao LIKE :palavra';
+        }
+        if($filtro_descricao != null) {
+            $conditions[] = ' descricao LIKE :filtro_descricao';
         }
         if($filtro_data_inicial != null) {
             $conditions[] = ' data >= :filtro_data_inicial';
@@ -248,6 +252,9 @@ class Ban02 {
         }
         if ($id_original !== null) {
             $stmt->bindValue(':id_original', $id_original);
+        }
+        if ($filtro_descricao !== null) {
+            $stmt->bindValue(':filtro_descricao', '%' . $filtro_descricao . '%');
         }
 
 

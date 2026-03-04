@@ -44,6 +44,9 @@ if($get_filtro_conta == '') $get_filtro_conta = null;
 
 $get_filtro_conciliado = filter_input(INPUT_GET, 'filtro_conciliado') == 'on' ? true : false;
 $get_filtro_descricao = filter_input(INPUT_GET, 'descricao');
+if($get_filtro_descricao === '') {
+    $get_filtro_descricao = null;
+}
 $erro = filter_input(INPUT_GET, 'erro');
 
 
@@ -61,7 +64,7 @@ $bancario_paginas = Ban02::read(
     filtro_subtitulo: $get_filtro_subtitulo ?? null,
     filtro_conta: $get_filtro_conta ?? null,
     filtro_tipo: $get_filtro_tipo,
-    palavra: $get_filtro_descricao
+    filtro_descricao: $get_filtro_descricao,
 ); 
 
 $total_paginas = ceil($bancario_paginas / $numero_exibir);
@@ -130,7 +133,7 @@ $movimentacoes_pdf = Ban02::read(
                             filtro_conta: $get_filtro_conta ?? null,
                             filtro_tipo: $get_filtro_tipo ?? null,
                             ordenar_por: 'data',
-                            palavra: $get_filtro_descricao,
+                            filtro_descricao: $get_filtro_descricao,
                             numero_exibir: 500
                         );
 $movimentacoes_totais = $movimentacoes_pdf;
@@ -160,7 +163,7 @@ if($get_filtro_data_inicial != null) {
                             filtro_subtitulo: $get_filtro_subtitulo ?? null,
                             filtro_conta: $get_filtro_conta ?? null,
                             filtro_tipo: $get_filtro_tipo ?? null,
-                            palavra: $get_filtro_descricao,
+                            filtro_descricao: $get_filtro_descricao,
     );
     foreach($movimentacoes_iniciais as $mov) {
         $saldo_inicial += $mov->valor;
@@ -396,7 +399,7 @@ foreach($movimentacoes_totais as $mov) {
                             filtro_subtitulo: $get_filtro_subtitulo ?? null,
                             filtro_conta: $get_filtro_conta ?? null,
                             filtro_tipo: $get_filtro_tipo,
-                            palavra: $get_filtro_descricao,
+                            filtro_descricao: $get_filtro_descricao,
                         );
 
                          if(!empty($movimentacoes)) {
