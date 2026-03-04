@@ -372,6 +372,9 @@ subtituloFiltroChoice.clearStore();
 <?php if($erro == 'selecao') {?>
     alert('Selecione Todos os campos')
     window.location.href='importar.php'
+<?php } if($erro == 'cadastrado') { ?>
+    alert('Arquivo vazio ou já cadastrado')
+    window.location.href='importar.php'
 <?php } ?>
 </script>
 
