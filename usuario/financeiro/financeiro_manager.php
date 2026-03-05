@@ -56,10 +56,11 @@ if($acao == 'processar') {
             $rec02_lista = Rec02::read(null, $_SESSION['usuario']->id_empresa);
             $current_cadastado = [];
             foreach($rec02_lista as $rec02) {
+                $rec01 = Rec01::read($rec02->id_rec01, $_SESSION['usuario']->id_empresa )[0];
                 $current_cadastado[] = [
                     'data' => $rec02->vencimento,
                     'valor' => $rec02->valor_par,
-                    'descricao' => $rec02->descricao
+                    'descricao' => $rec01->descricao
                 ];
             }
         } else if($tipo_lancamento == 'pagar') {
@@ -305,7 +306,7 @@ if($acao == 'adicionar') {
                     $valor,
                     1,
                     $vencimentos[$i],
-                    null,
+                    0,
                     null,
                     null,
                     null,
@@ -348,7 +349,7 @@ if($acao == 'adicionar') {
                     $valor,
                     1,
                     $vencimentos[$i],
-                    null,
+                    0,
                     null,
                     null,
                     null,
