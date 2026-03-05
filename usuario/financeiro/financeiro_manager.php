@@ -321,6 +321,9 @@ if($acao == 'adicionar') {
         require_once '../../db/buscar_documento_rec.php';
         $documento = buscarDocumentoRec();
         for($i = 0; $i < $total_linhas; $i++) {
+            if($importar[$i] !== 'on' || !isset($importar[$i]) || $importar[$i] === null) {
+                continue;
+            }
             $valor = str_replace('.', '', $valores[$i]);
             $valor = str_replace(',', '.', $valor);
             if(is_numeric($valor)) {
