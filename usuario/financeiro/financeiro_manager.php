@@ -56,7 +56,7 @@ if($acao == 'processar') {
             $rec02_lista = Rec02::read(null, $_SESSION['usuario']->id_empresa);
             $current_cadastado = [];
             foreach($rec02_lista as $rec02) {
-                $rec01 = Pag01::read($rec02->id_rec01, $_SESSION['usuario']->id_empresa )[0];
+                $rec01 = Rec01::read($rec02->id_rec01, $_SESSION['usuario']->id_empresa )[0];
                 $current_cadastado[] = [
                     'data' => $rec02->vencimento,
                     'valor' => $rec02->valor_par,
