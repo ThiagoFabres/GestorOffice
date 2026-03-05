@@ -27,6 +27,7 @@
                             <table class="table">
                                 <thead style="position:sticky;">
                                     <tr style="position:sticky;">
+                                        <th>Importar</th>
                                         <th>Data</th>
                                         <th>Valor</th>
                                         <th>Vencimento</th>
@@ -41,6 +42,7 @@
                                         $valor = str_replace(',', '.', $valor);
                                         ?>
                                         <tr>
+                                            <td><input type="checkbox" name="importar[<?=$id_linha?>]" checked></td>
                                             <td><input class="form-control" onkeypress="return false;" name="data[<?=$id_linha?>]" value="<?= htmlspecialchars($linha['data'] ?? '') ?>"></input></td>
                                             <td><input class="form-control" onkeypress="return false;" name="valor[<?=$id_linha?>]" value="<?= htmlspecialchars($linha['valor'] ?? '') ?>"></input></td>
                                             <td><input class="form-control" onkeypress="return false;" name="vencimento[<?=$id_linha?>]" value="<?= htmlspecialchars($linha['vencimento'] ?? '')?>"></input></td>
