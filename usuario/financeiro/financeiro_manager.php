@@ -176,9 +176,9 @@ if($acao == 'processar') {
                     'valor' => number_format($valor, 2, '.', ''),
                     'descricao' => $documento_descricao,
                 ];
-                // if(in_array($current_analizado, $current_cadastado)) {
-                //     continue;
-                // }
+                if(in_array($current_analizado, $current_cadastado)) {
+                    continue;
+                }
                 
 
                 $current = [
