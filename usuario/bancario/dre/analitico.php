@@ -405,9 +405,7 @@ if($todas_empresas) {
 
                             }
                             echo '</div>';
-                        }
-                        // ...existing code...
-                    
+                        }                    
                         ?>
                                             <?php if (empty($titulos)) { ?>
                                                 <div id="div-registro-vazio-dre">

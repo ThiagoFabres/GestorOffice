@@ -33,8 +33,10 @@ $titulos = [
     'Controle Bancário',
     'Controle de Cartão',
     'Recorrentes',
+    'Importar',
     'DRE',
-    'Importação de arquivo OFX'
+    'Importação de arquivo OFX',
+    
     
 ];
 $videos = [
@@ -44,6 +46,7 @@ $videos = [
     'Controle Bancário' => '<iframe width="100%" height="700px" src="https://www.youtube.com/embed/zVdaOzBbs-Q" title="CONTROLE BANCÁRIO" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>',
     'Controle de Cartão' => '<iframe width="100%" height="700px" src="https://www.youtube.com/embed/jnVvwGpgxPw" title="Controle de Cartão - GestorOffice Control" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>',
     'Recorrentes' => '<iframe width="100%" height="700px" src="https://www.youtube.com/embed/nyoZ798Q-Tw?feature=youtu.be&start=245&end=325&autoplay=1&mute=1&controls=1&loop=1&playlist=nyoZ798Q-Tw&modestbranding=1&rel=0&iv_load_policy=3&showinfo=1&disablekb=1&wmode=transparent&vq=default&theme=default&t=245s#t=245s " title="" frameborder="" allow="" referrerpolicy="" allowfullscreen=""></iframe>',
+    'Importar' => '<iframe width="1397" height="787" src="https://www.youtube.com/embed/x6rmNmigUEc" title="Módulo de Importação - Sistema GestorOffice Control" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>',
     'DRE' => '<iframe width="100%" height="700px" src="https://www.youtube.com/embed/ek9I0S5aW5I?feature=youtu.be&amp;t=245&amp;suggested=true&amp;" title="" frameborder="" allow="" referrerpolicy="" allowfullscreen=""></iframe>',
         ];
  
