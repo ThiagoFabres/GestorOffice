@@ -166,6 +166,32 @@ async function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=nu
         const tables = Array.from(body.querySelectorAll('table'));
         for (let t = 0; t < tables.length; t++) {
             const table = tables[t];
+
+        // procurar subtitulo (h5) anterior à tabela
+        let subtitle = '';
+        let prev = table.previousElementSibling;
+
+        while (prev) {
+            if (prev.tagName === 'H5') {
+                subtitle = prev.textContent.trim();
+                break;
+            }
+            prev = prev.previousElementSibling;
+        }
+
+        // escrever subtitulo no PDF
+        if (subtitle) {
+            pdf.setFontSize(10);
+            const subtitleLines = pdf.splitTextToSize(subtitle, usableWidth);
+
+            if (cursorY + subtitleLines.length * 6 > pdf.internal.pageSize.getHeight() - margin) {
+                pdf.addPage();
+                cursorY = margin;
+            }
+
+            pdf.text(subtitleLines, margin, cursorY);
+            cursorY += subtitleLines.length * 6 + 2;
+        }
             let headers = Array.from(table.querySelectorAll('thead th')).map(th => _convertIsoToDDMMYYYY(th.textContent.trim()));
             if (!headers || headers.length === 0) {
                 const firstRow = table.querySelector('tbody tr');
@@ -243,6 +269,21 @@ if (totalDreDiv) {
 }
 
     try {
+        const pageCount = pdf.getNumberOfPages();
+
+for (let i = 1; i <= pageCount; i++) {
+    pdf.setPage(i);
+
+    pdf.setFontSize(9);
+
+    pdf.text(
+        `Página ${i} de ${pageCount}`,
+        pdf.internal.pageSize.getWidth() / 1.1 ,
+        10,
+        { align: 'center' }
+    );
+}
+
         pdf.save('dre-' + nome + '.pdf');
     } catch (e) {
         console.error('Erro ao salvar PDF gerado por jsPDF:', e);
@@ -267,6 +308,7 @@ function gerarexcel(nome, data=null, hora=null, nomeEmpresa='') {
     const headerTitle = nomeEmpresa + '  -  ' + 'Relatório demonstrativo de resultado - ' + String(nome).toUpperCase();
     const formattedDate = _formatDateToDDMMYYYY(data);
     const titulo = _formatTimeToHHMM(hora);
+    
     const headerDateTime = (formattedDate ? 'Data: ' + formattedDate : '') + (titulo ? (formattedDate ? '<br>' : '') + 'Titulo: ' + titulo : '');
     allData.push([headerTitle]);
     if (headerDateTime.trim()) allData.push([headerDateTime]);
@@ -274,9 +316,9 @@ function gerarexcel(nome, data=null, hora=null, nomeEmpresa='') {
 
     accordionItems.forEach((item) => {
         let title = '';
+        const subtitulo = ''
         const header = item.querySelector('.accordion-header .accordion-button span');
         if (header) title = header.textContent.trim();
-
         const body = item.querySelector('.accordion-body');
         if (!body) return;
 
@@ -303,6 +345,7 @@ function gerarexcel(nome, data=null, hora=null, nomeEmpresa='') {
             while (next) {
                 if (next.tagName === 'DIV' && next.textContent.includes('Saldo do subtitulo')) {
                     saldoSubtitulo = next.textContent.trim();
+                    
                     break;
                 }
                 next = next.nextElementSibling;
