@@ -32,6 +32,8 @@
                                         <th>Valor</th>
                                         <th>Vencimento</th>
                                         <th>Descricao</th>
+                                        <th>Data De pagamento</th>
+                                        <th>Valor Pago</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -47,6 +49,9 @@
                                             <td><input class="form-control" onkeypress="return false;" name="valor[<?=$id_linha?>]" value="<?= htmlspecialchars($linha['valor'] ?? '') ?>"></input></td>
                                             <td><input class="form-control" onkeypress="return false;" name="vencimento[<?=$id_linha?>]" value="<?= htmlspecialchars($linha['vencimento'] ?? '')?>"></input></td>
                                             <td><input class="form-control" onkeypress="return false;" name="descricao[<?=$id_linha?>]" value="<?= htmlspecialchars($linha['documento'] . ' - ' . $linha['descricao'] ?? '') ?>"></input></td>
+                                            <td><input class="form-control" onkeypress="return false;" name="data_pag[<?=$id_linha?>]" value="<?= htmlspecialchars($linha['data_pag'] ?? '')?>"></input></td>
+                                            <td><input class="form-control" onkeypress="return false;" name="valor_pag[<?=$id_linha?>]" value="<?= htmlspecialchars($linha['valor_pag'] == 0 ? '' : number_format($linha['valor_pag'], 2, ',', '.'))?>"></input></td>
+                                        
                                         </tr>
                                     
                                     <?php

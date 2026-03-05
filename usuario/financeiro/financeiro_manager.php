@@ -81,6 +81,7 @@ if($acao == 'processar') {
         $transactions['debug'] = [];
         
         try {
+            echo '<pre>';
             // Usar PhpSpreadsheet para ler XLSX
             $spreadsheet = IOFactory::load($filePath);
             $worksheet = $spreadsheet->getActiveSheet();
@@ -89,12 +90,15 @@ if($acao == 'processar') {
 
             // Começa a ler a partir da linha 2 (linha 1 é cabeçalho)
             for ($row = 2; $row <= $highestRow; $row++) {
+            
                 // Colunas esperadas: A=DATA, B=DOCUMENTO, C=DESCRICAO, D=VALOR, E=VENCIMENTO
                 $data_raw = $worksheet->getCell('A' . $row)->getValue();
                 $documento_raw = $worksheet->getCell('B' . $row)->getValue();
                 $descricao_raw = $worksheet->getCell('C' . $row)->getValue();
                 $valor_raw = $worksheet->getCell('D' . $row)->getValue();
                 $vencimento_raw = $worksheet->getCell('E' . $row)->getValue();
+                $valor_pag_raw = $worksheet->getCell('F' . $row)->getValue() ?? null;
+                $data_pag_raw = $worksheet->getCell('G' . $row)->getValue() ?? null;
 
                 // Se linha vazia (todas as principais colunas vazias), pular
                 if (empty($data_raw) && empty($documento_raw) && empty($descricao_raw) && empty($valor_raw) && empty($vencimento_raw)) {
@@ -105,8 +109,15 @@ if($acao == 'processar') {
                 try {
                     if (is_numeric($data_raw)) {
                         $dateTime = ExcelDate::excelToDateTimeObject($data_raw);
+                        if($data_pag_raw != null){
+                            $dateTimePag = ExcelDate::excelToDateTimeObject($data_pag_raw);
+                            $data_pag_formatada = $dateTimePag->format('d/m/Y');
+                            $data_pag_analizada = $dateTimePag->format('Y-m-d');
+                        }
                         $data_analizada = $dateTime->format('Y-m-d');
                         $data_formatada = $dateTime->format('d/m/Y');
+                       
+                        
                     } else {
                         $data_str = trim((string)$data_raw);
                         $data_str = str_replace('-', '/', $data_str);
@@ -165,7 +176,18 @@ if($acao == 'processar') {
                         if (is_numeric($v)) $valor = (float)$v;
                     }
                 }
-
+                $valor_pag = null;
+                if ($valor_pag_raw !== null && $valor_pag_raw !== '') {
+                    // Se for numérico direto (planilha), converte
+                    if (is_numeric($valor_pag_raw)) {
+                        $valor_pag = (float)$valor_pag_raw;
+                    } else {
+                        $v = trim((string)$valor_pag_raw);
+                        $v = str_replace('.', '', $v);
+                        $v = str_replace(',', '.', $v);
+                        if (is_numeric($v)) $valor_pag = (float)$v;
+                    }
+                }
                 if ($valor === null || $valor == 0) {
                     continue;
                 }
@@ -188,7 +210,9 @@ if($acao == 'processar') {
                     'documento' => $documento,
                     'descricao' => $descricao,
                     'valor' => number_format($valor, 2, ',', '.'),
-                    'vencimento' => $vencimento_formatado
+                    'vencimento' => $vencimento_formatado,
+                    'valor_pag' => $valor_pag ?? 0,
+                    'data_pag' => $data_pag_formatada ?? null,
                 ];
                 
 
@@ -262,13 +286,25 @@ if($acao == 'adicionar') {
     $valores = $_POST['valor'];
     $vencimentos = $_POST['vencimento'];
     $descricoes = $_POST['descricao'];
+    $data_pag = $_POST['data_pag'];
+    $data_lanc = $_POST['data'];
+    $valor_pag = $_POST['valor_pag'];
     $cadastro = filter_input(INPUT_POST, 'cadastro');
     $custos = filter_input(INPUT_POST, 'custos');
     $titulo = filter_input(INPUT_POST, 'titulo');
     $subtitulo = filter_input(INPUT_POST, 'subtitulo');
     $vencimentos_formatados = [];
+    foreach($data_lanc as $i => $data) {
+        $datas_formatadas[$i] = DateTime::createFromFormat('d/m/Y', $data)->format('Y-m-d');
+    }
     foreach($vencimentos as $i => $data) {
         $vencimentos_formatados[$i] = DateTime::createFromFormat('d/m/Y', $data)->format('Y-m-d');
+    }
+    foreach($data_pag as $i => $data) {
+        if($data == '') {
+            continue;
+        }
+        $data_pag_formatadas[$i] = DateTime::createFromFormat('d/m/Y', $data)->format('Y-m-d');
     }
     $vencimentos = $vencimentos_formatados;
     if($tipo == 'pagar') {
@@ -291,7 +327,7 @@ if($acao == 'adicionar') {
                     $descricoes[$i],
                     $valor,
                     1,
-                    $vencimentos[$i],
+                    $datas_formatadas[$i],
                     $_SESSION['usuario']->id,
                     $custos,
                 );
@@ -306,8 +342,8 @@ if($acao == 'adicionar') {
                     $valor,
                     1,
                     $vencimentos[$i],
-                    0,
-                    null,
+                    $valor_pag[$i] == '' ? 0 : $valor_pag[$i] ?? 0,
+                    $data_pag_formatadas[$i] == '' ? null : $data_pag_formatadas[$i] ?? null,
                     null,
                     null,
                 );
@@ -352,8 +388,8 @@ if($acao == 'adicionar') {
                     $valor,
                     1,
                     $vencimentos[$i],
-                    0,
-                    null,
+                    $valor_pag[$i] == '' ? 0 : $valor_pag[$i] ?? 0,
+                    $data_pag_formatadas[$i] == '' ? null : $data_pag_formatadas[$i] ?? null,
                     null,
                     null,
                 );
