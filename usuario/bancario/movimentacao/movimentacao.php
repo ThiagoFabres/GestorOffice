@@ -312,7 +312,7 @@ foreach($movimentacoes_totais as $mov) {
                                     <div class="d-flex flex-column w-25">
                                         <label for="filtro_documento">Descrição:</label>
                                         <div class="h-100" style="top:1em; position: block;">
-                                        <input name="descricao" class="form-control" value="<?=$get_filtro_descricao?>" style="height:100%; top:1em; margin:0; padding:0;">
+                                        <input name="descricao" class="form-control" value="<?=$get_filtro_descricao?>" style="height:100%; top:1em; margin:0; padding:0;" placeholder="Descrição">
                                         </div>
                                     </div>
 

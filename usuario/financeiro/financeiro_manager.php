@@ -176,9 +176,9 @@ if($acao == 'processar') {
                     'valor' => number_format($valor, 2, '.', ''),
                     'descricao' => $documento_descricao,
                 ];
-                if(in_array($current_analizado, $current_cadastado)) {
-                    continue;
-                }
+                // if(in_array($current_analizado, $current_cadastado)) {
+                //     continue;
+                // }
                 
 
                 $current = [
@@ -257,6 +257,7 @@ if($acao == 'processar') {
 if($acao == 'adicionar') {
     $total_linhas = filter_input(INPUT_POST, 'total_linhas');
     $tipo = filter_input(INPUT_POST, 'tipo');
+    $importar = $_POST['importar'];
     $valores = $_POST['valor'];
     $vencimentos = $_POST['vencimento'];
     $descricoes = $_POST['descricao'];
@@ -273,6 +274,9 @@ if($acao == 'adicionar') {
         require_once '../../db/buscar_documento_pag.php';
         $documento = buscarDocumentoPag();
        for($i = 0; $i < $total_linhas; $i++) {
+        if($importar[$i] !== 'on' || !isset($importar[$i]) || $importar[$i] === null) {
+            continue;
+        }
             $valor = str_replace('.', '', $valores[$i]);
             $valor = str_replace(',', '.', $valor);
             if(is_numeric($valor)) {
@@ -301,8 +305,8 @@ if($acao == 'adicionar') {
                     $valor,
                     1,
                     $vencimentos[$i],
-                    $valor,
-                    $vencimentos[$i],
+                    null,
+                    null,
                     null,
                     null,
                 );
@@ -344,8 +348,8 @@ if($acao == 'adicionar') {
                     $valor,
                     1,
                     $vencimentos[$i],
-                    $valor,
-                    $vencimentos[$i],
+                    null,
+                    null,
                     null,
                     null,
                 );
