@@ -81,7 +81,6 @@ if($acao == 'processar') {
         $transactions['debug'] = [];
         
         try {
-            echo '<pre>';
             // Usar PhpSpreadsheet para ler XLSX
             $spreadsheet = IOFactory::load($filePath);
             $worksheet = $spreadsheet->getActiveSheet();
@@ -109,11 +108,6 @@ if($acao == 'processar') {
                 try {
                     if (is_numeric($data_raw)) {
                         $dateTime = ExcelDate::excelToDateTimeObject($data_raw);
-                        if($data_pag_raw != null){
-                            $dateTimePag = ExcelDate::excelToDateTimeObject($data_pag_raw);
-                            $data_pag_formatada = $dateTimePag->format('d/m/Y');
-                            $data_pag_analizada = $dateTimePag->format('Y-m-d');
-                        }
                         $data_analizada = $dateTime->format('Y-m-d');
                         $data_formatada = $dateTime->format('d/m/Y');
                        
@@ -135,7 +129,39 @@ if($acao == 'processar') {
                         $data_formatada = $data_obj->format('d/m/Y');
                     }
                 } catch (Exception $e) {
-                    continue;
+                    // continue;
+                }
+                $data_pag_formatada = null;
+                if($data_pag_raw != null){
+                
+                try {
+                    
+                    if (is_numeric($data_pag_raw)) {
+                        $dateTimePag = ExcelDate::excelToDateTimeObject($data_pag_raw);
+                        $data_pag_formatada = $dateTimePag->format('d/m/Y');
+                       
+                        
+                    } else {
+                        $data_pag_str = trim((string)$data_pag_raw);
+                        $data_pag_str = str_replace('-', '/', $data_pag_str);
+                        $data_pag_obj = DateTime::createFromFormat('d/m/Y', $data_pag_str);
+                        if (!$data_pag_obj) {
+                            $data_pag_obj = DateTime::createFromFormat('Y-m-d', $data_pag_str);
+                        }
+                        if (!$data_pag_obj) {
+                            // tenta outras formatacoes comuns
+                            $timestamp = strtotime($data_str);
+                            if ($timestamp === false)
+                                 continue;
+                            $data_pag_obj = (new DateTime())->setTimestamp($timestamp);
+                        }
+                        $data_pag_formatada = $data_pag_obj->format('d/m/Y');
+                    }
+                } catch (Exception $e) {
+                    if($data_pag_raw !== null) {
+                        continue;
+                    }
+                }
                 }
 
                 // Vencimento (opcional) - pode ser serial do Excel ou string
@@ -151,7 +177,7 @@ if($acao == 'processar') {
                             $vstr = str_replace('-', '/', $vstr);
                             $vobj = DateTime::createFromFormat('d/m/Y', $vstr);
                             if (!$vobj) $vobj = DateTime::createFromFormat('Y-m-d', $vstr);
-                            if ($vobj) $vencimento_formatado = $vobj->format('d/m/Y');
+                            if ($vobj) $vencimento_formatado = $vobj->format('d/m/Y'); $data_excel_analizada = $vobj->format('Y-m-d');
                         }
                     } catch (Exception $e) {
                         $vencimento_formatado = '';
@@ -343,7 +369,7 @@ if($acao == 'adicionar') {
                     1,
                     $vencimentos[$i],
                     $valor_pag[$i] == '' ? 0 : $valor_pag[$i] ?? 0,
-                    $data_pag_formatadas[$i] == '' ? null : $data_pag_formatadas[$i] ?? null,
+                    !isset($data_pag_formatadas[$i]) ? null : $data_pag_formatadas[$i] ?? null,
                     null,
                     null,
                 );
@@ -389,7 +415,7 @@ if($acao == 'adicionar') {
                     1,
                     $vencimentos[$i],
                     $valor_pag[$i] == '' ? 0 : $valor_pag[$i] ?? 0,
-                    $data_pag_formatadas[$i] == '' ? null : $data_pag_formatadas[$i] ?? null,
+                    !isset($data_pag_formatadas[$i]) ? null : $data_pag_formatadas[$i] ?? null,
                     null,
                     null,
                 );
