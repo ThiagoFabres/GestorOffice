@@ -151,6 +151,8 @@ if ($filtros != []) {
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 
 <script src=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js "></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 <link href=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css " rel="stylesheet">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -948,41 +950,41 @@ if ($filtros != []) {
                                     ?>
                                     <!-- style="<?php if ($ultima_parcela) { ?>border-bottom: 3px solid #5856d6;<?php } ?> border-inline: 1px solid #5856d6;" -->
                                     <!-- style="<?php if ($ultima_parcela) { ?>border-bottom: 2px solid #5856d6;<?php } else if ($rec02->parcela == 1) { ?> border-top: 3px solid #5856d6; <?php } ?> border-inline: 2px solid #5856d6;" -->
-                                <div class="avoid-page-break">
-                                    <tr class="avoid-page-break">
-                                        
+                                    <div class="avoid-page-break">
+                                        <tr class="avoid-page-break">
+                                            
 
-                                        <td><?php echo substr($centro_custos, 0, 9)?></td>
-                                        <td><?= $rec01->documento; ?> </td>
-                                        <td><?= $data_lanc; ?> </td>
-                                        <td colspan="9" class="descricao-full" style="text-align:start;" id="td-descricao"><?= nl2br(htmlspecialchars($cadastro->razao_soc . ' - ' . $rec01->descricao, ENT_QUOTES, 'UTF-8')) ?></td>
-                                        
-                                    </tr>
-                                    <tr class="avoid-page-break">
-                                        
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td></td>
-                                        <td>R$ <?= $valor_total ?></td>
-                                        <td><?= $rec01->parcelas ?></td>
-                                        <td><?= $rec02->parcela ?></td>
-                                        <td>R$ <?= $valor_parcela ?></td>
-                                        <td><?= $data_venc ?></td>
-                                        <td><?php if ($rec02->valor_pag == 0) {
-                                            echo 'Não foi pago';
-                                        } else {
-                                            echo $data_pag ?? 'Não foi pago';
-                                        } ?>
-                                        </td>
-                                        <td><?php if ($rec02->valor_pag == 0) {
-                                            echo '';
-                                        } else {
-                                            echo 'R$ ' . $valor_pago;
-                                        } ?></td>
-                                        <td><?php echo substr($pagamento->nome ?? '', 0, 9) ?></td>
-                                    </tr>
-                                </div> 
+                                            <td><?php echo substr($centro_custos, 0, 9)?></td>
+                                            <td><?= $rec01->documento; ?> </td>
+                                            <td><?= $data_lanc; ?> </td>
+                                            <td colspan="9" class="descricao-full" style="text-align:start;" id="td-descricao"><?= nl2br(htmlspecialchars($cadastro->razao_soc . ' - ' . $rec01->descricao, ENT_QUOTES, 'UTF-8')) ?></td>
+                                            
+                                        </tr>
+                                        <tr class="avoid-page-break">
+                                            
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td>R$ <?= $valor_total ?></td>
+                                            <td><?= $rec01->parcelas ?></td>
+                                            <td><?= $rec02->parcela ?></td>
+                                            <td>R$ <?= $valor_parcela ?></td>
+                                            <td><?= $data_venc ?></td>
+                                            <td><?php if ($rec02->valor_pag == 0) {
+                                                echo 'Não foi pago';
+                                            } else {
+                                                echo $data_pag ?? 'Não foi pago';
+                                            } ?>
+                                            </td>
+                                            <td><?php if ($rec02->valor_pag == 0) {
+                                                echo '';
+                                            } else {
+                                                echo 'R$ ' . $valor_pago;
+                                            } ?></td>
+                                            <td><?php echo substr($pagamento->nome ?? '', 0, 9) ?></td>
+                                        </tr>
+                                    </div>
 
 
                                                     
@@ -1175,8 +1177,7 @@ if ($filtros != []) {
 <script src="/choices/choices.js"></script>
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
 
 <script>
 <?php if(isset($modal_quitar_id)){
