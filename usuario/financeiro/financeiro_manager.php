@@ -373,7 +373,7 @@ if($acao == 'adicionar') {
                     $descricoes[$i],
                     $valor,
                     1,
-                    $vencimentos[$i],
+                    $datas_formatadas[$i],
                     $_SESSION['usuario']->id,
                     $custos,
                 );
