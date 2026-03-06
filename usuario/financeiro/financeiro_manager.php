@@ -342,6 +342,8 @@ if($acao == 'adicionar') {
         }
             $valor = str_replace('.', '', $valores[$i]);
             $valor = str_replace(',', '.', $valor);
+            $valor_pago = str_replace('.', '', $valor_pag[$i]);
+            $valor_pago = str_replace(',', '.', $valor_pago);
             if(is_numeric($valor)) {
                $pag01 = new Pag01(
                     null,
@@ -368,7 +370,7 @@ if($acao == 'adicionar') {
                     $valor,
                     1,
                     $vencimentos[$i],
-                    $valor_pag[$i] == '' ? 0 : $valor_pag[$i] ?? 0,
+                    $valor_pago == '' ? 0 : $valor_pago ?? 0,
                     !isset($data_pag_formatadas[$i]) ? null : $data_pag_formatadas[$i] ?? null,
                     null,
                     null,
@@ -388,6 +390,8 @@ if($acao == 'adicionar') {
             }
             $valor = str_replace('.', '', $valores[$i]);
             $valor = str_replace(',', '.', $valor);
+            $valor_pago = str_replace('.', '', $valor_pag[$i]);
+            $valor_pago = str_replace(',', '.', $valor_pago);
             if(is_numeric($valor)) {
                $rec01 = new Rec01(
                     null,
@@ -414,7 +418,7 @@ if($acao == 'adicionar') {
                     $valor,
                     1,
                     $vencimentos[$i],
-                    $valor_pag[$i] == '' ? 0 : $valor_pag[$i] ?? 0,
+                    $valor_pago == '' ? 0 : $valor_pago ?? 0,
                     !isset($data_pag_formatadas[$i]) ? null : $data_pag_formatadas[$i] ?? null,
                     null,
                     null,
