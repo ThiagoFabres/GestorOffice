@@ -134,7 +134,6 @@ $movimentacoes_pdf = Ban02::read(
                             filtro_tipo: $get_filtro_tipo ?? null,
                             ordenar_por: 'data',
                             filtro_descricao: $get_filtro_descricao,
-                            numero_exibir: 500
                         );
 $movimentacoes_totais = $movimentacoes_pdf;
 
