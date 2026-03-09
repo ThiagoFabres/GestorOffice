@@ -919,10 +919,8 @@ input[name="parcelas"] {
 
 .tabela-lancamento th,
 .tabela-lancamento td {
-    overflow: hidden;
     text-align: center;
     padding: 0.4em 0.2em;
-    text-overflow: ellipsis; 
     min-width: 120px;    
     font-size: 0.9em;
     vertical-align: middle;
