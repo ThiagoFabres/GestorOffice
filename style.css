@@ -912,16 +912,6 @@ input[name="parcelas"] {
     width: auto;
 }
 
-.tabela-lancamento th,
-.tabela-lancamento td {
-    padding: 0.3em;
-    white-space: nowrap;
-    word-wrap: break-word; 
-    overflow-wrap: break-word;
-    text-overflow: clip;
-}
-
-
 .card-body {
     overflow-x: auto;
     max-width: 100%;
