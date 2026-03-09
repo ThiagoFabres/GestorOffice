@@ -610,11 +610,11 @@ if ($filtros != []) {
                                         data-id-pag01-recebido="<?= in_array($pag02->id_pag01, $recebimentos_pagos) ? '1' : '0' ?>"
                                         onclick=""
                                          >
-                                        <td><?=$centro_custos?></td>
-                                        <td><?= $pag01->documento; ?> </td>
+                                        <td><?= substr($centro_custos, 0, 15)?></td>
+                                        <td><?= substr($pag01->documento,0 ,15); ?> </td>
                                         <td><?= $data_lanc; ?> </td>
-                                        <td><?= $cadastro->razao_soc; ?> </td>
-                                        <td><?= $pag01->descricao; ?></td>
+                                        <td><?= substr($cadastro->razao_soc, 0, 15); ?> </td>
+                                        <td><?= substr($pag01->descricao, 0, 100); ?></td>
                                         <td>R$ <?= $valor_total ?></td>
                                         <td><?= $pag01->parcelas ?></td>
                                         <td><?= $pag02->parcela ?></td>
@@ -631,8 +631,8 @@ if ($filtros != []) {
                                         } else {
                                             echo 'R$ ' . $valor_pago;
                                         } ?></td>
-                                        <td><?= $pagamento->nome ?? '' ?></td>
-                                        <td><?= $pag02->obs ?></td>
+                                        <td><?= $pagamento != null ? substr($pagamento->nome, 0, 15) : '' ?></td>
+                                        <td><?= substr($pag02->obs, 0, 50) ?></td>
                                         <?php if($_SESSION['usuario']->processar === 1) {?>
                                         <td class="td-acoes">
                                             <?php $valor_restante = number_format($pag02->valor_par - $pag02->valor_pag, 2, ',', '.') ?>

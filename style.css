@@ -898,10 +898,9 @@ input[name="parcelas"] {
 }
 
 .tabela-lancamento table {
-    width: 100%;
-    table-layout: fixed;
-    border-collapse: collapse;
+    min-width: 100%;
     white-space: nowrap;
+    overflow: auto;
 }
 
 .tabela-lancamento td {
@@ -910,13 +909,13 @@ input[name="parcelas"] {
 
 .tabela-lancamento th {
     font-size: 70%;
+    width: auto;
 }
 
 .tabela-lancamento th,
 .tabela-lancamento td {
     padding: 0.3em;
     white-space: nowrap;
-    white-space: normal; 
     word-wrap: break-word; 
     overflow-wrap: break-word;
     text-overflow: clip;
@@ -928,20 +927,13 @@ input[name="parcelas"] {
     max-width: 100%;
 }
 
-.tabela-lancamento table {
-    overflow: auto;
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: auto;
-}
-
 .tabela-lancamento th,
 .tabela-lancamento td {
     overflow: hidden;
     text-align: center;
-    padding: 0.4em;
+    padding: 0.4em 0.2em;
     text-overflow: ellipsis; 
-    max-width: 120px;    
+    min-width: 120px;    
     font-size: 0.9em;
     vertical-align: middle;
 }
