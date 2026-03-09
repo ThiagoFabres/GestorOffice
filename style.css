@@ -898,7 +898,6 @@ input[name="parcelas"] {
 }
 
 .tabela-lancamento table {
-    background-color: red;
     min-width: 100%;
     white-space: nowrap;
     overflow: auto;
