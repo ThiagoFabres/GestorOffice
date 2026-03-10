@@ -109,177 +109,150 @@ function _rewriteTextNodesInElement(root) {
 }
 
 function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=null) {
-    console.log(titulo);
-    // Select all accordion items (accordion-item class)
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4"
+    });
+
     const accordionItems = document.querySelectorAll('.accordion-item');
     if (accordionItems.length === 0) {
         alert('Nenhum conteúdo para exportar.');
         return;
     }
 
-    // Create a container to clone all accordion contents
-    const pdfContainer = document.createElement('div');
-    pdfContainer.style.padding = '20px';
+    let y = 15;
 
-    // Inject PDF-specific CSS to control page-break behavior.
-    // Keep only small headers/titles together but allow table rows to be split across pages
-    // to avoid large jumps/blank pages when a whole accordion can't fit on one page.
-    const pdfStyle = document.createElement('style');
-    pdfStyle.type = 'text/css';
-    pdfStyle.appendChild(document.createTextNode(`
-        /* Keep headers together with the following content when possible */
-        .avoid-page-break-header { page-break-inside: avoid; break-inside: avoid; -webkit-column-break-inside: avoid; }
-        .avoid-page-break-header { page-break-after: avoid; }
-
-        /* Allow tables to split across pages (so a large table doesn't force a big gap) */
-        table, tbody, thead, tfoot { page-break-inside: auto !important; break-inside: auto !important; }
-
-        /* Prevent individual table rows from being split across pages */
-        tr, td, th { page-break-inside: avoid !important; break-inside: avoid !important; }
-
-
-        /* Small safety: avoid forcing columns or shadows to create gaps inside PDF */
-        .avoid-page-break-header, .accordion-header { background: transparent !important; }
-    `));
-    pdfContainer.appendChild(pdfStyle);
-
-    // Header com nome, data e titulo (se passados) - formatados
     const formattedDate = _formatDateToDDMMYYYY(data);
-    const headerDiv = document.createElement('div');
-    const tipoSelec = document.querySelector('#filtro_operacional').value;
-    if(tipoSelec == 1) {
-        tipoFiltro = ' (Operacional)'
-    } else if(tipoSelec == 2) {
-        tipoFiltro = ' (Não Operacional)'
-    } else {
-        tipoFiltro = ''
-    }
-    headerDiv.style.marginBottom = '12px';
-    headerDiv.innerHTML = `
-    <div style=" display:flex; flex-direction:row; justify-content:start  align-itens:start; height:100%; ;">
-        <div style="display:flex; justify-content:start; align-itens:start; height:100%; width:100%;" >
-            <div style="display:flex; justify-content:start; align-itens:start; height:100%; width:100%;">
-                <p style="font-size:25px; text-align:start; margin:0;  white-space: nowrap; overflow:hidden; text-overflow:hidden;  padding-right:9px;">
-                    ${nomeEmpresa.substr(0, 22)} ${tipoFiltro} -
-                </p>
 
-            <p style="  font-size:20px; padding-top:5px; text-align:start; margin:0;  white-space: nowrap; overflow:hidden; text-overflow:hidden;">` 
-                +
-                
-                    ((formattedDate || titulo) ?  `${ formattedDate ? formattedDate + '</p>' : '</p>'}` : '</div>') + '</div>  </div> </p>' 
-                +
-            `</div>
-        </div> 
-        <div style="display:flex; flex-direction:column;"> 
-       `     
-    +
-    `<p style="text-align:center; font-size:1.5em; margin:0; padding:0;">Relatório demonstrativo de resultado (DRE)</p>` 
-    +
-    '</div></div><hr>'
-    pdfContainer.appendChild(headerDiv);
+    const tipoSelec = document.querySelector('#filtro_operacional').value;
+    let tipoFiltro = '';
+
+    if (tipoSelec == 1) tipoFiltro = ' (Operacional)';
+    else if (tipoSelec == 2) tipoFiltro = ' (Não Operacional)';
+
+    // HEADER
+    doc.setFontSize(14);
+    doc.text(`${nomeEmpresa.substr(0,22)} ${tipoFiltro}`, 14, y);
+
+    if(formattedDate){
+        doc.setFontSize(10);
+        doc.text(formattedDate, 14, y+5);
+    }
+
+    doc.setFontSize(16);
+    doc.text('Relatório demonstrativo de resultado (DRE)', 105, y, {align:'center'});
+
+    y += 10;
 
     accordionItems.forEach(item => {
-        const mainContainer = document.createElement("div")
-        // Clone only the visible content of each accordion
-        const headerOriginal = item.querySelector('.accordion-header');
-        const header = headerOriginal.cloneNode(true);
-        // Mark only the header to avoid splitting it away from the following content
-        // if (header && header.classList) header.classList.add('avoid-page-break-header');
 
-        if(nome == 'sintetico'){
-        header.style.fontSize = '95%'
-        }   else {
-        header.style.fontSize = '120%'
-        header.style.fontWeight = 'bold'
+        const header = item.querySelector('.accordion-header').innerText;
+
+        if (nome === 'sintetico'){
+            doc.setFontSize(11);
+        } else {
+            doc.setFontSize(13);
         }
-        const bodyOriginal = item.querySelector('.accordion-body');
-        const body = bodyOriginal.cloneNode(true);
 
-        // Garante que o fundo do body seja branco
-        body.style.background = 'white';
-        body.style.backgroundColor = 'white';
-        body.style.boxShadow = 'none';
-        body.style.filter = 'none';
+        doc.text(header, 14, y);
+        y += 4;
 
-        // Remove qualquer cor de fundo de elementos filhos que possam afetar o body
-        body.querySelectorAll('*').forEach(function(el) {
-            el.style.background = 'transparent';
-            el.style.backgroundColor = 'transparent';
-            el.style.boxShadow = 'none';
-            el.style.filter = 'none';
+        const table = item.querySelector('table');
+
+        if(!table) return;
+
+        // HEADER DA TABELA
+        const headers = [];
+        table.querySelectorAll("thead th").forEach(th=>{
+            headers.push(th.innerText.trim());
         });
 
-        header.style.backgroundColor = 'white';
-
-        body.querySelectorAll('table').forEach(function(el) {
-            el.classList.remove('table-striped');
+        // LINHAS
+        const rows = [];
+        table.querySelectorAll("tbody tr").forEach(tr=>{
+            const row = [];
+            tr.querySelectorAll("td").forEach(td=>{
+                row.push(td.innerText.trim());
+            });
+            rows.push(row);
         });
-        body.querySelectorAll('table tr').forEach(function(tr, index) {
-            const cor = (index % 2 === 0) ? '#f2f2f2'  : '#ffffff';
-            tr.querySelectorAll('td').forEach(td => td.style.backgroundColor = cor);
-        });
+        const subtitleElement = item.querySelector('.accordion-body > *:not(table)');
+let subtitle = '';
 
-        body.querySelectorAll('.tr-dre-total').forEach(function(tr) {
-            tr.style.backgroundColor = '#e1e1e2';
-            tr.querySelectorAll('td').forEach(td => td.style.backgroundColor = '#e1e1e2');
-        });
+if(subtitleElement){
+    subtitle = subtitleElement.innerText.trim();
+}
 
-        mainContainer.appendChild(header);
-        mainContainer.appendChild(body);
+if(subtitle){
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'bold');
+    doc.text(subtitle, 14, y);
+    y += 5;
+}
 
-        if (mainContainer) pdfContainer.appendChild(mainContainer.cloneNode(true));
-        // Add a separator between accordions
-        pdfContainer.appendChild(document.createElement('hr'));
+        doc.autoTable({
+    head: [headers],
+    body: rows,
+    startY: y,
+
+    theme: 'grid',
+
+    headStyles:{
+        fillColor: [220,220,220],   // preto
+        textColor: [0,0,0], // branco
+        fontStyle:'bold'
+    },
+
+    styles:{
+        fontSize:8,
+        cellPadding:2
+    },
+
+    alternateRowStyles:{
+        fillColor:[242,242,242]
+    }
+});
+
+        y = doc.lastAutoTable.finalY + 8;
+
     });
-const totaisContainer = document.createElement("div");
-totaisContainer.style.display = "flex";
-totaisContainer.style.justifyContent = "space-between"; // ou "center"
-totaisContainer.style.gap = "10px"; // espaçamento entre os totais
-totaisContainer.style.marginTop = "20px"; // margem opcional
 
-// adiciona cada total (se existir)
-const totalReceitasDiv = document.querySelector('#total-receitas');
-if (totalReceitasDiv) {
-    totaisContainer.appendChild(totalReceitasDiv.cloneNode(true));
-    totaisContainer.style.fontSize = '75%'
+    // TOTAIS
+    const totalReceitas = document.querySelector('#total-receitas');
+    const totalDespesas = document.querySelector('#total-despesas');
+    const totalDre = document.querySelector('#total-dre');
+
+    y += 5;
+
+    doc.setFontSize(11);
+
+    let xLabel = 14;
+let xValor = 60;
+
+doc.setFontSize(11);
+
+if(totalReceitas){
+    doc.text("Total receitas:", xLabel, y);
+    doc.text(totalReceitas.innerText.replace('Total receitas:', '').trim(), xValor, y);
+    y += 6;
 }
 
-const totalDespesasDiv = document.querySelector('#total-despesas');
-if (totalDespesasDiv) totaisContainer.appendChild(totalDespesasDiv.cloneNode(true));
-
-const totalDreDiv = document.querySelector('#total-dre');
-if (totalDreDiv) totaisContainer.appendChild(totalDreDiv.cloneNode(true));
-
-// adiciona ao container principal do PDF
-pdfContainer.appendChild(totaisContainer);
-
-    // Rewrite ISO dates inside the cloned container to dd-mm-yyyy
-    _rewriteTextNodesInElement(pdfContainer);
-
-    // Use html2pdf to generate PDF
-    html2pdf()
-        .set({
-            margin: 0,
-            filename: 'dre-'+nome+'.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        })
-        .from(pdfContainer)
-        .save();
-
-        body.querySelectorAll('table tr').forEach(function(tr) {
-            tr.querySelectorAll('td').forEach(td => td.style.backgroundColor = 'white')
-        })
-
-        const body = item.querySelector('.accordion-body');
-        body.querySelectorAll('table').forEach(function(el) {
-            el.classList.add (
-                'table-striped'
-            )
-        })
-        
+if(totalDespesas){
+    doc.text("Total despesas:", xLabel, y);
+    doc.text(totalDespesas.innerText.replace('Total despesas:', '').trim(), xValor, y);
+    y += 6;
 }
-// ...existing code...
+
+if(totalDre){
+    doc.text("Saldo do DRE:", xLabel, y);
+    doc.text(totalDre.innerText.replace('Saldo do DRE:', '').trim(), xValor, y);
+}
+
+    doc.save('dre-'+nome+'.pdf');
+}
 
 function gerarexcel(nome, data=null, hora=null, nomeEmpresa='') {
     if (nome == 'analitico') {
