@@ -1,22 +1,18 @@
-
+// Utilities
 function _formatDateToDDMMYYYY(input) {
     if (!input && input !== 0) return '';
-    // Date object
     if (input instanceof Date) {
         const d = input;
         return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
     }
-    // numeric timestamp
     if (typeof input === 'number') {
         const d = new Date(input);
         if (!isNaN(d)) return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
         return String(input);
     }
-    // string: already dd/mm/yyyy
     if (typeof input === 'string') {
         if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(input)) return input.replace(/\//g,'-');
         if (/^\d{1,2}-\d{1,2}-\d{4}$/.test(input)) return input;
-        // try ISO parse
         const d = new Date(input);
         if (!isNaN(d)) return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
         return input;
@@ -46,9 +42,8 @@ function _formatTimeToHHMM(input) {
 
 function _convertIsoToDDMMYYYY(text) {
     if (!text || typeof text !== 'string') return text;
-    // Replace ISO dates like 2025-10-16 -> 16-10-2025
     return text.replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g, function(_, y, m, d) {
-        return d + '-' + m + '-' + y;
+        return d + '/' + m + '/' + y;
     });
 }
 
@@ -63,7 +58,6 @@ function _rewriteTextNodesInElement(root) {
         if (after !== before) n.nodeValue = after;
     });
 
-    // Also convert values/attributes inside form controls and other attributes
     const elements = root.querySelectorAll('input, textarea, select, [placeholder], [title], [alt]');
     elements.forEach(el => {
         try {
@@ -89,7 +83,7 @@ function _rewriteTextNodesInElement(root) {
                     }
                 });
             }
-            // generic attributes
+
             if (el.hasAttribute && el.hasAttribute('title')) {
                 const t = _convertIsoToDDMMYYYY(el.getAttribute('title'));
                 if (t !== el.getAttribute('title')) el.setAttribute('title', t);
@@ -103,157 +97,199 @@ function _rewriteTextNodesInElement(root) {
                 if (ph !== el.getAttribute('placeholder')) el.setAttribute('placeholder', ph);
             }
         } catch (e) {
-            // ignore conversion errors for unusual elements
+            // ignore conversion errors
         }
     });
 }
 
-function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=null) {
+// gerarpdf: generates PDF using jsPDF + jspdf-autotable
+async function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=null) {
+    console.log('Rendering')
+    if (typeof jsPDF === 'undefined' && !(window.jspdf && window.jspdf.jsPDF)) {
+        alert('Biblioteca jsPDF não encontrada. Adicione jsPDF e jspdf-autotable ao seu HTML.');
+        return;
+    }
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4"
-    });
+    const PDFClass = (typeof jsPDF !== 'undefined') ? jsPDF : window.jspdf.jsPDF;
+    const pdf = new PDFClass({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    const margin = 12;
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const usableWidth = pageWidth - margin * 2;
 
-    const accordionItems = document.querySelectorAll('.accordion-item');
+    if (typeof pdf.autoTable !== 'function') {
+        alert('jspdf-autotable não detectado. Adicione o plugin jspdf-autotable ao seu HTML.');
+        return;
+    }
+
+    const accordionItems = Array.from(document.querySelectorAll('.accordion-item'));
     if (accordionItems.length === 0) {
         alert('Nenhum conteúdo para exportar.');
         return;
     }
 
-    let y = 15;
+    // Header
+    pdf.setFontSize(14);
+    const formattedDate = _convertIsoToDDMMYYYY(data);
+    console.log(data + ' - ' +formattedDate);
+    const headerTitle = nomeEmpresa ? nomeEmpresa.substr(0, 60) : '';
+    const headerLines = pdf.splitTextToSize(headerTitle + (formattedDate ? ' — ' + formattedDate : ''), usableWidth);
+    let cursorY = margin;
+    pdf.text(headerLines, margin, cursorY);
+    cursorY += headerLines.length * 7;
 
-    const formattedDate = _formatDateToDDMMYYYY(data);
-
-    const tipoSelec = document.querySelector('#filtro_operacional').value;
-    let tipoFiltro = '';
-
-    if (tipoSelec == 1) tipoFiltro = ' (Operacional)';
-    else if (tipoSelec == 2) tipoFiltro = ' (Não Operacional)';
-
-    // HEADER
-    doc.setFontSize(14);
-    doc.text(`${nomeEmpresa.substr(0,22)} ${tipoFiltro}`, 14, y);
-
-    if(formattedDate){
-        doc.setFontSize(10);
-        doc.text(formattedDate, 14, y+5);
+    if (titulo) {
+        pdf.setFontSize(11);
+        const titleLines = pdf.splitTextToSize(String(titulo), usableWidth);
+        pdf.text(titleLines, margin, cursorY);
+        cursorY += titleLines.length * 6;
     }
 
-    doc.setFontSize(16);
-    doc.text('Relatório demonstrativo de resultado (DRE)', 105, y, {align:'center'});
+    pdf.setFontSize(12);
+    pdf.text('Relatório demonstrativo de resultado (DRE)', margin, cursorY);
+    cursorY += 8;
 
-    y += 10;
+    // Iterate accordions and convert tables using autoTable
+    for (let i = 0; i < accordionItems.length; i++) {
+        const item = accordionItems[i];
+        const headerSpan = item.querySelector('.accordion-header .accordion-button span');
+        const title = headerSpan ? headerSpan.textContent.trim() : (item.querySelector('.accordion-header') ? item.querySelector('.accordion-header').textContent.trim() : '');
 
-    accordionItems.forEach(item => {
+        pdf.setFontSize(11);
+        const titleLines = pdf.splitTextToSize(title, usableWidth);
+        if (cursorY + titleLines.length * 6 > pdf.internal.pageSize.getHeight() - margin) pdf.addPage(), cursorY = margin;
+        pdf.text(titleLines, margin, cursorY);
+        cursorY += titleLines.length * 6 + 4;
 
-        const header = item.querySelector('.accordion-header').innerText;
+        const body = item.querySelector('.accordion-body');
+        if (!body) continue;
 
-        if (nome === 'sintetico'){
-            doc.setFontSize(11);
-        } else {
-            doc.setFontSize(13);
+        const tables = Array.from(body.querySelectorAll('table'));
+        for (let t = 0; t < tables.length; t++) {
+            const table = tables[t];
+
+        // procurar subtitulo (h5) anterior à tabela
+        let subtitle = '';
+        let prev = table.previousElementSibling;
+
+        while (prev) {
+            if (prev.tagName === 'H5') {
+                subtitle = prev.textContent.trim();
+                break;
+            }
+            prev = prev.previousElementSibling;
         }
 
-        doc.text(header, 14, y);
-        y += 4;
+        // escrever subtitulo no PDF
+        if (subtitle) {
+            pdf.setFontSize(10);
+            const subtitleLines = pdf.splitTextToSize(subtitle, usableWidth);
 
-        const table = item.querySelector('table');
+            if (cursorY + subtitleLines.length * 6 > pdf.internal.pageSize.getHeight() - margin) {
+                pdf.addPage();
+                cursorY = margin;
+            }
 
-        if(!table) return;
+            pdf.text(subtitleLines, margin, cursorY);
+            cursorY += subtitleLines.length * 6 + 2;
+        }
+            let headers = Array.from(table.querySelectorAll('thead th')).map(th => _convertIsoToDDMMYYYY(th.textContent.trim()));
+            if (!headers || headers.length === 0) {
+                const firstRow = table.querySelector('tbody tr');
+                if (firstRow) headers = Array.from(firstRow.querySelectorAll('td')).map((_, idx) => 'Col ' + (idx + 1));
+            }
 
-        // HEADER DA TABELA
-        const headers = [];
-        table.querySelectorAll("thead th").forEach(th=>{
-            headers.push(th.innerText.trim());
-        });
+            const rows = Array.from(table.querySelectorAll('tbody tr')).map(tr =>
+                Array.from(tr.querySelectorAll('td')).map(td => _convertIsoToDDMMYYYY(td.textContent.trim()))
+            );
 
-        // LINHAS
-        const rows = [];
-        table.querySelectorAll("tbody tr").forEach(tr=>{
-            const row = [];
-            tr.querySelectorAll("td").forEach(td=>{
-                row.push(td.innerText.trim());
+            if (!rows || rows.length === 0) continue;
+
+            pdf.autoTable({
+                startY: cursorY,
+                head: headers.length ? [headers] : [],
+                body: rows,
+                margin: { left: margin, right: margin },
+                styles: { fontSize: 9, cellPadding: 3 },
+                headStyles: { fillColor: [230, 230, 230], textColor: 20, halign: 'left' },
+                theme: 'striped'
             });
-            rows.push(row);
-        });
-        const subtitleElement = item.querySelector('.accordion-body > *:not(table)');
-let subtitle = '';
 
-if(subtitleElement){
-    subtitle = subtitleElement.innerText.trim();
-}
+            cursorY = (pdf.lastAutoTable && pdf.lastAutoTable.finalY) ? pdf.lastAutoTable.finalY + 6 : pdf.internal.pageSize.getHeight() - margin;
+            if (cursorY > pdf.internal.pageSize.getHeight() - margin) {
+                pdf.addPage();
+                cursorY = margin;
+            }
+        }
 
-if(subtitle){
-    doc.setFontSize(11);
-    doc.setFont(undefined, 'bold');
-    doc.text(subtitle, 14, y);
-    y += 5;
-}
-
-        doc.autoTable({
-    head: [headers],
-    body: rows,
-    startY: y,
-
-    theme: 'grid',
-
-    headStyles:{
-        fillColor: [220,220,220],   // preto
-        textColor: [0,0,0], // branco
-        fontStyle:'bold'
-    },
-
-    styles:{
-        fontSize:8,
-        cellPadding:2
-    },
-
-    alternateRowStyles:{
-        fillColor:[242,242,242]
+        cursorY += 4;
+        if (cursorY > pdf.internal.pageSize.getHeight() - margin) {
+            pdf.addPage();
+            cursorY = margin;
+        }
     }
-});
 
-        y = doc.lastAutoTable.finalY + 8;
+    function escreverLinhaTotal(label, valor) {
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const rightMargin = 130;
 
+    pdf.text(label, margin, cursorY);
+
+    pdf.text(valor, pageWidth - rightMargin, cursorY, {
+        align: 'right'
     });
 
-    // TOTAIS
-    const totalReceitas = document.querySelector('#total-receitas');
-    const totalDespesas = document.querySelector('#total-despesas');
-    const totalDre = document.querySelector('#total-dre');
-
-    y += 5;
-
-    doc.setFontSize(11);
-
-    let xLabel = 14;
-let xValor = 60;
-
-doc.setFontSize(11);
-
-if(totalReceitas){
-    doc.text("Total receitas:", xLabel, y);
-    doc.text(totalReceitas.innerText.replace('Total receitas:', '').trim(), xValor, y);
-    y += 6;
+    cursorY += 6;
 }
 
-if(totalDespesas){
-    doc.text("Total despesas:", xLabel, y);
-    doc.text(totalDespesas.innerText.replace('Total despesas:', '').trim(), xValor, y);
-    y += 6;
+    // Totals
+    const totalReceitasDiv = document.querySelector('#total-receitas');
+    
+    const totalDespesasDiv = document.querySelector('#total-despesas');
+    const totalDreDiv = document.querySelector('#total-dre');
+    totalReceitasDiv.style.whiteSpace = 'nowrap';
+    totalDespesasDiv.style.whiteSpace = 'nowrap';
+    totalDreDiv.style.whiteSpace = 'nowrap';
+    pdf.setFontSize(11);
+    if (totalReceitasDiv) {
+    const texto = totalReceitasDiv.textContent.trim();
+    const partes = texto.split('R$');
+    escreverLinhaTotal(partes[0] + 'R$', partes[1]?.trim() || '');
 }
 
-if(totalDre){
-    doc.text("Saldo do DRE:", xLabel, y);
-    doc.text(totalDre.innerText.replace('Saldo do DRE:', '').trim(), xValor, y);
+if (totalDespesasDiv) {
+    const texto = totalDespesasDiv.textContent.trim();
+    const partes = texto.split('R$');
+    escreverLinhaTotal(partes[0] + 'R$', partes[1]?.trim() || '');
 }
 
-    doc.save('dre-'+nome+'.pdf');
+if (totalDreDiv) {
+    const texto = totalDreDiv.textContent.trim();
+    const partes = texto.split('R$');
+    escreverLinhaTotal(partes[0] + 'R$', partes[1]?.trim() || '');
 }
 
+    try {
+        const pageCount = pdf.getNumberOfPages();
+
+for (let i = 1; i <= pageCount; i++) {
+    pdf.setPage(i);
+
+    pdf.setFontSize(9);
+
+    pdf.text(
+        `Página ${i} de ${pageCount}`,
+        pdf.internal.pageSize.getWidth() / 1.1 ,
+        10,
+        { align: 'center' }
+    );
+}
+
+        pdf.save('dre-' + nome + '.pdf');
+    } catch (e) {
+        console.error('Erro ao salvar PDF gerado por jsPDF:', e);
+        alert('Erro ao salvar PDF. Veja o console para detalhes.');
+    }
+}
 function gerarexcel(nome, data=null, hora=null, nomeEmpresa='') {
     if (nome == 'analitico') {
     // Check if XLSX library is loaded
