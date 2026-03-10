@@ -230,7 +230,7 @@ function formatarData(data){
 
 function gerarexcel(nome, nomeEmpresa = '') {
     try {
-        var tabela = getTabelaSemAcoes();
+        var tabela = document.querySelector('#tabela-pdf')
         if (!tabela) {
             alert("Tabela não encontrada!");
             return;
