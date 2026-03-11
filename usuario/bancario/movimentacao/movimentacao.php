@@ -146,16 +146,8 @@ $saldo_final = 0;
 
 
 
-if($get_filtro_conta == null) {
-    $contas = Ban01::read(id_empresa:$_SESSION['usuario']->id_empresa);
-    foreach ($contas as $conta) {
-        $saldo += $conta->valor ?? 0;
-    }
-} else if($get_filtro_conta != null) {
-    $conta = Ban01::read(id: $get_filtro_conta, id_empresa:$_SESSION['usuario']->id_empresa)[0];
-    $saldo += $conta->valor ;
-    $saldo_inicial += $conta->valor;
-}
+
+
 if($get_filtro_data_inicial != null) {
     $saldo_inicial = Ban02::read(
         id_empresa: $_SESSION['usuario']->id_empresa,
@@ -171,7 +163,16 @@ if($get_filtro_data_inicial != null) {
 } else {
     $saldo_inicial = $saldo;
 }
-
+if($get_filtro_conta == null) {
+    $contas = Ban01::read(id_empresa:$_SESSION['usuario']->id_empresa);
+    foreach ($contas as $conta) {
+        $saldo += $conta->valor ?? 0;
+    }
+} else if($get_filtro_conta != null) {
+    $conta = Ban01::read(id: $get_filtro_conta, id_empresa:$_SESSION['usuario']->id_empresa)[0];
+    $saldo += $conta->valor ;
+    $saldo_inicial += $conta->valor;
+}
 
 foreach($movimentacoes_totais as $mov) {
     $saldo += $mov->valor;
