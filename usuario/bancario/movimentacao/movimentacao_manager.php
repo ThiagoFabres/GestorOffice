@@ -305,13 +305,13 @@ if($acao == 'processar') {
 
             $data_analizada = $current['data_analizada'];
             
-                // if (isset($importadas_set[$data_analizada])) continue;
+                if (isset($importadas_set[$data_analizada])) continue;
                 if (isset($importadas_set[$data_analizada])){
                      $erro = 'importada';
                      $transactions['debug']['erro'][] = $erro ?? null;
                      continue;
                      }
-                // if(Ban02Imp::read($_SESSION['usuario']->id_empresa, $conta, $data_analizada)) continue;
+                if(Ban02Imp::read($_SESSION['usuario']->id_empresa, $conta, $data_analizada)) continue;
                 // echo $conta_obj->data;
                 // echo '<br>';
                 // echo $data_analizada;

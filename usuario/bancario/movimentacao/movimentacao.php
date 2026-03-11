@@ -122,7 +122,10 @@ if ($filtros != []) {
     $caminho_sem_pag = 'movimentacao.php?';
 }
 
-
+$saldo_geral = Ban02::read(
+    id_empresa:$_SESSION['usuario']->id_empresa,
+    read_total: true,
+);
 $movimentacoes_pdf = Ban02::read(
                             id_empresa: $_SESSION['usuario']->id_empresa,
                             filtro_data_inicial: $get_filtro_data_inicial ??null,
@@ -154,7 +157,7 @@ if($get_filtro_conta == null) {
     $saldo_inicial += $conta->valor;
 }
 if($get_filtro_data_inicial != null) {
-    $movimentacoes_iniciais = Ban02::read(
+    $saldo_inicial = Ban02::read(
         id_empresa: $_SESSION['usuario']->id_empresa,
                             filtro_data_final: $get_filtro_data_inicial ?? null,
                             filtro_conciliado:$get_filtro_conciliado,
@@ -163,10 +166,8 @@ if($get_filtro_data_inicial != null) {
                             filtro_conta: $get_filtro_conta ?? null,
                             filtro_tipo: $get_filtro_tipo ?? null,
                             filtro_descricao: $get_filtro_descricao,
+                            read_total: true,
     );
-    foreach($movimentacoes_iniciais as $mov) {
-        $saldo_inicial += $mov->valor;
-    }
 } else {
     $saldo_inicial = $saldo;
 }
@@ -220,7 +221,6 @@ foreach($movimentacoes_totais as $mov) {
     <?php require_once __DIR__ . '/../../../componentes/lateral/lateral.php'?>
     <?php require_once __DIR__ . '/../../../componentes/header/header.php' ?>
     <div class="main" id="container">
-
         <?php if($_SESSION['usuario']->processar === 1) { ?>
         <button  data-bs-toggle="modal" data-bs-target="#modal_cadastro_bancario" class="btn btn-primary" >Upload Arquivo OFX / Excel</button>
         <?php } ?>
@@ -513,11 +513,20 @@ foreach($movimentacoes_totais as $mov) {
                         </form>
                     </div>
 
-                    <div id="totais-lancamento">          
-
+                    <div id="totais-lancamento" class="d-flex flex-row">          
+                        <?php if($saldo_geral == $saldo) {?>
                                 <div id="total-parcela">Saldo: R$
+                                    <?= number_format($saldo, 2, ',', '.') ?>    
+                                </div>
+                        <?php } else {?>
+                                <div id="total-parcela">Saldo Geral: R$
+                                    <?= number_format($saldo_geral, 2, ',', '.') ?> 
+                                </div>
+
+                                <div id="total-parcela">Saldo Filtro: R$
                                     <?= number_format($saldo, 2, ',', '.') ?> 
                                 </div>
+                        <?php } ?>
                             
                         </div>
 
