@@ -77,14 +77,18 @@ class Ban02 {
         $dre_read = null,
         $filtro_operacional = null,
         $ordenar_por = null,
-        $direcao = ' ASC'
+        $direcao = ' ASC',
+        $read_total = null,
         ) {
 
         $pdo = (new Database())->connect();
         if($read_paginas != null && $read_paginas) {
             $query = 'SELECT COUNT(*)
             FROM ban02';
-        } else {
+        } else if($read_total != null && $read_total) {
+            $query = 'SELECT SUM(valor)
+            FROM ban02';
+        }else {
             $query = 'SELECT * FROM ban02';
         }
         $conditions = [];
@@ -260,7 +264,7 @@ class Ban02 {
 
 
         $stmt->execute();
-        if(isset($read_paginas)) {
+        if(isset($read_paginas) || isset($read_total)) {
             return $stmt->fetchColumn();
         } else {
             return $stmt->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, self::class);
