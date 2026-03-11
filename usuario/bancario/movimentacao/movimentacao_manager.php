@@ -24,6 +24,7 @@ require_once 'buscar_documento.php';
 $acao = filter_input(INPUT_POST, 'acao', FILTER_SANITIZE_STRING) ?? filter_input(INPUT_GET, 'acao', FILTER_SANITIZE_STRING);
 
 if($acao == 'processar') {
+
     
     function parse_excel($fileName, $filePath) {
     
@@ -252,7 +253,13 @@ if($acao == 'processar') {
     // }
     
     function parse_ofx($filePath) {
+        if (is_file($filePath)) {
         $content = file_get_contents($filePath);
+    } else {
+        // Senão assume que já é o conteúdo
+        $content = $filePath;
+    }
+
 
         $encoding = mb_detect_encoding($content, ['UTF-8', 'ISO-8859-1', 'Windows-1252'], true);
         if ($encoding !== 'UTF-8') {
@@ -359,10 +366,15 @@ if($acao == 'processar') {
                 $name = str_replace('</NAME>', '', $name);
              
                 // Garante que a descrição está em UTF-8
-                $current['descricao'] .= ' ' . $name;
+                if(isset($current['descricao'])) {
+                    $current['descricao'] .= ' ' . $name;
+                } else {
+                    $current['descricao'] = $name;
+                }
             }
             if ((strpos($line, '</STMTTRN>'))  !== false  ) {
                 $transactions['current'][] = $current;
+                $current = []; 
             }
         } 
             // $transactions['debug']['current'][] = $current;
@@ -377,9 +389,26 @@ if($acao == 'processar') {
 
         $fileExt = str_ends_with(strtolower($fileName), '.ofx') ? 'ofx' : 'xlsx';
         // Detecta o tipo de arquivo pela extensão
-        if ($fileExt === 'ofx') {
-            $transactions = parse_ofx($filePath);
-        } elseif ($fileExt === 'xlsx' || $fileExt === 'xls' || $fileExt === 'csv') {
+        $filePath = $_FILES['ofx']['tmp_name'];
+$fileName = $_FILES['ofx']['name'];
+
+$fileExt = str_ends_with(strtolower($fileName), '.ofx') ? 'ofx' : 'xlsx';
+
+if ($fileExt === 'ofx') {
+
+    // Lê o conteúdo do OFX
+    $conteudo = file_get_contents($filePath);
+
+    // Formata adicionando quebra de linha entre tags
+    $conteudoFormatado = preg_replace('/></', ">\n<", $conteudo);
+
+    // Remove múltiplas linhas vazias
+    $conteudoFormatado = preg_replace("/\n+/", "\n", $conteudoFormatado);
+
+    // Passa o conteúdo direto para o parser
+    $transactions = parse_ofx($conteudoFormatado);
+
+} elseif ($fileExt === 'xlsx' || $fileExt === 'xls' || $fileExt === 'csv') {
             $transactions = parse_excel($fileExt, $filePath);
         } else {
             // Tenta OFX por padrão
