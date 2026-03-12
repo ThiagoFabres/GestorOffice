@@ -230,7 +230,6 @@ $filtro_vendas = filter_input(INPUT_GET, 'filtro_vendas') == 'on' ? 1 : 0
                                continue;
                             }
                             if($filtro_cadastro != null && $filtro_cadastro != $cadastro->id_cadastro) continue;
-                            var_dump($filtro_vendas);
                             ?>
                             
                             <div class="accordion-item" style="position: sticky;">
