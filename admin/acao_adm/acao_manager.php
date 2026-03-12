@@ -47,7 +47,7 @@ if($target == 'vendas') {
     
 
     foreach($rec01_lista as $rec) {
-        Rec02::deletebyrec01($rec01->id);
+        Rec02::deletebyrec01($rec->id);
         Rec01::delete($rec->id);
     }
 
