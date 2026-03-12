@@ -40,6 +40,7 @@ $filtro_subtitulo = filter_input(INPUT_GET, 'subtitulo');
 $filtro_custo = filter_input(INPUT_GET, 'custos');
 $filtro_data_inicial = filter_input(INPUT_GET, 'data_inicial');
 $filtro_data_final = filter_input(INPUT_GET, 'data_final');
+$filtro_vendas = filter_input(INPUT_GET, 'filtro_vendas') == 'on' ? 1 : 0
 
 ?>
 <!DOCTYPE html>
@@ -170,6 +171,7 @@ $filtro_data_final = filter_input(INPUT_GET, 'data_final');
                                             </select>
                                         </div>
                                     </div>
+                                    
                                     <div class="d-flex flex-row">
                                         <div style="width: calc(100% / 2.5);">
                                             <label>C. Custos:</label>
@@ -222,12 +224,15 @@ $filtro_data_final = filter_input(INPUT_GET, 'data_final');
                                 con01: $filtro_titulo,
                                 con02: $filtro_subtitulo, 
                                 filtro_data_inicial: $filtro_data_inicial, 
+                                read_vendas: true,
                                 filtro_data_final: $filtro_data_final);
                             if(empty($lancamentos) && $filtro_cadastro == null) {
                                continue;
                             }
                             if($filtro_cadastro != null && $filtro_cadastro != $cadastro->id_cadastro) continue;
+                            var_dump($filtro_vendas);
                             ?>
+                            
                             <div class="accordion-item" style="position: sticky;">
                                 <h2 class="accordion-header" id="heading<?=$cadastro->id_cadastro?>" style="position: sticky; margin-bottom: 0.1em;">
                                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<?=$cadastro->id_cadastro?>" aria-expanded="false" aria-controls="collapse<?=$cadastro->id_cadastro?>" style="color: black;">
@@ -280,6 +285,7 @@ $filtro_data_final = filter_input(INPUT_GET, 'data_final');
                                         <input name="titulo" type="hidden" value="<?= $filtro_titulo ?>">
                                         <input name="subtitulo" type="hidden" value="<?= $filtro_subtitulo ?>">
                                         <input name="custos" type="hidden" value="<?= $filtro_custo ?>">
+                                        <input name="vendas" type="hidden" value="<?= $filtro_vendas ? 1 : 0?>">
                                         <button class="btn btn-danger m-3 mt-0 w-100">Excluir</button>
                                      </form>
                                     <?php } ?>

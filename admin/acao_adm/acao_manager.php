@@ -20,6 +20,7 @@ if($target == 'vendas') {
     $filtro_titulo  = filter_input(INPUT_POST, 'titulo') ?? null;
     $filtro_subtitulo  = filter_input(INPUT_POST, 'subtitulo') ?? null;
     $filtro_custos  = filter_input(INPUT_POST, 'custos') ?? null;
+    $filtro_vendas  = filter_input(INPUT_POST, 'vendas') ? true : null;
     if($filtro_data_final === '') $filtro_data_final = null;
     if($filtro_data_inicial === '') $filtro_data_inicial = null;
 
@@ -27,15 +28,6 @@ if($target == 'vendas') {
         header('Location: vendas.php?erro=empresa');
         exit;
     }
-    $rec02_lista = Rec02::read(
-        id_empresa: $filtro_empresa,
-        filtro_cadastro: $filtro_cadastro,
-        filtro_con01:$filtro_titulo,
-        filtro_con02:$filtro_subtitulo,
-        filtro_custos:$filtro_custos,
-        filtro_data_inicial:$filtro_data_inicial,
-        filtro_data_final:$filtro_data_final,
-    );
     $rec01_lista = Rec01::read(
         id_empresa: $filtro_empresa,
         id_cadastro: $filtro_cadastro,
@@ -45,21 +37,24 @@ if($target == 'vendas') {
         con02:$filtro_subtitulo,
         filtro_custos:$filtro_custos,
     );
-    $rec03_lista = Rec03::read(
-        id_empresa:$filtro_empresa,
-        data_inicial:$filtro_data_inicial,
-        data_final:$filtro_data_final,
-    );
+
+        $rec03_lista = Rec03::read(
+            id_empresa:$filtro_empresa,
+            data_inicial:$filtro_data_inicial,
+            data_final:$filtro_data_final,
+        );
+
     
-    foreach($rec02_lista as $rec) {
-        Rec02::delete($rec->id);
-    }
+
     foreach($rec01_lista as $rec) {
+        Rec02::deletebyrec01($rec01->id);
         Rec01::delete($rec->id);
     }
+
     foreach($rec03_lista as $rec) {
-        Rec03::delete($rec->id);
+         Rec03::delete($rec->id);
     }
+
 
     header('Location: vendas.php?sucesso=1&empresa=' . $filtro_empresa . '&cadastro=' . $filtro_cadastro . '&data_inicial=' . $filtro_data_inicial . '&data_final=' . $filtro_data_final . '&custos=' . $custos . 'filtro_titulo=' . $filtro_titulo . 'filtro_subtitulo=' . $filtro_subtitulo);
     exit;
