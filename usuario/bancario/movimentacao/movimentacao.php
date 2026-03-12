@@ -121,11 +121,20 @@ if ($filtros != []) {
     $caminho_get = urlencode('movimentacao.php?');
     $caminho_sem_pag = 'movimentacao.php?';
 }
-
-$saldo_geral = Ban02::read(
+if($get_filtro_conta != null){
+    $saldo_geral = Ban02::read(
+    filtro_data_inicial: $get_filtro_data_inicial ??null,
+    filtro_data_final: $get_filtro_data_final ?? null,
     id_empresa:$_SESSION['usuario']->id_empresa,
+    filtro_conta:$get_filtro_conta,
     read_total: true,
 );
+} else {
+    $saldo_geral = Ban02::read(
+        id_empresa:$_SESSION['usuario']->id_empresa,
+        read_total: true,
+    );
+}
 $movimentacoes_pdf = Ban02::read(
                             id_empresa: $_SESSION['usuario']->id_empresa,
                             filtro_data_inicial: $get_filtro_data_inicial ??null,
@@ -145,41 +154,42 @@ $saldo_inicial = 0;
 $saldo_final = 0;
 
 
+$saldo = Ban02::read(
+    id_empresa: $_SESSION['usuario']->id_empresa,
+    filtro_data_inicial: $get_filtro_data_inicial,
+    filtro_data_final: $get_filtro_data_final,
+    filtro_conciliado: $get_filtro_conciliado,
+    filtro_titulo: $get_filtro_titulo,
+    filtro_subtitulo: $get_filtro_subtitulo,
+    filtro_conta: $get_filtro_conta,
+    filtro_tipo: $get_filtro_tipo,
+    filtro_descricao: $get_filtro_descricao,
+    read_total: true
+);
 
+$saldo_geral = Ban02::read(
+    id_empresa: $_SESSION['usuario']->id_empresa,
+    filtro_data_final: $get_filtro_data_final,
+    filtro_conta: $get_filtro_conta,
+    read_total: true
+);
 
+if ($get_filtro_conta != null) {
 
-if($get_filtro_data_inicial != null) {
-    $saldo_inicial = Ban02::read(
-        id_empresa: $_SESSION['usuario']->id_empresa,
-                            filtro_data_final: $get_filtro_data_inicial ?? null,
-                            filtro_conciliado:$get_filtro_conciliado,
-                            filtro_titulo: $get_filtro_titulo ?? null,
-                            filtro_subtitulo: $get_filtro_subtitulo ?? null,
-                            filtro_conta: $get_filtro_conta ?? null,
-                            filtro_tipo: $get_filtro_tipo ?? null,
-                            filtro_descricao: $get_filtro_descricao,
-                            read_total: true,
-    );
+    $conta = Ban01::read(
+        id: $get_filtro_conta,
+        id_empresa: $_SESSION['usuario']->id_empresa
+    )[0];
+
+    $saldo_geral += $conta->valor;
 } else {
-    $saldo_inicial = $saldo;
-}
-if($get_filtro_conta == null) {
-    $contas = Ban01::read(id_empresa:$_SESSION['usuario']->id_empresa);
+
+    $contas = Ban01::read(id_empresa: $_SESSION['usuario']->id_empresa);
+
     foreach ($contas as $conta) {
-        $saldo += $conta->valor ?? 0;
         $saldo_geral += $conta->valor;
     }
-} else if($get_filtro_conta != null) {
-    $conta = Ban01::read(id: $get_filtro_conta, id_empresa:$_SESSION['usuario']->id_empresa)[0];
-    $saldo += $conta->valor ;
-    $saldo_inicial += $conta->valor;
-    $saldo_geral += $conta->valor;
 }
-
-foreach($movimentacoes_totais as $mov) {
-    $saldo += $mov->valor;
-}
-
 
 
 ?>
@@ -517,19 +527,18 @@ foreach($movimentacoes_totais as $mov) {
                     </div>
 
                     <div id="totais-lancamento" class="d-flex flex-row">          
-                        <?php if($saldo_geral == $saldo) {?>
-                                <div id="total-parcela">Saldo: R$
-                                    <?= number_format($saldo, 2, ',', '.') ?>    
-                                </div>
-                        <?php } else {?>
-                                <div id="total-parcela">Saldo Geral: R$
-                                    <?= number_format($saldo_geral, 2, ',', '.') ?> 
-                                </div>
 
                                 <div id="total-parcela">Saldo Filtro: R$
                                     <?= number_format($saldo, 2, ',', '.') ?> 
                                 </div>
-                        <?php } ?>
+
+                                <?php if($get_filtro_conta != null) { ?>
+
+                                    <div id="total-parcela">Saldo Conta: R$
+                                        <?= number_format($saldo_geral, 2, ',', '.') ?> 
+                                    </div>
+
+                                <?php } ?>
                             
                         </div>
 
