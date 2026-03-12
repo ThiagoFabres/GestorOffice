@@ -96,7 +96,6 @@ class Rec01 {
         if ($con02 != null) $conditions[] = 'id_con02 = :con02';
         if ($read_vendas) $conditions[] = 'valor_b IS NOT NULL';
         if ($read_diferencas) {
-            // compara taxa usada vs taxa calculada arredondadas a 2 casas e evita divisão por zero
             $conditions[] =
                 'ROUND((((valor_b - valor_liq_go) * 100) / NULLIF(valor_b,0)),2) <> '
                 . 'ROUND((((valor_b - valor) / NULLIF(valor_b,0)) * 100),2)';
@@ -569,6 +568,8 @@ INSERT INTO rec03 (
     $id = null, 
     $id_empresa = null, 
     $data = null, 
+    $data_inicial = null,
+    $data_final = null,
     $operadora_id = null, 
     $bandeira_id = null, 
     $tipo_id = null,
@@ -582,6 +583,8 @@ INSERT INTO rec03 (
         if ($id != null) $conditions[] = 'id = :id';
         if ($id_empresa != null) $conditions[] = 'id_empresa = :id_empresa';
         if ($data != null) $conditions[] = 'data_lanc = :data_lanc';
+        if ($data_inicial != null) $conditions[] = ' data_lanc >= :data_inicial';
+        if ($data_final != null) $conditions[] = ' data_lanc >= :data_final';
         if ($operadora_id != null) $conditions[] = 'operadora_id = :operadora_id';
         if ($bandeira_id != null) $conditions[] = 'bandeira_id = :bandeira_id';
         if ($tipo_id != null) $conditions[] = 'tipo_id = :tipo_id';
@@ -601,10 +604,20 @@ INSERT INTO rec03 (
         if ($bandeira_id != null) $stmt->bindValue(':bandeira_id', $bandeira_id);
         if ($tipo_id != null) $stmt->bindValue(':tipo_id', $tipo_id);
         if ($prazo_id != null) $stmt->bindValue(':prazo_id', $prazo_id);
+        if ($data_inicial != null) $stmt->bindValue(':data_inicial', $data_inicial);
+        if ($data_final != null) $stmt->bindValue(':data_final', $data_final);
 
         $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, self::class);
     }
+    public static function delete($id) {
+        $pdo = (new Database())->connect();
+        $sql = 'DELETE FROM rec01 WHERE id = :id';
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindValue(':id', $id);
+
+        return $stmt->execute();
+}
 }
 ?>

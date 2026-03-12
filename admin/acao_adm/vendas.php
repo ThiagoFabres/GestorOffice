@@ -210,13 +210,19 @@ $filtro_data_final = filter_input(INPUT_GET, 'data_final');
                     <?php
                     if($filtro_empresa != null) {
                         if($filtro_cadastro == null) {
-                            $cadastros = Cadastro::read(id_empresa: $filtro_empresa, filtro_data_inicial: $filtro_data_inicial, filtro_data_final: $filtro_data_final);
+                            $cadastros = Cadastro::read(id_empresa: $filtro_empresa);
                         } else {
-                            $cadastros = [Cadastro::read($filtro_cadastro)[0]];
+                            $cadastros = [Cadastro::read($filtro_cadastro, id_empresa:$filtro_empresa)[0]];
                         }
                                                 $custos = CentroCustos::read(id_empresa: $filtro_empresa);
                         foreach ($cadastros as $cadastro) {
-                            $lancamentos = Rec01::read(filtro_custos: $filtro_custo, id_cadastro: $cadastro->id_cadastro, con01: $filtro_titulo, con02: $filtro_subtitulo, filtro_data_inicial: $filtro_data_inicial, filtro_data_final: $filtro_data_final);
+                            $lancamentos = Rec01::read(
+                                filtro_custos: $filtro_custo, 
+                                id_cadastro: $cadastro->id_cadastro, 
+                                con01: $filtro_titulo,
+                                con02: $filtro_subtitulo, 
+                                filtro_data_inicial: $filtro_data_inicial, 
+                                filtro_data_final: $filtro_data_final);
                             if(empty($lancamentos) && $filtro_cadastro == null) {
                                continue;
                             }
@@ -266,7 +272,7 @@ $filtro_data_final = filter_input(INPUT_GET, 'data_final');
                                     <!-- <hr> -->
                                      <?php if(!empty($cadastros)) { ?>
                                      <form method="post" action="acao_manager.php">
-                                        <input name="target" type="hidden" value="bancario">
+                                        <input name="target" type="hidden" value="vendas">
                                         <input name="data_inicial" type="hidden" value="<?= $filtro_data_inicial ?>">
                                         <input name="data_final" type="hidden" value="<?= $filtro_data_final ?>">
                                         <input name="empresa" type="hidden" value="<?= $filtro_empresa ?>">

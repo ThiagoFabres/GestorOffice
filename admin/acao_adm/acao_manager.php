@@ -3,6 +3,7 @@ require_once __DIR__ . '/../../db/entities/usuarios.php';
 session_start();
 require_once __DIR__ . '/../../db/entities/empresas.php';
 require_once __DIR__ . '/../../db/entities/banco02.php';
+require_once __DIR__ . '/../../db/entities/recebimentos.php';
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 1) {
     header('Location: /');
     exit;
@@ -11,7 +12,57 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 1) {
 $target = filter_input(INPUT_POST, 'target', FILTER_SANITIZE_STRING);
 
 if($target == 'vendas') {
+    $filtro_empresa  = filter_input(INPUT_POST, 'empresa');
+    $filtro_cadastro  = filter_input(INPUT_POST, 'cadastro') ?? null;
+    $filtro_data_inicial  = filter_input(INPUT_POST, 'data_inicial') ?? null;
+    $filtro_data_final  = filter_input(INPUT_POST, 'data_final') ?? null;
+    $filtro_cadastro  = filter_input(INPUT_POST, 'cadastro') ?? null;
+    $filtro_titulo  = filter_input(INPUT_POST, 'titulo') ?? null;
+    $filtro_subtitulo  = filter_input(INPUT_POST, 'subtitulo') ?? null;
+    $filtro_custos  = filter_input(INPUT_POST, 'custos') ?? null;
+    if($filtro_data_final === '') $filtro_data_final = null;
+    if($filtro_data_inicial === '') $filtro_data_inicial = null;
+
+    if($filtro_empresa == null || !isset($filtro_empresa)) {
+        header('Location: vendas.php?erro=empresa');
+        exit;
+    }
+    $rec02_lista = Rec02::read(
+        id_empresa: $filtro_empresa,
+        filtro_cadastro: $filtro_cadastro,
+        filtro_con01:$filtro_titulo,
+        filtro_con02:$filtro_subtitulo,
+        filtro_custos:$filtro_custos,
+        filtro_data_inicial:$filtro_data_inicial,
+        filtro_data_final:$filtro_data_final,
+    );
+    $rec01_lista = Rec01::read(
+        id_empresa: $filtro_empresa,
+        id_cadastro: $filtro_cadastro,
+        filtro_data_inicial: $filtro_data_inicial,
+        filtro_data_final: $filtro_data_final,
+        con01:$filtro_titulo,
+        con02:$filtro_subtitulo,
+        filtro_custos:$filtro_custos,
+    );
+    $rec03_lista = Rec03::read(
+        id_empresa:$filtro_empresa,
+        data_inicial:$filtro_data_inicial,
+        data_final:$filtro_data_final,
+    );
     
+    foreach($rec02_lista as $rec) {
+        Rec02::delete($rec->id);
+    }
+    foreach($rec01_lista as $rec) {
+        Rec01::delete($rec->id);
+    }
+    foreach($rec03_lista as $rec) {
+        Rec03::delete($rec->id);
+    }
+
+    header('Location: vendas.php?sucesso=1&empresa=' . $filtro_empresa . '&cadastro=' . $filtro_cadastro . '&data_inicial=' . $filtro_data_inicial . '&data_final=' . $filtro_data_final . '&custos=' . $custos . 'filtro_titulo=' . $filtro_titulo . 'filtro_subtitulo=' . $filtro_subtitulo);
+    exit;
 } 
 
 else if($target == 'bancario') {
@@ -21,6 +72,12 @@ else if($target == 'bancario') {
     $filtro_data_final = filter_input(INPUT_POST, 'data_final');
     if($filtro_data_final === '') $filtro_data_final = null;
     if($filtro_data_inicial === '') $filtro_data_inicial = null;
+
+    if($filtro_empresa == null || !isset($filtro_empresa)) {
+        header('Location: bancario.php?erro=empresa');
+        exit;
+    }
+    
     $ban02_lista = Ban02::read(
         id_empresa: $filtro_empresa,
         filtro_conta: $filtro_conta,
