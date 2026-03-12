@@ -36,6 +36,7 @@ if($target == 'vendas') {
         con01:$filtro_titulo,
         con02:$filtro_subtitulo,
         filtro_custos:$filtro_custos,
+        read_vendas:true,
     );
 
         $rec03_lista = Rec03::read(
