@@ -44,21 +44,16 @@ if($target == 'vendas') {
             data_inicial:$filtro_data_inicial,
             data_final:$filtro_data_final,
         );
-
-        echo '<pre>';
-        print_r($rec03_lista);
-        echo '</pre>';
     
 
     foreach($rec01_lista as $rec) {
-        // Rec02::deletebyrec01($rec->id);
-        // Rec01::delete($rec->id);
+        Rec02::deletebyrec01($rec->id);
+        Rec01::delete($rec->id);
     }
 
     foreach($rec03_lista as $rec) {
         var_dump(Rec03::delete($rec->id));
     }
-    exit;
 
 
     header('Location: vendas.php?sucesso=1&empresa=' . $filtro_empresa . '&cadastro=' . $filtro_cadastro . '&data_inicial=' . $filtro_data_inicial . '&data_final=' . $filtro_data_final . '&custos=' . $custos . 'filtro_titulo=' . $filtro_titulo . 'filtro_subtitulo=' . $filtro_subtitulo);
