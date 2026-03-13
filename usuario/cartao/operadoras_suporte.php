@@ -237,7 +237,25 @@ $operadoras_suporte = [
             'suporte_data' => 'formatada',
             'separator' => ';',
             'encoding' => 'ISO-8859-1',
-        ]
+        ],
+        'xlsx' => [
+            'excluded_columns' => [
+                'B', 'C', 'D', 'I'
+            ],
+            'start_row' => 11,
+            'start_end_columns' => [ 'start' => 'A', 'end' => 'K'],
+            'organizador' => [
+                'data' => 0,
+                'bandeira' => 3,
+                'tipo' => 1,
+                'parcela' => 2,
+                'valor_b' => 4,
+                'valor_l' => 5,
+                'estado' => 6
+            ],
+            'suporte_data' => 'formatada',
+            'suporte_numero' => 'formatado',
+        ],
     ]
 ]
 ?>
