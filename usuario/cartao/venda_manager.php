@@ -51,6 +51,7 @@ function parse_excel($numero_arquivo = null) {
         'rede',
         'sicredi',
         'fazpay',
+        'cielo'
     ];
     
     $tipo_arquivo = filter_input(INPUT_POST, 'tipo_arquivo');
