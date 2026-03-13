@@ -127,7 +127,15 @@ foreach($grupos as $key => $group) {
     $valor_liq_go = $valor_b_total - (($valor_b_total / 100) * $prazo->taxa );
 
     $data = (DateTime::createFromFormat('d/m/Y', $grupo_base['data']))->format('Y-m-d');
-    if(Rec03::read(null, $_SESSION['usuario']->id_empresa, $data, $operadora->id, $id_bandeira, null, $prazo->id )) {
+    if(Rec03::read(
+        null, 
+        id_empresa:$_SESSION['usuario']->id_empresa, 
+        data:$data, 
+        operadora_id:$operadora->id, 
+        bandeira_id:$id_bandeira, 
+        tipo_id:null, 
+        prazo_id:$prazo->id 
+    )) {
         continue;
     }
 
@@ -167,24 +175,17 @@ foreach($grupos as $key => $group) {
     Rec01::create($rec01[$documento]);
     $id_rec01 = Rec01::read(null, $_SESSION['usuario']->id_empresa, documento:$documento)[0]->id;
 
-    // dividimos o valor total igualmente entre todas as parcelas e usamos o prazo específico
-    // de cada número de parcela para calcular vencimento. a taxa da maior parcela já foi aplicada
-    // em $valor_liq_go acima.
     $last_rec02 = null;
     $parcel_value = $max_parcela > 0 ? round($valor_l_total / $max_parcela, 2) : 0;
 
-    // preparão para caching de prazos por parcela
     $prazo_por_parcela = [];
 
     for ($num = 1; $num <= $max_parcela; $num++) {
-        // ajusta pequeno resto na última parcela para que a soma dê exatamente $valor_l_total
         if ($num == $max_parcela) {
             $valor_parcela = $valor_l_total - $parcel_value * ($max_parcela - 1);
         } else {
             $valor_parcela = $parcel_value;
         }
-
-        // recupera o prazo para esta parcela (cache se disponível)
         if (!isset($prazo_por_parcela[$num])) {
             $prazo_por_parcela[$num] = Pra01::read(id_empresa:$_SESSION['usuario']->id_empresa, id_bandeira: $id_bandeira, parcela: $num)[0] ?? $prazo;
         }

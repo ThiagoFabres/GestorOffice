@@ -88,6 +88,7 @@ if($exibir_detalhes === false){
         filtro_documento: $get_filtro_nome ?? null,
         filtro_opcao: $get_filtro_opcao ?? null,
         filtro_por: $get_filtro_por ?? null,
+        read_vendas:true,
         filtro_pagamento: $get_filtro_pagamento ?? null,
         filtro_cadastro:$get_filtro_cadastro ?? null, 
         filtro_custos: $get_filtro_custo ?? null,
