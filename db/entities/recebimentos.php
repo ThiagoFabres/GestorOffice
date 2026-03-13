@@ -613,7 +613,7 @@ INSERT INTO rec03 (
     }
     public static function delete($id) {
         $pdo = (new Database())->connect();
-        $sql = 'DELETE FROM rec01 WHERE id = :id';
+        $sql = 'DELETE FROM rec03 WHERE id = :id';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id', $id);
 
