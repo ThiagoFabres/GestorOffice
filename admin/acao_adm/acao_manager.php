@@ -52,7 +52,7 @@ if($target == 'vendas') {
     }
 
     foreach($rec03_lista as $rec) {
-        var_dump(Rec03::delete($rec->id));
+        Rec03::delete($rec->id);
     }
 
 
