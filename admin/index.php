@@ -70,7 +70,7 @@ $erro = filter_input(INPUT_GET, 'erro');
             <a class="nav-link text-white" data-bs-toggle="collapse" href="#cadastrosMenu" role="button"aria-expanded="false" aria-controls="cadastrosMenu">
                 <div style=" align-items:center;"><i class="bi bi-clipboard"></i></div> Ação Administrativa
             </a>
-                    <div class="<?php if($lateral_target != 'cadastro'){?>collapse<?php } ?>" id="cadastrosMenu">
+                    <div class="<?php if( !isset($lateral_target) || $lateral_target != 'cadastro'){?>collapse<?php } ?>" id="cadastrosMenu">
                         <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
                             <li class=" menu-li <?php if(isset($get_cadastro) && $get_cadastro == 'cliente') { ?> menu-li-atual <?php } ?>"><a href="/admin/acao_adm/bancario.php" class="link-light text-decoration-none"><i
                                         class="bi bi-bank"></i>Bancária</a></li>
