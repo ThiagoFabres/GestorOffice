@@ -219,13 +219,14 @@ $filtro_vendas = filter_input(INPUT_GET, 'filtro_vendas') == 'on' ? 1 : 0
                                                 $custos = CentroCustos::read(id_empresa: $filtro_empresa);
                         foreach ($cadastros as $cadastro) {
                             $lancamentos = Rec01::read(
-                                filtro_custos: $filtro_custo, 
-                                id_cadastro: $cadastro->id_cadastro, 
-                                con01: $filtro_titulo,
-                                con02: $filtro_subtitulo, 
-                                filtro_data_inicial: $filtro_data_inicial, 
+                                filtro_custos: $filtro_custo ?? null, 
+                                id_cadastro: $cadastro->id_cadastro ?? null, 
+                                con01: $filtro_titulo ?? null,
+                                con02: $filtro_subtitulo ?? null, 
+                                filtro_data_inicial: $filtro_data_inicial ?? null, 
                                 read_vendas: true,
-                                filtro_data_final: $filtro_data_final);
+                                filtro_data_final: $filtro_data_final ?? null
+                                );
                             if(empty($lancamentos) && $filtro_cadastro == null) {
                                continue;
                             }

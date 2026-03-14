@@ -584,7 +584,7 @@ INSERT INTO rec03 (
         if ($id_empresa != null) $conditions[] = 'id_empresa = :id_empresa';
         if ($data != null) $conditions[] = 'data_lanc = :data_lanc';
         if ($data_inicial != null) $conditions[] = ' data_lanc >= :data_inicial';
-        if ($data_final != null) $conditions[] = ' data_lanc >= :data_final';
+        if ($data_final != null) $conditions[] = ' data_lanc <= :data_final';
         if ($operadora_id != null) $conditions[] = 'operadora_id = :operadora_id';
         if ($bandeira_id != null) $conditions[] = 'bandeira_id = :bandeira_id';
         if ($tipo_id != null) $conditions[] = 'tipo_id = :tipo_id';
