@@ -122,7 +122,8 @@ function parse_excel($numero_arquivo = null) {
         $excluded_columns = $operadora_sup['excluded_columns'];
     }
     if($tipo_arquivo == 'padrao') {
-        $worksheet_lines = $worksheet->getRowIterator($operadora_sup['start_row']);
+        $highestRow = $worksheet->getHighestDataRow();
+        $worksheet_lines = $worksheet->getRowIterator($operadora_sup['start_row'], $highestRow);
     } else {
         $worksheet_lines = $worksheet->getRowIterator(2);
     }
@@ -173,8 +174,28 @@ function parse_excel($numero_arquivo = null) {
                 5 =>$cells_p[$operadora_sup_org['valor_l']],
                 //estado
                 6 => $cells_p[$operadora_sup_org['estado']]
-            ];
+            ]; 
         }
+        
+        // $linha_vazia = true;
+        // foreach ($cells as $valor) {
+        //     if ($valor !== null && trim($valor) !== '') {
+        //         $linha_vazia = false;
+        //         break;
+        //     }
+        // }
+
+        // if ($linha_vazia) {
+        //     break;
+        // }
+    if(
+        empty($cells[0]) &&
+        empty($cells[1]) &&
+        empty($cells[4]) &&
+        empty($cells[5])
+    ){
+        break;
+    }
         if(isset($operadora_sup['suporte_pix']) && $operadora_sup['suporte_pix'] == true) {
             
             $cells[2] = 'pix';
@@ -183,8 +204,8 @@ function parse_excel($numero_arquivo = null) {
         if(isset($operadora_sup['suporte_valor_taxa']) && $operadora_sup['suporte_valor_taxa'] == true) {
            $cells[4] = $cells[5] + $cells[4];   
         }
-        
 
+        
         if(($tipo_arquivo == 'personalizado' && isset($cells[6])) || ($tipo_arquivo == 'padrao' && !isset($cells[6])) ) {
             $multi = false;
             foreach($arquivos_multi as $i => $num) {
@@ -223,7 +244,7 @@ function parse_excel($numero_arquivo = null) {
                 header('location: cadastro_vendas.php?erro=arquivo');
                 exit;
             }
-        }
+        }    
         $palavras_negadas = [
             'cancelada',
             'negada',
@@ -236,7 +257,7 @@ function parse_excel($numero_arquivo = null) {
             }
         }
         $cells[3] = intval($cells[3]);
-        
+
 
 
         if($tipo_arquivo == 'padrao'){
