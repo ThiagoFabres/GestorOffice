@@ -528,9 +528,11 @@ function parse_csv(string $caminhoCsv): array {
 
         if($operadora_sup['suporte_data'] == 'hora'){
             $data = strtolower($data);
-            $data = str_replace( ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez', ','], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, ''], $data);
-            $data = substr($data, 0, 9);
-            $data = (DateTime::createFromFormat('d m Y', $data))->format('Y-m-d');
+            $data = str_replace( ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez', ',', '/'], ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '', ' '], $data);
+            $data = substr($data, 0, 10);
+
+
+                $data = (DateTime::createFromFormat('d m Y', $data))->format('Y-m-d');
         }
         if($operadora_sup['suporte_data'] == 'formatada'){
             $data = (DateTime::createFromFormat('d/m/Y', $data))->format('Y-m-d');

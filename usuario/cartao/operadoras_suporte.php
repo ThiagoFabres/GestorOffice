@@ -256,6 +256,25 @@ $operadoras_suporte = [
             'suporte_data' => 'formatada',
             'suporte_numero' => 'formatado',
         ],
-    ]
+    ],
+    'pagbank' => [
+        'csv' => [
+            'colunas' => [
+                'data' => 'Data da Transação',
+                'status' => 'Status',
+                'valor_b' => 'Valor Bruto',
+                'valor_l' => 'Valor Líquido',
+                'tipo' => 'Forma de Pagamento',
+                'bandeira' => 'Bandeira',
+                'parcela' => 'Parcela'
+            ],
+            'separator' => ';',
+            'suporte_parcela' => true,
+            'linha_inicial' => null,
+            'suporte_data' => 'hora',
+            'suporte_numero' => 'formatado',
+            'encoding' => 'UTF-8',
+        ],
+    ],
 ]
 ?>
