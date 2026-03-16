@@ -533,6 +533,11 @@ if ($get_filtro_conta != null) {
                                 </div>
 
                                 <?php if($get_filtro_conta != null) { ?>
+                                <div style="margin-inline:10px;">
+
+                                    |
+
+                                </div>
 
                                     <div id="total-parcela">Saldo Conta: R$
                                         <?= number_format($saldo_geral, 2, ',', '.') ?> 
