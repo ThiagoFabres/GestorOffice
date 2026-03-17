@@ -260,7 +260,7 @@ async function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=nu
 
         columnStyles: {
             0: { cellWidth: usableWidth * 0.75 },
-            1: { cellWidth: usableWidth * 0.25, halign: 'justify',  },
+            1: { cellWidth: usableWidth * 0.25, halign: 'right' }
         },
 
 
