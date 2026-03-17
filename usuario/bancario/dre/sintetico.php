@@ -261,9 +261,8 @@ $titulos = array_values($titulos_array);
                                                 <table class="table table-striped table-bordered">
                                                     <thead>
                                                         <tr class="tr-dre-sintetico avoid-page-break avoid-page-break">
-                                                            <!-- <th style="width:25%;">Centro de Custos</th> -->
-                                                            <th style="width:50%;">Subtitulo</th>
-                                                            <th style="width:25%;">Receita</th>
+                                                            <th style="width:75%;">Subtitulo</th>
+                                                            <th style="width:25%;">Valor</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
@@ -286,7 +285,7 @@ $titulos = array_values($titulos_array);
                                                                 }
                                                             }
 
-                                                            // Se título é Despesa (D), o valor já vem negativo; se Receita (C), vem positivo
+
                                                             $receita = $soma;
 
                                                             $total_subtitulo += $receita;

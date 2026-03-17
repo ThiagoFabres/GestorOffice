@@ -34,7 +34,7 @@ if($acao == 'editar' && $target == 'prazo') {
                         </div>
                         <div>
                             <label for="nomeOperadora" class="form-label">Taxa</label>
-                            <input style="border-radius:0;" type="text" id="taxaOperadora" name="taxa" class="form-control" placeholder="Taxa" value="<?=$pra01->taxa ?? '' ?>" required>
+                            <input style="border-radius:0;" onkeypress="return /[0-9,]/.test(event.key)"  type="text" id="taxaOperadora" name="taxa" class="form-control" placeholder="Taxa" value="<?= isset($pra01) ? number_format($pra01->taxa, 2, ',', '') : '' ?>" required>
                         </div>
                     </div>
                     
@@ -47,7 +47,7 @@ if($acao == 'editar' && $target == 'prazo') {
                         <?php } ?>
                         <div>
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                            <button type="submit" name="acao" value="<?php if($acao == 'editar') echo $acao; else echo 'adicionar'; ?>" class="btn btn-success" style="background-color: #5856d6; border-color: #5856d6;">Salvar</button>
+                            <button type="submit" name="acao" value="<?php if($acao == 'editar') echo 'editar'; else echo 'adicionar'; ?>" class="btn btn-success" style="background-color: #5856d6; border-color: #5856d6;">Salvar</button>
                         </div>
                     </div>
                     </form>

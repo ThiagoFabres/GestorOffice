@@ -102,7 +102,6 @@ function _rewriteTextNodesInElement(root) {
     });
 }
 
-// gerarpdf: generates PDF using jsPDF + jspdf-autotable
 async function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=null) {
     console.log('Rendering')
     if (typeof jsPDF === 'undefined' && !(window.jspdf && window.jspdf.jsPDF)) {
@@ -157,7 +156,11 @@ async function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=nu
         pdf.setFontSize(11);
         const titleLines = pdf.splitTextToSize(title, usableWidth);
         if (cursorY + titleLines.length * 6 > pdf.internal.pageSize.getHeight() - margin) pdf.addPage(), cursorY = margin;
+       pdf.setFont(undefined, 'bold');
+        pdf.setFontSize(18)
         pdf.text(titleLines, margin, cursorY);
+        pdf.setFont(undefined, 'normal');
+        pdf.setFontSize(11)
         cursorY += titleLines.length * 6 + 4;
 
         const body = item.querySelector('.accordion-body');
@@ -188,8 +191,9 @@ async function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=nu
                 pdf.addPage();
                 cursorY = margin;
             }
-
+            pdf.setFontSize(15)
             pdf.text(subtitleLines, margin, cursorY);
+            pdf.setFontSize(10)
             cursorY += subtitleLines.length * 6 + 2;
         }
             let headers = Array.from(table.querySelectorAll('thead th')).map(th => _convertIsoToDDMMYYYY(th.textContent.trim()));
@@ -203,17 +207,78 @@ async function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=nu
             );
 
             if (!rows || rows.length === 0) continue;
-
+            if(nome == 'sintetico'){
             pdf.autoTable({
-                startY: cursorY,
-                head: headers.length ? [headers] : [],
-                body: rows,
-                margin: { left: margin, right: margin },
-                styles: { fontSize: 9, cellPadding: 3 },
-                headStyles: { fillColor: [230, 230, 230], textColor: 20, halign: 'left' },
-                theme: 'striped'
-            });
+        startY: cursorY,
+        head: headers.length ? [headers] : [],
+        body: rows,
+        margin: { left: margin, right: margin },
 
+        styles: { fontSize: 9, cellPadding: 3 },
+
+        headStyles: { 
+            fillColor: [230, 230, 230], 
+            textColor: 20,
+            halign: 'left'
+        },
+        
+
+        columnStyles: {
+            0: { cellWidth: usableWidth * 0.75 },
+            1: { cellWidth: usableWidth * 0.25, halign: 'right' }
+        },
+
+
+        didParseCell: function (data) {
+            const totalLinhas = data.table.body.length;
+
+            if (data.row.index === totalLinhas - 1) {
+        data.cell.styles.fontStyle = 'bold';
+        data.cell.styles.fillColor = [220, 220, 220]; 
+        data.cell.styles.textColor = [30, 30, 30]
+        data.cell.styles.halign = 'right';
+    }
+        },
+
+        theme: 'striped'
+    });
+} else {
+   pdf.autoTable({
+        startY: cursorY,
+        head: headers.length ? [headers] : [],
+        body: rows,
+        margin: { left: margin, right: margin },
+
+        styles: { fontSize: 9, cellPadding: 3 },
+
+        headStyles: { 
+            fillColor: [230, 230, 230], 
+            textColor: 20,
+            halign: 'left'
+        },
+        
+
+        columnStyles: {
+            0: { cellWidth: usableWidth * 0.15 },
+            1: { cellWidth: usableWidth * 0.60 },
+            2:{ cellWidth: usableWidth * 0.25, halign: 'right' }
+        },
+
+
+        didParseCell: function (data) {
+            const totalLinhas = data.table.body.length;
+
+            if (data.row.index === totalLinhas - 1) {
+        data.cell.styles.fontStyle = 'bold';
+        data.cell.styles.fillColor = [220, 220, 220]; 
+        data.cell.styles.textColor = [30, 30, 30]
+        data.cell.styles.halign = 'right';
+    }
+        },
+
+        theme: 'striped'
+    });
+}
             cursorY = (pdf.lastAutoTable && pdf.lastAutoTable.finalY) ? pdf.lastAutoTable.finalY + 6 : pdf.internal.pageSize.getHeight() - margin;
             if (cursorY > pdf.internal.pageSize.getHeight() - margin) {
                 pdf.addPage();
