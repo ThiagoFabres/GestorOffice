@@ -182,7 +182,6 @@ async function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=nu
             prev = prev.previousElementSibling;
         }
 
-        // escrever subtitulo no PDF
         if (subtitle) {
             pdf.setFontSize(10);
             const subtitleLines = pdf.splitTextToSize(subtitle, usableWidth);
