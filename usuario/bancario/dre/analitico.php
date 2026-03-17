@@ -21,7 +21,6 @@ $lateral_bancario = true;
 $lateral_target = 'dreBancario';
 function format_valor_alinhado($valor) {
     $formatado = number_format($valor, 2, ',', '.');
-    // 12 caracteres para alinhar valores grandes e pequenos
     $formatado = str_pad($formatado, 12, ' ', STR_PAD_LEFT);
     return $formatado;
 }
