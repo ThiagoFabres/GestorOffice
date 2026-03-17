@@ -207,7 +207,7 @@ async function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=nu
             );
 
             if (!rows || rows.length === 0) continue;
-            if(nome == 'sintetico'){
+
             pdf.autoTable({
         startY: cursorY,
         head: headers.length ? [headers] : [],
@@ -242,42 +242,7 @@ async function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=nu
 
         theme: 'striped'
     });
-} else {
-   pdf.autoTable({
-        startY: cursorY,
-        head: headers.length ? [headers] : [],
-        body: rows,
-        margin: { left: margin, right: margin },
 
-        styles: { fontSize: 9, cellPadding: 3 },
-
-        headStyles: { 
-            fillColor: [230, 230, 230], 
-            textColor: 20,
-            halign: 'left'
-        },
-        
-
-        columnStyles: {
-            0: { cellWidth: usableWidth * 0.75 },
-            1: { cellWidth: usableWidth * 0.25, halign: 'right' }
-        },
-
-
-        didParseCell: function (data) {
-            const totalLinhas = data.table.body.length;
-
-            if (data.row.index === totalLinhas - 1) {
-        data.cell.styles.fontStyle = 'bold';
-        data.cell.styles.fillColor = [220, 220, 220]; 
-        data.cell.styles.textColor = [30, 30, 30]
-        data.cell.styles.halign = 'right';
-    }
-        },
-
-        theme: 'striped'
-    });
-}
             cursorY = (pdf.lastAutoTable && pdf.lastAutoTable.finalY) ? pdf.lastAutoTable.finalY + 6 : pdf.internal.pageSize.getHeight() - margin;
             if (cursorY > pdf.internal.pageSize.getHeight() - margin) {
                 pdf.addPage();
