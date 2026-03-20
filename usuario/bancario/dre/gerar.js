@@ -230,13 +230,16 @@ async function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=nu
 
         didParseCell: function (data) {
             const totalLinhas = data.table.body.length;
+            if (data.column.index === 1) {
+                data.cell.styles.halign = 'right';
+            }
 
             if (data.row.index === totalLinhas - 1) {
-        data.cell.styles.fontStyle = 'bold';
-        data.cell.styles.fillColor = [220, 220, 220]; 
-        data.cell.styles.textColor = [30, 30, 30]
-        data.cell.styles.halign = 'right';
-    }
+                data.cell.styles.fontStyle = 'bold';
+                data.cell.styles.fillColor = [220, 220, 220]; 
+                data.cell.styles.textColor = [30, 30, 30]
+                data.cell.styles.halign = 'right';
+            }
         },
 
         theme: 'striped'
