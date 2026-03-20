@@ -376,9 +376,7 @@ function parse_excel($numero_arquivo = null) {
                     $transactions['lancamentos'][$i]['motivo'][] = 'parcela';
                 }
             } else {
-                if($tipo_preg != 'pix') {
                     $transactions['lancamentos'][$i]['motivo'][] = 'parcela';
-                }
             }
         if(!in_array($bandeira_preg, $bandeiras_parcelas)) {
             $transactions['lancamentos'][$i]['motivo'][] = 'parcela';
@@ -568,6 +566,7 @@ function parse_csv(string $caminhoCsv): array {
         $tipo = mb_convert_encoding($tipo, 'UTF-8', $operadora_sup['encoding']);
         $bandeira = mb_convert_encoding($linha[$mapa[$operadora_sup['colunas']['bandeira']]], 'UTF-8', $operadora_sup['encoding']);
 
+
         
         $transactions['lancamentos'][$i] = [
             'data'          => $data,
@@ -586,21 +585,19 @@ function parse_csv(string $caminhoCsv): array {
         $tipo_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $transactions['lancamentos'][$i]['tipo'])));
         if(isset($parcelas_bandeira[$bandeira_preg][$tipo_preg])) {
                 $parcelas_esperadas = $parcelas_bandeira[$bandeira_preg][$tipo_preg];
-                if(!in_array($transactions['lancamentos'][$i]['parcela'], $parcelas_esperadas) && $tipo_preg != 'pix') {
+                if(!in_array($transactions['lancamentos'][$i]['parcela'], $parcelas_esperadas)) {
                     $transactions['lancamentos'][$i]['motivo'][] = 'parcela';
                 }
             } else {
-                if($tipo_preg != 'pix') {
                     $transactions['lancamentos'][$i]['motivo'][] = 'parcela';
-                }
             }
-        if(!in_array($bandeira_preg, $bandeiras_parcelas) && $tipo_preg != 'pix') {
+        if(!in_array($bandeira_preg, $bandeiras_parcelas)) {
             $transactions['lancamentos'][$i]['motivo'][] = 'parcela';
             $transactions['lancamentos'][$i]['motivo'][] = 'bandeira';
             $transactions['lancamentos'][$i]['motivo'][] = 'tipo';
         } 
         if((!in_array($tipo_preg, $bandeiras_tipo) ||
-            !in_array($bandeira_preg, $bandeiras_parcelas)) && $tipo_preg != 'pix' ) {
+            !in_array($bandeira_preg, $bandeiras_parcelas)) ) {
             if(isset($tipos_bandeira[$bandeira_preg][$tipo_preg])) {
                 $tipos_esperados = $tipos_bandeira[$bandeira_preg][$tipo_preg];
                 if(!in_array($tipo_preg, $tipos_esperados)) {
@@ -615,9 +612,6 @@ function parse_csv(string $caminhoCsv): array {
         }
         $transactions['lancamentos'][$i]['bandeira'] = ucfirst($transactions['lancamentos'][$i]['bandeira']);
         
-        if(strtolower($transactions['lancamentos'][$i]['bandeira']) == 'pix') {
-            $transactions['lancamentos'][$i]['bandeira'] = '';
-        } 
 
     $i++;
     }

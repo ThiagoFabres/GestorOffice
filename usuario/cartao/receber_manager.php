@@ -31,7 +31,7 @@ $tamanho = count($parcela_lista);
 while($tamanho != 0 ) {
     $transactions[$i] = [
         'data' => $data_lista[$i],
-        'bandeira' => $bandeira_lista[$i],
+        'bandeira' => $tipo_lista[$i] == 'Pix' ? 'Pix' : $bandeira_lista[$i],
         'tipo' => $tipo_lista[$i],
         'parcela' => $parcela_lista[$i],
         'valor_b' => $valor_b_lista[$i],
@@ -122,9 +122,13 @@ foreach($grupos as $key => $group) {
     }
 
     // recupera o prazo referente à maior parcela (taxa da maior parcela)
+    if($valor_b_total != $valor_l_total){
     $prazo = Pra01::read(id_empresa:$_SESSION['usuario']->id_empresa, id_bandeira: $id_bandeira, parcela: $max_parcela)[0] ?? $cache_prazo[$id_bandeira];
-
+    
     $valor_liq_go = $valor_b_total - (($valor_b_total / 100) * $prazo->taxa );
+    } else {
+        $valor_liq_go = $valor_b_total;
+    }
 
     $data = (DateTime::createFromFormat('d/m/Y', $grupo_base['data']))->format('Y-m-d');
     if(Rec03::read(
@@ -216,12 +220,12 @@ foreach($grupos as $key => $group) {
         $rec01[$documento],
         $last_rec02
     ];
+
     $documento++;
 }
 foreach($rec03_lista as $rec03) {
     Rec03::create($rec03);
 }
-
 header('Location: cadastro_vendas.php');
 exit;
 

@@ -485,15 +485,23 @@ if (isset($view) && $view == 'cadastro') {
 
             Con02::update($conta);
             } else if (isset($acao) && $acao == 'excluir') {
-
-
-                if(!Rec01::read(con02: $id_conta02) 
-                    && !Pag01::read(con02: $id_conta02) ) {
-            Con02::delete($id_conta02);
-        } else {
-            header('Location: contas.php?con01id='.$id_conta.'&erro=usado');
-            exit;
-        }
+                $con02 = Con02::read($id_conta02, idempresa:$_SESSION['usuario']->id_empresa)[0];
+                $con01 = Con01::read($con02->id_con01, idempresa:$_SESSION['usuario']->id_empresa)[0];
+                if($con01->tipo == 'C') {
+                    if(!Rec02::read(id_empresa:$_SESSION['usuario']->id_empresa, filtro_con02: $id_conta02)) {
+                        Con02::delete($con02->id);
+                    } else {
+                        header('Location: contas.php?con01id='.$id_conta.'&erro=usado');
+                        exit;
+                    }
+                } else if($con01->tipo == 'D') {
+                    if(!Pag02::read(id_empresa:$_SESSION['usuario']->id_empresa, filtro_con02: $id_conta02)) {
+                        Con02::delete($con02->id);
+                    } else {
+                        header('Location: contas.php?con01id='.$id_conta.'&erro=usado');
+                        exit;
+                    }
+                }
             } 
     }
 
@@ -509,7 +517,7 @@ if (isset($view) && $view == 'cadastro') {
         }
     }
     if (isset($con01)) {
-        $route = '?con01id=' . $con01;
+        $route = '?con01id=' . $id_conta;
     }
     ;
     header('Location: contas.php' . $route);
