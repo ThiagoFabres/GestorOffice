@@ -94,7 +94,7 @@ if ($get_data_inicial != '' || $get_data_final != '' || $get_custos != '' || $ge
     $subtitulos_agrupados = [];
     foreach($empresa_lista as $empresa) {
         foreach ($subtitulos as $subtitulo) {
-            $titulo = Con01::read($subtitulo->id_con01, $empresa->id, ordenar_por: 'tipo', filtro_operacional:$get_operacional);
+            $titulo = Con01::read($subtitulo->id_con01, $empresa->id, filtro_operacional:$get_operacional);
             if($titulo && isset($titulo[0])) {
                 $nome_titulo = $titulo[0]->nome;
                 if(!isset($titulos_array[$nome_titulo])) {

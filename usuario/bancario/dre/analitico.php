@@ -248,7 +248,6 @@ if($todas_empresas) {
                     foreach ($subtitulos as $subtitulo) {
                         $titulo = Con01::read(
                             id: $subtitulo->id_con01,
-                            ordenar_por: 'tipo',
                             filtro_operacional: $get_operacional);
                         if ($titulo && isset($titulo[0])) {
                             $nome_titulo = $titulo[0]->nome;

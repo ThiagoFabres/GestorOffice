@@ -20,7 +20,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
 $lateral_target = 'dre';
 function format_valor_alinhado($valor) {
     $formatado = number_format($valor, 2, ',', '.');
-    // 12 caracteres para alinhar valores grandes e pequenos
+
     $formatado = str_pad($formatado, 12, ' ', STR_PAD_LEFT);
     return $formatado;
 }
@@ -88,8 +88,8 @@ if($todas_empresas) {
                     <div class="card-header">
                         <button class="btn btn-primary dre-menu-btn" id="btn-sintetico" onclick="window.location.href='sintetico.php'">
                             <h3>DRE - Sintético</h3>
-                        </button><!--
-    --><button class="btn btn-primary btn-dre-selecionado dre-menu-btn" style="border-bottom: 2px solid #5856d6;" id="btn-analitico">
+                        </button>
+                        <button class="btn btn-primary btn-dre-selecionado dre-menu-btn" style="border-bottom: 2px solid #5856d6;" id="btn-analitico">
                             <h3>DRE - Analitico</h3>
                         </button>
                     </div>
@@ -270,7 +270,7 @@ if($todas_empresas) {
                         $subtitulos_agrupados = [];
                         foreach ($subtitulos as $subtitulo) {
                             foreach($empresa_lista as $empresa) {
-                                $titulo = Con01::read($subtitulo->id_con01, $empresa->id, ordenar_por: 'tipo', filtro_operacional:$get_operacional);
+                                $titulo = Con01::read($subtitulo->id_con01, $empresa->id, filtro_operacional:$get_operacional);
                                 if ($titulo && isset($titulo[0])) {
                                     $nome_titulo = $titulo[0]->nome;
                                     if(!isset($titulos_array[$nome_titulo])) {

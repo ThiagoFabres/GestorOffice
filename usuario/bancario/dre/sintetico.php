@@ -80,7 +80,6 @@ foreach($empresa_lista as $empresa) {
         $c1 = Con01::read(
             $sub->id_con01,
             $empresa->id,
-            ordenar_por: 'tipo',
             filtro_operacional: $get_operacional
         );
 
@@ -201,10 +200,10 @@ $titulos = array_values($titulos_array);
                                             </div>
                                             <div class="botoes-gerar">
                                                 <?php if (isset($get_data_inicial) || isset($get_data_inicial)) { ?>
-                                                    <button type="button" class="btn-sm btn" id="botao-gerar-pdf" style=" "
+                                                    <button type="button" class="btn-sm btn" id="botao-gerar-pdf"
                                                         onclick="prepararGeracao('pdf')">Gerar PDF</button>
                                                     <button type="button" class="btn-sm btn" id="botao-gerar-excel"
-                                                        style=" " onclick="prepararGeracao('excel')">Gerar Excel</button>
+                                                      onclick="prepararGeracao('excel')">Gerar Excel</button>
                                                 <?php } ?>
                                             </div>
                                         </div>
