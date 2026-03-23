@@ -95,8 +95,11 @@ foreach($empresa_lista as $empresa) {
         }
     }
 }
-$titulos = array_values($titulos_array);
+    uasort($titulos_array, function($a, $b) {
+    return strcasecmp($a->nome, $b->nome);
+});
 
+$titulos = array_values($titulos_array);
 
 ?>
 
