@@ -260,7 +260,11 @@ if($todas_empresas) {
                             }
                         }
                     }
-                    $titulos = array_values($titulos_array);
+                        uasort($titulos_array, function($a, $b) {
+    return strcasecmp($a->nome, $b->nome);
+});
+
+$titulos = array_values($titulos_array);
                     
                     // Exibir cada título como um accordion
                         if (isset($titulos)) { ?>

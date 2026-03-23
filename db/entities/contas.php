@@ -59,13 +59,14 @@ Class Con01 {
 
         if($ordenar_por != null) {
             if($ordenar_por == 'tipo') {
-                
                 $query .= ' ORDER BY tipo asc ';
+            } else if($ordenar_por == 'nome') {
+                $query .= ' ORDER BY nome asc ';
             } 
             
         } else {
                 $query .= ' ORDER BY nome ASC';
-            }
+        }
         $stmt = $pdo->prepare($query);
         if ($id != null) $stmt->bindValue(':id', $id);
         if ($idempresa != null) $stmt->bindValue(':id_empresa', $idempresa);

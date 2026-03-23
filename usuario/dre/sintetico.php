@@ -107,7 +107,12 @@ if ($get_data_inicial != '' || $get_data_final != '' || $get_custos != '' || $ge
             }
         }
     }
-    $titulos = array_values($titulos_array);
+    uasort($titulos_array, function($a, $b) {
+    return strcasecmp($a->nome, $b->nome);
+});
+
+$titulos = array_values($titulos_array);
+    
 }
 
 
@@ -220,10 +225,9 @@ if ($get_data_inicial != '' || $get_data_final != '' || $get_custos != '' || $ge
                                             </div>
                                             <div class="botoes-gerar">
                                                 <?php if (isset($get_data_inicial) || isset($get_data_inicial)) { ?>
-                                                    <button type="button" class="btn-sm btn" id="botao-gerar-pdf" style=" "
+                                                    <button type="button" class="btn-sm btn" id="botao-gerar-pdf"
                                                         onclick="prepararGeracao('pdf')">Gerar PDF</button>
-                                                    <button type="button" class="btn-sm btn" id="botao-gerar-excel"
-                                                        style=" " onclick="prepararGeracao('excel')">Gerar Excel</button>
+                                                    <button type="button" class="btn-sm btn" id="botao-gerar-excel" onclick="prepararGeracao('excel')">Gerar Excel</button>
                                                 <?php } ?>
                                                     
                                                     

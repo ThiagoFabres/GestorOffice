@@ -138,7 +138,7 @@ if($todas_empresas) {
                                             <div class="d-flex flex-row justify-content-center">
                                                     <div style="max-width: calc(30% - (160px/4));">
                                                             <label for="titulo" >Titulo:</label>
-                                                            <div class="input-select-titulo" style="margin-top 3%">
+                                                            <div class="input-select-titulo">
                                                                 <select id="input-titulo" class="input-select-geral" name="titulo" onchange="this.form.submit()">
                                                                     <option value="">Selecione</option>
                                                                     <?php
@@ -152,7 +152,7 @@ if($todas_empresas) {
 
                                                     <div id="subtitulo-dre-div" style="max-width: calc(30% - (160px/4));">
                                                     <label for="subtitulo">Sub-Titulo:</label>
-                                                        <div id="subtitulo-dre" style="margin-top 3%">
+                                                        <div id="subtitulo-dre">
                                                             <select id="input-subtitulo" class="input-select-geral" name="subtitulo" class="form-control" onchange="this.form.submit()">
                                                                 <option value=""> Selecione</option>
                                                                 <?php
@@ -174,7 +174,7 @@ if($todas_empresas) {
                                         </div>
                                                  <div class="inputs-dre-btn">
                                                    <div class="botoes-acao">
-                                                    <button type="submit" class="btn-sm btn" style="background-color: #5856d6; color: white; ">Filtrar</button>
+                                                    <button type="submit" class="btn-sm btn" style="background-color: #5856d6; color: white;">Filtrar</button>
                                                     <a href="analitico.php" class="btn btn-secondary btn-sm">Limpar</a>
                                                      </div>   
                                                     <div id="inputs-btn-analitico">
@@ -283,7 +283,11 @@ if($todas_empresas) {
                                 }
                             }
                         }
-                        $titulos = array_values($titulos_array);
+    uasort($titulos_array, function($a, $b) {
+    return strcasecmp($a->nome, $b->nome);
+});
+
+$titulos = array_values($titulos_array);
 
                         // Exibir cada título como um accordion, e dentro dele, as contas separadas por categoria
 // ...existing code...
