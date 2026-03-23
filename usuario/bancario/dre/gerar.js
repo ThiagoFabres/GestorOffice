@@ -146,6 +146,9 @@ async function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=nu
     pdf.setFontSize(12);
     pdf.text('Relatório demonstrativo de resultado (DRE)', margin, cursorY);
     cursorY += 8;
+    pdf.setLineWidth(0.2);
+    pdf.line(margin, cursorY, pageWidth - margin, cursorY);
+    cursorY += 8;
 
     // Iterate accordions and convert tables using autoTable
     for (let i = 0; i < accordionItems.length; i++) {
@@ -216,7 +219,7 @@ async function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=nu
         styles: { fontSize: 9, cellPadding: 3 },
 
         headStyles: { 
-            fillColor: [230, 230, 230], 
+            fillColor: [190, 190, 190], 
             textColor: 20,
             halign: 'left'
         },
@@ -240,9 +243,14 @@ async function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=nu
                 data.cell.styles.textColor = [30, 30, 30]
                 data.cell.styles.halign = 'right';
             }
+            if (data.section === 'body') {
+                if (data.row.index % 2 === 0) {
+                    data.cell.styles.fillColor = [245, 245, 245]; 
+                }
+            }
         },
 
-        theme: 'striped'
+        theme: 'grid'
     });
 
             cursorY = (pdf.lastAutoTable && pdf.lastAutoTable.finalY) ? pdf.lastAutoTable.finalY + 6 : pdf.internal.pageSize.getHeight() - margin;
