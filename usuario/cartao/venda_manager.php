@@ -340,13 +340,13 @@ function parse_excel($numero_arquivo = null) {
                 }
                 }
             }
-        
+        $cadastrado = false;
         if(isset($bandeira_id) && isset($prazo_id)) {
             if(isset($importadas_set[$data_formatada][$bandeira_id][$prazo_id])) {
                 $cadastrado = true;
             }
         }
-        if(isset($cadastrado)) {
+        if(isset($cadastrado) && $cadastrado === true) {
             continue;
         }
        
