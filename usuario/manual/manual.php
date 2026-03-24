@@ -41,6 +41,7 @@ $titulos = [
     
 ];
 $videos = [
+    'Introdução' => '<iframe width="1397" height="787" src="https://www.youtube.com/embed/In7vbeEVFDg" title="Introdução ao Sistema GestorOffice Control" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>',
     'Dashboard' => '<iframe width="100%" height="700px" src="https://www.youtube.com/embed/OXPsQ3-QVck" title="DASHBOARD" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>',
     'Cadastros' => '<iframe width="100%" height="700px" src="https://www.youtube.com/embed/-WLAPH795zU" title="CADASTROS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>',
     'Controle Financeiro' => '<iframe width="100%" height="700px" src="https://www.youtube.com/embed/1w0CcZs0ZTE" title="CONTROLE FINANCEIRO" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>',   
@@ -49,6 +50,7 @@ $videos = [
     'Recorrentes' => '<iframe width="100%" height="700px" src="https://www.youtube.com/embed/nyoZ798Q-Tw?feature=youtu.be&start=245&end=325&autoplay=1&mute=1&controls=1&loop=1&playlist=nyoZ798Q-Tw&modestbranding=1&rel=0&iv_load_policy=3&showinfo=1&disablekb=1&wmode=transparent&vq=default&theme=default&t=245s#t=245s " title="" frameborder="" allow="" referrerpolicy="" allowfullscreen=""></iframe>',
     'Importar' => '<iframe width="1397" height="787" src="https://www.youtube.com/embed/x6rmNmigUEc" title="Módulo de Importação - Sistema GestorOffice Control" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>',
     'DRE' => '<iframe width="100%" height="700px" src="https://www.youtube.com/embed/ek9I0S5aW5I?feature=youtu.be&amp;t=245&amp;suggested=true&amp;" title="" frameborder="" allow="" referrerpolicy="" allowfullscreen=""></iframe>',
+    'Importação de arquivo OFX' => '<iframe width="1397" height="787" src="https://www.youtube.com/embed/qihai49D_7Q" title="Importação OFX" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>',
         ];
  
 
