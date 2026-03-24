@@ -27,6 +27,7 @@ if($target != 'titulo' && $target != 'subtitulo' && $target != null) {
 }
 
 $titulos = [
+    'Introdução',
     'Dashboard',
     'Cadastros',
     'Controle Financeiro',
