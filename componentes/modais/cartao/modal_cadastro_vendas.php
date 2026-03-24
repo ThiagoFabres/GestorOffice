@@ -109,6 +109,7 @@
                                     <?php 
                                     $i = 0;
                                     foreach ($_SESSION['vendas']['transactions'] as $linha){ 
+
                                         ?>
                                     
                                             <input type="hidden" name="bandeira_id[<?=$i?>]" value="<?=$linha['bandeira_id']?>">
@@ -117,7 +118,7 @@
                                             <td><input class="form-control" readonly name="parcela[<?=$i?>]" value="<?php echo htmlspecialchars($linha['parcela'] == '' ? 1 : $linha['parcela']) ?>"></input></td>
                                             <td><input class="form-control" readonly name="data[<?=$i?>]" value="<?= (new DateTime(htmlspecialchars($linha['data'] ?? '')))->format(('d/m/Y')) ?>"></input></td>
                                             <td><input class="form-control" readonly name="valor_b[<?=$i?>]" value="<?= number_format(htmlspecialchars($linha['valor_b'] ?? ''), 2, ',', '.') ?>"></input></td>
-                                            <td><input class="form-control" readonly name="valor_l[<?=$i?>]" value="<?= number_format(htmlspecialchars($linha['valor_l'] ?? ''), 2, ',', '.') ?>"></input></td>
+                                            <td><input class="form-control" readonly name="valor_l[<?=$i?>]" value="<?= $linha['valor_l'] == 0 ? 'A ser Calculado' : number_format(htmlspecialchars($linha['valor_l']), 2, ',', '.') ?>"></input></td>
                                             <td><input class="form-control" readonly name="bandeira[<?=$i?>]" value="<?= htmlspecialchars(ucfirst(strtolower($linha['bandeira'])) ?? '') ?>"></input></td>
                                             <td><input class="form-control" readonly name="tipo[<?=$i?>]" value="<?= htmlspecialchars(ucfirst(strtolower($linha['tipo'])))?>"></input></td>
                                         </tr>

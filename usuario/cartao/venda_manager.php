@@ -294,7 +294,7 @@ function parse_excel($numero_arquivo = null) {
         $cells[4] = floatval($cells[4]);
         $cells[5] = floatval($cells[5]);
 
-        if( $cells[4] == 0 || $cells[5] == 0) {
+        if( $cells[4] == 0 || ($cells[5] == 0 && $tipo_arquivo == 'padrao')) {
             continue;
         }
    

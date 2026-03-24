@@ -692,8 +692,6 @@ if ($filtros != []) {
         $valor_restante_js = number_format($parcela_for_modal->valor_par - $parcela_for_modal->valor_pag, 2, ',', '');
     }
 ?>
-    
-        set the modal id and the displayed remaining value when the page was opened with ?quitar_id=
         var modalQInput = document.getElementById('modal_quitar_id');
         if (modalQInput) modalQInput.value = <?= $modal_quitar_id ?>;
         var vrEl = document.getElementById('modal_quitar_valor_restante');

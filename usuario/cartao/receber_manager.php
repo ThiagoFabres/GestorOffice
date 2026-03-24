@@ -44,15 +44,14 @@ $i++;
 $operadora_id = $_POST['operadora'] ?? null; // se existir
 $operadora = Ope01::read($operadora_id)[0];
 
-// agrupamos todas as transações pela mesma operadora, data, bandeira e tipo (ignoramos a parcela aqui).
-// Vamos conservar o número da parcela dentro de cada transação para, mais tarde, construir várias Rec02.
+
 $grupos = [];
 foreach ($transactions as $t) {
     $data     = $t['data'];
     $bandeira = $t['bandeira'];
     $tipo     = $t['tipo'];
 
-    // chave sem a parcela para unir todas as vendas do mesmo dia/operadora.
+
     $key = "{$operadora->id}|{$data}|{$bandeira}|{$tipo}";
     if (!isset($grupos[$key])) {
         $grupos[$key] = [];
@@ -60,7 +59,7 @@ foreach ($transactions as $t) {
     $grupos[$key][] = $t;
 }
 
-// Não há mais subgrupos complexos para limpar, cada entrada de $grupos já é um array de transações.
+
 
 
 $documento = buscarDocumentoRec();
@@ -68,10 +67,9 @@ $rec01_lista = [];
 $rec02_lista = [];
 $rec03_lista = [];
 $grupo_feito = [];
-$cache_prazo = []; // Cache para evitar múltiplas queries
+$cache_prazo = []; 
 
-// Coleta todas as bandeiras únicas para inicializar o cache de prazos. Ainda vamos precisar consultar
-// prazos específicos por número de parcelas mais adiante, mas precacheamos ao menos o último registro disponível.
+
 $bandeiras_unicas = [];
 foreach($grupos as $group) {
     $first = $group[0];
@@ -81,23 +79,23 @@ foreach($grupos as $group) {
     }
 }
 
-// Pre-carregar o prazo "default" de cada bandeira (o registro mais recente) para evitar queries extras.
+
 foreach(array_keys($bandeiras_unicas) as $id_bandeira) {
     $cache_prazo[$id_bandeira] = Pra01::read(id_empresa:$_SESSION['usuario']->id_empresa, id_bandeira: $id_bandeira, direcao: 'DESC')[0];
 }
-// cada grupo agora contém todos os lançamentos com mesma operadora, data, bandeira, tipo e parcela
+
 foreach($grupos as $key => $group) {
     $valor_l_total = 0;
     $valor_b_total = 0;
     $grupo_base = $group[0];
-    $tamanho_grupo = count($group); // quantidade de lançamentos agregados
+    $tamanho_grupo = count($group);
     $id_bandeira = $grupo_base['id_bandeira'];
 
-    // determina a maior parcela entre as transações do grupo (taxa da maior será aplicada) e soma valores
+
     $max_parcela = 0;
 
     foreach($group as $idx => $parcela) {
-        // normaliza valores
+
         $valor_l = $parcela['valor_l'];
         $valor_l = str_replace('.', '', $valor_l);
         $valor_l = str_replace(',', '.',$valor_l);
@@ -121,7 +119,6 @@ foreach($grupos as $key => $group) {
         $group[$idx] = $parcela;
     }
 
-    // recupera o prazo referente à maior parcela (taxa da maior parcela)
     if($valor_b_total != $valor_l_total){
     $prazo = Pra01::read(id_empresa:$_SESSION['usuario']->id_empresa, id_bandeira: $id_bandeira, parcela: $max_parcela)[0] ?? $cache_prazo[$id_bandeira];
     
@@ -144,7 +141,6 @@ foreach($grupos as $key => $group) {
     }
 
     $desc = $operadora->descricao . ' - ' .$grupo_base['bandeira'] . ' - ' . $grupo_base['tipo']. ' - ' . $prazo->parcela . 'x';
-
     $rec01[$documento] = new Rec01 (
         null,
         $_SESSION['usuario']->id_empresa,
@@ -153,7 +149,7 @@ foreach($grupos as $key => $group) {
         $operadora->id_con02,
         $documento,
         $desc,
-        $valor_l_total,
+        $valor_l_total == 0 ? $valor_liq_go : $valor_l_total,
         $max_parcela,
         $data,
         $_SESSION['usuario']->id,
@@ -185,6 +181,9 @@ foreach($grupos as $key => $group) {
     $prazo_por_parcela = [];
 
     for ($num = 1; $num <= $max_parcela; $num++) {
+        if($valor_l_total == 0) {
+            $valor_l_total = $valor_liq_go;
+        }
         if ($num == $max_parcela) {
             $valor_parcela = $valor_l_total - $parcel_value * ($max_parcela - 1);
         } else {
@@ -222,7 +221,9 @@ foreach($grupos as $key => $group) {
     ];
 
     $documento++;
+
 }
+
 foreach($rec03_lista as $rec03) {
     Rec03::create($rec03);
 }
