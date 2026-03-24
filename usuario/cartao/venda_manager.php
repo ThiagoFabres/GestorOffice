@@ -310,7 +310,7 @@ function parse_excel($numero_arquivo = null) {
         // if(str_starts_with($tipo_preg, 'voucher')) {
         //     $cells[2] = 'voucher';
         // }
-        if($cells[3] == null || $cells[3] == '-' || $cells[3] == 0) {
+        if($cells[3] == null || $cells[3] == '-' || $cells[3] == 0 || $cells[3] == '') {
             $cells[3] = 1;
         }
         $cells[2] = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $cells[2])));
