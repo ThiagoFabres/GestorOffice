@@ -276,10 +276,10 @@ if ($filtros != []) {
 
                                                     
                                                 </div>
-                                            </div> <!-- fecha row -->
-                                        </div> <!-- fecha inputs-pagamento-group -->
-                                        <div class="checkbox-group" style="margin-right:1.5em;display:flex; justify-content: center; align-itens:center;">
-                                            <div style="display:flex; justify-content: center; align-itens:center; flex-direction:column">
+                                            </div> 
+                                        </div> 
+                                        <div class="checkbox-group" style="margin-right:1.5em;display:flex; justify-content: center; align-items:center;">
+                                            <div style="display:flex; justify-content: center; align-items:center; flex-direction:column">
                                                 <div class="form-check">
                                                     <label style="font-size: 100%; overflow: visible; white-space: nowrap;" for="filtro_documento">Auditoria:</label>
                                                     <input type="checkbox" name="filtro_detalhes" <?= $exibir_detalhes === true ? 'checked' : '' ?>>
@@ -294,7 +294,7 @@ if ($filtros != []) {
                                             <div style="width: 15%;">
                                                 <h5 style="font-size: 75%;">Opção:</h5>
                                             </div>
-                                            <!-- Primeira linha de radios (opção) -->
+
                                             <div class="radio-pagamento">
                                                 
                                                 <div>                    
@@ -362,7 +362,7 @@ if ($filtros != []) {
                                             </div>
                                         </div>  
 
-                                        </div> <!-- fecha selects-pagamento -->
+                                        </div>
                                     <?php } ?>
 
 
