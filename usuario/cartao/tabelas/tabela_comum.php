@@ -66,7 +66,6 @@
                                 <?php if($_SESSION['usuario']->processar === 1) {?>
                                 <th>Quitar</th>
                                 <th>Estornar</th>
-                                <th>Editar</th>
                                 <?php } ?>
                                 <th>Visualizar</th>
                             </tr>
@@ -207,11 +206,7 @@
                                                 <?php } ?>&numero_exibido=<?= 'knumero_exibido=' . $numero_exibir ?>'"><i
                                                     class="bi bi-wallet2"></i></button>
                                         </td>
-                                        <td class="td-acoes">
-                                            <button class="btn btn-primary" <?php if (in_array($rec02->id_rec01, $recebimentos_pagos) ) { ?> disabled <?php } ?>
-                                                onclick="window.location.href='cadastro_vendas.php?id=<?= $rec01->id ?>&acao=editar'"><i
-                                                    class="bi bi-pen-fill"></i></button>
-                                        </td>
+
                                         <?php } ?>
                                         <td class="td-acoes">
                                             <button class="btn btn-primary"
@@ -242,7 +237,6 @@
                                     <td></td>
                                     <td style="text-align: end; font-size: 100%;">R$</td>
                                     <td style="text-align: center; font-size: 100%;"><?= number_format($total_valor_pago, '2', ',', '.')?></td>
-                                    <td></td>
                                     <td></td>
                                     <?php if($_SESSION['usuario']->processar === 1) {?>
                                     <td></td>

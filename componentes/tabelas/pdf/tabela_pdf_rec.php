@@ -39,8 +39,7 @@
                                 filtro_con02: $get_filtro_subtitulo,
                                 ordenar_por: $ordenar_por,
                                 direcao: $direcao,
-                                filtro_custos: $get_filtro_custo,
-                                read_vendas:true,
+                                filtro_custos: $get_filtro_custo,             
                             );
                             if (!empty($parcelas)) {
                         

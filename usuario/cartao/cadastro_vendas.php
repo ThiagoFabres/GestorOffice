@@ -72,6 +72,10 @@ $get_filtro_custo = filter_input(INPUT_GET, 'filtro_custo') ?? null;
 
 $exibir_detalhes = filter_input(INPUT_GET, 'filtro_detalhes') == 'on' ? true : false;
 $exibir_diferencas = filter_input(INPUT_GET, 'filtro_diferencas') == 'on' ? true : false;
+
+$get_pdf = filter_input(INPUT_GET, 'pdf') == 1 ? true : false;
+$get_excel = filter_input(INPUT_GET, 'excel') == 1 ? true : false;
+
 if($exibir_diferencas === true) {
     $exibir_detalhes = true;
 }
@@ -518,21 +522,24 @@ if ($filtros != []) {
                 </div>
             </div>
         <div class="relatorios-botoes" style="float:left; width:100%">
-            <button type="button" class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="gerarpdf('movimentacao', document.querySelector('#nome-empresa h1').innerHTML)">Gerar PDF</button>
-            <button type="button" class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="gerarexcel('movimentacao', document.querySelector('#nome-empresa h1').innerHTML)">Gerar Excel</button>
+            <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf || $get_excel) { echo "gerarpdf('receber', document.querySelector('#nome-empresa h1').innerHTML)";} else {?>window.location.href='<?=$caminho?><?= empty($filtros) ? '?' : '&' ?>pdf=1' <?php } ?>">Gerar PDF</button>
+            <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="<?php if($get_pdf || $get_excel) { echo "gerarexcel('receber', document.querySelector('#nome-empresa h1').innerHTML)";} else {?>window.location.href='<?=$caminho?><?= empty($filtros) ? '?' : '&' ?>excel=1' <?php } ?>">Gerar Excel</button>
         </div>
     </div>
-</div>
-           
-<div style="display:none">
+    <div style="display: none;">
     <?php 
-    if($exibir_detalhes){
-        require_once __DIR__ . '/tabelas/tabela_detalhada_pdf.php';
-    } else if($exibir_detalhes === false) {
-        require_once __DIR__ . '/tabelas/tabela_comum_pdf.php';
+    if($get_pdf || $get_excel) {
+        if($exibir_detalhes){
+            require_once __DIR__ . '/tabelas/tabela_detalhada_pdf.php';
+        } else if($exibir_detalhes === false) {
+            require_once __DIR__ . '/tabelas/tabela_comum_pdf.php';
+        }
     }
     ?>
 </div>
+</div>
+           
+
     
     <div id="custom-context-menu" style="display:none; position:absolute; z-index:9999; background:#fff; border:1px solid #ccc; box-shadow:0 2px 8px rgba(0,0,0,0.2); min-width:180px; border-radius:6px; overflow:hidden;">
                     <?php if($_SESSION['usuario']->processar === 1) {?>
@@ -544,6 +551,28 @@ if ($filtros != []) {
     </div>
 
     <?php require_once __DIR__ . '/../../componentes/modais/cartao/modal_cadastro_vendas.php' ?>
+</div>
+    <?php require_once __DIR__ . '/../../componentes/modais/lancamentos/receber/modal_quitar.php'; ?>
+    </div>                          
+    <?php require_once __DIR__ . '/../../componentes/modais/lancamentos/receber/modal_cadastro_pagamento.php'; ?>
+    </div>  
+    <?php require_once __DIR__ . '/../../componentes/modais/lancamentos/receber/modal_titulo.php'; ?>
+    </div>  
+    <?php require_once __DIR__ . '/../../componentes/modais/lancamentos/receber/modal_subtitulo.php'; ?>
+    </div>                 
+    <?php require_once __DIR__ . '/../../componentes/modais/lancamentos/receber/modal_cadastro_cidade.php'; ?>
+    </div>
+    <?php require_once __DIR__ . '/../../componentes/modais/lancamentos/receber/modal_cadastro_bairro.php'; ?>        
+    </div>
+    <?php require_once __DIR__ . '/../../componentes/modais/lancamentos/receber/modal_cadastro_categoria.php'; ?>
+    </div>  
+    <?php require_once __DIR__ . '/../../componentes/modais/lancamentos/receber/modal_cadastro.php'; ?>
+    </div>  
+    <?php require_once __DIR__ . '/../../componentes/modais/lancamentos/receber/modal_cadastro_custos.php'; ?>
+    </div>  
+    <?php require_once __DIR__ . '/../../componentes/modais/lancamentos/receber/modal_receber.php'; ?>
+
+
 
     <?php
     if(isset($_SESSION['vendas_invalidas'])) {
@@ -569,6 +598,60 @@ if ($filtros != []) {
 
 
 <script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+    <?php if($get_pdf) { ?>
+        gerarpdf('receber', document.querySelector('#nome-empresa h1').innerHTML);
+            window.location.href = '<?=$caminho?>';
+    <?php } ?>
+
+    <?php if($get_excel) { ?>
+        gerarexcel('receber', document.querySelector('#nome-empresa h1').innerHTML);
+            window.location.href = '<?=$caminho?>';
+    <?php } ?>
+
+});
+
+<?php if (isset($acao) && ($acao == 'adicionar' || $acao == 'visualizar')) { 
+    if($acao == 'visualizar') {?>
+        window.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('modal_receber');
+            var Modal = new bootstrap.Modal(modalEl);
+            Modal.show();
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                window.location.href = 'receber.php?pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>';
+            });
+        });
+    <?php } else if(!isset($target) || $target == 'cadastro') {?>
+        window.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('modal_receber');
+            var Modal = new bootstrap.Modal(modalEl);
+            Modal.show();
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                window.location.href = 'receber.php?pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>';
+            });
+        });
+    <?php } else if($target == 'quitar') { ?>
+
+        window.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('modal_quitar');
+            var Modal = new bootstrap.Modal(modalEl);
+            Modal.show();
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                window.location.href = 'receber.php?pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>';
+            });
+        });
+    <?php } else if (isset($target) && $target != 'cadastro' && $target != 'quitar'){ ?>
+        window.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('modal_cadastro');
+            var Modal = new bootstrap.Modal(modalEl);
+            Modal.show();
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                window.location.href = 'receber.php?pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>';
+            });
+        });
+<?php }}?>
+
     <?php if($vendas_invalidas || $vendas_enviadas) {?>
         window.addEventListener('DOMContentLoaded', function () {
             var modalEl = document.getElementById('modal_cadastro_vendas');
@@ -1059,59 +1142,10 @@ document.addEventListener('DOMContentLoaded', function () {
     ;}, 100);
 });
 <?php } ?>
-<?php if (isset($acao) && ($acao == 'adicionar' || $acao == 'visualizar' || $acao == 'editar')) { 
-    if($acao == 'visualizar') {?>
-        window.addEventListener('DOMContentLoaded', function () {
-            var modalEl = document.getElementById('modal_receber');
-            var Modal = new bootstrap.Modal(modalEl);
-            Modal.show();
-            modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'cadastro_vendas.php';
-            });
-        });
-    <?php } else if(!isset($target) || $target == 'cadastro') {?>
-        window.addEventListener('DOMContentLoaded', function () {
-            var modalEl = document.getElementById('modal_receber');
-            var Modal = new bootstrap.Modal(modalEl);
-            Modal.show();
-            modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'cadastro_vendas.php';
-            });
-        });
-    <?php } else if($target == 'quitar') { ?>
 
-        window.addEventListener('DOMContentLoaded', function () {
-            var modalEl = document.getElementById('modal_quitar');
-            var Modal = new bootstrap.Modal(modalEl);
-            Modal.show();
-            modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'cadastro_vendas.php';
-            });
-        });
-    <?php } else if (isset($target) && $target != 'cadastro' && $target != 'quitar'){ ?>
-        window.addEventListener('DOMContentLoaded', function () {
-            var modalEl = document.getElementById('modal_cadastro');
-            var Modal = new bootstrap.Modal(modalEl);
-            Modal.show();
-            modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'cadastro_vendas.php';
-            });
-        });
-<?php }}?>
-
-<?php if(isset($acao) && $acao == 'editar') { ?>
-        window.addEventListener('DOMContentLoaded', function () {
-            var modalEl = document.getElementById('modal_receber');
-            var Modal = new bootstrap.Modal(modalEl);
-            Modal.show();
-            modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'cadastro_vendas.php';
-            });
-        });
-<?php } ?>
 </script>
 
-<?php if($erro != null) {?>
+<?php if( $erro != null) {?>
     <?php if($erro == 'operadora'){?>
     <script>
         alert('Operadora não Selecionada')

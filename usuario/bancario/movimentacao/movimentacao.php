@@ -48,6 +48,8 @@ if($get_filtro_descricao === '') {
     $get_filtro_descricao = null;
 }
 $erro = filter_input(INPUT_GET, 'erro');
+$get_pdf = filter_input(INPUT_GET, 'pdf') == 1 ? true : false;
+$get_excel = filter_input(INPUT_GET, 'excel') == 1 ? true : false;
 
 
 $numero_pagina = intval($numero_pagina);
@@ -73,8 +75,8 @@ $novo_documento = buscarDocumento();
 
 $lateral_target = 'movimentacao';
 $lateral_bancario = true;
-$acao = filter_input(INPUT_GET, 'acao', FILTER_SANITIZE_STRING) ?? null;
-if($acao == null) $acao = filter_input(INPUT_POST, 'acao', FILTER_SANITIZE_STRING) ?? null;
+$acao = filter_input(INPUT_GET, 'acao') ?? null;
+if($acao == null) $acao = filter_input(INPUT_POST, 'acao') ?? null;
 $ofx = filter_input(INPUT_GET, 'ofx', FILTER_SANITIZE_NUMBER_INT);
 
 $filtros = [];
@@ -116,6 +118,7 @@ if ($filtros != []) {
     $caminho_sem_pag = $filtros;
     array_pop($caminho_sem_pag);
     $caminho_sem_pag = 'movimentacao.php?' . implode('&', $caminho_sem_pag) . '&';
+    $caminho_exibir = '?'. implode('&', $filtros);
 } else {
     $caminho = 'movimentacao.php?';
     $caminho_get = urlencode('movimentacao.php?');
@@ -567,84 +570,7 @@ if ($get_filtro_conta != null) {
             
         </div>
 
-        <div style="display: none;">
-                <table id="tabela-pdf">
-                    <thead>
-                        <tr class="tr-header">
-                            <th>Documento</th>
-                            <th>Data de Lançamento</th>
-                            <th>Tipo de Lançamento</th>
-                            <th>Descrição</th>
-                            <th>Valor</th>
-                            <th>Conta</th>
-                            <th>Título</th>
-                            <th>Subtítulo</th>
-                            
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php
-
-                        
-                        
-
-                         if(!empty($movimentacoes_pdf)) {
-                            
-                            foreach($movimentacoes_pdf as $movimentacao) {
-                                
-                                // echo '<pre>';
-                                // print_r($movimentacao);
-                                // echo '</pre>';
-                                if(empty($filtros)) {
-                                $link = $caminho . '?';
-                            } else {$link = $caminho . '&';}
-                                $link .= 'acao=conciliar&id=' . $movimentacao->id;
-                            
-                            if($movimentacao->id_con01 != null) {
-                                $con01 = Con01::read($movimentacao->id_con01, $_SESSION['usuario']->id_empresa)[0];
-                            } else {
-                                $con01 = null;
-                            }
-                            if($movimentacao->id_con02 != null) {
-                                $con02 = Con02::read($movimentacao->id_con02, $_SESSION['usuario']->id_empresa)[0];
-                            } else {
-                                $con02 = null;
-                            }
-                            if($movimentacao->id_con01 != null && $movimentacao->id_con02 != null )   {
-                                $cor_parcela = 'parcela_cor_verde';
-                            } else {
-                                $cor_parcela = 'parcela_cor_vermelha';
-                            }
-                                $tipo = $movimentacao->valor < 0 ? 'Débito' : 'Crédito';
-                                $caminho_quitar = $movimentacao->valor < 0 ? '/usuario/pagar.php?filtro_data_inicial='.$movimentacao->data.'&filtro_data_final='.$movimentacao->data.'&opcao_filtro=abertos&filtro_por=lancamento' : '/usuario/receber.php?filtro_data_inicial='.$movimentacao->data.'&filtro_data_final='.$movimentacao->data.'&opcao_filtro=abertos&filtro_por=lancamento';
-                                $data_lancamento = DateTime::createFromFormat('Y-m-d', $movimentacao->data)->format('d/m/Y');
-                                $conta_nome = Ban01::read($movimentacao->id_ban01, $_SESSION['usuario']->id_empresa)[0]->nome;
-                         {?>
-                         <tr>
-                            <td onclick="window.location.href='<?=$link?>'"><?=$movimentacao->documento?></td>
-                            <td onclick="window.location.href='<?=$link?>'"><?=$data_lancamento?></td>
-                            <td onclick="window.location.href='<?=$link?>'"><?=$tipo?></td>
-                            <td colspan="9" class="descricao-full" style="text-align:start;" id="td-descricao" onclick="window.location.href='<?=$link?>'"><?php echo $movimentacao->descricao_comp != '' ? substr(substr($movimentacao->descricao, 0, 60) . ' - ' . substr($movimentacao->descricao_comp, 0,60), 0, 100) : $movimentacao->descricao ?></td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td onclick="window.location.href='<?=$link?>'">R$ <?=number_format($movimentacao->valor, 2, ',', '.', )?></td>
-                            <td onclick="window.location.href='<?=$link?>'"><?=$conta_nome?></td>
-                            <td onclick="window.location.href='<?=$link?>'"><?= isset($con01) ? substr($con01->nome, 0, 15) : ''?></td>
-                            <td onclick="window.location.href='<?=$link?>'"><?= isset($con02) ? substr($con02->nome, 0, 15) : ''?></td>
-                            
-                        </tr>
-                        <?php } } }?>
-                    </tbody>
-                </table>
-
-                <!-- Context menu for bancario table rows -->
-                
-
-                </div>
+        
         <div id="custom-context-menu" style="display:none; position:absolute; z-index:9999; background:#fff; border:1px solid #ccc; box-shadow:0 2px 8px rgba(0,0,0,0.2); min-width:200px; border-radius:6px; overflow:hidden;">
             <?php if($_SESSION['usuario']->processar === 1) { ?>
                     <button id="menu-conciliar" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-clipboard-check"></i> Conciliar</button>
@@ -668,9 +594,11 @@ if ($get_filtro_conta != null) {
             <?php } ?>
         </div>
         <div class="relatorios-botoes" style="float:left; width:100%">
-            <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="gerarpdf('movimentacao', document.querySelector('#nome-empresa h1').innerHTML)">Gerar PDF</button>
-            <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="gerarexcel('movimentacao', document.querySelector('#nome-empresa h1').innerHTML)">Gerar Excel</button>
+            <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf) {echo "gerarpdf('movimentacao', document.querySelector('#nome-empresa h1').innerHTML)";} else {?>window.location.href='<?=$caminho?>pdf=1'<?php } ?>">Gerar PDF</button>           
+            <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="<?php if($get_excel) {echo "gerarexcel('movimentacao', document.querySelector('#nome-empresa h1').innerHTML)";} else {?>window.location.href='<?=$caminho?>excel=1'<?php } ?>">Gerar Excel</button>           
         </div>
+
+
 
         <div id="totais-lancamento-pdf" style="display:none;">
             <?php
@@ -683,6 +611,11 @@ if ($get_filtro_conta != null) {
                 <?= number_format($saldo, 2, ',', '.') ?> </strong>
             </div>
         </div>
+        <?php if($get_pdf || $get_excel) {?>
+        <div style="display:none;">
+            <?php require_once __DIR__ . '/../../../componentes/tabelas/pdf/tabela_pdf_mov.php'; ?>
+        </div>
+        <?php } ?>
     
 
     <?php 
@@ -720,6 +653,8 @@ if ($get_filtro_conta != null) {
     ?>
 <?php require_once __DIR__ . '/../../../componentes/footer/footer.php' ?> 
 </body>
+
+
 
 <script>
 
@@ -1019,6 +954,7 @@ if ($get_filtro_conta != null) {
 
 </script>
 
+
 <script src="gerar.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script src="/../../../choices/choices.js"></script>
@@ -1120,8 +1056,14 @@ if ($get_filtro_conta != null) {
     </script>
 <?php } ?>
 <script>
-    
-    
+<?php if($get_pdf) {?>
+        gerarpdf('pagar', document.querySelector('#nome-empresa h1').innerHTML);
+        window.location.href='<?=$caminho?>'
+    <?php } ?>  
+    <?php if($get_excel) {?>
+        gerarexcel('pagar', document.querySelector('#nome-empresa h1').innerHTML);
+        window.location.href='<?=$caminho?>'
+    <?php } ?>  
 
         // ========== INICIALIZAÇÃO DO CHOICES.JS ==========
         const tituloFiltroElement = document.querySelector('#titulo-filtro');
