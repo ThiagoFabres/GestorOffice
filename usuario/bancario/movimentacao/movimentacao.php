@@ -43,6 +43,9 @@ $get_filtro_conta = filter_input(INPUT_GET, 'filtro_conta');
 if($get_filtro_conta == '') $get_filtro_conta = null;
 
 $get_filtro_conciliado = filter_input(INPUT_GET, 'filtro_conciliado') == 'on' ? true : false;
+if(!$get_filtro_conciliado) {
+    $get_filtro_conciliado = filter_input(INPUT_POST, 'filtro_conciliado') == 'on' ? true : false;
+}
 $get_filtro_descricao = filter_input(INPUT_GET, 'descricao');
 if($get_filtro_descricao === '') {
     $get_filtro_descricao = null;
@@ -87,7 +90,7 @@ if ($get_filtro_data_inicial != '')
 if ($get_filtro_data_final != '')
     $filtros[] = 'filtro_data_final=' . $get_filtro_data_final;
     $filtros_get['filtro_data_final']  = $get_filtro_data_final;
-if ($get_filtro_conciliado != '')
+if ($get_filtro_conciliado)
     $filtros[] = 'filtro_conciliado=on';
     $filtros_get['filtro_conciliado']  = 'on';
 if($get_filtro_tipo != '')
@@ -105,12 +108,15 @@ if($get_filtro_conta != '')
 if($numero_exibir != 10) 
     $filtros[] = 'numero_exibido=' . $numero_exibir;
     $filtros_get['numero_exibir']  = $numero_exibir;
-if($numero_pagina != 1) 
-    $filtros[] = 'pagina=' . $numero_pagina;
-    $filtros_get['numero_pagina']  = $numero_pagina;
 if($get_filtro_descricao != '')
     $filtros[] = 'descricao=' . $get_filtro_descricao;
     $filtros_get['descricao']  = $get_filtro_descricao;
+
+$caminho_exibir = 'movimentacao.php?' . implode('&', $filtros) . '&';
+if($numero_pagina != 1) 
+    $filtros[] = 'pagina=' . $numero_pagina;
+    $filtros_get['numero_pagina']  = $numero_pagina;
+
 if ($filtros != []) {
     
     $caminho = 'movimentacao.php?' . implode('&', $filtros) . '&';
@@ -118,7 +124,6 @@ if ($filtros != []) {
     $caminho_sem_pag = $filtros;
     array_pop($caminho_sem_pag);
     $caminho_sem_pag = 'movimentacao.php?' . implode('&', $caminho_sem_pag) . '&';
-    $caminho_exibir = '?'. implode('&', $filtros);
 } else {
     $caminho = 'movimentacao.php?';
     $caminho_get = urlencode('movimentacao.php?');
@@ -552,7 +557,7 @@ if ($get_filtro_conta != null) {
 
                     <div class="card-select-numero">
                         <div>
-                            <form method="post" action="<?=$caminho_sem_pag?>">
+                            <form method="post" action="<?=$caminho_exibir?>">
 
                                 <select class="form-control" onchange="this.form.submit()" name="numero_exibido">
                                     <option <?php if ($numero_exibir == 5) { ?> selected <?php } ?> value="5">5</option>
