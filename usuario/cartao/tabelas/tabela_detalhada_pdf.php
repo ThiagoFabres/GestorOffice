@@ -10,48 +10,17 @@
                             }
                             ?>
                             <tr class="tr-clientes-header">
-                                <th><a
-                                        href="<?= $caminho ?>?ordenar=documento&direcao=<?php echo ($ordenar_por === 'documento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Documento</a><?php if ($ordenar_por == 'documento') {
-                                                         echo $seta;
-                                                     } ?>
-                                </th>
-                                <th><a
-                                        href="<?= $caminho ?>?ordenar=data_lancamento&direcao=<?php echo ($ordenar_por === 'data_lancamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Data
-                                        de Lançamento</a><?php if ($ordenar_por == 'data_lancamento') {
-                                            echo $seta;
-                                        } ?>
-                                </th>
-                                <th><a
-                                        href="<?= $caminho ?>?ordenar=nome&direcao=<?php echo ($ordenar_por === 'nome' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Nome</a><?php if ($ordenar_por == 'nome') {
-                                                         echo $seta;
-                                                     } ?>
-                                </th>
-                                <th><a>Descrição</a></th>
-                                <th><a>C. Custos</a></th>
-                                
-                                <th><a>Parcela Geral</a></th>
-                                <th>
-                                    <a href="<?= $caminho ?>?ordenar=valor&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'valor' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">
-                                        Valor Bruto
-                                    </a><?php if ($ordenar_por == 'valor') {echo $seta;} ?>
-                                </th>
-                                <th>
-                                    Taxa
-                                </th>
-                                <?php if($exibir_diferencas) { ?>
-                                <th>
-                                    Taxa Aplicada
-                                </th>
-                                <?php } ?>
-                                <th>
-                                    Valor Liquido
-                                </th>
-                                <th>
-                                    Valor Liquido GO
-                                </th>
-                                <th>
-                                    Diferença
-                                </th>
+                                <th>DOCUMENTO</th>
+                                <th>DATA.LANC</th>
+                                <th>NOME</th>
+                                <th>DESCRICAO</th>
+                                <th>C.CUSTOS</th>
+                                <th>PARC.GERAL</th>
+                                <th>VALOR BRUTO</th>
+                                <th>TAXA</th>
+                                <th>VALOR LIQ.</th>
+                                <th>VALOR LIQ.GO</th>
+                                <th>DIFERENÇA</th>
                             </tr>
                         </thead>
                         <tbody class="avoid-page-break">
