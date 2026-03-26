@@ -652,27 +652,6 @@ if ($filtros != []) {
         });
 <?php }}?>
 
-<?php if(isset($acao) && $acao == 'editar') { ?>
-        window.addEventListener('DOMContentLoaded', function () {
-            var modalEl = document.getElementById('modal_receber');
-            var Modal = new bootstrap.Modal(modalEl);
-            Modal.show();
-            modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'receber.php?pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>';
-            });
-        });
-<?php } ?>
-
-<?php if(isset($acao) && $acao == 'editar') { ?>
-        window.addEventListener('DOMContentLoaded', function () {
-            var modalEl = document.getElementById('modal_receber');
-            var Modal = new bootstrap.Modal(modalEl);
-            Modal.show();
-            modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'cadastro_vendas.php';
-            });
-        });
-<?php } ?>
     <?php if($vendas_invalidas || $vendas_enviadas) {?>
         window.addEventListener('DOMContentLoaded', function () {
             var modalEl = document.getElementById('modal_cadastro_vendas');

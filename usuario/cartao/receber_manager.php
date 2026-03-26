@@ -47,12 +47,13 @@ $operadora = Ope01::read($operadora_id)[0];
 
 $grupos = [];
 foreach ($transactions as $t) {
-    $data     = $t['data'];
-    $bandeira = $t['bandeira'];
-    $tipo     = $t['tipo'];
+    $data       = $t['data'];
+    $bandeira   = $t['bandeira'];
+    $tipo       = $t['tipo'];
+    $n_parcelas = $t['parcela'];
 
 
-    $key = "{$operadora->id}|{$data}|{$bandeira}|{$tipo}";
+    $key = "{$operadora->id}|{$data}|{$bandeira}|{$tipo}|{$n_parcelas}";
     if (!isset($grupos[$key])) {
         $grupos[$key] = [];
     }
@@ -94,6 +95,7 @@ foreach($grupos as $key => $group) {
 
     $max_parcela = 0;
 
+
     foreach($group as $idx => $parcela) {
 
         $valor_l = $parcela['valor_l'];
@@ -118,6 +120,8 @@ foreach($grupos as $key => $group) {
 
         $group[$idx] = $parcela;
     }
+
+    
 
     if($valor_b_total != $valor_l_total){
     $prazo = Pra01::read(id_empresa:$_SESSION['usuario']->id_empresa, id_bandeira: $id_bandeira, parcela: $max_parcela)[0] ?? $cache_prazo[$id_bandeira];
@@ -176,6 +180,7 @@ foreach($grupos as $key => $group) {
     $id_rec01 = Rec01::read(null, $_SESSION['usuario']->id_empresa, documento:$documento)[0]->id;
 
     $last_rec02 = null;
+
     $parcel_value = $max_parcela > 0 ? round($valor_l_total / $max_parcela, 2) : 0;
 
     $prazo_por_parcela = [];
@@ -211,17 +216,19 @@ foreach($grupos as $key => $group) {
             null
         );
         $rec02_lista[] = $rec02_entry;
+        
         Rec02::create($rec02_entry);
         $last_rec02 = $rec02_entry;
     }
 
-    $grupo_feito[] = [
-        $rec01[$documento],
-        $last_rec02
-    ];
+
+        $grupo_feito[] = [
+            $rec01[$documento],
+            $last_rec02
+        ];
 
     $documento++;
-
+    
 }
 
 foreach($rec03_lista as $rec03) {
