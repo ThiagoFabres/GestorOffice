@@ -488,7 +488,7 @@ if (isset($view) && $view == 'cadastro') {
                 $con02 = Con02::read($id_conta02, idempresa:$_SESSION['usuario']->id_empresa)[0];
                 $con01 = Con01::read($con02->id_con01, idempresa:$_SESSION['usuario']->id_empresa)[0];
                 if($con01->tipo == 'C') {
-                    if(!Rec02::read(id_empresa:$_SESSION['usuario']->id_empresa, filtro_con02: $id_conta02)) {
+                    if(!Rec02::read(id_empresa:$_SESSION['usuario']->id_empresa, filtro_con02: $id_conta02) && Ban02::read(id_empresa: $_SESSION['usuario']->id_empresa, filtro_subtitulo: $id_conta02)) {
                         if(!Con02::delete($con02->id)) {
                             header('Location: contas.php?con01id='.$id_conta.'&erro=usado');
                             exit;
@@ -498,7 +498,7 @@ if (isset($view) && $view == 'cadastro') {
                         exit;
                     }
                 } else if($con01->tipo == 'D') {
-                    if(!Pag02::read(id_empresa:$_SESSION['usuario']->id_empresa, filtro_con02: $id_conta02)) {
+                    if(!Pag02::read(id_empresa:$_SESSION['usuario']->id_empresa, filtro_con02: $id_conta02) && Ban02::read(id_empresa: $_SESSION['usuario']->id_empresa, filtro_subtitulo: $id_conta02)) {
                         if(!Con02::delete($con02->id)) {
                             header('Location: contas.php?con01id='.$id_conta.'&erro=usado');
                             exit;
