@@ -11,6 +11,8 @@ require_once __DIR__ . '/../db/entities/contas.php';
 require_once __DIR__ . '/../db/entities/recebimentos.php';
 require_once __DIR__ . '/../db/entities/pagar.php';
 require_once __DIR__ . '/../db/entities/centrocustos.php';
+require_once __DIR__ . '/../db/entities/banco01.php';
+require_once __DIR__ . '/../db/entities/banco02.php';
 
 session_start();
 
