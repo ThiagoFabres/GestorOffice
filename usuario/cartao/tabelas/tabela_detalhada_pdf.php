@@ -18,6 +18,11 @@
                                 <th>PARC.GERAL</th>
                                 <th>VALOR BRUTO</th>
                                 <th>TAXA</th>
+                                <?php if($exibir_diferencas) { ?>
+                                <th>
+                                    TAXA APLICADA
+                                </th>
+                                <?php } ?>
                                 <th>VALOR LIQ.</th>
                                 <th>VALOR LIQ.GO</th>
                                 <th>DIFERENÇA</th>
