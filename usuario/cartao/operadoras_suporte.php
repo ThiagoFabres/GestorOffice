@@ -276,5 +276,26 @@ $operadoras_suporte = [
             'encoding' => 'UTF-8',
         ],
     ],
+    'capim' => [
+        'xlsx' => [
+            'excluded_columns' => [
+                'A', 'C', 'D', 'J'
+            ],
+            'start_row' => 6,
+            'start_end_columns' => [ 'start' => 'A', 'end' => 'J'],
+            'organizador' => [
+                'data' => 0,
+                'bandeira' => 1,
+                'tipo' => 2,
+                'parcela' => 3,
+                'valor_b' => 4,
+                'valor_l' => 5,
+                'estado' => null
+            ],
+            'suporte_estado' => true,
+            'suporte_data' => 'formatada(Y-m-d)',
+
+        ],
+    ],
 ]
 ?>

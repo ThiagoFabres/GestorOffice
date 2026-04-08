@@ -51,7 +51,8 @@ function parse_excel($numero_arquivo = null) {
         'rede',
         'sicredi',
         'fazpay',
-        'cielo'
+        'cielo',
+        'capim'
     ];
     
     $tipo_arquivo = filter_input(INPUT_POST, 'tipo_arquivo');
@@ -172,9 +173,17 @@ function parse_excel($numero_arquivo = null) {
                 4 =>$cells_p[$operadora_sup_org['valor_b']],
                 //valor Liquido
                 5 =>$cells_p[$operadora_sup_org['valor_l']],
-                //estado
-                6 => $cells_p[$operadora_sup_org['estado']]
+                
             ]; 
+        }
+
+        if(isset($cells_p[$operadora_sup_org['estado']]) && $cells_p[$operadora_sup_org['estado']] != null) {
+            //estado    
+            $cells[6] = $cells_p[$operadora_sup_org['estado']];
+        }
+        
+        if($operadora_sup['suporte_estado']) {
+            $cells[6] = 'aprovada';
         }
         
         // $linha_vazia = true;
@@ -261,11 +270,13 @@ function parse_excel($numero_arquivo = null) {
 
 
         if($tipo_arquivo == 'padrao'){
-            if($operadora_sup['suporte_data'] == 'hora') {
+            if(isset($operadora_sup['suporte_data']) && $operadora_sup['suporte_data'] == 'hora') {
                 $cells[0] = substr($cells[0], 0, 10);
                 $data_formatada = (DateTime::createFromFormat('d/m/Y', $cells[0]))->format('Y-m-d');
-            } else if($operadora_sup['suporte_data'] == 'formatada') {
+            } else if(isset($operadora_sup['suporte_data']) && $operadora_sup['suporte_data'] == 'formatada') {
                 $data_formatada = (DateTime::createFromFormat('d/m/Y', $cells[0]))->format('Y-m-d');
+            } else if (isset($operadora_sup['suporte_data']) && $operadora_sup['suporte_data'] == 'formatada(Y-m-d)') {
+                $data_formatada = (DateTime::createFromFormat('Y-m-d', $cells[0]))->format('Y-m-d');
             } else {
                 $data_formatada = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($cells[0])->format('Y-m-d');
             }
@@ -301,10 +312,10 @@ function parse_excel($numero_arquivo = null) {
         if(str_starts_with(strtolower($cells[2]), 'pix')) {
             $cells[2] = 'pix';
         }
-        if(str_starts_with($tipo_preg, 'debito')) {
+        if(str_starts_with($tipo_preg, 'debit')) {
             $cells[2] = 'debito';
         } 
-        if(str_starts_with($tipo_preg, 'credito')) {
+        if(str_starts_with($tipo_preg, 'credit')) {
             $cells[2] = 'credito';
         }
         // if(str_starts_with($tipo_preg, 'voucher')) {
