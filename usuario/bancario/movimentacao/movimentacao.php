@@ -1369,6 +1369,12 @@ document.addEventListener('DOMContentLoaded', function () {
         window.location.href="<?=$caminho?>"
     </script>
 <?php } ?>
+<?php if($erro == 'erro_palavra') { ?>
+    <script>
+        alert('Não existe nenhuma palavra chave cadastrada')
+        window.location.href="<?=$caminho?>"
+    </script>
+<?php } ?>
 
 
 </html>
