@@ -639,31 +639,37 @@ else if($acao == 'conciliar_todas'){
     require_once '../../../db/entities/contas.php';
 
     $palavras_lista = Pal01::read(id_empresa:$_SESSION['usuario']->id_empresa);
-    foreach($palavras_lista as $palavra) {
-        $titulo = Con01::read($palavra->id_con01)[0];
-        $tipo = $titulo->tipo;
-        $titulo = $titulo->id;
-        $subtitulo = Con02::read($palavra->id_con02)[0]->id;
-        $ban02_lista = Ban02::read(id_empresa: $_SESSION['usuario']->id_empresa, tipo:$tipo, palavra: strtolower($palavra->palavra));
+    if(empty($palavras_lista)) {
+        header('Location: movimentacao.php?erro=erro_palavra');
+        exit;
+    } else {
+        foreach($palavras_lista as $palavra) {
+            $titulo = Con01::read($palavra->id_con01)[0];
+            $tipo = $titulo->tipo;
+            $titulo = $titulo->id;
+            $subtitulo = Con02::read($palavra->id_con02)[0]->id;
+            $ban02_lista = Ban02::read(id_empresa: $_SESSION['usuario']->id_empresa, tipo:$tipo, palavra: strtolower($palavra->palavra));
 
-        foreach($ban02_lista as $ban02) {
-        $novo_ban02 = new Ban02 (
-            $ban02->id,
-            $ban02->id_empresa,
-            $ban02->id_ban01,
-            $ban02->data,
-            $ban02->documento,
-            $titulo,
-            $subtitulo,
-            $ban02->descricao,
-            $ban02->descricao_comp,
-            $ban02->valor,
-            $ban02->id_original,
-            $ban02->ativo
-        );
-        Ban02::update($novo_ban02);
-    }
+            foreach($ban02_lista as $ban02) {
+                $novo_ban02 = new Ban02 (
+                    $ban02->id,
+                    $ban02->id_empresa,
+                    $ban02->id_ban01,
+                    $ban02->data,
+                    $ban02->documento,
+                    $titulo,
+                    $subtitulo,
+                    $ban02->descricao,
+                    $ban02->descricao_comp,
+                    $ban02->valor,
+                    $ban02->id_original,
+                    $ban02->ativo
+                );
+                Ban02::update($novo_ban02);
+            }
+        }
     header('Location: movimentacao.php');
+    exit;
     }
 
     
