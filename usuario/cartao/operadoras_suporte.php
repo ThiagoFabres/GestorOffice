@@ -297,5 +297,25 @@ $operadoras_suporte = [
 
         ],
     ],
+    'saudeservice' => [
+        'xls' => [
+            'excluded_columns' => [
+                'G', 'J', 'K', 'L', 'N', 'O', 'P', 'Q', 'R', 
+            ],
+            'start_row' => 3,
+            'start_end_columns' => [ 'start' => 'F', 'end' => 'U'],
+            'organizador' => [
+                'data' => 0,
+                'bandeira' => 4,
+                'tipo' => 5,
+                'parcela' => 2,
+                'valor_b' => 1,
+                'valor_l' => 3,
+                'estado' => 6
+            ],
+            'suporte_parcela' => 'formatada(0/0)',
+            'suporte_data' => true,
+        ]
+    ]
 ]
 ?>
