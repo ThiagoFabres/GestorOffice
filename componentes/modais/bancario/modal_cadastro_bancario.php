@@ -35,7 +35,7 @@
                             <label for="agencia" class="form-label">Arquivo OFX / Excel</label>
                             <input type="file"
                             onchange="this.form.submit()"
-                            accept=".ofx, .xlsx" id="agencia" name="ofx"
+                            accept=".ofx, .xlsx, .csv" id="agencia" name="ofx"
                             class="form-control" placeholder="Agência"
                             >
                         </div>

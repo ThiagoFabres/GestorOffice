@@ -52,7 +52,8 @@ function parse_excel($numero_arquivo = null) {
         'sicredi',
         'fazpay',
         'cielo',
-        'capim'
+        'capim',
+        'saudeservice'
     ];
     
     $tipo_arquivo = filter_input(INPUT_POST, 'tipo_arquivo');
@@ -182,9 +183,11 @@ function parse_excel($numero_arquivo = null) {
             $cells[6] = $cells_p[$operadora_sup_org['estado']];
         }
         
-        if($operadora_sup['suporte_estado']) {
+        if(isset($operadora_sup['suporte_estado']) && $operadora_sup['suporte_estado']) {
             $cells[6] = 'aprovada';
         }
+
+    
         
         // $linha_vazia = true;
         // foreach ($cells as $valor) {
@@ -197,6 +200,7 @@ function parse_excel($numero_arquivo = null) {
         // if ($linha_vazia) {
         //     break;
         // }
+        
     if(
         empty($cells[0]) &&
         empty($cells[1]) &&
@@ -265,10 +269,17 @@ function parse_excel($numero_arquivo = null) {
                 continue;
             }
         }
-        $cells[3] = intval($cells[3]);
+        if (isset($operadora_sup['suporte_parcela']) && $operadora_sup['suporte_parcela'] == 'formatada(0/0)') {
+            if (strpos($cells[3], '/') !== false) {
+                $partes = explode('/', $cells[3]);
+                $cells[3] = $partes[1];
+            }
+        }
+
+    $cells[3] = intval($cells[3]);
 
 
-
+        
         if($tipo_arquivo == 'padrao'){
             if(isset($operadora_sup['suporte_data']) && $operadora_sup['suporte_data'] == 'hora') {
                 $cells[0] = substr($cells[0], 0, 10);
@@ -321,6 +332,7 @@ function parse_excel($numero_arquivo = null) {
         // if(str_starts_with($tipo_preg, 'voucher')) {
         //     $cells[2] = 'voucher';
         // }
+        
         if($cells[3] == null || $cells[3] == '-' || $cells[3] == 0 || $cells[3] == '') {
             $cells[3] = 1;
         }

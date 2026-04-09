@@ -158,99 +158,99 @@ if($acao == 'processar') {
     }
 
     
-    // function parse_csv($filePath) {
-    //     $conta = filter_input(INPUT_POST, 'conta');
-    //     $data_atual = (new DateTime())->format('Y-m-d');
-    //     $ultima_data = buscarData($conta);
-    //     $importadas = Ban02Imp::read($_SESSION['usuario']->id_empresa, $conta);      
-    //     $importadas_set = [];
-    //     foreach ($importadas as $imp) {
-    //         $importadas_set[$imp->data] = true;
-    //     }
-        
-    //     $conta_obj = Ban01::read($conta)[0];
-    //     $transactions = [];
-    //     $transactions['current'] = [];
-    //     $transactions['debug'] = [];
-        
-    //     try {
-    //         $handle = fopen($filePath, 'r');
-    //         $row_number = 0;
+    function parse_csv($filePath) {
+    $conta = filter_input(INPUT_POST, 'conta');
+    $data_atual = (new DateTime())->format('Y-m-d');
+    $ultima_data = buscarData($conta);
+
+    $importadas = Ban02Imp::read($_SESSION['usuario']->id_empresa, $conta);      
+    $importadas_set = [];
+    foreach ($importadas as $imp) {
+        $importadas_set[$imp->data] = true;
+    }
+    
+    $conta_obj = Ban01::read($conta)[0];
+
+    $transactions = [
+        'current' => [],
+        'debug' => []
+    ];
+
+    try {
+        // IMPORTANTE: separador é ";"
+        $handle = fopen($filePath, 'r');
+        $row_number = 0;
+
+        while (($row = fgetcsv($handle, 1000, ';')) !== false) {
+            $row_number++;
+
+            // Pula linhas inúteis (antes do cabeçalho)
+            if ($row_number < 3) continue;
             
-    //         while (($row = fgetcsv($handle, 1000, ',')) !== false) {
-    //             $row_number++;
-                
-    //             // Pula cabeçalho
-    //             if ($row_number === 1) {
-    //                 continue;
-    //             }
-                
-    //             // Verifica se a linha tem dados
-    //             if (empty($row[0]) && empty($row[1]) && empty($row[2])) {
-    //                 continue;
-    //             }
-                
-    //             $data_str = trim($row[0] ?? '');
-    //             $descricao = trim($row[1] ?? '');
-    //             $valor_str = trim($row[2] ?? '');
-                
-    //             // Se não houver data ou valor, pula a linha
-    //             if (empty($data_str) || empty($valor_str)) {
-    //                 continue;
-    //             }
-                
-    //             // Converte data dd/mm/yyyy para Y-m-d
-    //             try {
-    //                 $data_obj = DateTime::createFromFormat('d/m/Y', $data_str);
-    //                 if (!$data_obj) {
-    //                     $data_obj = DateTime::createFromFormat('Y-m-d', $data_str);
-    //                 }
-    //                 if (!$data_obj) {
-    //                     continue;
-    //                 }
-    //                 $data_analizada = $data_obj->format('Y-m-d');
-    //                 $data_formatada = $data_obj->format('d/m/Y');
-    //             } catch (Exception $e) {
-    //                 continue;
-    //             }
-                
-    //             // Valida se já foi importada
-    //             if (isset($importadas_set[$data_analizada])) {
-    //                 continue;
-    //             }
-                
-    //             if($ultima_data != null && ($data_analizada >= $data_atual || $data_analizada == $ultima_data) || $conta_obj->data > $data_analizada) {
-    //                 continue;
-    //             }
-                
-    //             // Converte valor para número
-    //             $valor_str = str_replace('.', '', $valor_str);
-    //             $valor_str = str_replace(',', '.', $valor_str);
-    //             $valor = (float)$valor_str;
-                
-    //             if ($valor == 0) {
-    //                 continue;
-    //             }
-                
-    //             $current = [
-    //                 'data' => $data_formatada,
-    //                 'data_analizada' => $data_analizada,
-    //                 'descricao' => $descricao,
-    //                 'valor' => number_format($valor, 2, '.', ''),
-    //                 'tipo' => ($valor < 0) ? 'Débito' : 'Crédito',
-    //                 'documento' => ''
-    //             ];
-                
-    //             $transactions['current'][] = $current;
-    //         }
+            // Pula rodapés ou linhas inválidas
+            if (empty($row[0]) || !preg_match('/\d{2}\/\d{2}\/\d{4}/', $row[0])) {
+                continue;
+            }
+
+            $data_str  = trim($row[0] ?? '');
+            $descricao = trim($row[1] ?? '');
+            $documento = trim($row[2] ?? '');
+            $credito   = trim($row[3] ?? '');
+            $debito    = trim($row[4] ?? '');
             
-    //         fclose($handle);
-    //         return $transactions;
-    //     } catch (Exception $e) {
-    //         error_log('Erro ao processar CSV: ' . $e->getMessage());
-    //         return ['current' => [], 'debug' => ['error' => $e->getMessage()]];
-    //     }
-    // }
+
+            // Converte data
+            $data_obj = DateTime::createFromFormat('d/m/Y', $data_str);
+            if (!$data_obj) continue;
+
+            $data_analizada = $data_obj->format('Y-m-d');
+            $data_formatada = $data_obj->format('d/m/Y');
+
+            // Validações
+            if (isset($importadas_set[$data_analizada])) continue;
+
+            if (
+                ($ultima_data != null && ($data_analizada >= $data_atual || $data_analizada == $ultima_data)) ||
+                $conta_obj->data > $data_analizada
+            ) {
+                continue;
+            }
+
+            // Converte valores BR → float
+            $credito = str_replace(['.', ','], ['', '.'], $credito);
+            $debito  = str_replace(['.', ','], ['', '.'], $debito);
+
+            $valor = 0;
+            $tipo  = '';
+
+            if (!empty($credito)) {
+                $valor = (float)$credito;
+                $tipo = 'Crédito';
+            } elseif (!empty($debito)) {
+                $valor = -(float)$debito;
+                $tipo = 'Débito';
+            }
+
+            if ($valor == 0) continue;
+
+            $transactions['current'][] = [
+                'data' => $data_formatada,
+                'data_analizada' => $data_analizada,
+                'descricao' => $descricao,
+                'valor' => number_format($valor, 2, ',', '.'),
+                'tipo' => $tipo,
+                'documento' => $documento
+            ];
+        }
+
+        fclose($handle);
+        return $transactions;
+
+    } catch (Exception $e) {
+        error_log('Erro ao processar CSV: ' . $e->getMessage());
+        return ['current' => [], 'debug' => ['error' => $e->getMessage()]];
+    }
+}
     
     function parse_ofx($filePath) {
         if (is_file($filePath)) {
@@ -391,8 +391,15 @@ if($acao == 'processar') {
         // Detecta o tipo de arquivo pela extensão
         $filePath = $_FILES['ofx']['tmp_name'];
 $fileName = $_FILES['ofx']['name'];
-
-$fileExt = str_ends_with(strtolower($fileName), '.ofx') ? 'ofx' : 'xlsx';
+if(str_ends_with(strtolower($fileName), '.ofx')) {
+    $fileExt = 'ofx';
+} elseif (str_ends_with(strtolower($fileName), '.xlsx') || str_ends_with(strtolower($fileName), '.xls')) {
+    $fileExt = 'xlsx';
+} elseif (str_ends_with(strtolower($fileName), '.csv')) {
+    $fileExt = 'csv';
+} else {
+    $fileExt = 'unknown';
+}
 
 if ($fileExt === 'ofx') {
 
@@ -408,8 +415,10 @@ if ($fileExt === 'ofx') {
     // Passa o conteúdo direto para o parser
     $transactions = parse_ofx($conteudoFormatado);
 
-} elseif ($fileExt === 'xlsx' || $fileExt === 'xls' || $fileExt === 'csv') {
+} elseif ($fileExt === 'xlsx' || $fileExt === 'xls') {
             $transactions = parse_excel($fileExt, $filePath);
+        } else if($fileExt === 'csv') {
+            $transactions = parse_csv($filePath);
         } else {
             // Tenta OFX por padrão
             $transactions = parse_ofx($filePath);
