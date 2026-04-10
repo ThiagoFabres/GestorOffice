@@ -53,7 +53,7 @@ if($get_filtro_descricao === '') {
 $erro = filter_input(INPUT_GET, 'erro');
 $get_pdf = filter_input(INPUT_GET, 'pdf') == 1 ? true : false;
 $get_excel = filter_input(INPUT_GET, 'excel') == 1 ? true : false;
-$url_atual = $_SERVER['REQUEST_URI'];
+
 
 $numero_pagina = intval($numero_pagina);
 $numero_exibir = intval($numero_exibir);
@@ -481,12 +481,12 @@ if ($get_filtro_conta != null) {
                                 <td class="td-acoes">
                                     <button class="btn" type="button" 
                                     <?php if($movimentacao->id_original != null ) echo 'disabled'?> 
-                                    onclick="window.location.href='<?php if(str_ends_with($url_atual, '?')) {echo $caminho . '?';} else {echo $caminho . '&';}?>acao=desmembrar&id=<?= $movimentacao->id ?>'">
+                                    onclick="window.location.href='<?php if(empty($filtros)) {echo $caminho . '?';} else {echo $caminho . '&';}?>acao=desmembrar&id=<?= $movimentacao->id ?>'">
                                         <i class="bi bi-code-slash"></i>
                                     </button>
                                 </td>
                             <?php } ?>
-                                <td class="td-acoes"><button class="btn" type="button" onclick="window.location.href='<?php if((str_ends_with($url_atual, '?'))) {echo $caminho . '?';} else {echo $caminho . '&';}?>acao=visualizar&id=<?= $movimentacao->id ?>'"><i class="bi 
+                                <td class="td-acoes"><button class="btn" type="button" onclick="window.location.href='<?php if(empty($filtros)) {echo $caminho . '?';} else {echo $caminho . '&';}?>acao=visualizar&id=<?= $movimentacao->id ?>'"><i class="bi 
                                 <?php if($_SESSION['usuario']->processar === 1) { ?>
                                 bi-pen-fill
                                 <?php } else { ?>
@@ -495,7 +495,7 @@ if ($get_filtro_conta != null) {
                                 "></i></button></td>
                             <?php if($_SESSION['usuario']->processar === 1) { ?>
                                 <td class="td-acoes">
-                                    <button class="btn" type="button" <?php if($movimentacao->id_con01 == null || $movimentacao->id_con02 == null) echo 'disabled'?> onclick="window.location.href='<?php if((str_ends_with($url_atual, '?'))) {echo $caminho . '?';} else {echo $caminho . '&';}?>acao=quitar_bancario&id=<?=$movimentacao->id?>'" >
+                                    <button class="btn" type="button" <?php if($movimentacao->id_con01 == null || $movimentacao->id_con02 == null) echo 'disabled'?> onclick="window.location.href='<?php if(empty($filtros)) {echo $caminho . '?';} else {echo $caminho . '&';}?>acao=quitar_bancario&id=<?=$movimentacao->id?>'" >
                                         <i class="bi bi-arrow-90deg-up" ></i>
                                     </button>
                                 </td>
