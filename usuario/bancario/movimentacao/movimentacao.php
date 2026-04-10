@@ -125,9 +125,9 @@ if ($filtros != []) {
     array_pop($caminho_sem_pag);
     $caminho_sem_pag = 'movimentacao.php?' . implode('&', $caminho_sem_pag) . '&';
 } else {
-    $caminho = 'movimentacao.php?';
-    $caminho_get = urlencode('movimentacao.php?');
-    $caminho_sem_pag = 'movimentacao.php?';
+    $caminho = 'movimentacao.php';
+    $caminho_get = urlencode('movimentacao.php');
+    $caminho_sem_pag = 'movimentacao.php';
 }
 if($get_filtro_conta != null){
     $saldo_geral = Ban02::read(
@@ -481,12 +481,12 @@ if ($get_filtro_conta != null) {
                                 <td class="td-acoes">
                                     <button class="btn" type="button" 
                                     <?php if($movimentacao->id_original != null ) echo 'disabled'?> 
-                                    onclick="window.location.href='<?php if(empty($filtros)) {echo $caminho;} else {echo $caminho . '&';}?>acao=desmembrar&id=<?= $movimentacao->id ?>'">
+                                    onclick="window.location.href='<?php if(empty($filtros)) {echo $caminho . '?';} else {echo $caminho . '&';}?>acao=desmembrar&id=<?= $movimentacao->id ?>'">
                                         <i class="bi bi-code-slash"></i>
                                     </button>
                                 </td>
                             <?php } ?>
-                                <td class="td-acoes"><button class="btn" type="button" onclick="window.location.href='<?php if(empty($filtros)) {echo $caminho;} else {echo $caminho . '&';}?>acao=visualizar&id=<?= $movimentacao->id ?>'"><i class="bi 
+                                <td class="td-acoes"><button class="btn" type="button" onclick="window.location.href='<?php if(empty($filtros)) {echo $caminho . '?';} else {echo $caminho . '&';}?>acao=visualizar&id=<?= $movimentacao->id ?>'"><i class="bi 
                                 <?php if($_SESSION['usuario']->processar === 1) { ?>
                                 bi-pen-fill
                                 <?php } else { ?>
