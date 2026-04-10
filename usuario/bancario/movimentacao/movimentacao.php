@@ -152,7 +152,6 @@ $movimentacoes_pdf = Ban02::read(
                             filtro_subtitulo: $get_filtro_subtitulo ?? null,
                             filtro_conta: $get_filtro_conta ?? null,
                             filtro_tipo: $get_filtro_tipo ?? null,
-                            ordenar_por: 'data',
                             filtro_descricao: $get_filtro_descricao,
                         );
 $movimentacoes_totais = $movimentacoes_pdf;
@@ -482,12 +481,12 @@ if ($get_filtro_conta != null) {
                                 <td class="td-acoes">
                                     <button class="btn" type="button" 
                                     <?php if($movimentacao->id_original != null ) echo 'disabled'?> 
-                                    onclick="window.location.href='<?php if(empty($filtros)) {echo $caminho . '?';} else {echo $caminho . '&';}?>acao=desmembrar&id=<?= $movimentacao->id ?>'">
+                                    onclick="window.location.href='<?php if(empty($filtros)) {echo $caminho;} else {echo $caminho . '&';}?>acao=desmembrar&id=<?= $movimentacao->id ?>'">
                                         <i class="bi bi-code-slash"></i>
                                     </button>
                                 </td>
                             <?php } ?>
-                                <td class="td-acoes"><button class="btn" type="button" onclick="window.location.href='<?php if(empty($filtros)) {echo $caminho . '?';} else {echo $caminho . '&';}?>acao=visualizar&id=<?= $movimentacao->id ?>'"><i class="bi 
+                                <td class="td-acoes"><button class="btn" type="button" onclick="window.location.href='<?php if(empty($filtros)) {echo $caminho;} else {echo $caminho . '&';}?>acao=visualizar&id=<?= $movimentacao->id ?>'"><i class="bi 
                                 <?php if($_SESSION['usuario']->processar === 1) { ?>
                                 bi-pen-fill
                                 <?php } else { ?>
@@ -1303,13 +1302,17 @@ document.addEventListener('DOMContentLoaded', function () {
         tituloModalChoice.clearStore();
         tituloModalChoice.clearChoices();
 
-        // 🔵 opção padrão
-
         // 🔎 filtra títulos por tipo
         const titulosFiltrados = todosTitulosModal.filter(t =>
             t.value === '' || t.tipo === tipo
         );
 
+        // 🟡 adiciona opção padrão "Selecione"
+        tituloModalChoice.setChoices([
+            { value: '', label: 'Selecione', selected: true, }
+        ], 'value', 'label', false);
+
+        // 🔵 adiciona opções filtradas
         if (titulosFiltrados.length) {
             tituloModalChoice.setChoices(
                 titulosFiltrados.filter(t => t.value !== ''),
@@ -1319,7 +1322,7 @@ document.addEventListener('DOMContentLoaded', function () {
             );
         }
 
-        // 🔁 reseta seleção
+        // 🔁 garante que fique no "Selecione"
         tituloModalChoice.setChoiceByValue('');
     });
 

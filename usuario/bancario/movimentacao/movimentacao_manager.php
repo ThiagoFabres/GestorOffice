@@ -550,8 +550,10 @@ if ($fileExt === 'ofx') {
     exit;
    }
 } else if($acao == 'conciliar') {
-    $titulo = filter_input(INPUT_POST, 'titulo');
-    $subtitulo = filter_input(INPUT_POST, 'subtitulo');
+    $titulo = filter_input(INPUT_POST, 'titulo') ?? null;
+    $subtitulo = filter_input(INPUT_POST, 'subtitulo') ?? null;
+    $titulo = ($titulo === '' ? null : $titulo);
+    $subtitulo = ($subtitulo === '' ? null : $subtitulo);
     $id = filter_input(INPUT_POST, 'id');
     $movimentacao_antiga = Ban02::read($id)[0];
     $caminho = filter_input(INPUT_POST, 'caminho');
@@ -562,15 +564,21 @@ if ($fileExt === 'ofx') {
         $movimentacao_antiga->id_ban01,
         $movimentacao_antiga->data,
         $movimentacao_antiga->documento,
-        $titulo,
-        $subtitulo,
+        $titulo ?? null,
+        $subtitulo ?? null,
         $movimentacao_antiga->descricao,
         $movimentacao_antiga->descricao_comp,
         $movimentacao_antiga->valor,
         $movimentacao_antiga->id_original,
         $movimentacao_antiga->ativo,
     );
-    Ban02::update($movimentacao);
+    try {
+        Ban02::update($movimentacao);
+    } catch(Exception $e ) {
+        header('Location: movimentacao.php?erro=erro_conciliacao');
+        exit;
+    }
+
 
 
     header('Location: '. $caminho . 'status=sucesso');
@@ -616,8 +624,10 @@ else if($acao == 'conciliar_marcados') {
     $lista_ban = $_POST['id_check'];
     $titulo = filter_input(INPUT_POST, 'titulo');
     $subtitulo = filter_input(INPUT_POST, 'subtitulo');
+    $titulo = ($titulo === '' ? null : $titulo);
+    $subtitulo = ($subtitulo === '' ? null : $subtitulo);
 
-    if(empty($lista_ban) || $lista_ban == '' || $titulo == '' || $subtitulo == '' ) {
+    if(empty($lista_ban) || $lista_ban == '') {
         header('Location: movimentacao.php?status=erro_dados');
         exit;
     }
@@ -652,13 +662,20 @@ else if($acao == 'conciliar_todas'){
         header('Location: movimentacao.php?erro=erro_palavra');
         exit;
     } else {
-        foreach($palavras_lista as $palavra) {
+        foreach($palavras_lista as $i => $palavra) {
             $titulo = Con01::read($palavra->id_con01)[0];
             $tipo = $titulo->tipo;
             $titulo = $titulo->id;
             $subtitulo = Con02::read($palavra->id_con02)[0]->id;
             $ban02_lista = Ban02::read(id_empresa: $_SESSION['usuario']->id_empresa, tipo:$tipo, palavra: strtolower($palavra->palavra));
-
+            if(empty($ban02_lista)) {
+                continue;
+            } 
+            if($i == 1) {
+                echo '<pre>';
+                print_r($ban02_lista);
+                exit;
+            }
             foreach($ban02_lista as $ban02) {
                 $novo_ban02 = new Ban02 (
                     $ban02->id,
