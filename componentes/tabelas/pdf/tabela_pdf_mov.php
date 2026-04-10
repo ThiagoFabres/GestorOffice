@@ -2,14 +2,14 @@
                     <thead>
                         <tr class="tr-header">
                             <th>Documento</th>
-                            <th>Data de Lançamento</th>
-                            <th>Tipo de Lançamento</th>
+                            <th>Data</th>
+                            <th>Tipo</th>
                             <th>Descrição</th>
                             <th>Valor</th>
                             <th>Conta</th>
                             <th>Título</th>
                             <th>Subtítulo</th>
-                            
+                            <th>Código</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -37,6 +37,7 @@
                             }
                             if($movimentacao->id_con02 != null) {
                                 $con02 = Con02::read($movimentacao->id_con02, $_SESSION['usuario']->id_empresa)[0];
+                                $codigo = $con02->codigo ?? '';
                             } else {
                                 $con02 = null;
                             }
@@ -65,6 +66,7 @@
                             <td onclick="window.location.href='<?=$link?>'"><?=$conta_nome?></td>
                             <td onclick="window.location.href='<?=$link?>'"><?= isset($con01) ? substr($con01->nome, 0, 15) : ''?></td>
                             <td onclick="window.location.href='<?=$link?>'"><?= isset($con02) ? substr($con02->nome, 0, 15) : ''?></td>
+                            <td onclick="window.location.href='<?=$link?>'"><?= isset($con02) ? $con02->codigo : ''?></td>
                             
                         </tr>
                         <?php } } }?>

@@ -108,24 +108,27 @@ Class Con02 {
     public $id_con01;
     public $nome;
     public $data_r;
+    public $codigo;
 
-    public function __construct($id = null, $id_empresa = null,  $id_con01 = null, $nome = null) {
+    public function __construct($id = null, $id_empresa = null,  $id_con01 = null, $nome = null, $codigo = null) {
         $this->id = $id;
         $this->id_empresa = $id_empresa;
         $this->id_con01 = $id_con01;
         $this->nome = $nome;
         $this->data_r = (new DateTime)->format('Y-m-d');
+        $this->codigo = $codigo;
     }
 
     public static function create($conta) {
         $pdo = (new Database())->connect();
-        $sql = 'INSERT INTO con02 (id_empresa, id_con01, nome, data_r) 
-                VALUES (:id_empresa, :id_con01, :nome, :data_r)';
+        $sql = 'INSERT INTO con02 (id_empresa, id_con01, nome, data_r, codigo) 
+                VALUES (:id_empresa, :id_con01, :nome, :data_r, :codigo)';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id_empresa', $conta->id_empresa);
         $stmt->bindValue(':id_con01', $conta->id_con01);
         $stmt->bindValue(':nome', $conta->nome);
         $stmt->bindValue(':data_r', $conta->data_r);
+        $stmt->bindValue(':codigo', $conta->codigo);
 
 
         return $stmt->execute();
@@ -169,12 +172,14 @@ Class Con02 {
         $pdo = (new Database())->connect();
         $sql = 'UPDATE con02 
                 SET id_con01 = :id_con01, 
-                    nome = :nome 
+                    nome = :nome, 
+                    codigo = :codigo
                 WHERE id = :id';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id', $conta->id);
         $stmt->bindValue(':id_con01', $conta->id_con01);
         $stmt->bindValue(':nome', $conta->nome);
+        $stmt->bindValue(':codigo', $conta->codigo);
 
         return $stmt->execute();
     }

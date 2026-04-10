@@ -165,12 +165,24 @@ $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa);
                         <input type="hidden" name="con02id" value="<?php echo htmlspecialchars($con02, ENT_QUOTES, 'UTF-8') ?? ''; ?>">
                         <input type="hidden" name="acao" value="<?=$acao?>">
 
-                        <div class="input-nome input-form-adm">
+                        
+                    <?php if(isset($target) && $target == 'subtitulo') {?>
+                        <div class="d-flex flex-row">
+                            <div class="d-flex flex-column w-75">
+                                <label for="nome">Nome:</label>
+                                <input type="text" onchange="checar()" name="nome" class="form-control rounded-0" placeholder="Nome" value="<?php if($acao == 'editar'){ echo $conta_modal->nome ;}?>" required>
+                            </div>
+                            <div class="d-flex flex-column w-25">
+                                <label>Cod. Contabil</label>
+                                <input type="text" onkeypress="" name="codigo" class="form-control rounded-0" placeholder="Código" value="<?php if($acao == 'editar'){ echo $conta_modal->codigo ;}?>" required>
+                            </div>
+                        </div>
+                    <?php } else if(isset($target) && $target == 'titulo'){ ?>
+                    <div class="input-nome input-form-adm">
                             <!--Nome: -->
                             <label for="nome">Nome:</label>
                             <input type="text" onchange="checar()" name="nome" class="form-control" placeholder="Nome" value="<?php if($acao == 'editar'){ echo $conta_modal->nome ;}?>" required>
                         </div>
-                    <?php if(isset($target) && $target == 'titulo'){ ?>
                         <div class="input-nome input-form-adm">
                             <label for="nome">Tipo:</label>
                             <select name="tipo" class="form-select" id="tipo" style="margin-bottom: 1em;">

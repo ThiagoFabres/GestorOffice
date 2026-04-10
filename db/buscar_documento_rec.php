@@ -1,9 +1,9 @@
 <?php 
 
-if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
-    header('Location: /');
-    exit;
-}
+// if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
+//     header('Location: /');
+//     exit;
+// }
 function buscarDocumentoRec(){
 
 $pdo = (new Database())->connect();
