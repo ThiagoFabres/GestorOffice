@@ -77,7 +77,7 @@ class Ban02 {
         $dre_read = null,
         $filtro_operacional = null,
         $ordenar_por = null,
-        $direcao = ' ASC',
+        $direcao = ' DESC',
         $read_total = null,
         ) {
 
@@ -114,10 +114,10 @@ class Ban02 {
         if($palavra != null) {
             $conditions[] = ' id_con01 IS NULL';
             $conditions[] = ' id_con02 IS NULL';
-            $conditions[] = ' descricao LIKE :palavra';
+            $conditions[] = ' ((LOWER(descricao) LIKE :palavra) OR (LOWER(descricao_comp) LIKE :palavra))';
         }
         if($filtro_descricao != null) {
-            $conditions[] = ' descricao LIKE :filtro_descricao';
+            $conditions[] = ' ((LOWER(descricao) LIKE :filtro_descricao) OR (LOWER(descricao_comp) LIKE :filtro_descricao))';
         }
         if($filtro_data_inicial != null) {
             $conditions[] = ' data >= :filtro_data_inicial';
@@ -170,18 +170,10 @@ class Ban02 {
 
         switch($ordenar_por) {
     case 'documento':
-        if (strpos($query, 'pag01') === false) {
-            $query = str_replace(
-                'FROM pag02',
-                'FROM pag02 p2 INNER JOIN pag01 p1 ON p2.id_pag01 = p1.id',
-                $query
-            );
-        }
-        $query .= ' ORDER BY documento';
+        $query .= ' ORDER BY documento desc';
         break;
-
     case 'data':   
-        $query .= ' ORDER BY data asc';
+        $query .= ' ORDER BY data ' . $direcao;
         break;
     case 'nome':
         $query .= ' ORDER BY razao_soc';

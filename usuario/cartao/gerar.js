@@ -197,7 +197,7 @@ for (let i = 0; i < body.length; i += linhasPorPagina) {
        SALVAR
     ------------------------- */
 
-    doc.save(`contas_a_${nome}.pdf`);
+    doc.save(`relatorio.pdf`);
 }
 
 /* -------------------------
@@ -395,7 +395,7 @@ function gerarexcel(nome, nomeEmpresa = '') {
         XLSX.utils.book_append_sheet(wb, ws, "Contas a " + nome);
 
         // Gera arquivo
-        var filename = "contas_a_" + nome + ".xlsx";
+        var filename = "relatorio.xlsx";
         XLSX.writeFile(wb, filename);
 
     } catch (error) {

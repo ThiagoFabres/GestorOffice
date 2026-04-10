@@ -143,7 +143,12 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('conciliar-marcados-btn').style.display = 'none'
         document.getElementById('conciliar-btn').style.display = 'none'
         
-    } 
+    } else {
+        document.getElementById('mensagem-erro').innerHTML = ''
+        document.getElementById('conciliar-marcados-btn').style.display = 'block'
+        document.getElementById('conciliar-btn').style.display = 'block'
+        document.getElementById('form-conciliar').style.display = 'block'
+    }
     console.log(idsListaConciliar)
     if(idsListaConciliar.length <= 1) {
     document.getElementById('conciliar-marcados-btn').style.display = 'none'

@@ -87,8 +87,8 @@
             }
         });
         if (hasNewSelects) {
-            initAllSelects
-        }
+    initAllSelects();
+}
     });
     
     observer.observe(document.body, {

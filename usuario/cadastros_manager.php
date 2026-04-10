@@ -429,6 +429,7 @@ if (isset($view) && $view == 'cadastro') {
     $tipo = filter_input(INPUT_POST, 'tipo');
     $id_conta = filter_input(INPUT_POST, 'con01id');
     $id_conta02 = filter_input(INPUT_POST, 'con02id');
+    $codigo = filter_input(INPUT_POST, 'codigo');
  
     if($target == 'titulo') {
         $operacional = filter_input(INPUT_POST, 'operacional') == 'on' ? 1 : 0;
@@ -474,7 +475,8 @@ if (isset($view) && $view == 'cadastro') {
                     null,
                     $_SESSION['usuario']->id_empresa,
                     $id_conta,
-                    $nome
+                    $nome,
+                    $codigo
                 );
                 Con02::create($conta);
             } else if (isset($acao) && $acao == 'editar') {
@@ -482,7 +484,8 @@ if (isset($view) && $view == 'cadastro') {
                     $id_conta02,
                     $_SESSION['usuario']->id_empresa,
                     $id_conta,
-                    $nome
+                    $nome,
+                    $codigo
                 );
 
             Con02::update($conta);
