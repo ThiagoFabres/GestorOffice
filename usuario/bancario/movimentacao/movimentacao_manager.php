@@ -671,11 +671,6 @@ else if($acao == 'conciliar_todas'){
             if(empty($ban02_lista)) {
                 continue;
             } 
-            if($i == 1) {
-                echo '<pre>';
-                print_r($ban02_lista);
-                exit;
-            }
             foreach($ban02_lista as $ban02) {
                 $novo_ban02 = new Ban02 (
                     $ban02->id,
