@@ -407,7 +407,7 @@ function gerarexcel(nome, nomeEmpresa = '') {
         XLSX.utils.book_append_sheet(wb, ws, "Relatório de Movimentação");
 
         // Gera arquivo
-        var filename = "relatorio_" + nome + ".xlsx";
+        var filename = "relatorio_movimentacao.xlsx";
         XLSX.writeFile(wb, filename);
 
     } catch (error) {
