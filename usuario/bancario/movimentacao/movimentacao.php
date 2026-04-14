@@ -615,9 +615,14 @@ if ($get_filtro_conta != null) {
                 <?= number_format($saldo, 2, ',', '.') ?> </strong>
             </div>
         </div>
-        <?php if($get_pdf || $get_excel) {?>
+        <?php if($get_pdf) {?>
         <div style="display:none;">
             <?php require_once __DIR__ . '/../../../componentes/tabelas/pdf/tabela_pdf_mov.php'; ?>
+        </div>
+        <?php } ?>
+        <?php if($get_excel) {?>
+        <div style="display:none;">
+            <?php require_once __DIR__ . '/../../../componentes/tabelas/excel/tabela_excel_mov.php'; ?>
         </div>
         <?php } ?>
     
