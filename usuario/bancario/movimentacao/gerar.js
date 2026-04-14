@@ -404,7 +404,7 @@ function gerarexcel(nome, nomeEmpresa = '') {
 
         // Cria workbook e adiciona worksheet
         var wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Relatório de " + nome);
+        XLSX.utils.book_append_sheet(wb, ws, "Relatório de Movimentação");
 
         // Gera arquivo
         var filename = "relatorio_" + nome + ".xlsx";
