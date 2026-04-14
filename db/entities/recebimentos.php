@@ -164,7 +164,11 @@ class Rec01 {
         $stmt->bindValue(':descricao', $rec01->descricao);
         $stmt->bindValue(':valor', $rec01->valor);
         $stmt->bindValue(':parcelas', $rec01->parcelas);
-        $stmt->bindValue(':data_lanc', $rec01->data_lanc->format('Y-m-d H:i:s'));
+        if($rec01->data_lanc instanceof DateTime) {
+            $stmt->bindValue(':data_lanc', $rec01->data_lanc->format('Y-m-d H:i:s'));
+        } else {
+            $stmt->bindValue(':data_lanc', $rec01->data_lanc);
+        }
         $stmt->bindValue(':id_usuario', $rec01->id_usuario);
         $stmt->bindValue(':centro_custos', $rec01->centro_custos);
 
@@ -254,7 +258,8 @@ class Rec02 {
         $filtro_cadastro = null,
         $filtro_custos = null,
         $read_totais = null,
-        $read_vendas = null
+        $read_vendas = null,
+        $filtro_descricao = null,
     ) {
         $pdo = (new Database())->connect();
 
@@ -338,6 +343,9 @@ class Rec02 {
     }
     if($read_vendas != null) {
         $conditions[] = 'r1.valor_b IS NOT NULL';
+    }
+    if($filtro_descricao != null) {
+        $conditions[] = 'r1.descricao LIKE :filtro_descricao';
     }
         
 
@@ -462,7 +470,7 @@ switch($ordenar_por) {
         if($filtro_con01 != null && $hasParam(':filtro_con01')) $stmt->bindValue(':filtro_con01', $filtro_con01);
         if($filtro_con02 != null && $hasParam(':filtro_con02')) $stmt->bindValue(':filtro_con02', $filtro_con02);
         if($filtro_custos != null && $hasParam(':filtro_custos')) $stmt->bindValue(':filtro_custos', $filtro_custos);
-
+        if($filtro_descricao != null && $hasParam(':filtro_descricao')) $stmt->bindValue(':filtro_descricao', '%' . $filtro_descricao . '%');
         $stmt->execute();
 
         if(isset($read_paginas)) {
@@ -485,7 +493,11 @@ switch($ordenar_por) {
         $stmt->bindValue(':parcela', $rec02->parcela);
         $stmt->bindValue(':vencimento', $rec02->vencimento);
         $stmt->bindValue(':valor_pag', $rec02->valor_pag);
-        $stmt->bindValue(':data_pag', $rec02->data_pag ? $rec02->data_pag->format('Y-m-d') : null);
+        if($rec02->data_pag instanceof DateTime) {
+            $stmt->bindValue(':data_pag', $rec02->data_pag->format('Y-m-d'));
+        } else {
+            $stmt->bindValue(':data_pag', $rec02->data_pag);
+        }
         $stmt->bindValue(':obs', $rec02->obs);
         $stmt->bindValue(':id_pgto', $rec02->id_pgto);
 
