@@ -33,86 +33,95 @@
                                         class="bi bi-bank"></i>Centro de custos</a></li>
                             <li class=" menu-li <?php if(isset($get_cadastro) && $get_cadastro == 'contas') { ?> menu-li-atual <?php } ?>"><a href="/usuario/contas.php" class="link-light text-decoration-none">
                                 <i class="bi bi-journal-bookmark"></i>Plano de Contas</a></li>
+                            <li class=" menu-li <?php if(isset($get_cadastro) && $get_cadastro == 'parametro') { ?> menu-li-atual <?php } ?>"><a href="/usuario/fechamento/parametro.php" class="link-light text-decoration-none">
+                                <i class="bi bi-journal-bookmark"></i>Parametro de Fechamento</a></li>
+                        </ul>
+                    </div>
+                </div>
 
+                <div class="menu-item accordion <?php if( isset($lateral_financeiro) && $lateral_financeiro ){ 
+                    ?>menu-item-atual<?php } ?>">
+                    <a class="nav-link text-white" data-bs-toggle="collapse" href="#fincanceiroMenu" role="button"
+                        aria-expanded="false" aria-controls="fincanceiroMenu">
+                        <div style=" align-items:center;"><i class="bi bi-briefcase"></i></div> Controle Financeiro
+                    </a>
+                    <div class="<?php if( !isset($lateral_financeiro) || !$lateral_financeiro ){ ?>collapse<?php } ?>" id="fincanceiroMenu">
+                        <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
+                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'receber') { ?> menu-li-atual <?php } ?>"><a href="/usuario/receber.php" class="link-light text-decoration-none">
+                                <i class="bi bi-wallet"></i>
+                                Contas a Receber</a></li>
+                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'pagar') { ?> menu-li-atual <?php } ?>"><a href="/usuario/pagar.php" class="link-light text-decoration-none">
+                                <i class="bi bi-cash-stack"></i>
+                                Contas a Pagar</a></li>
+                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'dre') { ?> menu-li-atual <?php } ?>"><a href="/usuario/dre/sintetico.php" class="link-light text-decoration-none">
+                                <i class="bi bi-file-earmark-text"></i>
+                                DRE Financeiro</a></li>
+    
                         </ul>
                     </div>
                 </div>
 
 
-            <div class="menu-item accordion <?php if( isset($lateral_financeiro) && $lateral_financeiro ){ 
-                ?>menu-item-atual<?php } ?>">
-                <a class="nav-link text-white" data-bs-toggle="collapse" href="#fincanceiroMenu" role="button"
-                    aria-expanded="false" aria-controls="fincanceiroMenu">
-                    <div style=" align-items:center;"><i class="bi bi-briefcase"></i></div> Controle Financeiro
-                </a>
-                <div class="<?php if( !isset($lateral_financeiro) || !$lateral_financeiro ){ ?>collapse<?php } ?>" id="fincanceiroMenu">
-                    <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
-                        <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'receber') { ?> menu-li-atual <?php } ?>"><a href="/usuario/receber.php" class="link-light text-decoration-none">
-                            <i class="bi bi-wallet"></i>
-                            Contas a Receber</a></li>
-                        <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'pagar') { ?> menu-li-atual <?php } ?>"><a href="/usuario/pagar.php" class="link-light text-decoration-none">
-                            <i class="bi bi-cash-stack"></i>
-                            Contas a Pagar</a></li>
-                        <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'dre') { ?> menu-li-atual <?php } ?>"><a href="/usuario/dre/sintetico.php" class="link-light text-decoration-none">
-                            <i class="bi bi-file-earmark-text"></i>
-                            DRE Financeiro</a></li>
- 
-                    </ul>
+                <div class="menu-item accordion <?php if( isset($lateral_bancario) && $lateral_bancario ){ 
+                    ?>menu-item-atual<?php } ?>">
+                    <a class="nav-link text-white" data-bs-toggle="collapse" href="#bancarioMenu" role="button"
+                        aria-expanded="false" aria-controls="bancarioMenu">
+                        <div style=" align-items:center;"><i class="bi bi-bank"></i></div> Controle Bancário
+                    </a>
+                    <div class="<?php if( !isset($lateral_bancario) || !$lateral_bancario ){ ?>collapse<?php } ?>" id="bancarioMenu">
+                        <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
+                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'contaBancario') { ?> menu-li-atual <?php } ?>"><a href="/usuario/bancario/contas/conta.php" class="link-light text-decoration-none"><i
+                                            class="bi bi-person"></i>Cadastro de conta</a></li>
+                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'palavraChave') { ?> menu-li-atual <?php } ?>"><a href="/usuario/bancario/palavra/palavra_chave.php" class="link-light text-decoration-none"><i
+                                            class="bi bi-key"></i>Palavra Chave</a></li>
+                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'movimentacao') { ?> menu-li-atual <?php } ?>"><a href="/usuario/bancario/movimentacao/movimentacao.php" class="link-light text-decoration-none"><i
+                                            class="bi bi-buildings"></i>Movimentação bancária</a></li>
+                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'dreBancario') { ?> menu-li-atual <?php } ?>"><a href="/usuario/bancario/dre/sintetico.php" class="link-light text-decoration-none"><i
+                                            class="bi bi-cash-coin"></i>Dre Bancário</a></li>
+    
+                        </ul>
+                    </div>
                 </div>
-            </div>
-            <div class="menu-item accordion <?php if( isset($lateral_bancario) && $lateral_bancario ){ 
-                ?>menu-item-atual<?php } ?>">
-                <a class="nav-link text-white" data-bs-toggle="collapse" href="#bancarioMenu" role="button"
-                    aria-expanded="false" aria-controls="bancarioMenu">
-                    <div style=" align-items:center;"><i class="bi bi-bank"></i></div> Controle Bancário
-                </a>
-                <div class="<?php if( !isset($lateral_bancario) || !$lateral_bancario ){ ?>collapse<?php } ?>" id="bancarioMenu">
-                    <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
-                        <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'contaBancario') { ?> menu-li-atual <?php } ?>"><a href="/usuario/bancario/contas/conta.php" class="link-light text-decoration-none"><i
-                                        class="bi bi-person"></i>Cadastro de conta</a></li>
-                        <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'palavraChave') { ?> menu-li-atual <?php } ?>"><a href="/usuario/bancario/palavra/palavra_chave.php" class="link-light text-decoration-none"><i
-                                        class="bi bi-key"></i>Palavra Chave</a></li>
-                        <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'movimentacao') { ?> menu-li-atual <?php } ?>"><a href="/usuario/bancario/movimentacao/movimentacao.php" class="link-light text-decoration-none"><i
-                                        class="bi bi-buildings"></i>Movimentação bancária</a></li>
-                        <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'dreBancario') { ?> menu-li-atual <?php } ?>"><a href="/usuario/bancario/dre/sintetico.php" class="link-light text-decoration-none"><i
-                                        class="bi bi-cash-coin"></i>Dre Bancário</a></li>
- 
-                    </ul>
-                </div>
-            </div>
+
             
-            <div class="menu-item accordion <?php if( isset($lateral_cartao) && $lateral_cartao ){ 
-                ?>menu-item-atual<?php } ?>">
-                <a class="nav-link text-white" data-bs-toggle="collapse" href="#cartaoMenu" role="button"
-                    aria-expanded="false" aria-controls="cartaoMenu">
-                    <div style=" align-items:center;"><i class="bi bi-credit-card"></i></div>Controle Cartão
-                </a>
-                <div class="<?php if( !isset($lateral_cartao) || !$lateral_cartao ){ ?>collapse<?php } ?>" id="cartaoMenu">
-                    <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
-                        <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'cadastro_cartao') { ?> menu-li-atual <?php } ?>"><a href="/usuario/cartao/cadastro_cartao.php" class="link-light text-decoration-none">
-                            <i class="bi bi-wallet"></i>Cadastro</a></li>
-                        <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'cartao_vendas') { ?> menu-li-atual <?php } ?>"><a href="/usuario/cartao/cadastro_vendas.php" class="link-light text-decoration-none">
-                            <i class="bi bi-coin"></i></i>Lançamento Vendas</a></li>
- 
-                    </ul>
+
+                <div class="menu-item accordion <?php if( isset($lateral_cartao) && $lateral_cartao ){ 
+                    ?>menu-item-atual<?php } ?>">
+                    <a class="nav-link text-white" data-bs-toggle="collapse" href="#cartaoMenu" role="button"
+                        aria-expanded="false" aria-controls="cartaoMenu">
+                        <div style=" align-items:center;"><i class="bi bi-credit-card"></i></div>Controle Cartão
+                    </a>
+                    <div class="<?php if( !isset($lateral_cartao) || !$lateral_cartao ){ ?>collapse<?php } ?>" id="cartaoMenu">
+                        <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
+                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'cadastro_cartao') { ?> menu-li-atual <?php } ?>"><a href="/usuario/cartao/cadastro_cartao.php" class="link-light text-decoration-none">
+                                <i class="bi bi-wallet"></i>Cadastro</a></li>
+                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'cartao_vendas') { ?> menu-li-atual <?php } ?>"><a href="/usuario/cartao/cadastro_vendas.php" class="link-light text-decoration-none">
+                                <i class="bi bi-coin"></i></i>Lançamento Vendas</a></li>
+    
+                        </ul>
+                    </div>
                 </div>
-            </div>
-            <div class="menu-item accordion <?php if( isset($lateral_recorrente) && $lateral_recorrente ){ 
-                ?>menu-item-atual<?php } ?>">
-                <a class="nav-link text-white" data-bs-toggle="collapse" href="#recorrenteMenu" role="button"
-                    aria-expanded="false" aria-controls="recorrenteMenu">
-                    <div style=" align-items:center;"><i class="bi bi-clock"></i></div>Recorrentes
-                </a>
-                <div class="<?php if( !isset($lateral_recorrente) || !$lateral_recorrente ){ ?>collapse<?php } ?>" id="recorrenteMenu">
-                    <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
-                        <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'recorrente_receber') { ?> menu-li-atual <?php } ?>"><a href="/usuario/recorrente/receber.php" class="link-light text-decoration-none">
-                            <i class="bi bi-wallet"></i>Contas a Receber</a></li>
-                        <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'recorrente_pagar') { ?> menu-li-atual <?php } ?>"><a href="/usuario/recorrente/pagar.php" class="link-light text-decoration-none">
-                            <i class="bi bi-cash-stack"></i>Contas a Pagar</a></li>
- 
-                    </ul>
+
+
+
+                <div class="menu-item accordion <?php if( isset($lateral_recorrente) && $lateral_recorrente ){ 
+                    ?>menu-item-atual<?php } ?>">
+                    <a class="nav-link text-white" data-bs-toggle="collapse" href="#recorrenteMenu" role="button"
+                        aria-expanded="false" aria-controls="recorrenteMenu">
+                        <div style=" align-items:center;"><i class="bi bi-clock"></i></div>Recorrentes
+                    </a>
+                    <div class="<?php if( !isset($lateral_recorrente) || !$lateral_recorrente ){ ?>collapse<?php } ?>" id="recorrenteMenu">
+                        <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
+                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'recorrente_receber') { ?> menu-li-atual <?php } ?>"><a href="/usuario/recorrente/receber.php" class="link-light text-decoration-none">
+                                <i class="bi bi-wallet"></i>Contas a Receber</a></li>
+                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'recorrente_pagar') { ?> menu-li-atual <?php } ?>"><a href="/usuario/recorrente/pagar.php" class="link-light text-decoration-none">
+                                <i class="bi bi-cash-stack"></i>Contas a Pagar</a></li>
+    
+                        </ul>
+                    </div>
                 </div>
-            </div>
+            
+
             <div class="menu-item <?php if($lateral_target == 'importar') {?>menu-item-atual<?php } ?>">
                 <a href="/usuario/financeiro/importar.php">
                     <div style=" align-items:center;"><i class="bi bi-file-excel"></i></div> Importar
@@ -121,6 +130,11 @@
             <div class="menu-item <?php if($lateral_target == 'comparativo') {?>menu-item-atual<?php } ?>">
                 <a href="/usuario/dre/comparativo.php">
                     <div style=" align-items:center;"><i class="bi bi-arrow-left-right"></i></div> DRE Comparativo
+                </a>
+            </div>
+            <div class="menu-item <?php if($lateral_target == 'fechamento') {?>menu-item-atual<?php } ?>">
+                <a href="/usuario/fechamento/fechamento.php">
+                    <div style=" align-items:center;"><i class="bi bi-cart3"></i></div> Fechamento de Caixa
                 </a>
             </div>
 
