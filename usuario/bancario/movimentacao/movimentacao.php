@@ -598,8 +598,8 @@ if ($get_filtro_conta != null) {
             <?php } ?>
         </div>
         <div class="relatorios-botoes" style="float:left; width:100%">
-            <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf) {echo "gerarpdf('movimentacao', document.querySelector('#nome-empresa h1').innerHTML)";} else {?>window.location.href='<?php if(empty($filtros)) {echo $caminho . '?'?>pdf=1'<?php } else { echo $caminho . '&pdf=1' ?> <?php }} ?>">Gerar PDF</button>           
-            <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="<?php if($get_excel) {echo "gerarexcel('movimentacao', document.querySelector('#nome-empresa h1').innerHTML)";} else {?>window.location.href='<?php if(empty($filtros)) {echo $caminho . '?'?>excel=1'<?php } else { echo $caminho . '&excel=1' ?> <?php }} ?>">Gerar Excel</button>           
+            <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf) {echo "gerarpdf('movimentacao', document.querySelector('#nome-empresa h1').innerHTML)";} else {?>window.location.href='<?php if(empty($filtros)) {echo $caminho . '?'?>pdf=1'<?php } else { echo $caminho . 'pdf=1' ?> <?php }} ?>">Gerar PDF</button>           
+            <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="<?php if($get_excel) {echo "gerarexcel('movimentacao', document.querySelector('#nome-empresa h1').innerHTML)";} else {?>window.location.href='<?php if(empty($filtros)) {echo $caminho . '?'?>excel=1'<?php } else { echo $caminho . 'excel=1' ?> <?php }} ?>">Gerar Excel</button>           
         </div>
 
 
