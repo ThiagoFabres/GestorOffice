@@ -1061,11 +1061,11 @@ if ($get_filtro_conta != null) {
 <?php } ?>
 <script>
 <?php if($get_pdf) {?>
-        gerarpdf('pagar', document.querySelector('#nome-empresa h1').innerHTML);
+        gerarpdf('movimentacao', document.querySelector('#nome-empresa h1').innerHTML);
         window.location.href='<?=$caminho?>'
     <?php } ?>  
     <?php if($get_excel) {?>
-        gerarexcel('pagar', document.querySelector('#nome-empresa h1').innerHTML);
+        gerarexcel('movimentacao', document.querySelector('#nome-empresa h1').innerHTML);
         window.location.href='<?=$caminho?>'
     <?php } ?>  
 
