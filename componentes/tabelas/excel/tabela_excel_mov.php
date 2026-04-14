@@ -9,7 +9,7 @@
                             <th>Conta</th>
                             <th>Título</th>
                             <th>Subtítulo</th>
-                            <th>Código</th>
+                            <th>Código Contábil</th>
                         </tr>
                     </thead>
                     <tbody>
