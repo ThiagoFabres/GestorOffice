@@ -63,8 +63,8 @@ $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)[0] ?? nul
     <?php require_once __DIR__ . '/../../componentes/lateral/lateral.php'?>
     <?php require_once __DIR__ . '/../../componentes/header/header.php' ?>
 
-    <div class="main" id="container">
-        <div class="card" style="max-width: 30%; overflow:visible !important;">
+    <div class="main" id="container" >
+        <div class="card card-fechamento-responsivo" style=" overflow:visible !important;">
             <div class="card-header">
                 <h3>Parametro de Fechamento de Caixa</h3>
             </div>

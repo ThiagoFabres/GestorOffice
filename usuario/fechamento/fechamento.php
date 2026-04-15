@@ -63,7 +63,7 @@ $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)[0] ?? nul
     <?php require_once __DIR__ . '/../../componentes/header/header.php' ?>
 
     <div class="main" id="container">
-        <div class="card" style="max-width: 50%; overflow:visible !important;">
+        <div class="card card-fechamento-responsivo" style="overflow:visible !important;">
             <div class="card-header">
                 <h3>Fechamento de Caixa</h3>
             </div>
@@ -80,12 +80,13 @@ $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)[0] ?? nul
                             <input class="form-control rounded-0" type="date" name="data" value="<?= (new DateTime())->format('Y-m-d') ?>">
                         </div>
                         <div class="d-flex flex-column w-50">
-                            <label>Nome do Caixa</label>
-                            <input class="form-control rounded-0" type="text" name="nome_caixa" placeholder="Nome do Caixa">
+                            <label>Turno</label>
+                            <input class="form-control rounded-0" type="number" name="turno" onkeypress="return /[0-9,]/.test(event.key)"  placeholder="Turno" id="input_turno" value="">
+                            
                         </div>
                         <div class="d-flex flex-column w-50">
-                            <label>Turno</label>
-                            <input class="form-control rounded-0" type="number" name="turno" id="input_turno" value="">
+                            <label>Nome</label>
+                            <input class="form-control rounded-0" type="text" name="nome_caixa" placeholder="Nome">
                         </div>
                     </div>
                     <hr>
@@ -94,22 +95,20 @@ $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)[0] ?? nul
                             <?php foreach($tipo_pagamento_lista as $i => $tipo_pagamento) {?>
                             <div class="d-flex flex-row">
                                 <div class="d-flex flex-column w-50">
-                                    <label>Tipo De Pagamento</label>
                                     <select class="form-select tipo-pagamento form-control rounded-0" name="tipo_pagamento[<?= $i ?>]" style="height:2.75em; appearance: none; background-image: none; pointer-events:none;">
                                             <option value="<?=$tipo_pagamento->id?>"><?=$tipo_pagamento->nome?></option>
                                     </select>
                                 </div>
 
                                 <div class="d-flex flex-column w-50">
-                                    <label>Valor</label>
-                                    <input class="form-control valor" type="number" name="valor[<?= $i ?>]" placeholder="Valor">
+                                    <input class="form-control valor" type="number" onkeypress="return /[0-9,]/.test(event.key)"  name="valor[<?= $i ?>]" placeholder="Valor">
                                 </div>
                             </div>
                             <?php } ?>
                         </div>
                     </div>
 
-                    <button style="float: right;" type="submit" class="btn btn-primary ">Fechar</button>
+                    <button style="float: right;" type="submit" class="btn btn-primary ">Processar</button>
                 </form>
                 <?php } ?>
             </div>
