@@ -14,7 +14,18 @@ select[readonly] {
   pointer-events: none;
   touch-action: none;
 }
-
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    appearance: textfield;       /* padrão moderno */
+    -moz-appearance: textfield;  /* Firefox */
+}
+.card-fechamento-responsivo {
+    max-width: 50%;
+}
 
 .btn {
     /* margin-left: auto;
