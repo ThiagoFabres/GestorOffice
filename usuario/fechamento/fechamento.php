@@ -101,7 +101,7 @@ $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)[0] ?? nul
                                 </div>
 
                                 <div class="d-flex flex-column w-50">
-                                    <input class="form-control valor" type="number" onkeypress="return /[0-9,]/.test(event.key)"  name="valor[<?= $i ?>]" placeholder="Valor">
+                                    <input class="form-control valor" type="text" inputmode="decimal" pattern="[0-9.,]*" onkeypress="return /[0-9,]/.test(event.key)" name="valor[<?= $i ?>]" placeholder="Valor">
                                 </div>
                             </div>
                             <?php } ?>
@@ -137,8 +137,37 @@ $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)[0] ?? nul
 
 // Função para converter valores brasileiros para número
 function parseBrazilianDecimal(valorStr) {
-    const normalized = String(valorStr).trim().replace(/\./g, '').replace(/,/g, '.');
-    return parseFloat(normalized);
+    let value = String(valorStr).trim().replace(/\s+/g, '');
+    if (value === '') {
+        return NaN;
+    }
+
+    const commaCount = (value.match(/,/g) || []).length;
+    const dotCount = (value.match(/\./g) || []).length;
+
+    if (commaCount > 0 && dotCount > 0) {
+        // Formato brasileiro com separador de milhar e decimal: 1.234,56
+        value = value.replace(/\./g, '').replace(/,/g, '.');
+    } else if (commaCount > 0) {
+        // Formato brasileiro simples: 1234,56
+        value = value.replace(/,/g, '.');
+    }
+
+    return parseFloat(value);
+}
+
+function formatBrazilianDecimal(valor) {
+    if (valor === null || valor === undefined || valor === '') {
+        return '';
+    }
+    const numero = typeof valor === 'number' ? valor : parseBrazilianDecimal(valor);
+    if (Number.isNaN(numero)) {
+        return '';
+    }
+    return numero.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
 }
 
 // Função para atualizar o total
@@ -150,7 +179,10 @@ function atualizarTotal() {
             total += valor;
         }
     });
-    document.getElementById('total-valor').textContent = total.toFixed(2);
+    document.getElementById('total-valor').textContent = total.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
 }
 
 function definirTurnoPadrao(turnos) {
@@ -199,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const tipoId = select.value;
                 const valorInput = document.querySelectorAll('.valor')[index];
                 if (dados.valores[tipoId] !== undefined) {
-                    valorInput.value = parseFloat(dados.valores[tipoId]).toFixed(2);
+                    valorInput.value = formatBrazilianDecimal(dados.valores[tipoId]);
                 } else {
                     valorInput.value = '';
                 }
