@@ -23,10 +23,12 @@ if($post_turno == '' || $post_nome_caixa == '') {
 }
 $rec02_criado = Rec02::read(
         id_empresa: $_SESSION['usuario']->id_empresa, 
-        filtro_descricao: $post_turno . ' - ' . $post_nome_caixa, 
+        filtro_descricao: 'Turno ' .$post_turno . ' - ' . $post_nome_caixa, 
         filtro_data_inicial: $data,
         filtro_data_final: $data,
+        filtro_por:'pagamento',
         ) ?? null;
+
 $excluir = true;
 foreach($post_valor_lista as $valor) {
     if($valor != 0) {
@@ -47,6 +49,10 @@ if($acao != 'excluir') {
 for($i = 0; $i < count($post_tipo_pagamento_lista); $i++) {
     $tipo_pagamento_id = $post_tipo_pagamento_lista[$i];
     $valor = $post_valor_lista[$i];
+    // Converte formato brasileiro (1.234,56) para formato numérico (1234.56)
+    $valor = str_replace('.', '', $valor);
+    $valor = str_replace(',', '.', $valor);
+    $valor = floatval($valor);
     if($valor) {
         $valor_total += $valor;
     }
@@ -65,6 +71,10 @@ for($i = 0; $i < count($post_tipo_pagamento_lista); $i++) {
     for($i = 0; $i < count($post_tipo_pagamento_lista); $i++) {
     $tipo_pagamento_id = $post_tipo_pagamento_lista[$i];
     $valor = $post_valor_lista[$i];
+    // Converte formato brasileiro (1.234,56) para formato numérico (1234.56)
+    $valor = str_replace('.', '', $valor);
+    $valor = str_replace(',', '.', $valor);
+    $valor = floatval($valor);
     if($valor) {
         $valor_total += $valor;
     }
@@ -99,7 +109,7 @@ if($acao == 'adicionar') {
                 id_con01: $fecha01->id_titulo,
                 id_con02: $fecha01->id_subtitulo,
                 documento: $documento,
-                descricao: $post_turno . ' - ' . $post_nome_caixa,
+                descricao: 'Turno ' . $post_turno . ' - ' . $post_nome_caixa,
                 valor: $valor_total,
                 parcelas: count($grupos),
                 data_lanc: $data,

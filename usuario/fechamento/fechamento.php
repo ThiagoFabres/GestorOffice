@@ -101,7 +101,7 @@ $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)[0] ?? nul
                                 </div>
 
                                 <div class="d-flex flex-column w-50">
-                                    <input class="form-control valor" type="number" onkeypress="return /[0-9,]/.test(event.key)"  name="valor[<?= $i ?>]" placeholder="Valor">
+                                    <input class="form-control valor" type="text" onkeypress="return /[0-9,]/.test(event.key)"  name="valor[<?= $i ?>]" placeholder="Valor">
                                 </div>
                             </div>
                             <?php } ?>
