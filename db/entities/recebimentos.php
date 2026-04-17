@@ -260,6 +260,7 @@ class Rec02 {
         $read_totais = null,
         $read_vendas = null,
         $filtro_descricao = null,
+        
     ) {
         $pdo = (new Database())->connect();
 
