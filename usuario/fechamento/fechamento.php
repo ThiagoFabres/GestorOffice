@@ -77,16 +77,16 @@ $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)[0] ?? nul
                     <div class="d-flex flex-row justify-content-evenly gap-3 mb-3">
                         <div class="d-flex flex-column w-50">
                             <label>Data</label>
-                            <input class="form-control rounded-0" type="date" name="data" value="<?= (new DateTime())->format('Y-m-d') ?>">
+                            <input class="form-control rounded-0" type="date" id="data_fechamento" name="data" value="<?= (new DateTime())->format('Y-m-d') ?>">
                         </div>
                         <div class="d-flex flex-column w-50">
                             <label>Turno</label>
-                            <input class="form-control rounded-0" type="number" name="turno" onkeypress="return /[0-9,]/.test(event.key)"  placeholder="Turno" id="input_turno" value="">
-                            
+                            <input class="form-control rounded-0" type="number" name="turno" id="input_turno" list="turno-list" placeholder="Turno" onkeypress="return /[0-9,]/.test(event.key)">
+                            <datalist id="turno-list"></datalist>
                         </div>
                         <div class="d-flex flex-column w-50">
                             <label>Nome</label>
-                            <input class="form-control rounded-0" type="text" name="nome_caixa" placeholder="Nome">
+                            <input class="form-control rounded-0" type="text" id="input_nome_caixa" name="nome_caixa" placeholder="Nome">
                         </div>
                     </div>
                     <hr>
@@ -101,14 +101,21 @@ $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)[0] ?? nul
                                 </div>
 
                                 <div class="d-flex flex-column w-50">
-                                    <input class="form-control valor" type="text" onkeypress="return /[0-9,]/.test(event.key)"  name="valor[<?= $i ?>]" placeholder="Valor">
+                                    <input class="form-control valor" type="number" onkeypress="return /[0-9,]/.test(event.key)"  name="valor[<?= $i ?>]" placeholder="Valor">
                                 </div>
                             </div>
                             <?php } ?>
                         </div>
                     </div>
-
-                    <button style="float: right;" type="submit" class="btn btn-primary ">Processar</button>
+                    <hr>
+                    <div class="d-flex flex-row justify-content-between align-items-center mt-3">
+                        <div>
+                            <div>
+                                Total: R$ <span id="total-valor">0.00</span>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Processar</button>
+                    </div>
                 </form>
                 <?php } ?>
             </div>
@@ -128,54 +135,146 @@ $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)[0] ?? nul
 
 <script>
 
-// let index = 1;
+// Função para converter valores brasileiros para número
+function parseBrazilianDecimal(valorStr) {
+    const normalized = String(valorStr).trim().replace(/\./g, '').replace(/,/g, '.');
+    return parseFloat(normalized);
+}
 
-// $(document).on('change', '.tipo-pagamento, .valor', function () {
+// Função para atualizar o total
+function atualizarTotal() {
+    let total = 0;
+    document.querySelectorAll('.valor').forEach(input => {
+        const valor = parseBrazilianDecimal(input.value);
+        if (!isNaN(valor)) {
+            total += valor;
+        }
+    });
+    document.getElementById('total-valor').textContent = total.toFixed(2);
+}
 
-//     let linha = $(this).closest('.linha');
-//     let tipo = linha.find('.tipo-pagamento').val();
-//     let valor = linha.find('.valor').val();
+function definirTurnoPadrao(turnos) {
+    if (!Array.isArray(turnos) || turnos.length === 0) {
+        if (!document.getElementById('input_turno').value) {
+            document.getElementById('input_turno').value = '1';
+        }
+        return;
+    }
 
-//     // Se os dois campos estiverem preenchidos
-//     if (tipo && valor) {
+    const numeros = turnos
+        .map(turno => parseInt(turno, 10))
+        .filter(n => !Number.isNaN(n));
 
-//         // Evita duplicar linha se já tiver próxima
-//         if (linha.next('.linha').length === 0) {
+    const proximo = numeros.length ? Math.max(...numeros) + 1 : 1;
+    if (!document.getElementById('input_turno').value) {
+        document.getElementById('input_turno').value = String(proximo);
+    }
+}
 
-//             let novaLinha = `
-//                 <div class="linha d-flex flex-row justify-content-evenly gap-3 mb-2">
-                    
-//                     <div class="d-flex flex-column w-50">
-//                         <label>Tipo De Pagamento</label>
-//                         <select class="form-select tipo-pagamento" name="tipo_pagamento[${index}]">
-//                             <option value="">Selecione</option>
-//                             <?php foreach($tipo_pagamento_lista as $tipo_pagamento) { ?>
-//                                 <option value="<?=$tipo_pagamento->id?>"><?=$tipo_pagamento->nome?></option>
-//                             <?php } ?>
-//                         </select>
-//                     </div>
+// Atualiza o total quando qualquer input de valor é alterado
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.valor').forEach(input => {
+        input.addEventListener('change', atualizarTotal);
+        input.addEventListener('input', atualizarTotal);
+    });
+    atualizarTotal();
 
-//                     <div class="d-flex flex-column w-50">
-//                         <label>Valor</label>
-//                         <input class="form-control valor" type="number" name="valor[${index}]" placeholder="Valor">
-//                     </div>
+        const dataInput = document.getElementById('data_fechamento');
+        const turnoInput = document.getElementById('input_turno');
 
-//                 </div>
-//             `;
+        function clearDadosTurno() {
+            document.getElementById('input_nome_caixa').value = '';
+            document.querySelectorAll('.valor').forEach(input => input.value = '');
+            atualizarTotal();
+        }
 
-//             $('#linhas-container').append(novaLinha);
-//             index++;
-//         }
-//     }
-// });
+        function preencherValoresPorTurno(dados) {
+            if (!dados || !dados.valores) {
+                clearDadosTurno();
+                return;
+            }
 
-// const input = document.getElementById('input_turno');
-// input.addEventListener('input', function() {
-//   this.value = this.value.replace(/[^0-9]/g, '');
-//   if (this.value.length > 1) {
-//     this.value = this.value.slice(0, 1);
-//   }
-// });
+            document.getElementById('input_nome_caixa').value = dados.nome_caixa || '';
+            document.querySelectorAll('.tipo-pagamento').forEach((select, index) => {
+                const tipoId = select.value;
+                const valorInput = document.querySelectorAll('.valor')[index];
+                if (dados.valores[tipoId] !== undefined) {
+                    valorInput.value = parseFloat(dados.valores[tipoId]).toFixed(2);
+                } else {
+                    valorInput.value = '';
+                }
+            });
+            atualizarTotal();
+        }
+
+        const fechamentoApiUrl = './fechamento_ajax.php';
+
+        async function carregarTurnos(data) {
+            if (!data) return;
+            const url = `${fechamentoApiUrl}?action=getTurnos&data=${encodeURIComponent(data)}`;
+            const response = await fetch(url, { credentials: 'same-origin' });
+            const text = await response.text();
+            let json;
+            try {
+                json = JSON.parse(text);
+            } catch (error) {
+                console.error('Erro ao parsear JSON de carregarTurnos:', error, 'responseText:', text);
+                return;
+            }
+            const list = document.getElementById('turno-list');
+            list.innerHTML = '';
+
+            if (json.success && Array.isArray(json.turnos)) {
+                json.turnos.forEach(turno => {
+                    const option = document.createElement('option');
+                    option.value = String(turno);
+                    list.appendChild(option);
+                });
+                definirTurnoPadrao(json.turnos);
+            } else {
+                definirTurnoPadrao([]);
+            }
+        }
+
+        async function carregarDadosTurno(data, turno) {
+            if (!data || !turno) {
+                clearDadosTurno();
+                return;
+            }
+
+            const url = `${fechamentoApiUrl}?action=getDadosTurno&data=${encodeURIComponent(data)}&turno=${encodeURIComponent(turno)}`;
+            const response = await fetch(url, { credentials: 'same-origin' });
+            const text = await response.text();
+            let json;
+            try {
+                json = JSON.parse(text);
+            } catch (error) {
+                console.error('Erro ao parsear JSON de carregarDadosTurno:', error, 'responseText:', text);
+                clearDadosTurno();
+                return;
+            }
+            if (json.success) {
+                preencherValoresPorTurno(json);
+            } else {
+                clearDadosTurno();
+            }
+        }
+
+        dataInput.addEventListener('change', function() {
+            carregarTurnos(this.value);
+            clearDadosTurno();
+        });
+
+        turnoInput.addEventListener('change', function() {
+            carregarDadosTurno(dataInput.value, this.value);
+        });
+
+        turnoInput.addEventListener('blur', function() {
+            carregarDadosTurno(dataInput.value, this.value);
+        });
+
+        carregarTurnos(dataInput.value);
+});
 
 
 </script>

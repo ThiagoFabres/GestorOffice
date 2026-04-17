@@ -193,7 +193,7 @@ class Pag02 {
         $filtro_cadastro = null,
         $filtro_custos = null,
         $read_totais = null,
-
+        $filtro_descricao = null,
     ) {
         $pdo = (new Database())->connect();
 
@@ -274,7 +274,9 @@ class Pag02 {
     if($filtro_con02 != null) {
         $conditions[] = 'p1.id_con02 = :filtro_con02';
     }
-        
+    if($filtro_descricao != null) {
+        $conditions[] = 'p1.descricao LIKE :filtro_descricao';
+    }
 
         if ($id != null) $conditions[] = 'p2.id = :id';
         if ($id_empresa != null) {
@@ -393,6 +395,7 @@ switch($ordenar_por) {
         if($filtro_con01 != null && $hasParam(':filtro_con01')) $stmt->bindValue(':filtro_con01', $filtro_con01);
         if($filtro_con02 != null && $hasParam(':filtro_con02')) $stmt->bindValue(':filtro_con02', $filtro_con02);
         if($filtro_custos != null && $hasParam(':filtro_custos')) $stmt->bindValue(':filtro_custos', $filtro_custos);
+        if($filtro_descricao != null && $hasParam(':filtro_descricao')) $stmt->bindValue(':filtro_descricao', '%' . $filtro_descricao . '%');
 
         $stmt->execute();
 

@@ -54,7 +54,7 @@ $direcao_var = $direcao;
 $get_filtro_data_inicial = filter_input(INPUT_GET, 'filtro_data_inicial') ?? null;
 $get_filtro_data_final = filter_input(INPUT_GET, 'filtro_data_final') ?? null;
 
-$get_filtro_nome = filter_input(INPUT_GET, 'filtro_nome') ?? null;
+$get_filtro_descricao = filter_input(INPUT_GET, 'filtro_descricao') ?? null;
 $get_filtro_opcao = filter_input(INPUT_GET, 'opcao_filtro') ?? null;
 $get_filtro_por = filter_input(INPUT_GET, 'filtro_por') ?? null;
 $get_filtro_pagamento = filter_input(INPUT_GET, 'forma_pagamento') ?? null;
@@ -89,7 +89,7 @@ $parcela_paginas = Pag02::read(
     id_empresa: $_SESSION['usuario']->id_empresa,
     filtro_data_inicial: $get_filtro_data_inicial ?? null,
     filtro_data_final: $get_filtro_data_final ?? null,
-    filtro_documento: $get_filtro_nome ?? null,
+    filtro_descricao: $get_filtro_descricao ?? null,
     filtro_opcao: $get_filtro_opcao ?? null,
     filtro_por: $get_filtro_por ?? null,
     filtro_pagamento: $get_filtro_pagamento ?? null,
@@ -114,8 +114,8 @@ if ($get_filtro_data_inicial != '')
     $filtros[] = 'filtro_data_inicial=' . $get_filtro_data_inicial;
 if ($get_filtro_data_final != '')
     $filtros[] = 'filtro_data_final=' . $get_filtro_data_final;
-if ($get_filtro_nome != '')
-    $filtros[] = 'filtro_nome=' . $get_filtro_nome;
+if ($get_filtro_descricao != '')
+    $filtros[] = 'filtro_descricao=' . $get_filtro_descricao;
 if ($get_filtro_opcao != '')
     $filtros[] = 'opcao_filtro=' . $get_filtro_opcao;
 if ($get_filtro_por != '')
@@ -251,10 +251,10 @@ if ($filtros != []) {
 
                                                     <div class="r-inputs-data" >
                                                         <div>
-                                                            <label for="filtro_nome"
+                                                            <label for="filtro_descricao"
                                                             >Documento:</label>
-                                                            <input type="text" id="filtro_nome" name="filtro_nome"
-                                                                class="form-control" value="<?= $get_filtro_nome; ?>"
+                                                            <input type="text" id="filtro_descricao" name="filtro_descricao"
+                                                                class="form-control" value="<?= $get_filtro_descricao; ?>"
                                                                 placeholder="Documento" style="border-radius: 0;">
                                                         </div>
 
@@ -526,7 +526,7 @@ if ($filtros != []) {
                                 id_empresa: $_SESSION['usuario']->id_empresa,
                                 filtro_data_inicial: $get_filtro_data_inicial,
                                 filtro_data_final: $get_filtro_data_final,
-                                filtro_documento: $get_filtro_nome,
+                                filtro_descricao: $get_filtro_descricao,
                                 filtro_opcao: $get_filtro_opcao,
                                 filtro_por: $get_filtro_por,
                                 filtro_pagamento: $get_filtro_pagamento,
@@ -771,7 +771,7 @@ if ($filtros != []) {
                         id_empresa: $_SESSION['usuario']->id_empresa,
                                 filtro_data_inicial: $get_filtro_data_inicial,
                                 filtro_data_final: $get_filtro_data_final,
-                                filtro_documento: $get_filtro_nome,
+                                filtro_descricao: $get_filtro_descricao,
                                 filtro_opcao: $get_filtro_opcao,
                                 filtro_por: $get_filtro_por,
                                 filtro_pagamento: $get_filtro_pagamento,
