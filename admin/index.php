@@ -321,70 +321,103 @@ $erro = filter_input(INPUT_GET, 'erro');
     <input type="hidden" name="data_r" value="<?=$empresa->data_r?>">
     <input type="hidden" name="id" value="<?=$empresa->id?>">
  
-    <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input type="text" class="form-control" id="nome" placeholder="Razao social / Nome" name="nome" value="<?= $empresa->razao_soc ?>" required>
+    <div  class="mb-3 d-flex flex-row">
+        <div class="d-flex flex-column w-50">
+            <label for="nome" class="form-label">Razão social / Nome:</label>
+            <input type="text" class="rounded-0 form-control" id="nome" placeholder="Razao social / Nome" name="nome" value="<?= $empresa->razao_soc ?>" required>
+        </div>
+        <div class="d-flex flex-column w-50">
+            <label for="fantasia" class="form-label">Nome fantasia:</label>
+            <input type="text" class="rounded-0 form-control" id="fantasia" placeholder="Nome fantasia" name="fantasia" value="<?= $empresa->nom_fant ?>" required>
+        </div>
     </div>
 
-    <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input type="text" class="form-control" id="senha" placeholder="Nome fantasia" name="fantasia" value="<?= $empresa->nom_fant ?>" required>
+    <div  class="mb-3 d-flex flex-row">
+        <div class="d-flex flex-column" style="width: calc(100%/3);">
+            <label for="cnpj" class="form-label">CNPJ:</label>
+            <input type="text" class="rounded-0 form-control" id="cnpj" placeholder="CNPJ" name="cnpj" value="<?= $empresa->cnpj ?>" required>
+        </div>
+        <div class="d-flex flex-column" style="width: calc(100%/3);">
+            <label for="cnpj_principal" class="form-label">CNPJ principal:</label>
+            <input type="text" class="rounded-0 form-control" id="cnpj_principal" placeholder="CNPJ principal" name="cnpj_principal" value="<?= $empresa->cnpj_principal ?>">
+        </div>
+        <div class="d-flex flex-column" style="width: calc(100%/3);">
+            <label for="cpf" class="form-label">CPF:</label>
+            <input type="text" class="rounded-0 form-control" id="cpf" placeholder="CPF" name="cpf" value="<?= $empresa->cpf ?>" required>
+        </div>
     </div>
 
-    <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input type="text" class="form-control" id="cnpj" placeholder="CNPJ" name="cnpj" value="<?= $empresa->cnpj ?>" required>
+    <div  class="mb-3 d-flex flex-row">
+        <div class="d-flex flex-column" style="width: calc(100%/3);">
+            <label for="estado" class="form-label">Estado:</label>
+            <input style="border-top-left-radius: 0; border-bottom-left-radius: 0;" type="text" class="rounded-0 form-control" id="estado" placeholder="Estado" name="estado" value="<?= $empresa->estado ?>" required>
+        </div>
+        <div class="d-flex flex-column" style="width: calc(100%/3);">
+            <label for="cidade" class="form-label">Cidade:</label>
+            <input style=" border-radius: 0;" type="text" class="rounded-0 form-control" id="cidade" placeholder="Cidade" name="cidade" value="<?= $empresa->cidade ?>" required>
+        </div>
+        <div class="d-flex flex-column" style="width: calc(100%/3);">
+            <label for="bairro" class="form-label">Bairro:</label>
+            <input style="border-top-right-radius: 0; border-bottom-right-radius: 0;" type="text" class="rounded-0 form-control" id="bairro" placeholder="Bairro" name="bairro" value="<?= $empresa->bairro?>" required>
+        </div>
+        <div class="d-flex flex-column" style="width: calc(100%/3);">
+            <label for="cep" class="form-label">CEP:</label>
+            <input type="text" class="rounded-0 form-control" id="cep" placeholder="CEP" name="cep" value="<?= $empresa->cep ?>" required>
+        </div>
+        <div class="d-flex flex-column" style="width: calc(100%/3);">
+            <label for="endereco" class="form-label">Rua / Número:</label>
+            <input type="text" class="rounded-0 form-control" id="endereco" placeholder="Rua / Número" name="endereco" value="<?= $empresa->rua ?>" required>
+        </div>
+        
+        
+        
     </div>
 
-    <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input type="text" class="form-control" id="cnpj_principal" placeholder="CNPJ principal" name="cnpj_principal" value="<?= $empresa->cnpj_principal ?>">
+    <div  class="mb-3 d-flex flex-row">
+        <div class="d-flex flex-column" style="width: calc(100%/3);">
+            <label for="celular" class="form-label">Celular:</label>
+            <input style="border-top-right-radius: 0; border-bottom-right-radius: 0;" type="text" class="rounded-0 form-control" id="celular" placeholder="Celular" name="celular" value="<?= $empresa->celular ?>" required>
+        </div>
+        <div class="d-flex flex-column" style="width: calc(100%/3);">
+            <label for="telefone" class="form-label">Telefone fixo:</label>
+            <input  style="border-top-left-radius: 0; border-bottom-left-radius: 0;" type="text" class="rounded-0 form-control" id="telefone" placeholder="Telefone fixo" name="telefone" value="<?= $empresa->fixo ?>" required>
+        </div>
+        <div class="d-flex flex-column" style="width: calc(100%/3);">
+            <label for="email" class="form-label">E-mail</label>
+        <input type="text" class="rounded-0 form-control" id="email" placeholder="E-mail" name="email" value="<?= $empresa->email ?>" required>
+        </div>
     </div>
 
-    <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input type="text" class="form-control" id="cpf" placeholder="CPF" name="cpf" value="<?= $empresa->cpf ?>" required>
-    </div>
-
-    <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input type="text" class="form-control" id="cep" placeholder="CEP" name="cep" value="<?= $empresa->cep ?>" required>
-    </div>
-
-    <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input type="text" class="form-control" id="endereco" placeholder="Endereço" name="endereco" value="<?= $empresa->rua ?>" required>
-    </div>
-
-    <div class="input-form-adm-group input-form-adm">
-
-    <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input style="border-top-right-radius: 0; border-bottom-right-radius: 0;" type="text" class="form-control" id="bairro" placeholder="Bairro" name="bairro" value="<?= $empresa->bairro?>" required>
-    </div>
-
-    <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input style=" border-radius: 0;" type="text" class="form-control" id="cidade" placeholder="Cidade" name="cidade" value="<?= $empresa->cidade ?>" required>
-    </div>
-
-    <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input style="border-top-left-radius: 0; border-bottom-left-radius: 0;" type="text" class="form-control" id="estado" placeholder="Estado" name="estado" value="<?= $empresa->estado ?>" required>
-    </div>
-
-    </div>
-
-    <div class="input-form-contato-adm-group input-form-adm">
-
-    <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input style="border-top-right-radius: 0; border-bottom-right-radius: 0;" type="text" class="form-control" id="celular" placeholder="Celular" name="celular" value="<?= $empresa->celular ?>" required>
-    </div>
-
-    <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input  style="border-top-left-radius: 0; border-bottom-left-radius: 0;" type="text" class="form-control" id="telefone" placeholder="Telefone fixo" name="telefone" value="<?= $empresa->fixo ?>" required>
-    </div>
-
-    </div>
-
-    <div style="display:flex; flex-direction:row;" class="mb-3">
-        <input type="text" class="form-control" id="email" placeholder="E-mail" name="email" value="<?= $empresa->email ?>" required>
-    </div>
-
-    <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
-            <label for="status" style="margin-bottom:0;">Ativo</label>
-            <input type="checkbox" <?php if($empresa->status == 1) {?> checked <?php }; ?> onchange="" name="status" class="form-check-input"
-            value="">
+    <div class="d-flex flex-row justify-content-between">
+        <div>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Ativo</label>
+                    <input type="checkbox" <?php if($empresa->status == 1) {?> checked <?php }; ?> onchange="" name="status" class="form-check-input"
+                    value="">
+            </div>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 1em;">
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Cartão</label>
+                    <input type="checkbox" <?php if($empresa->permissao_cartao == 1) {?> checked <?php }; ?> onchange="" name="permissao_cartao" class="form-check-input"
+                    value="">
+            </div>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Segurança</label>
+                    <input type="checkbox" <?php if($empresa->permissao_seguranca == 1) {?> checked <?php }; ?> onchange="" name="permissao_seguranca" class="form-check-input"
+                    value="">
+            </div>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Financeiro</label>
+                    <input type="checkbox" <?php if($empresa->permissao_financeiro == 1) {?> checked <?php }; ?> onchange="" name="permissao_financeiro" class="form-check-input"
+                    value="">
+            </div>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Bancario</label>
+                    <input type="checkbox" <?php if($empresa->permissao_bancario == 1 ) {?> checked <?php }; ?> onchange="" name="permissao_bancario" class="form-check-input"
+                    value="">
+            </div>
+        </div>
     </div>
 
     <button name="acao" value="editar" type="submit" style="background-color:#5856d6; padding-inline:1.5em; " class="btn btn-primary">Salvar</button>
@@ -397,7 +430,7 @@ $erro = filter_input(INPUT_GET, 'erro');
     <?php } ?>
 
     <!-- Modal -->
-    <div class="modal fade" id="modal_empresa" tabindex="-1" role="dialog"
+    <div class="modal modal-xl fade" id="modal_empresa" tabindex="-1" role="dialog"
         aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
         <div class=" modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
@@ -412,110 +445,103 @@ $erro = filter_input(INPUT_GET, 'erro');
                         <input type="hidden" name="id" value="">
                         <label>Informe os dados da empresa </label>
 
-                        <div class="input-nome input-form-adm">
-                            <!-- Razão social / Nome: -->
-                            <input type="text" onchange="checar()" name="nome" class="form-control" placeholder="Razão social / Nome"
-                                value="" required>
+                        <div class="d-flex flex-row mb-3">
+                            <div class="d-flex flex-column w-50">       
+                                <label for="nome">Razão social / Nome:</label>                  
+                                <input type="text" onchange="checar()" name="nome" class="form-control rounded-0" placeholder="Razão social / Nome" value="" required>
+                            </div>  
+                            <div class="d-flex flex-column w-50">
+                                <label for="fantasia">Nome fantasia:</label>
+                                <input type="text" onchange="checar()" name="fantasia"
+                                    class="form-control rounded-0" placeholder="Nome fantasia" value="" required>
+                            </div>
                         </div>
+
+                        <div class="d-flex flex-row mb-3">
+                            <div class="d-flex.flex-column" style="width: calc(100%/3);">
+                                <label for="cnpj">CNPJ</label>
+                                <input type="text" onchange="checar()" name="cnpj" class="form-control rounded-0" placeholder="CNPJ" value="" required>
+                            </div>
+                            <div class="d-flex.flex-column" style="width: calc(100%/3);">
+                                <label for="cnpj_principal">CNPJ Principal</label>
+                                <input type="text" onchange="checar()" name="cnpj_principal" class="form-control rounded-0" placeholder="CNPJ Principal" value="" required>
+                            </div>
+                            <div class="d-flex.flex-column" style="width: calc(100%/3);">
+                                <label for="cpf">CPF</label>
+                                <input type="text" onchange="checar()" name="cpf" class="form-control rounded-0" placeholder="CPF" value="" required>
+                            </div>
+                        </div>
+                        
 
                         
 
-                        <div class="input-fantasia input-form-adm">
-                            <!--Nome fantasia-->
-                            <input type="text" onchange="checar()" name="fantasia"
-                                class="form-control" placeholder="Nome fantasia" value="" required>
+                        
+                        
+                        <div class="d-flex flex-row mb-3">
+                            <div class="d-flex flex-column">
+                                <label for="estado">Estado:</label>
+                                <input type="text" onchange="checar()" name="estado" class="form-control rounded-0" placeholder="Estado" value="" required>
+                            </div>
+                            <div class="d-flex flex-column">
+                                <label for="cidade">Cidade:</label>
+                                <input type="text" onchange="checar()" name="cidade" class="form-control rounded-0" placeholder="Cidade" value="" required>
+                            </div>
+                            <div class="d-flex flex-column">
+                                <label for="bairro">Bairro:</label>
+                                <input type="text" onchange="checar()" name="bairro" class="form-control rounded-0" placeholder="Bairro" value="" required>
+                            </div>
+                            <div class="d-flex flex-column">
+                                <label for="cep">CEP:</label>
+                                <input type="text" onchange="checar()" name="cep" class="form-control rounded-0" placeholder="CEP" value="" required>
+                            </div>
+                            <div class="d-flex flex-column">
+                                <label for="endereco">Rua / Número:</label>
+                                <input type="text" onchange="checar()" name="endereco" class="form-control rounded-0" placeholder="Endereço" value="" required>
+                            </div>
+                            
+                            
+
+                        </div>
+
+                        <div class="d-flex flex-row mb-3">
+                            <div class="d-flex flex-column" style="width: calc(100%/3);">
+                                <label for="celular">Celular:</label>
+                                <input type="text" onchange="checar()" name="celular" class="form-control rounded-0" placeholder="Celular" value="" required>
+                            </div>
+                            <div class="d-flex flex-column" style="width: calc(100%/3);">
+                                <label for="telefone">Telefone fixo:</label>
+                                <input type="text" onchange="checar()" name="telefone" class="form-control rounded-0" placeholder="Telefone fixo" value="" required>
+                            </div>
+                            <div class="d-flex flex-column" style="width: calc(100%/3);">
+                                <label for="email">E-mail</label>
+                                <input type="text" onchange="checar()" name="email" class="form-control rounded-0" placeholder="E-mail" value="" required>
+                            </div>
+                            
                         </div>
 
                         
-
-                        <div class="input-cpf input-form-adm">
-                            <!--CPF-->
-                            <input type="text" onchange="checar()" name="cpf" class="form-control"
-                                placeholder="CPF" value="" required>
-                        </div>
-
-                        
-
-                        <div class="input-cnpj input-form-adm">
-                            <!--cnpj-->
-                            <input type="text" onchange="checar()" name="cnpj" class="form-control"
-                                placeholder="CNPJ" value="" required>
-                        </div>
-                        <div class="input-cnpj input-form-adm">
-                            <!--cnpj-->
-                            <input type="text" onchange="checar()" name="cnpj_principal" class="form-control"
-                                placeholder="CNPJ Principal" value="" required>
-                        </div>
-
-                        
-                        
-                        <div class="input-cep input-form-adm">
-                            <input type="text" onchange="checar()" name="cep"
-                                class="form-control" placeholder="CEP" value="" required>
-                        </div>
-                        
-                        
-
-                        <div class="input-endereco input-form-adm">
-                            <input type="text" onchange="checar()" name="endereco" class="form-control"
-                                placeholder="Endereço" value="" required>
-                        </div>
-
-                        <div class="input-form-adm-group input-form-adm">
-                                <div class="input-bairro">
-                                    <input type="text" onchange="checar()" name="bairro" class="form-control" style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
-                                        placeholder="Bairro" value="" required>
+                        <div class="checkbox-group d-flex flex-row justify-content-between">
+                            <div>
+                                <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                                    <label for="status" style="margin-bottom:0;">Ativo</label>
+                                    <input type="checkbox" checked onchange="" name="status" class="form-check-input"
+                                        value="">
                                 </div>
-
-                                
-
-                                <div class="input-cidade">
-                                    <input type="text" onchange="checar()" name="cidade" class="form-control" style=" border-radius: 0;"
-                                        placeholder="Cidade" value="" required>
+                            </div>
+                            <div>
+                                <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                                    <label for="status" style="margin-bottom:0;">Cartões</label>
+                                    <input type="checkbox" onchange="" checked name="permissao_cartao" class="form-check-input"
+                                        value="">
                                 </div>
-
-                                
-
-                                <div class="input-estado">
-                                    <input type="text" onchange="checar()" name="estado" class="form-control" style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
-                                        placeholder="Estado" value="" required>
+                                <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                                    <label for="status" style="margin-bottom:0;">Segurança</label>
+                                    <input type="checkbox" onchange="" name="permissao_seguranca" class="form-check-input"
+                                        value="">
                                 </div>
+                            </div>
                         </div>
                         
-
-                        <div class="input-form-contato-adm-group input-form-adm">
-
-                        
-
-                        <div class="input-celular">
-                            <input type="text" onchange="checar()" name="celular" class="form-control" style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
-                                placeholder="Celular" value="" required>
-                        </div>
-
-                        
-
-                        <div class="input-telefone">
-                            <input type="text" onchange="checar()" name="telefone" class="form-control" style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
-                                placeholder="Telefone Fixo" value="" required>
-                        </div>
-                        
-                        </div>
-
-                        <div class="input-email input-form-adm">
-                            <input type="text" onchange="checar()" name="email" class="form-control"
-                                placeholder="E-mail" value="" required>
-                        </div>
-
-                        
-
-                        <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
-                            <label for="status" style="margin-bottom:0;">Ativo</label>
-                            <input type="checkbox" checked onchange="" name="status" class="form-check-input"
-                                 value="">
-                        </div>
-
-                        
-
                         <div style="margin-bottom: 3em;" class="footer">
 
 
