@@ -116,7 +116,7 @@ public static function updateSenha($usuario) {
     $pdo = (new Database())->connect();
 
     $sql = 'UPDATE usuario 
-            SET senha = :senha,
+            SET senha = :senha
             WHERE id = :id';
 
     $stmt = $pdo->prepare($sql);
