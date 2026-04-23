@@ -178,6 +178,8 @@ function parse_excel($numero_arquivo = null) {
             ]; 
         }
 
+        
+
         if(isset($cells_p[$operadora_sup_org['estado']]) && $cells_p[$operadora_sup_org['estado']] != null) {
             //estado    
             $cells[6] = $cells_p[$operadora_sup_org['estado']];
@@ -589,7 +591,9 @@ function parse_csv(string $caminhoCsv): array {
         $tipo = mb_convert_encoding($tipo, 'UTF-8', $operadora_sup['encoding']);
         $bandeira = mb_convert_encoding($linha[$mapa[$operadora_sup['colunas']['bandeira']]], 'UTF-8', $operadora_sup['encoding']);
 
-
+        if($tipo == 'pix') {
+            $bandeira = 'pix';
+        }
         
         $transactions['lancamentos'][$i] = [
             'data'          => $data,
@@ -603,6 +607,7 @@ function parse_csv(string $caminhoCsv): array {
             'motivo'        => []
         ];
 
+        
 
         $bandeira_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $transactions['lancamentos'][$i]['bandeira'])));
         $tipo_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $transactions['lancamentos'][$i]['tipo'])));
