@@ -9,6 +9,7 @@ if($_SESSION['usuario']->processar !== 1) {
     header('Location: /usuario/cartao/cadastro_vendas.php?erro=permissao');
     exit;
 }
+
 require_once __DIR__ . '/../../db/entities/ope01.php';
 require_once __DIR__ . '/../../db/entities/band01.php';
 require_once __DIR__ . '/../../db/entities/pra01.php';
@@ -122,11 +123,9 @@ foreach($grupos as $key => $group) {
     }
 
     
-
+$prazo = Pra01::read(id_empresa:$_SESSION['usuario']->id_empresa, id_bandeira: $id_bandeira, parcela: $max_parcela)[0] ?? $cache_prazo[$id_bandeira];
     if($valor_b_total != $valor_l_total){
-    $prazo = Pra01::read(id_empresa:$_SESSION['usuario']->id_empresa, id_bandeira: $id_bandeira, parcela: $max_parcela)[0] ?? $cache_prazo[$id_bandeira];
-    
-    $valor_liq_go = $valor_b_total - (($valor_b_total / 100) * $prazo->taxa );
+        $valor_liq_go = $valor_b_total - (($valor_b_total / 100) * $prazo->taxa);
     } else {
         $valor_liq_go = $valor_b_total;
     }
