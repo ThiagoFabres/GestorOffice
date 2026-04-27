@@ -37,6 +37,7 @@ if($todas_empresas) {
 } else {
     $empresa_lista = Empresa::read(id: $_SESSION['usuario']->id_empresa);
 }
+
 if ($get_data_inicial != '' || $get_data_final != '' || $get_custos != '' || $get_operacional != '') {
     $recebimentos = [];
     $pagamentos = [];
@@ -166,6 +167,9 @@ $titulos = array_values($titulos_array);
                         </button><!--
     --><button class="btn btn-primary dre-menu-btn" id="btn-analitico" onclick="window.location.href='analitico.php'">
                             <h3>DRE - Analitico</h3>
+                        </button>
+                        <button class="btn btn-primary dre-menu-btn" id="btn-pagamento" onclick="window.location.href='pagamento.php'">
+                            <h3>Tipo de Pagamento</h3>
                         </button>
                     </div>
 

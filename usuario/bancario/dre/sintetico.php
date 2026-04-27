@@ -13,12 +13,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     header('Location: /');
     exit;
 }
-$empresa_usuario_id = $_SESSION['usuario']->id_empresa;
-$empresa_usuario_obj = Empresa::read($empresa_usuario_id)[0];
-if(!$empresa_usuario_obj->permissao_bancario) {
-    header('Location: /usuario/index.php?erro=permissao');
-    exit;
-}
+
 $lateral_bancario = true;
 $lateral_target = 'dreBancario';
 
