@@ -120,41 +120,39 @@ async function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=nu
         return;
     }
     let accordionItems = [];
-if(nome !== 'pagamento') {
-    const accordionItems = Array.from(document.querySelectorAll('.accordion-item'));
-    if (accordionItems.length === 0) {
-        alert('Nenhum conteúdo para exportar.');
-        return;
+    if(nome !== 'pagamento') {
+        accordionItems = Array.from(document.querySelectorAll('.accordion-item'));
+        if (accordionItems.length === 0) {
+            alert('Nenhum conteúdo para exportar.');
+            return;
+        }
     }
-}
 
     // Header
     pdf.setFontSize(14);
     const formattedDate = _convertIsoToDDMMYYYY(data);
     console.log(data + ' - ' +formattedDate);
     const headerTitle = nomeEmpresa ? nomeEmpresa.substr(0, 60) : '';
-    const headerLines = pdf.splitTextToSize(headerTitle + (formattedDate ? ' — ' + formattedDate : ''), usableWidth);
+    const dateLabel = formattedDate ? formattedDate.replace(/Data Inicial:/i, 'Data:').replace(/Data Final:/i, 'Data:') : '';
+    const headerLines = pdf.splitTextToSize(headerTitle + (dateLabel ? ' — ' + dateLabel : ''), usableWidth);
     let cursorY = margin;
     pdf.text(headerLines, margin, cursorY);
     cursorY += headerLines.length * 7;
 
-    if (titulo) {
-        pdf.setFontSize(11);
-        const titleLines = pdf.splitTextToSize(String(titulo), usableWidth);
-        pdf.text(titleLines, margin, cursorY);
-        cursorY += titleLines.length * 6;
-    }
-
     pdf.setFontSize(12);
     if(nome !== 'pagamento') {
         pdf.text('Relatório demonstrativo de resultado (DRE)', margin, cursorY);
+        cursorY += 8;
+        pdf.setLineWidth(0.2);
+        pdf.line(margin, cursorY, pageWidth - margin, cursorY);
+        cursorY += 8;
     } else {
-        pdf.text('Relatório de tipo de pagamento', margin, cursorY);
+        pdf.text('Fechamento de Caixa', margin, cursorY);
+        cursorY += 8;
+        pdf.setLineWidth(0.2);
+        pdf.line(margin, cursorY, pageWidth - margin, cursorY);
+        cursorY += 8;
     }
-    cursorY += 8;
-    pdf.setLineWidth(0.2);
-    pdf.line(margin, cursorY, pageWidth - margin, cursorY);
-    cursorY += 8;
 
     if (nome === 'pagamento') {
     const table = document.querySelector('#table-pagamento-pdf');
@@ -206,7 +204,7 @@ if(nome !== 'pagamento') {
         styles: { fontSize: 9, cellPadding: 3 },
 
         headStyles: {
-            fillColor: [88, 86, 214],
+            fillColor: [220, 220, 220],
             textColor: 0
         },
 
@@ -235,15 +233,22 @@ if(nome !== 'pagamento') {
     cursorY = pdf.lastAutoTable.finalY + 6;
 
     // TOTAL FINAL
-    const totalDiv = document.querySelector('#total-dre');
-    if (totalDiv) {
-        const texto = totalDiv.textContent.trim();
-        const partes = texto.split('R$');
-
+const totalDiv = document.querySelector('#total-dre');
+if (totalDiv) {
+    let texto = totalDiv.textContent.trim();
+    texto = texto.replace(/\s*\n\s*/g, ' ').replace(/R\$\s+/g, 'R$ ');
+    
+    const match = texto.match(/(Total Recebido:)\s*R\$\s*([\d.,]+)/);
+    if (match) {
+        const label = match[1];               // "Total Recebido:"
+        const valor = 'R$ ' + match[2].trim(); // "R$ 203,00"
         pdf.setFontSize(11);
-        pdf.text(partes[0] + 'R$', margin, cursorY);
-        pdf.text(partes[1]?.trim() || '', pageWidth - margin, cursorY, { align: 'right' });
+        pdf.text(label, margin, cursorY);
+        pdf.text(valor, pageWidth - margin, cursorY, { align: 'right' });
+    } else {
+        pdf.text(texto, margin, cursorY);
     }
+}
 
     // paginação
     const pageCount = pdf.getNumberOfPages();
