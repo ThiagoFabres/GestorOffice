@@ -1,5 +1,6 @@
 <?php
 
+
 require_once __DIR__ . '/../../db/base.php';
 require_once __DIR__ . '/../../db/entities/usuarios.php';
 require_once __DIR__ . '/../../db/entities/contas.php';
@@ -7,11 +8,13 @@ require_once __DIR__ . '/../../db/entities/cadastro.php';
 require_once __DIR__ . '/../../db/entities/categoria.php';
 require_once __DIR__ . '/../../db/entities/recebimentos.php';
 require_once __DIR__ . '/../../db/entities/pagamento.php';
+
 require_once __DIR__ . '/../../db/entities/pagar.php';
 require_once __DIR__ . '/../../db/entities/centrocustos.php';
 require_once __DIR__ . '/../../db/entities/empresas.php';
+require_once __DIR__ . '/../../db/buscar_documento_pag.php';
+
 session_start();
-// Função para alinhar valores monetários
 
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     header('Location: /');
@@ -91,6 +94,9 @@ if($todas_empresas) {
                         </button>
                         <button class="btn btn-primary btn-dre-selecionado dre-menu-btn" style="border-bottom: 2px solid #5856d6;" id="btn-analitico">
                             <h3>DRE - Analitico</h3>
+                        </button>
+                        <button class="btn btn-primary dre-menu-btn" id="btn-pagamento" onclick="window.location.href='pagamento.php'">
+                            <h3>Tipo de Pagamento</h3>
                         </button>
                     </div>
 
