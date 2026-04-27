@@ -162,7 +162,7 @@ $totais_tipo_pagamento = [];
                                                     <label for="filtro_titulo">Título:</label>
                                                     <select name="filtro_titulo" class="form-control" onchange="this.form.submit()">
                                                         <option value="">Selecione</option>
-                                                        <?php foreach(Con01::read(idempresa:$_SESSION['usuario']->id_empresa) as $titulo) { ?>
+                                                        <?php foreach(Con01::read(idempresa:$_SESSION['usuario']->id_empresa, tipo: 'C') as $titulo) { ?>
                                                             <option <?php if($get_titulo == $titulo->id){?>selected<?php } ?> value="<?=$titulo->id?>"><?=$titulo->nome?></option>
                                                         <?php } ?>
                                                     </select>
