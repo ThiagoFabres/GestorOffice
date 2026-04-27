@@ -119,12 +119,14 @@ async function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=nu
         alert('jspdf-autotable não detectado. Adicione o plugin jspdf-autotable ao seu HTML.');
         return;
     }
-
+    let accordionItems = [];
+if(nome !== 'pagamento') {
     const accordionItems = Array.from(document.querySelectorAll('.accordion-item'));
     if (accordionItems.length === 0) {
         alert('Nenhum conteúdo para exportar.');
         return;
     }
+}
 
     // Header
     pdf.setFontSize(14);
@@ -144,12 +146,122 @@ async function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=nu
     }
 
     pdf.setFontSize(12);
-    pdf.text('Relatório demonstrativo de resultado (DRE)', margin, cursorY);
+    if(nome !== 'pagamento') {
+        pdf.text('Relatório demonstrativo de resultado (DRE)', margin, cursorY);
+    } else {
+        pdf.text('Relatório de tipo de pagamento', margin, cursorY);
+    }
     cursorY += 8;
     pdf.setLineWidth(0.2);
     pdf.line(margin, cursorY, pageWidth - margin, cursorY);
     cursorY += 8;
- 
+
+    if (nome === 'pagamento') {
+    const table = document.querySelector('#table-pagamento-pdf');
+        console.log(table)
+    if (!table) {
+        alert('Nenhum conteúdo para exportar.');
+        return;
+    }
+
+    let headers = Array.from(table.querySelectorAll('thead th'))
+        .map(th => _convertIsoToDDMMYYYY(th.textContent.trim()));
+
+    if (!headers.length) {
+        const firstRow = table.querySelector('tbody tr');
+        if (firstRow) {
+            headers = Array.from(firstRow.querySelectorAll('td'))
+                .map((_, i) => 'Col ' + (i + 1));
+        }
+    }
+
+    const rows = Array.from(table.querySelectorAll('tbody tr')).map(tr =>
+    Array.from(tr.querySelectorAll('td')).map(td => {
+        let text = td.textContent.trim();
+
+        // 🔥 junta "R$" com valor
+        text = text.replace(/\s*\n\s*/g, ' '); // remove quebra
+        text = text.replace(/R\$\s+/g, 'R$ ');
+
+        return _convertIsoToDDMMYYYY(text);
+    })
+);
+
+    const numCols = headers.length;
+
+    let colWidths = {};
+    if (numCols === 2) {
+        colWidths = {
+            0: { cellWidth: usableWidth * 0.6 },
+            1: { cellWidth: usableWidth * 0.4, halign: 'right' }
+        };
+    }
+
+    pdf.autoTable({
+        startY: cursorY,
+        head: headers.length ? [headers] : [],
+        body: rows,
+        margin: { left: margin, right: margin },
+
+        styles: { fontSize: 9, cellPadding: 3 },
+
+        headStyles: {
+            fillColor: [88, 86, 214],
+            textColor: 0
+        },
+
+        columnStyles: colWidths,
+
+        didParseCell: function (data) {
+            const totalLinhas = data.table.body.length;
+
+            if (data.column.index === numCols - 1) {
+                data.cell.styles.halign = 'right';
+            }
+
+            if (data.row.index === totalLinhas - 1) {
+                data.cell.styles.fontStyle = 'bold';
+                data.cell.styles.fillColor = [220, 220, 220];
+            }
+
+            if (data.section === 'body' && data.row.index % 2 === 0) {
+                data.cell.styles.fillColor = [245, 245, 245];
+            }
+        },
+
+        theme: 'grid'
+    });
+
+    cursorY = pdf.lastAutoTable.finalY + 6;
+
+    // TOTAL FINAL
+    const totalDiv = document.querySelector('#total-dre');
+    if (totalDiv) {
+        const texto = totalDiv.textContent.trim();
+        const partes = texto.split('R$');
+
+        pdf.setFontSize(11);
+        pdf.text(partes[0] + 'R$', margin, cursorY);
+        pdf.text(partes[1]?.trim() || '', pageWidth - margin, cursorY, { align: 'right' });
+    }
+
+    // paginação
+    const pageCount = pdf.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(9);
+        pdf.text(
+            `Página ${i} de ${pageCount}`,
+            pageWidth / 1.1,
+            10,
+            { align: 'center' }
+        );
+    }
+
+    pdf.save('dre-pagamento.pdf');
+    return; // 🚨 IMPORTANTE: para não cair no código dos accordions
+
+}
 
     for (let i = 0; i < accordionItems.length; i++) {
         const item = accordionItems[i];
@@ -214,6 +326,7 @@ async function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=nu
 
             if (!rows || rows.length === 0) continue;
 if(nome == 'sintetico') {
+    console.log('sintetico')
     pdf.autoTable({
         startY: cursorY,
         head: headers.length ? [headers] : [],
@@ -258,6 +371,7 @@ if(nome == 'sintetico') {
         theme: 'grid'
     });
 } else {
+    console.log('analitico')
     pdf.autoTable({
         startY: cursorY,
         head: headers.length ? [headers] : [],
@@ -380,6 +494,79 @@ for (let i = 1; i <= pageCount; i++) {
     }
 }
 function gerarexcel(nome, data=null, hora=null, nomeEmpresa='') {
+    if (nome === 'pagamento') {
+    if (typeof XLSX === 'undefined') {
+        alert('Biblioteca XLSX não carregada.');
+        return;
+    }
+
+    const table = document.querySelector('#table-pagamento-pdf');
+
+    if (!table) {
+        alert('Nenhum conteúdo para exportar.');
+        return;
+    }
+
+    let allData = [];
+
+    // Header
+    const headerTitle = nomeEmpresa + ' Relatório de tipo de pagamento';
+    const formattedDate = _formatDateToDDMMYYYY(data);
+    const formattedHora = _formatTimeToHHMM(hora);
+
+    allData.push([headerTitle]);
+    if (formattedDate || formattedHora) {
+        allData.push([`${formattedDate || ''}${formattedHora ? ' — ' + formattedHora : ''}`]);
+    }
+    allData.push([]);
+
+    // Cabeçalhos
+    let headers = Array.from(table.querySelectorAll('thead th'))
+        .map(th => th.textContent.trim());
+
+    if (!headers.length) {
+        const firstRow = table.querySelector('tbody tr');
+        if (firstRow) {
+            headers = Array.from(firstRow.querySelectorAll('td'))
+                .map((_, i) => 'Col ' + (i + 1));
+        }
+    }
+
+    if (headers.length) allData.push(headers);
+
+    const rows = Array.from(table.querySelectorAll('tbody tr')).map(tr =>
+        Array.from(tr.querySelectorAll('td')).map(td => {
+            let text = td.textContent.trim();
+
+            text = text.replace(/\s*\n\s*/g, ' ');
+            text = text.replace(/R\$\s+/g, 'R$ ');
+
+            return text;
+        })
+    );
+
+    rows.forEach(row => allData.push(row));
+
+    // Total final
+    const totalDiv = document.querySelector('#total-dre');
+    if (totalDiv) {
+        let texto = totalDiv.textContent.trim();
+
+        texto = texto.replace(/\s*\n\s*/g, ' ');
+        texto = texto.replace(/R\$\s+/g, 'R$ ');
+
+        allData.push([]);
+        allData.push([texto]);
+    }
+
+    // Criar Excel
+    const ws = XLSX.utils.aoa_to_sheet(allData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Pagamento');
+
+    XLSX.writeFile(wb, 'relatorio_pagamento.xlsx');
+    return;
+}
     if (nome == 'analitico') {
     // Check if XLSX library is loaded
     if (typeof XLSX === 'undefined') {
@@ -397,7 +584,7 @@ function gerarexcel(nome, data=null, hora=null, nomeEmpresa='') {
     let allData = [];
 
     // Adiciona header com nome, data e hora no topo do Excel (formatado)
-    const headerTitle = nomeEmpresa + '  -  ' + 'Relatório demonstrativo de resultado - ' + String(nome).toUpperCase();
+    const headerTitle = nomeEmpresa + '  -  ' + 'Relatório de tipos de pagamento';
     const formattedDate = _formatDateToDDMMYYYY(data);
     const titulo = _formatTimeToHHMM(hora);
     const headerDateTime = (formattedDate ? 'Data: ' + formattedDate : '') + (titulo ? (formattedDate ? '<br>' : '') + 'Titulo: ' + titulo : '');
