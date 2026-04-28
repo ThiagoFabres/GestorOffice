@@ -131,7 +131,10 @@ if($acao == 'processar') {
                     continue;
                 }
                 
-                if($ultima_data != null && ($data_analizada >= $data_atual || $data_analizada == $ultima_data) || $conta_obj->data > $data_analizada) {
+                if(($ultima_data != null && ($data_analizada == $ultima_data) || $conta_obj->data > $data_analizada) || $data_analizada >= $data_atual) {
+                    continue;
+                }
+                if($data_analizada >= $data_atual) {
                     continue;
                 }
                 
