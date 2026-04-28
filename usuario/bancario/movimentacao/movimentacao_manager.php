@@ -219,6 +219,10 @@ if($acao == 'processar') {
                 continue;
             }
 
+            if($data_analizada >= $data_atual) {
+                    continue;
+                }
+
             // Converte valores BR → float
             $credito = str_replace(['.', ','], ['', '.'], $credito);
             $debito  = str_replace(['.', ','], ['', '.'], $debito);
@@ -323,19 +327,23 @@ if($acao == 'processar') {
                 // echo 'conta_obj->data: ' . $conta_obj->data . ' - data_analizada: ' . $data_analizada ;
                 // exit;
                 
-                if(
-                    $ultima_data != null 
-                && ($data_analizada >= $data_atual || $data_analizada == $ultima_data )
-                 ) {
+                if(($ultima_data != null && ($data_analizada == $ultima_data )) || $data_analizada >= $data_atual) {
                     $erro = 'uso';
                     $transactions['debug']['erro'][] = $erro ?? null;
                     continue;
                 }
+
+                if($data_analizada >= $data_atual) {
+                    continue;
+                }
+
                 if($conta_obj->data > $data_analizada) {
                     $erro = 'data_conta';
                     $transactions['debug']['erro'][] = $erro ?? null;
                     continue;
                 }
+
+                
             
 
         
