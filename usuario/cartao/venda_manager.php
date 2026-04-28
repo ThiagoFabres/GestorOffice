@@ -19,6 +19,7 @@ require_once __DIR__ . '/../../db/entities/recebimentos.php';
 
 
 function parse_excel($numero_arquivo = null) {
+    $data_atual = (new DateTime())->format('Y-m-d');
     if($numero_arquivo == 1) {
         $numero_arquivo = 2;
     }
@@ -280,7 +281,7 @@ function parse_excel($numero_arquivo = null) {
 
     $cells[3] = intval($cells[3]);
 
-
+        
         
         if($tipo_arquivo == 'padrao'){
             if(isset($operadora_sup['suporte_data']) && $operadora_sup['suporte_data'] == 'hora') {
@@ -295,6 +296,9 @@ function parse_excel($numero_arquivo = null) {
             }
         } else {
                 $data_formatada = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($cells[0])->format('Y-m-d');
+        }
+        if($data_formatada >= $data_atual) {
+            continue;
         }
         
 
