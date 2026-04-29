@@ -1,7 +1,7 @@
 <?php
 
-require_once __DIR__ . '/../../db/base.php';
-require_once __DIR__ . '/../../db/entities/usuarios.php';
+require_once __DIR__ . '/../../../db/base.php';
+require_once __DIR__ . '/../../../db/entities/usuarios.php';
 session_start();
 
 header('Content-Type: application/json; charset=UTF-8');

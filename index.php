@@ -40,6 +40,7 @@ $erro = (!$sucesso) ? filter_input(INPUT_GET, 'erro') : null;
             <?php if(isset($erro) && $erro == 'campos') { ?><label style="width:100%; text-align: center; color: #ff3030ff;"> Por favor, preencha todos os campos. </label><?php } ?>
             <?php if(isset($erro) && $erro == 'usuario_inativo') { ?><label style="width:100%; text-align: center; color: #ff3030ff;"> Cliente impossibilitado de acessar o sistema.  Favor entrar em contato com a GestorOffice. </label><?php } ?>
             <?php if(isset($erro) && $erro == 'empresa_inativa') { ?><label style="width:100%; text-align: center; color: #ff3030ff;"> Cliente impossibilitado de acessar o sistema.  Favor entrar em contato com a GestorOffice.</label><?php } ?>
+            <?php if(isset($erro) && $erro == 'usuario_seguranca') { ?><label style="width:100%; text-align: center; color: #ff3030ff;"> O Usuario só tem acesso ao aplicativo de Segurança, qualquer duvida, entrar em contato com o Gestor.</label><?php } ?>
             <form action="login.php" method="post">
                 <div id="input-login-card" style="<?php if(isset($erro) && $erro != null) { ?>border: 1px solid #ff30309d;<?php }  else if($sucesso) {?>border: 1px solid #30ff3aff;<?php } ?> ">
 
@@ -54,7 +55,7 @@ $erro = (!$sucesso) ? filter_input(INPUT_GET, 'erro') : null;
                     <div class="input-icon">
                         <i class="bi bi-lock"></i>
                     </div>
-                    <input type="password" class="form-control" id="password" placeholder="Password" name="senha" required>
+                    <input type="password" class="form-control" id="password" placeholder="Senha" name="senha" required>
                 </div>
 
                 </div>

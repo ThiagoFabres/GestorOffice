@@ -388,6 +388,26 @@ $erro = filter_input(INPUT_GET, 'erro');
         </div>
     </div>
 
+    <div class="d-flex flex-row mb-3">
+                            <div class="d-flex flex-column" style="width: calc(100%/3);">
+                                <label for="ativ_inicio">Inicio de Atividade:</label>
+                                <input type="time" onchange="checar()" name="ativ_inicio" class="form-control rounded-0" placeholder="Inicio de Atividade" value="<?= $empresa->ativ_inicio ?? '' ?>" required style="height: 2.75em;">
+                            </div>
+                            <div class="d-flex flex-column" style="width: calc(100%/3);">
+                                <label for="tolerancia">Tolerância (Minutos)</label>
+                                <input type="number" onchange="checar()" name="tolerancia" class="form-control rounded-0" placeholder="Tolerância" value="<?= $empresa->tolerancia ?? '' ?>" required>
+                            </div>
+                            <div class="d-flex flex-column" style="width: calc(100%/3);">
+                                <label for="cel1">Celular 1 (Atividade)</label>
+                                <input type="text" onchange="checar()" name="cel1" class="form-control rounded-0" placeholder="Celular 1" value="<?= $empresa->celular1_atividade ?? '' ?>" required>
+                            </div>
+                            <div class="d-flex flex-column" style="width: calc(100%/3);">
+                                <label for="cel2">Celular 2 (Atividade)</label>
+                                <input type="text" onchange="checar()" name="cel2" class="form-control rounded-0" placeholder="Celular 2" value="<?= $empresa->celular2_atividade ?? '' ?>" required>
+                            </div>
+                            
+                        </div>
+
     <div class="d-flex flex-row justify-content-between">
         <div>
             <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
@@ -518,6 +538,26 @@ $erro = filter_input(INPUT_GET, 'erro');
                             </div>
                             
                         </div>
+                        
+                        <div class="d-flex flex-row mb-3">
+                            <div class="d-flex flex-column" style="width: calc(100%/3);">
+                                <label for="ativ_inicio">Inicio de Atividade:</label>
+                                <input type="time" onchange="checar()" name="ativ_inicio" class="form-control rounded-0" placeholder="Inicio de Atividade" value="" required style="height: 2.75em;">
+                            </div>
+                            <div class="d-flex flex-column" style="width: calc(100%/3);">
+                                <label for="tolerancia">Tolerância (Minutos)</label>
+                                <input type="number" onchange="checar()" name="tolerancia" class="form-control rounded-0" placeholder="Tolerância" value="" required>
+                            </div>
+                            <div class="d-flex flex-column" style="width: calc(100%/3);">
+                                <label for="cel1">Celular 1 (Atividade)</label>
+                                <input type="text" onchange="checar()" name="cel1" class="form-control rounded-0" placeholder="Celular 1" value="" required>
+                            </div>
+                            <div class="d-flex flex-column" style="width: calc(100%/3);">
+                                <label for="cel2">Celular 2 (Atividade)</label>
+                                <input type="text" onchange="checar()" name="cel2" class="form-control rounded-0" placeholder="Celular 2" value="" required>
+                            </div>
+                            
+                        </div>
 
                         
                         <div class="checkbox-group d-flex flex-row justify-content-between">
@@ -528,18 +568,28 @@ $erro = filter_input(INPUT_GET, 'erro');
                                         value="">
                                 </div>
                             </div>
-                            <div>
-                                <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
-                                    <label for="status" style="margin-bottom:0;">Cartões</label>
-                                    <input type="checkbox" onchange="" checked name="permissao_cartao" class="form-check-input"
-                                        value="">
-                                </div>
-                                <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
-                                    <label for="status" style="margin-bottom:0;">Segurança</label>
-                                    <input type="checkbox" onchange="" name="permissao_seguranca" class="form-check-input"
-                                        value="">
-                                </div>
-                            </div>
+                            <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 1em;">
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Cartão</label>
+                    <input type="checkbox" <?php if($empresa->permissao_cartao == 1) {?> checked <?php }; ?> onchange="" name="permissao_cartao" class="form-check-input"
+                    value="">
+            </div>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Segurança</label>
+                    <input type="checkbox" <?php if($empresa->permissao_seguranca == 1) {?> checked <?php }; ?> onchange="" name="permissao_seguranca" class="form-check-input"
+                    value="">
+            </div>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Financeiro</label>
+                    <input type="checkbox" <?php if($empresa->permissao_financeiro == 1) {?> checked <?php }; ?> onchange="" name="permissao_financeiro" class="form-check-input"
+                    value="">
+            </div>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Bancario</label>
+                    <input type="checkbox" <?php if($empresa->permissao_bancario == 1 ) {?> checked <?php }; ?> onchange="" name="permissao_bancario" class="form-check-input"
+                    value="">
+            </div>
+        </div>
                         </div>
                         
                         <div style="margin-bottom: 3em;" class="footer">

@@ -1,12 +1,12 @@
 <?php
 
-require_once __DIR__ . '/../../db/entities/usuarios.php';
-require_once __DIR__ . '/../../db/entities/empresas.php';
-require_once __DIR__ . '/../../db/entities/cadastro.php';
-require_once __DIR__ . '/../../db/entities/centrocustos.php';
-require_once __DIR__ . '/../../db/entities/contas.php';
-require_once __DIR__ . '/../../db/entities/fecha01.php';
-require_once __DIR__ . '/../../db/entities/pagamento.php';
+require_once __DIR__ . '/../../../db/entities/usuarios.php';
+require_once __DIR__ . '/../../../db/entities/empresas.php';
+require_once __DIR__ . '/../../../db/entities/cadastro.php';
+require_once __DIR__ . '/../../../db/entities/centrocustos.php';
+require_once __DIR__ . '/../../../db/entities/contas.php';
+require_once __DIR__ . '/../../../db/entities/fecha01.php';
+require_once __DIR__ . '/../../../db/entities/pagamento.php';
 session_start();
 
 
@@ -16,7 +16,8 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     exit;
 }
 
-$lateral_target = 'fechamento';
+$lateral_target = 'fechamento_caixa';
+$lateral_operacional = true;
 $tipo_pagamento_lista = TipoPagamento::read(idempresa: $_SESSION['usuario']->id_empresa);
 $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)[0] ?? null;
 
@@ -59,8 +60,8 @@ $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)[0] ?? nul
 <body id="body">
 
 
-    <?php require_once __DIR__ . '/../../componentes/lateral/lateral.php'?>
-    <?php require_once __DIR__ . '/../../componentes/header/header.php' ?>
+    <?php require_once __DIR__ . '/../../../componentes/lateral/lateral.php'?>
+    <?php require_once __DIR__ . '/../../../componentes/header/header.php' ?>
 
     <div class="main" id="container">
         <div class="card card-fechamento-responsivo" style="overflow:visible !important;">

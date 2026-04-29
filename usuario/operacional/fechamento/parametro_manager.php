@@ -1,7 +1,7 @@
 <?php
 
-require_once __DIR__ . '/../../db/entities/fecha01.php';
-require_once __DIR__ . '/../../db/entities/usuarios.php';
+require_once __DIR__ . '/../../../db/entities/fecha01.php';
+require_once __DIR__ . '/../../../db/entities/usuarios.php';
 session_start();
 
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
