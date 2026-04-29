@@ -1,8 +1,8 @@
 <?php
 
-require_once __DIR__ . '/../../db/entities/usuarios.php';
-require_once __DIR__ . '/../../db/entities/fecha01.php';
-require_once __DIR__ . '/../../db/entities/recebimentos.php';
+require_once __DIR__ . '/../../../db/entities/usuarios.php';
+require_once __DIR__ . '/../../../db/entities/fecha01.php';
+require_once __DIR__ . '/../../../db/entities/recebimentos.php';
 session_start();
 
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
@@ -96,7 +96,7 @@ if(empty($grupos) && $acao != 'excluir') {
 }
 
 if($acao == 'adicionar') {
-    require_once __DIR__ . '/../../db/buscar_documento_rec.php';
+    require_once __DIR__ . '/../../../db/buscar_documento_rec.php';
     $documento_inicial = buscarDocumentoRec();
     $documento = $documento_inicial;
     $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)[0] ?? null;

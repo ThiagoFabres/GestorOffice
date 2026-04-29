@@ -16,13 +16,24 @@ class Empresa {
     public $celular;
     public $fixo;
     public $status;
-
     public $data_r;
-
     public $cep;
     public $cnpj_principal;
+    public $permissao_cartao;
+    public $permissao_seguranca;
+    public $permissao_financeiro;
+    public $permissao_bancario;
+    public $ativ_inicio;
+    public $tolerancia;
+    public $celular1_atividade;
+    public $celular2_atividade;
 
-    public function __construct($id = null, $razao_soc = '', $nom_fant = '', $rua = '', $bairro = '', $cidade = '', $estado = '', $cpf = '',$cnpj = '', $email = '', $celular = '', $fixo = '',  $status = 1, $data_r = '', $cep = '', $cnpj_principal = '') {
+    public function __construct($id = null, $razao_soc = '', $nom_fant = '', $rua = '', $bairro = '', $cidade = '', $estado = '', $cpf = '',$cnpj = '', $email = '', $celular = '', $fixo = '',  $status = 1, $data_r = '', $cep = '', $cnpj_principal = '', $permissao_cartao = 1, $permissao_seguranca = 0, $permissao_financeiro = 1, $permissao_bancario = 1, 
+     $ativ_inicio = null,
+     $tolerancia = null,
+     $celular1_atividade = null,
+     $celular2_atividade = null,
+     ) {
         $this->id = $id;
         $this->razao_soc = $razao_soc;
         $this->nom_fant = $nom_fant;
@@ -33,18 +44,26 @@ class Empresa {
         $this->cpf = $cpf;
         $this->cnpj = $cnpj;
         $this->email = $email;
-        $this->celular = $celular;
+        $this->celular = $celular;  
         $this->fixo = $fixo;
         $this->status = $status;
         $this->data_r = $data_r;
         $this->cep = $cep;
         $this->cnpj_principal = $cnpj_principal;
+        $this->permissao_cartao = $permissao_cartao;
+        $this->permissao_seguranca = $permissao_seguranca;
+        $this->permissao_financeiro = $permissao_financeiro;
+        $this->permissao_bancario = $permissao_bancario;
+        $this->ativ_inicio = $ativ_inicio;
+        $this->tolerancia = $tolerancia;
+        $this->celular1_atividade = $celular1_atividade;
+        $this->celular2_atividade = $celular2_atividade;
     }
 
     public static function create($empresa) {
         $pdo = (new Database())->connect();
-        $sql = 'INSERT INTO empresas (razao_soc, nom_fant, rua, bairro, cidade, estado, cpf, cnpj, email, celular, fixo, status, data_r, cep, cnpj_principal) 
-        VALUES (:razao_soc, :nom_fant, :rua, :bairro, :cidade, :estado, :cpf, :cnpj, :email, :celular, :fixo, :status, :data_r, :cep, :cnpj_principal)';
+        $sql = 'INSERT INTO empresas (razao_soc, nom_fant, rua, bairro, cidade, estado, cpf, cnpj, email, celular, fixo, status, data_r, cep, cnpj_principal, permissao_cartao, permissao_seguranca, permissao_financeiro, permissao_bancario, ativ_inicio, tolerancia, celular1_atividade, celular2_atividade) 
+        VALUES (:razao_soc, :nom_fant, :rua, :bairro, :cidade, :estado, :cpf, :cnpj, :email, :celular, :fixo, :status, :data_r, :cep, :cnpj_principal, :permissao_cartao, :permissao_seguranca, :permissao_financeiro, :permissao_bancario, :ativ_inicio, :tolerancia, :celular1_atividade, :celular2_atividade)';
         $stmt = $pdo->prepare($sql);
 
         $stmt->bindValue(':razao_soc', $empresa->razao_soc);
@@ -62,6 +81,14 @@ class Empresa {
         $stmt->bindValue(':data_r', $empresa->data_r);
         $stmt->bindValue(':cep', $empresa->cep);
         $stmt->bindValue(':cnpj_principal', $empresa->cnpj_principal);
+        $stmt->bindValue(':permissao_cartao', $empresa->permissao_cartao);
+        $stmt->bindValue(':permissao_seguranca', $empresa->permissao_seguranca);
+        $stmt->bindValue(':permissao_financeiro', $empresa->permissao_financeiro);
+        $stmt->bindValue(':permissao_bancario', $empresa->permissao_bancario);
+        $stmt->bindValue(':ativ_inicio', $empresa->ativ_inicio);
+        $stmt->bindValue(':tolerancia', $empresa->tolerancia);
+        $stmt->bindValue(':celular1_atividade', $empresa->celular1_atividade);
+        $stmt->bindValue(':celular2_atividade', $empresa->celular2_atividade);
 
        return $stmt->execute(); 
     }
@@ -147,7 +174,17 @@ class Empresa {
         status = :status, 
         cep = :cep, 
         data_r = :data_r,
-        cnpj_principal = :cnpj_principal
+        cnpj_principal = :cnpj_principal,
+        permissao_cartao = :permissao_cartao,
+        permissao_seguranca = :permissao_seguranca,
+        permissao_financeiro = :permissao_financeiro,
+        permissao_bancario = :permissao_bancario,
+        ativ_inicio = :ativ_inicio,
+        tolerancia = :tolerancia,
+        celular1_atividade = :celular1_atividade,
+        celular2_atividade = :celular2_atividade
+
+
     WHERE id = :id';
 
         $stmt = $pdo->prepare($sql);
@@ -166,8 +203,16 @@ class Empresa {
     $stmt->bindValue(':status', $empresa->status);
     $stmt->bindValue(':cep', $empresa->cep);
     $stmt->bindValue(':data_r', $empresa->data_r);
-    $stmt->bindValue(':id', $empresa->id, PDO::PARAM_INT); // ← Faltava esse bind
+    $stmt->bindValue(':id', $empresa->id, PDO::PARAM_INT); 
     $stmt->bindValue(':cnpj_principal', $empresa->cnpj_principal);
+    $stmt->bindValue(':permissao_cartao', $empresa->permissao_cartao);
+    $stmt->bindValue(':permissao_seguranca', $empresa->permissao_seguranca);
+    $stmt->bindValue(':permissao_financeiro', $empresa->permissao_financeiro);
+    $stmt->bindValue(':permissao_bancario', $empresa->permissao_bancario);
+    $stmt->bindValue(':ativ_inicio', $empresa->ativ_inicio);
+    $stmt->bindValue(':tolerancia', $empresa->tolerancia);
+    $stmt->bindValue(':celular1_atividade', $empresa->celular1_atividade);
+    $stmt->bindValue(':celular2_atividade', $empresa->celular2_atividade);
 
        return $stmt->execute(); 
         
@@ -175,7 +220,8 @@ class Empresa {
 
     public static function delete($id) {
         $pdo = (new Database())->connect();
-        $stmt = $pdo->prepare('DELETE FROM empresas WHERE id = ?');
-        return $stmt->execute([$id]);
+        $stmt = $pdo->prepare('DELETE FROM empresas WHERE id = :id');
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        return $stmt->execute();
     }
 }
