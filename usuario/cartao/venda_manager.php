@@ -44,8 +44,16 @@ function parse_excel($numero_arquivo = null) {
     }
     $arquivos_multi = [
         'sicredi' => 2,
-        'getnet' => 2
+        'getnet' => 2,
+        'saudeservice' => 2
     ];
+    
+    // Verificar limite máximo de arquivos para o operador
+    $limite_arquivo = $arquivos_multi[$operadora_descricao_preg] ?? 2;
+    if($numero_arquivo > $limite_arquivo) {
+        header('Location: cadastro_vendas.php?erro=arquivo');
+        exit;
+    }
     $operadoras_suportadas = [
         'stone',
         'getnet',
@@ -220,16 +228,19 @@ function parse_excel($numero_arquivo = null) {
         if(isset($operadora_sup['suporte_valor_taxa']) && $operadora_sup['suporte_valor_taxa'] == true) {
            $cells[4] = $cells[5] + $cells[4];   
         }
-
-        
-        if(($tipo_arquivo == 'personalizado' && isset($cells[6])) || ($tipo_arquivo == 'padrao' && !isset($cells[6])) ) {
-            $multi = false;
+        $multi = false;
             foreach($arquivos_multi as $i => $num) {
                 if($operadora_descricao_preg == $i && $numero_arquivo <= $num) {
                     $multi = true;
                 }
             }
+        
+        if(($tipo_arquivo == 'personalizado' && isset($cells[6])) || ($tipo_arquivo == 'padrao' && !isset($cells[6])) ) {
+            // if(!empty($transactions['lancamentos'])) {
+            //     continue;
+            // }
             if ($multi) {
+
             $transactions_next = parse_excel($numero_arquivo + 1);
 
             if (!empty($transactions_next['invalido'])) {
@@ -282,24 +293,67 @@ function parse_excel($numero_arquivo = null) {
     $cells[3] = intval($cells[3]);
 
         
-        
+    try {
         if($tipo_arquivo == 'padrao'){
             if(isset($operadora_sup['suporte_data']) && $operadora_sup['suporte_data'] == 'hora') {
                 $cells[0] = substr($cells[0], 0, 10);
-                $data_formatada = (DateTime::createFromFormat('d/m/Y', $cells[0]))->format('Y-m-d');
+                $dateObj = DateTime::createFromFormat('d/m/Y', $cells[0]);
+                if (!$dateObj) {
+                    throw new Exception('Data inválida: ' . $cells[0]);
+                }
+                $data_formatada = $dateObj->format('Y-m-d');
             } else if(isset($operadora_sup['suporte_data']) && $operadora_sup['suporte_data'] == 'formatada') {
-                $data_formatada = (DateTime::createFromFormat('d/m/Y', $cells[0]))->format('Y-m-d');
+                $dateObj = DateTime::createFromFormat('d/m/Y', $cells[0]);
+                if (!$dateObj) {
+                    throw new Exception('Data inválida: ' . $cells[0]);
+                }
+                $data_formatada = $dateObj->format('Y-m-d');
             } else if (isset($operadora_sup['suporte_data']) && $operadora_sup['suporte_data'] == 'formatada(Y-m-d)') {
-                $data_formatada = (DateTime::createFromFormat('Y-m-d', $cells[0]))->format('Y-m-d');
+                $dateObj = DateTime::createFromFormat('Y-m-d', $cells[0]);
+                if (!$dateObj) {
+                    throw new Exception('Data inválida: ' . $cells[0]);
+                }
+                $data_formatada = $dateObj->format('Y-m-d');
             } else {
                 $data_formatada = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($cells[0])->format('Y-m-d');
             }
         } else {
-                $data_formatada = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($cells[0])->format('Y-m-d');
+            $data_formatada = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($cells[0])->format('Y-m-d');
         }
         if($data_formatada >= $data_atual) {
             continue;
         }
+    } catch (Exception $e) {
+        // if(!empty($transactions['lancamentos'])) {
+        //     continue;
+        // }
+        if (isset($multi) && $multi) {
+            $transactions_next = parse_excel($numero_arquivo + 1);
+            if (!empty($transactions_next['invalido'])) {
+                $transactions['invalido'] =  $transactions_next['invalido'];
+            }
+            if (!empty($transactions_next['lancamentos'])) {
+                $transactions['lancamentos'] = $transactions_next['lancamentos'];
+            }
+            if(empty($transactions['lancamentos'])) {
+                header('Location: cadastro_vendas.php?erro=cadastrado');
+                exit;
+            }
+            if(!empty($transactions['invalido'])) {
+                $_SESSION['vendas_invalidas'] = $transactions['invalido'];
+                header('Location: cadastro_vendas.php?vendas_invalidas=1');
+                exit;
+            } else {
+                $_SESSION['vendas']['transactions'] = $transactions['lancamentos'];
+                $_SESSION['vendas']['conta'] = $id_operadora;
+                header('Location: cadastro_vendas.php?vendas_enviadas=1');
+                exit;
+            }
+        } else {
+            header('location: cadastro_vendas.php?erro=arquivo');
+            exit;
+        }
+    }
         
 
         

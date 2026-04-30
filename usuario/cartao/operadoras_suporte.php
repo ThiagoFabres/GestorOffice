@@ -315,6 +315,60 @@ $operadoras_suporte = [
             ],
             'suporte_parcela' => 'formatada(0/0)',
             'suporte_data' => true,
+        ],
+        'xls2' => [
+            'excluded_columns' => [
+                'B', 'D', 'F', 'G', 'H', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'S', 'T', 'U',
+            ],
+            'start_row' => 3,
+            'start_end_columns' => [ 'start' => 'A', 'end' => 'V'],
+            'organizador' => [
+                'data' => 0,
+                'bandeira' => 4,
+                'tipo' => 3,
+                'parcela' => 2,
+                'valor_b' => 1,
+                'valor_l' => 5,
+                'estado' => 6
+            ],
+            'suporte_parcela' => 'formatada(0/0)',
+            'suporte_data' => 'formatada',
+        ],
+        'xlsx' => [
+            'excluded_columns' => [
+                'G', 'J', 'K', 'L', 'N', 'O', 'P', 'Q', 'R', 
+            ],
+            'start_row' => 3,
+            'start_end_columns' => [ 'start' => 'F', 'end' => 'U'],
+            'organizador' => [
+                'data' => 0,
+                'bandeira' => 4,
+                'tipo' => 5,
+                'parcela' => 2,
+                'valor_b' => 1,
+                'valor_l' => 3,
+                'estado' => 6
+            ],
+            'suporte_parcela' => 'formatada(0/0)',
+            'suporte_data' => true,
+        ],
+        'xlsx2' => [
+            'excluded_columns' => [
+                'B', 'D', 'F', 'G', 'H', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'S', 'T', 'U',
+            ],
+            'start_row' => 3,
+            'start_end_columns' => [ 'start' => 'A', 'end' => 'V'],
+            'organizador' => [
+                'data' => 0,
+                'bandeira' => 4,
+                'tipo' => 3,
+                'parcela' => 2,
+                'valor_b' => 1,
+                'valor_l' => 5,
+                'estado' => 6
+            ],
+            'suporte_parcela' => 'formatada(0/0)',
+            'suporte_data' => 'formatada',
         ]
     ]
 ]

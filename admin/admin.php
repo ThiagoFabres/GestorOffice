@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('America/Sao_Paulo');
 function permissao() {
         // Exemplo: só permite se o usuário logado for admin
         return isset($_SESSION['usuario']) && $_SESSION['usuario']->cargo == Cargo::ADMIN;
@@ -33,11 +34,13 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'editar') {
     $telefone = $_POST['telefone'];
     $email = $_POST['email'];
     $data_r = $_POST['data_r'];
-    $status = isset($_POST['status']) == 'on' ? 1 : 0;
-    $permissao_cartao = isset($_POST['permissao_cartao']) == 'on' ? 1 : 0;
-    $permissao_seguranca = isset($_POST['permissao_seguranca']) == 'on' ? 1 : 0;
-    $permissao_financeiro = isset($_POST['permissao_financeiro']) == 'on' ? 1 : 0;
-    $permissao_bancario = isset($_POST['permissao_bancario']) == 'on' ? 1 : 0;
+    $status = isset($_POST['status']) ? 1 : 0;
+    $permissao_cartao = isset($_POST['permissao_cartao']) ? 1 : 0;
+    $permissao_seguranca = isset($_POST['permissao_seguranca']) ? 1 : 0;
+    $permissao_financeiro = isset($_POST['permissao_financeiro']) ? 1 : 0;
+    $permissao_bancario = isset($_POST['permissao_bancario']) ? 1 : 0;
+    $permissao_operacional = isset($_POST['permissao_operacional']) ? 1 : 0;
+    $permissao_inicio = isset($_POST['permissao_inicio']) ? 1 : 0;
     $inicio_atividade = $_POST['ativ_inicio'] ?? null;
     $tolerancia_atividade = $_POST['tolerancia'] ?? null;
     $celular1_atividade = $_POST['cel1'] ?? null;
@@ -67,6 +70,8 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'editar') {
         $permissao_seguranca,
         $permissao_financeiro,
         $permissao_bancario,
+        $permissao_operacional,
+        $permissao_inicio,
         ativ_inicio: $inicio_atividade,
         tolerancia: $tolerancia_atividade,
         celular1_atividade: $celular1_atividade,
@@ -119,16 +124,17 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'adicionar') {
     $celular = $_POST['celular'];
     $telefone = $_POST['telefone'];
     $email = $_POST['email'];
-    $status = $_POST['status'] == 'on' ? 1 : 0;
-    $permissao_cartao = $_POST['permissao_cartao'] == 'on' ? 1 : 0;
-    $permissao_seguranca = $_POST['permissao_seguranca'] == 'on' ? 1 : 0;
-    $permissao_financeiro = $_POST['permissao_financeiro'] == 'on' ? 1 : 0;
-    $permissao_bancario = $_POST['permissao_bancario'] == 'on' ? 1 : 0;
+    $status = isset($_POST['status']) ? 1 : 0;
+    $permissao_cartao = isset($_POST['permissao_cartao']) ? 1 : 0;
+    $permissao_seguranca = isset($_POST['permissao_seguranca']) ? 1 : 0;
+    $permissao_financeiro = isset($_POST['permissao_financeiro']) ? 1 : 0;
+    $permissao_bancario = isset($_POST['permissao_bancario']) ? 1 : 0;
+    $permissao_operacional = isset($_POST['permissao_operacional']) ? 1 : 0;
+    $permissao_inicio = isset($_POST['permissao_inicio']) ? 1 : 0;
     $inicio_atividade = $_POST['ativ_inicio'] ?? null;
     $tolerancia_atividade = $_POST['tolerancia'] ?? null;
     $celular1_atividade = $_POST['cel1'] ?? null;
     $celular2_atividade = $_POST['cel2'] ?? null;
-
     
 
     $empresa = new Empresa(
@@ -152,14 +158,13 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'adicionar') {
         $permissao_seguranca,
         $permissao_financeiro,
         $permissao_bancario,
+        $permissao_operacional,
+        $permissao_inicio,
         ativ_inicio: $inicio_atividade,
         tolerancia: $tolerancia_atividade,
         celular1_atividade: $celular1_atividade,
         celular2_atividade: $celular2_atividade
     );
-
-
-// Exemplo de criação de usuário com validação de cargo
 $gestor = new Usuario(
     null, // id_usuario
     null, // id_empresa
