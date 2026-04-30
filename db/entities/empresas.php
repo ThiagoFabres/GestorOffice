@@ -23,12 +23,14 @@ class Empresa {
     public $permissao_seguranca;
     public $permissao_financeiro;
     public $permissao_bancario;
+    public $permissao_operacional;
+    public $permissao_inicio;
     public $ativ_inicio;
     public $tolerancia;
     public $celular1_atividade;
     public $celular2_atividade;
 
-    public function __construct($id = null, $razao_soc = '', $nom_fant = '', $rua = '', $bairro = '', $cidade = '', $estado = '', $cpf = '',$cnpj = '', $email = '', $celular = '', $fixo = '',  $status = 1, $data_r = '', $cep = '', $cnpj_principal = '', $permissao_cartao = 1, $permissao_seguranca = 0, $permissao_financeiro = 1, $permissao_bancario = 1, 
+    public function __construct($id = null, $razao_soc = '', $nom_fant = '', $rua = '', $bairro = '', $cidade = '', $estado = '', $cpf = '',$cnpj = '', $email = '', $celular = '', $fixo = '',  $status = 1, $data_r = '', $cep = '', $cnpj_principal = '', $permissao_cartao = 1, $permissao_seguranca = 0, $permissao_financeiro = 1, $permissao_bancario = 1, $permissao_operacional = 0, $permissao_inicio = 0,
      $ativ_inicio = null,
      $tolerancia = null,
      $celular1_atividade = null,
@@ -54,6 +56,8 @@ class Empresa {
         $this->permissao_seguranca = $permissao_seguranca;
         $this->permissao_financeiro = $permissao_financeiro;
         $this->permissao_bancario = $permissao_bancario;
+        $this->permissao_operacional = $permissao_operacional;
+        $this->permissao_inicio = $permissao_inicio;
         $this->ativ_inicio = $ativ_inicio;
         $this->tolerancia = $tolerancia;
         $this->celular1_atividade = $celular1_atividade;
@@ -62,8 +66,8 @@ class Empresa {
 
     public static function create($empresa) {
         $pdo = (new Database())->connect();
-        $sql = 'INSERT INTO empresas (razao_soc, nom_fant, rua, bairro, cidade, estado, cpf, cnpj, email, celular, fixo, status, data_r, cep, cnpj_principal, permissao_cartao, permissao_seguranca, permissao_financeiro, permissao_bancario, ativ_inicio, tolerancia, celular1_atividade, celular2_atividade) 
-        VALUES (:razao_soc, :nom_fant, :rua, :bairro, :cidade, :estado, :cpf, :cnpj, :email, :celular, :fixo, :status, :data_r, :cep, :cnpj_principal, :permissao_cartao, :permissao_seguranca, :permissao_financeiro, :permissao_bancario, :ativ_inicio, :tolerancia, :celular1_atividade, :celular2_atividade)';
+        $sql = 'INSERT INTO empresas (razao_soc, nom_fant, rua, bairro, cidade, estado, cpf, cnpj, email, celular, fixo, status, data_r, cep, cnpj_principal, permissao_cartao, permissao_seguranca, permissao_financeiro, permissao_bancario, permissao_operacional, permissao_inicio, ativ_inicio, tolerancia, celular1_atividade, celular2_atividade) 
+        VALUES (:razao_soc, :nom_fant, :rua, :bairro, :cidade, :estado, :cpf, :cnpj, :email, :celular, :fixo, :status, :data_r, :cep, :cnpj_principal, :permissao_cartao, :permissao_seguranca, :permissao_financeiro, :permissao_bancario, :permissao_operacional, :permissao_inicio, :ativ_inicio, :tolerancia, :celular1_atividade, :celular2_atividade)';
         $stmt = $pdo->prepare($sql);
 
         $stmt->bindValue(':razao_soc', $empresa->razao_soc);
@@ -85,6 +89,8 @@ class Empresa {
         $stmt->bindValue(':permissao_seguranca', $empresa->permissao_seguranca);
         $stmt->bindValue(':permissao_financeiro', $empresa->permissao_financeiro);
         $stmt->bindValue(':permissao_bancario', $empresa->permissao_bancario);
+        $stmt->bindValue(':permissao_operacional', $empresa->permissao_operacional);
+        $stmt->bindValue(':permissao_inicio', $empresa->permissao_inicio);
         $stmt->bindValue(':ativ_inicio', $empresa->ativ_inicio);
         $stmt->bindValue(':tolerancia', $empresa->tolerancia);
         $stmt->bindValue(':celular1_atividade', $empresa->celular1_atividade);
@@ -179,6 +185,8 @@ class Empresa {
         permissao_seguranca = :permissao_seguranca,
         permissao_financeiro = :permissao_financeiro,
         permissao_bancario = :permissao_bancario,
+        permissao_operacional = :permissao_operacional,
+        permissao_inicio = :permissao_inicio,
         ativ_inicio = :ativ_inicio,
         tolerancia = :tolerancia,
         celular1_atividade = :celular1_atividade,
@@ -209,6 +217,8 @@ class Empresa {
     $stmt->bindValue(':permissao_seguranca', $empresa->permissao_seguranca);
     $stmt->bindValue(':permissao_financeiro', $empresa->permissao_financeiro);
     $stmt->bindValue(':permissao_bancario', $empresa->permissao_bancario);
+    $stmt->bindValue(':permissao_operacional', $empresa->permissao_operacional);
+    $stmt->bindValue(':permissao_inicio', $empresa->permissao_inicio);
     $stmt->bindValue(':ativ_inicio', $empresa->ativ_inicio);
     $stmt->bindValue(':tolerancia', $empresa->tolerancia);
     $stmt->bindValue(':celular1_atividade', $empresa->celular1_atividade);

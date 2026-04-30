@@ -437,6 +437,16 @@ $erro = filter_input(INPUT_GET, 'erro');
                     <input type="checkbox" <?php if($empresa->permissao_bancario == 1 ) {?> checked <?php }; ?> onchange="" name="permissao_bancario" class="form-check-input"
                     value="">
             </div>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Operacional</label>
+                    <input type="checkbox" <?php if($empresa->permissao_operacional == 1 ) {?> checked <?php }; ?> onchange="" name="permissao_operacional" class="form-check-input"
+                    value="">
+            </div>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Inicio</label>
+                    <input type="checkbox" <?php if($empresa->permissao_inicio == 1 ) {?> checked <?php }; ?> onchange="" name="permissao_inicio" class="form-check-input"
+                    value="">
+            </div>
         </div>
     </div>
 
@@ -587,6 +597,17 @@ $erro = filter_input(INPUT_GET, 'erro');
             <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
                     <label for="status" style="margin-bottom:0;">Bancario</label>
                     <input type="checkbox" <?php if($empresa->permissao_bancario == 1 ) {?> checked <?php }; ?> onchange="" name="permissao_bancario" class="form-check-input"
+                    value="">
+            </div>
+            
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Operacional</label>
+                    <input type="checkbox" <?php if($empresa->permissao_operacional == 1 ) {?> checked <?php }; ?> onchange="" name="permissao_operacional" class="form-check-input"
+                    value="">
+            </div>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Inicio</label>
+                    <input type="checkbox" <?php if($empresa->permissao_inicio == 1 ) {?> checked <?php }; ?> onchange="" name="permissao_inicio" class="form-check-input"
                     value="">
             </div>
         </div>

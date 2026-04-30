@@ -2,10 +2,6 @@
 require_once __DIR__ . '/../../db/entities/empresas.php';
 $empresa_usuario_id = $_SESSION['usuario']->id_empresa;
 $empresa_usuario_obj = Empresa::read($empresa_usuario_id)[0];
-if(!$empresa_usuario_obj->permissao_financeiro) {
-    header('Location: /usuario/index.php?erro=permissao');
-    exit;
-}
 ?>
 <nav id="barra-lateral">
         <div id="logo-container">
@@ -115,6 +111,26 @@ if(!$empresa_usuario_obj->permissao_financeiro) {
                 </div>
                 <?php } ?>
 
+                <?php if($empresa_usuario_obj->permissao_seguranca){ ?>
+                <div class="menu-item accordion <?php if( isset($lateral_seguranca) && $lateral_seguranca ){ 
+                    ?>menu-item-atual<?php } ?>">
+                    <a class="nav-link text-white" data-bs-toggle="collapse" href="#segurancaMenu" role="button"
+                        aria-expanded="false" aria-controls="segurancaMenu">
+                        <div style=" align-items:center;"><i class="bi bi-shield"></i></div>Segurança
+                    </a>
+                    <div class="<?php if( !isset($lateral_seguranca) || !$lateral_seguranca ){ ?>collapse<?php } ?>" id="segurancaMenu">
+                        <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
+                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'cadastro_cartao') { ?> menu-li-atual <?php } ?>"><a href="/usuario/seguranca/escala.php" class="link-light text-decoration-none">
+                                <i class="bi bi-calendar-week"></i>Escala</a></li>
+                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'cartao_vendas') { ?> menu-li-atual <?php } ?>"><a href="/usuario/seguranca/ocorrencias.php" class="link-light text-decoration-none">
+                                <i class="bi bi-cone"></i></i>Ocorrências</a></li>
+    
+                        </ul>
+                    </div>
+                </div>
+                <?php } ?>
+
+
                 <?php if($empresa_usuario_obj->permissao_financeiro){ ?>
                 <div class="menu-item accordion <?php if( isset($lateral_recorrente) && $lateral_recorrente ){ 
                     ?>menu-item-atual<?php } ?>">
@@ -149,7 +165,9 @@ if(!$empresa_usuario_obj->permissao_financeiro) {
             
             
             <?php } ?>
-            <?php if($empresa_usuario_obj->permissao_financeiro){ ?>
+
+            
+            <?php if($empresa_usuario_obj->permissao_operacional){ ?>  
             <div class="menu-item accordion <?php if( isset($lateral_operacional) && $lateral_operacional ){ 
                     ?>menu-item-atual<?php } ?>">
                     <a class="nav-link text-white" data-bs-toggle="collapse" href="#operacionalMenu" role="button"
@@ -158,8 +176,10 @@ if(!$empresa_usuario_obj->permissao_financeiro) {
                     </a>
                     <div class="<?php if( !isset($lateral_operacional) || !$lateral_operacional ){ ?>collapse<?php } ?>" id="operacionalMenu">
                         <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
+                        <?php if($empresa_usuario_obj->permissao_inicio){ ?>      
                             <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'operacional_atividade') { ?> menu-li-atual <?php } ?>"><a href="/usuario/operacional/atividade/atividade.php" class="link-light text-decoration-none">
                                 <i class="bi bi-clock"></i>Inicio de atividade</a></li>
+                        <?php } ?>
                             <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'fechamento_caixa') { ?> menu-li-atual <?php } ?>"><a href="/usuario/operacional/fechamento/fechamento.php" class="link-light text-decoration-none">
                                 <i class="bi bi-cart3"></i>Fechamento de Caixa</a></li>
     
