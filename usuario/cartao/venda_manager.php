@@ -229,8 +229,8 @@ function parse_excel($numero_arquivo = null) {
            $cells[4] = $cells[5] + $cells[4];   
         }
         $multi = false;
-            foreach($arquivos_multi as $i => $num) {
-                if($operadora_descricao_preg == $i && $numero_arquivo <= $num) {
+            foreach($arquivos_multi as $j => $num) {
+                if($operadora_descricao_preg == $j && $numero_arquivo <= $num) {
                     $multi = true;
                 }
             }
