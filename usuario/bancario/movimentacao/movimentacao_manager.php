@@ -22,7 +22,7 @@ require_once 'buscar_documento.php';
 
 
 $acao = filter_input(INPUT_POST, 'acao', FILTER_SANITIZE_STRING) ?? filter_input(INPUT_GET, 'acao', FILTER_SANITIZE_STRING);
-
+$caminho = filter_input(INPUT_POST, 'caminho') ?? 'movimentacao.php';
 if($acao == 'processar') {
 
     
@@ -567,7 +567,7 @@ if ($fileExt === 'ofx') {
     $subtitulo = ($subtitulo === '' ? null : $subtitulo);
     $id = filter_input(INPUT_POST, 'id');
     $movimentacao_antiga = Ban02::read($id)[0];
-    $caminho = filter_input(INPUT_POST, 'caminho');
+    
 
     $movimentacao = new Ban02(
         $id,
@@ -591,9 +591,16 @@ if ($fileExt === 'ofx') {
     }
 
 
-
-    header('Location: '. $caminho . 'status=sucesso');
-    exit;
+    if(str_ends_with($caminho, '.php')) {
+        header('Location: '. $caminho . '?status=sucesso');
+        exit;
+    } else if(str_ends_with($caminho, '&')) {
+        header('Location: ' . $caminho . 'status=sucesso');
+        exit;
+    } else {
+        header('Location: ' . $caminho . '&status=sucesso');
+        exit;
+    }
 } else if($acao == 'conciliar_palavra') {
 
     require_once '../../../db/entities/palavra_chave.php';
@@ -627,7 +634,16 @@ if ($fileExt === 'ofx') {
     }
 
 
-    header('Location: movimentacao.php');
+    if(str_ends_with($caminho, '.php')) {
+        header('Location: '. $caminho . '?status=sucesso');
+        exit;
+    } else if(str_ends_with($caminho, '&')) {
+        header('Location: ' . $caminho . 'status=sucesso');
+        exit;
+    } else {
+        header('Location: ' . $caminho . '&status=sucesso');
+        exit;
+    }
 } 
 
 else if($acao == 'conciliar_marcados') {
@@ -660,8 +676,16 @@ else if($acao == 'conciliar_marcados') {
         );
         Ban02::update($novo_ban02);
     }
-    header('Location: movimentacao.php?status=sucesso');
-    exit;
+    if(str_ends_with($caminho, '.php')) {
+        header('Location: '. $caminho . '?status=sucesso');
+        exit;
+    } else if(str_ends_with($caminho, '&')) {
+        header('Location: ' . $caminho . 'status=sucesso');
+        exit;
+    } else {
+        header('Location: ' . $caminho . '&status=sucesso');
+        exit;
+    }
 }
 
 else if($acao == 'conciliar_todas'){
@@ -700,8 +724,16 @@ else if($acao == 'conciliar_todas'){
                 Ban02::update($novo_ban02);
             }
         }
-    header('Location: movimentacao.php');
-    exit;
+    if(str_ends_with($caminho, '.php')) {
+        header('Location: '. $caminho . '?status=sucesso');
+        exit;
+    } else if(str_ends_with($caminho, '&')) {
+        header('Location: ' . $caminho . 'status=sucesso');
+        exit;
+    } else {
+        header('Location: ' . $caminho . '&status=sucesso');
+        exit;
+    }
     }
 
     
@@ -712,7 +744,6 @@ else if($acao == 'conciliar_todas'){
     $valor_lista = $_POST['valor_desmembrado'];
     $descricao_comp_lista = $_POST['descricao_comp_desmembrado'];
     $descricao_comp_original = filter_input(INPUT_POST,'descricao_comp_original');
-    $caminho = filter_input(INPUT_POST, 'caminho');
 
         
     
@@ -801,13 +832,21 @@ else if($acao == 'conciliar_todas'){
     );
     Ban02::update($ban02_atualizado);
 
-    header('Location:'. $caminho);
+    if(str_ends_with($caminho, '.php')) {
+        header('Location: '. $caminho . '?status=sucesso');
+        exit;
+    } else if(str_ends_with($caminho, '&')) {
+        header('Location: ' . $caminho . 'status=sucesso');
+        exit;
+    } else {
+        header('Location: ' . $caminho . '&status=sucesso');
+        exit;
+    }
 
 } else if($acao == 'cancelar_desmembramento') {
     $id = filter_input(INPUT_POST, 'id');
     $primeiro_ban02 = Ban02::read(id:$id, id_empresa: $_SESSION['usuario']->id_empresa)[0];
     $id_lista = $_POST['desmembramento_id'];
-    $caminho = filter_input(INPUT_POST, 'caminho');
 
     $valor_desmembrado = 0;
     foreach($id_lista as $id_ban02) {
@@ -832,8 +871,16 @@ else if($acao == 'conciliar_todas'){
             $primeiro_ban02->ativo
     );
     Ban02::update($ban02_atualizado);
-    header('Location:'. $caminho);
-    exit;
+    if(str_ends_with($caminho, '.php')) {
+        header('Location: '. $caminho . '?status=sucesso');
+        exit;
+    } else if(str_ends_with($caminho, '&')) {
+        header('Location: ' . $caminho . 'status=sucesso');
+        exit;
+    } else {
+        header('Location: ' . $caminho . '&status=sucesso');
+        exit;
+    }
 } else if($acao == 'editar_desmembramento') {
     $id = filter_input(INPUT_POST, 'id');
     $ban02 = Ban02::read($id, $_SESSION['usuario']->id_empresa)[0];
@@ -849,7 +896,6 @@ else if($acao == 'conciliar_todas'){
     $desmembramento_id_lista = $_POST['desmembramento_id'];
     $descricao_comp_lista = $_POST['descricao_comp'];
 
-    $caminho = filter_input(INPUT_POST, 'caminho');
 
     $i = 0;
 
@@ -890,7 +936,16 @@ else if($acao == 'conciliar_todas'){
             $primeiro_ban02->ativo
     );
     Ban02::update($ban02_atualizado);
-    header('Location:'. $caminho);
+    if(str_ends_with($caminho, '.php')) {
+        header('Location: '. $caminho . '?status=sucesso');
+        exit;
+    } else if(str_ends_with($caminho, '&')) {
+        header('Location: ' . $caminho . 'status=sucesso');
+        exit;
+    } else {
+        header('Location: ' . $caminho . '&status=sucesso');
+        exit;
+    }
 
 } else if($acao == 'mov_pagar' || $acao == 'mov_receber') {
 
@@ -957,8 +1012,16 @@ else if($acao == 'conciliar_todas'){
         Pag02::create($lanc02);
     }
 
-    header('Location:movimentacao.php');
-    exit;
+    if(str_ends_with($caminho, '.php')) {
+        header('Location: '. $caminho . '?status=sucesso');
+        exit;
+    } else if(str_ends_with($caminho, '&')) {
+        header('Location: ' . $caminho . 'status=sucesso');
+        exit;
+    } else {
+        header('Location: ' . $caminho . '&status=sucesso');
+        exit;
+    }
     
     
 
