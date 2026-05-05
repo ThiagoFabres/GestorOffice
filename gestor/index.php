@@ -170,7 +170,12 @@ $logo_blob = null;
             );
 
             if (!empty($cadastros_reg)) { ?>
-                        <?php foreach ($cadastros_reg as $cadastro) {?>
+                        <?php foreach ($cadastros_reg as $cadastro) {
+                            if($cadastro->id == $_SESSION['usuario']->id) {
+                                continue;
+                            }
+                            ?>
+                        
                                         <tr onclick="window.location.href='index.php?acao=editar&id=<?=$cadastro->id?>'" data-id="<?= htmlspecialchars($cadastro->id, ENT_QUOTES, 'UTF-8') ?>" style="cursor: pointer;">
                                             <td>
                                                 <?=htmlspecialchars($cadastro->nome, ENT_QUOTES, 'UTF-8')?>
