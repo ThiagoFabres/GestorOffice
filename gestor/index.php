@@ -161,13 +161,12 @@ $logo_blob = null;
                 <tbody>
             <?php 
             $cadastros_reg = Usuario::read(
-            null,
-            null,
-            $_SESSION['usuario']->id_empresa,
-            'usuario',
-            $get_nome,
-            $get_data_inicial,
-            $get_data_final
+            id:null,
+            email:null,
+            idempresa:$_SESSION['usuario']->id_empresa,
+            nome:$get_nome,
+            filtro_data_inicial:$get_data_inicial,
+            filtro_data_final:$get_data_final
             );
 
             if (!empty($cadastros_reg)) { ?>
