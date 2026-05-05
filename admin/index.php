@@ -18,6 +18,7 @@ require_once __DIR__ . '/../db/entities/usuarios.php';
 session_start();
 require_once __DIR__ . '/../db/entities/empresas.php';
 require_once __DIR__ . '/../db/entities/cargo.php';
+require_once __DIR__ . '/../db/entities/logo.php';
 
 
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 1) {
@@ -26,10 +27,83 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 1) {
 }
 require_once __DIR__ . '/admin.php';
 
-
+$empresas = Empresa::read();
 $erro = filter_input(INPUT_GET, 'erro');
 
+$logo_image = null;
+$logo_blob = null;
+if (isset($_GET['acao']) && $_GET['acao'] === 'editar' && isset($_GET['id'])) {
+    $empresaId = (int) $_GET['id'];
+    $logos = Logo::read(null, $empresaId);
+    if ($logos && isset($logos[0]->foto) && !empty($logos[0]->foto)) {
+        $logo_blob = $logos[0]->foto;
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime_type = finfo_buffer($finfo, $logo_blob);
+        unset($finfo);
+        if (!$mime_type) {
+            $mime_type = 'image/png';
+        }
+        $logo_image = 'data:' . $mime_type . ';base64,' . base64_encode($logo_blob);
+    }
+}
 
+$lista_estados = [];
+
+                            foreach ($empresas as $empresa) {
+                                if (!in_array($empresa->estado, $lista_estados) && ($empresa->estado != null && $empresa->estado != '')) {
+                                    $lista_estados[] = $empresa->estado;
+                                }
+                            }
+                            $estados_unicos = [];
+                            foreach ($lista_estados as $estado) {
+                                $chave = mb_strtolower(trim($estado), 'UTF-8');
+                                if(strlen($chave) != 2) {
+                                    $estados_unicos[$chave] = ucfirst(mb_strtolower($estado, 'UTF-8'));
+                                } else {
+                                    $estados_unicos[$chave] = mb_strtoupper($estado, 'UTF-8');
+                                }
+
+                                
+                            }
+$lista_bairros = [];
+
+                            foreach ($empresas as $empresa) {
+                                if (!in_array($empresa->bairro, $lista_bairros) && ($empresa->bairro != null && $empresa->bairro != '')) {
+                                    $lista_bairros[] = $empresa->bairro;
+                                }
+                            }
+
+                            $bairros_unicos = [];
+                            foreach ($lista_bairros as $bairro) {
+                                $chave = mb_strtolower(trim($bairro), 'UTF-8');
+                                $bairros_unicos[$chave] = ucfirst(mb_strtolower($bairro, 'UTF-8'));
+                            }
+                            
+$lista_parceiros = [];
+
+                                foreach ($empresas as $empresa) {
+                                    if (!in_array($empresa->parceiro, $lista_parceiros) && ($empresa->parceiro != null && $empresa->parceiro != '')) {
+                                        $lista_parceiros[] = $empresa->parceiro;
+                                    }
+                                }
+
+                                $parceiros_unicos = [];
+                                foreach ($lista_parceiros as $parceiro) {
+                                    $chave = mb_strtolower(trim($parceiro), 'UTF-8');
+                                    $parceiros_unicos[$chave] = $parceiro;
+                                }
+                            
+$lista_cidades = [];
+                            foreach ($empresas as $empresa) {
+                                if (!in_array(mb_strtolower($empresa->cidade), $lista_cidades) && ($empresa->cidade != null && $empresa->cidade != '')) {
+                                    $lista_cidades[] = $empresa->cidade;
+                                }
+                            }
+                            $cidades_unicas = [];
+                            foreach ($lista_cidades as $cidade) {
+                                $chave = mb_strtolower(trim($cidade), 'UTF-8');
+                                $cidades_unicas[$chave] = ucfirst(mb_strtolower($cidade, 'UTF-8'));
+                            }
 ?>
 <!DOCTYPE html>
 
@@ -103,7 +177,7 @@ $erro = filter_input(INPUT_GET, 'erro');
 
                 <div class="col-md-12" style="padding: 0;">
                         <div class="row">
-                    <?php $empresas = Empresa::read(); ?>
+                    
                 
 
                     <div class="card">
@@ -117,136 +191,99 @@ $erro = filter_input(INPUT_GET, 'erro');
                 <h5 class="card-title">Filtros</h5>
                 
                 <form class="row g-3 align-items-end mb-3" method="get" action="index.php">
-                    <input type="hidden" name="registro" value="cadastros">
+                    <div class="d-flex flex-row justify-content-between gap-5">
+                        <div class="d-flex flex-column">
+                            <div class="d-flex flex-row">
+                                <input type="hidden" name="registro" value="cadastros">
 
-                        <div class="col-md-2" style="width: 15%;"   >
-                        <label for="nome" class="form-label">Nome:</label>
-                        <div class="input-group">
-                            <input name="nome" value="<?= $_GET['nome'] ?? "" ?>" type="Nome" class="form-control" id="nome" placeholder="Nome">
+                                <div >
+                                    <label for="nome" class="form-label">Nome:</label>
+                                    <div class="input-group">
+                                        <input name="nome" value="<?= $_GET['nome'] ?? "" ?>" type="Nome" class="form-control rounded-0" id="nome" placeholder="Nome" style="height:2.75em">
+                                        
+                                    </div>
+                                </div>
+                                <div   >
+                                    <label for="dataInicio" class="form-label">Data inicial:</label>
+                                    <div class="input-group">
+                                        <input name="dataInicial" value="<?= $_GET['dataInicial'] ?? "" ?>" type="date" class="form-control rounded-0" id="dataInicio" placeholder="dd/mm/aaaa" style="height:2.75em">
+                                        
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="dataFinal" class="form-label">Data final:</label>
+                                    <div class="input-group">
+                                        <input name="dataFinal"  value="<?= $_GET['dataFinal'] ?? "" ?>" type="date" class="form-control rounded-0" id="dataFinal" placeholder="dd/mm/aaaa" style="height:2.75em">
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-row">
+                                <div >
+                                    <label for="estado" class="form-label">Estado:</label>
+                                    <select name="estado" class="form-select" id="estado">
+
+                                    
+                                        <option value="" <?php if(!isset($_GET['estado'])) {?> selected <?php } ?> >Selecione</option>
+                                        <?php foreach ($estados_unicos as $estado) { ?>
+                                            <option value="<?= $estado ; ?>"  <?php if(isset($_GET['estado']) && $estado == $_GET['estado']) {?> selected <?php } ?>  ><?= $estado ?></option>
+                                        <?php }; ?>
+                                    </select>
+                                </div>
                             
+                                <div >
+                                    <label for="cidade" class="form-label">Cidade:</label>
+                                    <select name="cidade" class="form-select" id="cidade">
+                                    
+                                        <option value="" <?php if(!isset($_GET['cidade'])) {?> selected <?php } ?> >Selecione</option>
+
+                                        <?php foreach ($cidades_unicas as $cidade) { ?>
+                                            <option value="<?php echo $cidade; ?>"  <?php if(isset($_GET['cidade']) && $cidade == $_GET['cidade']) {?> selected <?php } ?>  ><?php echo $cidade; ?></option>
+                                        <?php }; ?>
+                                    </select>
+                                </div>
+
+                                <div >
+                                    <label for="bairro" class="form-label">Bairro:</label>
+                                    <select name="bairro" class="form-select" id="bairro">
+                                    
+                                        <option value="" <?php if(!isset($_GET['bairro'])) {?> selected <?php } ?> >Selecione</option>
+
+                                        <?php foreach ($bairros_unicos as $bairro) { 
+                                            ?>
+                                        
+                                            <option value="<?php echo $bairro; ?>"  <?php if(isset($_GET['bairro']) && $bairro == $_GET['bairro']) {?> selected <?php } ?>  ><?php echo $bairro; ?></option>
+                                        <?php }; ?>
+                                    </select>
+                                </div>
+
+                                <div >
+                                    <label for="parceiro" class="form-label">Parceiro:</label>
+                                    <select name="parceiro" class="form-select" id="parceiro">
+                                    
+                                        <option value="" <?php if(!isset($_GET['parceiro'])) {?> selected <?php } ?> >Selecione</option>
+
+                                        <?php foreach ($parceiros_unicos as $parceiro) { 
+                                            ?>
+                                        
+                                            <option value="<?php echo $parceiro; ?>"  <?php if(isset($_GET['parceiro']) && $parceiro == $_GET['parceiro']) {?> selected <?php } ?>  ><?php echo $parceiro; ?></option>
+                                        <?php }; ?>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md-2" style="width: 15%;"   >
-                        <label for="dataInicio" class="form-label">Data inicial:</label>
-                        <div class="input-group">
-                            <input name="dataInicial" value="<?= $_GET['dataInicial'] ?? "" ?>" type="date" class="form-control" id="dataInicio" placeholder="dd/mm/aaaa">
-                            
+                        <div class="botoes-admin">
+                            <div>
+                                <button type="submit" style="background-color: #5856d6; border: 0;" class="btn btn-primary">Buscar</button>
+                            </div>
+                            <div>
+                                <a type="button" style="border: 0;" href="index.php?registro=cadastros" class="btn btn-secondary">Limpar</a>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-md-2" style="width: 15%;">
-                        <label for="dataFinal" class="form-label">Data final:</label>
-                        <div class="input-group">
-                            <input name="dataFinal"  value="<?= $_GET['dataFinal'] ?? "" ?>" type="date" class="form-control" id="dataFinal" placeholder="dd/mm/aaaa">
-                            
-                        </div>
-                    </div>
-
-                    <div class="col-md-1" style="width: 10%;">
-                        <label for="estado" class="form-label">Estado:</label>
-                        <select name="estado" class="form-select" id="estado">
-
-                        
-                            <option value="" <?php if(!isset($_GET['estado'])) {?> selected <?php } ?> >Selecione</option>
-                            <?php
-
-                            $lista_estados = [];
-
-                            foreach ($empresas as $empresa) {
-                                if (!in_array($empresa->estado, $lista_estados)) {
-                                    $lista_estados[] = $empresa->estado;
-                                }
-                            }
-                            $estados_unicos = [];
-                            foreach ($lista_estados as $estado) {
-                                $chave = mb_strtolower(trim($estado), 'UTF-8');
-                                if(strlen($chave) != 2) {
-                                    $estados_unicos[$chave] = ucfirst(mb_strtolower($estado, 'UTF-8'));
-                                } else {
-                                    $estados_unicos[$chave] = mb_strtoupper($estado, 'UTF-8');
-                                }
-
-                                
-                            }
-
-                            
-
-                            ?>
-                            <?php foreach ($estados_unicos as $estado) { ?>
-                                <option value="<?= $estado ; ?>"  <?php if(isset($_GET['estado']) && $estado == $_GET['estado']) {?> selected <?php } ?>  ><?= $estado ?></option>
-                            <?php }; ?>
-                        </select>
-                    </div>
-                
-                    <div class="col-md-1" style="width: 10%; ">
-                        <label for="cidade" class="form-label">Cidade:</label>
-                        <select name="cidade" class="form-select" id="cidade">
-                        
-                            <option value="" <?php if(!isset($_GET['cidade'])) {?> selected <?php } ?> >Selecione</option>
-
-                            <?php
-                            
-                            $lista_cidades = [];
-                            foreach ($empresas as $empresa) {
-                                if (!in_array(mb_strtolower($empresa->cidade), $lista_cidades)) {
-                                    $lista_cidades[] = $empresa->cidade;
-                                }
-                            }
-                            $cidades_unicas = [];
-                            foreach ($lista_cidades as $cidade) {
-                                $chave = mb_strtolower(trim($cidade), 'UTF-8');
-                                $cidades_unicas[$chave] = ucfirst(mb_strtolower($cidade, 'UTF-8'));
-                            }
-                            ?>
-                        
-                            <?php foreach ($cidades_unicas as $cidade) { ?>
-                                <option value="<?php echo $cidade; ?>"  <?php if(isset($_GET['cidade']) && $cidade == $_GET['cidade']) {?> selected <?php } ?>  ><?php echo $cidade; ?></option>
-                            <?php }; ?>
-                        </select>
-                    </div>
-
-                    <div class="col-md-1" style="width: 10%;">
-                        <label for="bairro" class="form-label">Bairro:</label>
-                        <select name="bairro" class="form-select" id="bairro">
-                        
-                            <option value="" <?php if(!isset($_GET['bairro'])) {?> selected <?php } ?> >Selecione</option>
-
-                            <?php
-
-                            $lista_bairros = [];
-
-                            foreach ($empresas as $empresa) {
-                                if (!in_array($empresa->bairro, $lista_bairros)) {
-                                    $lista_bairros[] = $empresa->bairro;
-                                }
-                            }
-
-                            $bairros_unicos = [];
-                            foreach ($lista_bairros as $bairro) {
-                                $chave = mb_strtolower(trim($bairro), 'UTF-8');
-                                $bairros_unicos[$chave] = ucfirst(mb_strtolower($bairro, 'UTF-8'));
-                            }
-
-                            ?>
-                        
-                        
-                            <?php foreach ($bairros_unicos as $bairro) { 
-                                ?>
-                            
-                                <option value="<?php echo $bairro; ?>"  <?php if(isset($_GET['bairro']) && $bairro == $_GET['bairro']) {?> selected <?php } ?>  ><?php echo $bairro; ?></option>
-                            <?php }; ?>
-                        </select>
-                    </div>
-
-                    <div class="botoes-admin">
-                        <div>
-                            <button type="submit" style="background-color: #5856d6; border: 0;" class="btn btn-primary">Buscar</button>
-                        </div>
-                        <div>
-                            <a type="button" style="border: 0;" href="index.php?registro=cadastros" class="btn btn-secondary">Limpar</a>
-                        </div>
-                    </div>
                     
+                    </div>
                 </form>
+                
                 </div>
                 </div>
 </div>
@@ -266,7 +303,7 @@ $erro = filter_input(INPUT_GET, 'erro');
                         </thead>
                         <tbody>
                             <?php
-                            $empresas = Empresa::read(null, null, $_GET['nome'] ?? null, $_GET['dataInicial'] ?? null, $_GET['dataFinal'] ?? null, $_GET['estado'] ?? null, $_GET['cidade'] ?? null, $_GET['bairro'] ?? null);
+                            $empresas = Empresa::read(null, null, $_GET['nome'] ?? null, $_GET['dataInicial'] ?? null, $_GET['dataFinal'] ?? null, $_GET['estado'] ?? null, $_GET['cidade'] ?? null, $_GET['bairro'] ?? null, null, $_GET['parceiro'] ?? null);
                             foreach ($empresas as $empresa) {
                                 if($empresa->id == 1) {
                                     continue;
@@ -316,7 +353,14 @@ $erro = filter_input(INPUT_GET, 'erro');
     <div class="card-body">
 
 <div id="card-sub">Edite os dados do cliente</div>
-<form action="index.php" method="post">
+
+<?php if($logo_image): ?>
+    <div style="text-align: center; margin-bottom: 2em;">
+        <h6>Logo Atual</h6>
+        <img src="<?= $logo_image ?>" alt="Logo da Empresa" style="max-width: 200px; max-height: 200px; object-fit: contain; border: 1px solid #ddd; padding: 5px;">
+    </div>
+<?php endif; ?>
+<form action="index.php" method="post" enctype="multipart/form-data">
 
     <input type="hidden" name="data_r" value="<?=$empresa->data_r?>">
     <input type="hidden" name="id" value="<?=$empresa->id?>">
@@ -409,12 +453,27 @@ $erro = filter_input(INPUT_GET, 'erro');
                         </div>
 
     <div class="d-flex flex-row justify-content-between">
-        <div>
-            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
-                    <label for="status" style="margin-bottom:0;">Ativo</label>
-                    <input type="checkbox" <?php if($empresa->status == 1) {?> checked <?php }; ?> onchange="" name="status" class="form-check-input"
-                    value="">
+        <div class="d-flex flex-column w-50">
+            <div class="d-flex flex-row justify-content-between" >
+                <div class="d-flex flex-column">
+                    <label for="parceiro">Parceiro</label>
+                    <input type="text" onchange="checar()" name="parceiro" class="form-control rounded-0" placeholder="Parceiro" value="<?= $empresa->parceiro ?? '' ?>" required>
+                </div>
+            
+                <div class="d-flex flex-column">
+                    <label for="logo">Logo Customizada:</label>
+                    <input type="file" name="logo" class="form-control rounded-0" placeholder="Logo" value="<?= $empresa->logo ?? '' ?>" style="height:2.75em;">
+                </div>
             </div>
+                <div>
+                    <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                        <label for="status" style="margin-bottom:0;">Ativo</label>
+                        <input type="checkbox" <?php if($empresa->status == 1) {?> checked <?php }; ?> onchange="" name="status" class="form-check-input"
+                        value="">
+                    </div>
+                </div>
+            
+
         </div>
         <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 1em;">
             <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
@@ -471,7 +530,7 @@ $erro = filter_input(INPUT_GET, 'erro');
                 </div>
                 <div class="modal-body">
 
-                    <form method="post" id="content" action="index.php">
+                    <form method="post" id="content" action="index.php" enctype="multipart/form-data">
                         <input type="hidden" name="id" value="">
                         <label>Informe os dados da empresa </label>
 
@@ -571,43 +630,57 @@ $erro = filter_input(INPUT_GET, 'erro');
 
                         
                         <div class="checkbox-group d-flex flex-row justify-content-between">
-                            <div>
-                                <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
-                                    <label for="status" style="margin-bottom:0;">Ativo</label>
-                                    <input type="checkbox" checked onchange="" name="status" class="form-check-input"
-                                        value="">
+
+                <div class="d-flex flex-column">
+                <div class="d-flex flex-row justify-content-between" >
+                    <div class="d-flex flex-column">
+                        <label for="parceiro">Parceiro</label>
+                        <input type="text" onchange="checar()" name="parceiro" class="form-control rounded-0" placeholder="Parceiro" value="<?= $empresa->parceiro ?? '' ?>" required>
+                    </div>
+                
+                    <div class="d-flex flex-column">
+                        <label for="logo">Logo Customizada:</label>
+                        <input type="file" name="logo" class="form-control rounded-0" placeholder="Logo" value="<?= $empresa->logo ?? '' ?>" style="height:2.75em;">
+                    </div>
+                </div>
+            <div>
+                <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Ativo</label>
+                    <input type="checkbox" checked onchange="" name="status" class="form-check-input"value="">
+                    </div>
+            </div>
                                 </div>
-                            </div>
+
                             <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 1em;">
             <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
                     <label for="status" style="margin-bottom:0;">Cartão</label>
-                    <input type="checkbox" <?php if($empresa->permissao_cartao == 1) {?> checked <?php }; ?> onchange="" name="permissao_cartao" class="form-check-input"
+                    <input type="checkbox" checked onchange="" name="permissao_cartao" class="form-check-input"
                     value="">
             </div>
             <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
                     <label for="status" style="margin-bottom:0;">Segurança</label>
-                    <input type="checkbox" <?php if($empresa->permissao_seguranca == 1) {?> checked <?php }; ?> onchange="" name="permissao_seguranca" class="form-check-input"
+                    <input type="checkbox" onchange="" name="permissao_seguranca" class="form-check-input"
                     value="">
             </div>
             <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
                     <label for="status" style="margin-bottom:0;">Financeiro</label>
-                    <input type="checkbox" <?php if($empresa->permissao_financeiro == 1) {?> checked <?php }; ?> onchange="" name="permissao_financeiro" class="form-check-input"
+                    <input type="checkbox" checked onchange="" name="permissao_financeiro" class="form-check-input"
                     value="">
             </div>
             <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
                     <label for="status" style="margin-bottom:0;">Bancario</label>
-                    <input type="checkbox" <?php if($empresa->permissao_bancario == 1 ) {?> checked <?php }; ?> onchange="" name="permissao_bancario" class="form-check-input"
+                    <input type="checkbox" checked onchange="" name="permissao_bancario" class="form-check-input"
                     value="">
             </div>
             
             <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
                     <label for="status" style="margin-bottom:0;">Operacional</label>
-                    <input type="checkbox" <?php if($empresa->permissao_operacional == 1 ) {?> checked <?php }; ?> onchange="" name="permissao_operacional" class="form-check-input"
+                    <input type="checkbox" checked onchange="" name="permissao_operacional" class="form-check-input"
                     value="">
             </div>
             <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
                     <label for="status" style="margin-bottom:0;">Inicio</label>
-                    <input type="checkbox" <?php if($empresa->permissao_inicio == 1 ) {?> checked <?php }; ?> onchange="" name="permissao_inicio" class="form-check-input"
+                    <input type="checkbox" onchange="" name="permissao_inicio" class="form-check-input"
                     value="">
             </div>
         </div>

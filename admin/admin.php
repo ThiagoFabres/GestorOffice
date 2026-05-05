@@ -1,5 +1,7 @@
 <?php
 date_default_timezone_set('America/Sao_Paulo');
+require_once __DIR__ . '/../db/entities/logo.php';
+
 function permissao() {
         // Exemplo: só permite se o usuário logado for admin
         return isset($_SESSION['usuario']) && $_SESSION['usuario']->cargo == Cargo::ADMIN;
@@ -45,6 +47,7 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'editar') {
     $tolerancia_atividade = $_POST['tolerancia'] ?? null;
     $celular1_atividade = $_POST['cel1'] ?? null;
     $celular2_atividade = $_POST['cel2'] ?? null;
+    $parceiro = $_POST['parceiro'] ?? null;
 
 
     if(strlen($estado) == 2){$estado = mb_strtoupper($estado);};
@@ -75,7 +78,8 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'editar') {
         ativ_inicio: $inicio_atividade,
         tolerancia: $tolerancia_atividade,
         celular1_atividade: $celular1_atividade,
-        celular2_atividade: $celular2_atividade
+        celular2_atividade: $celular2_atividade,
+        parceiro: $parceiro,
 );
 $gestor_atual = Usuario::read(idempresa:$id, cargo:Cargo::GESTOR)[0];
 
@@ -101,6 +105,24 @@ try {
 
 Empresa::update($empresa);
 Usuario::update($gestor);
+
+// Processar logo se arquivo foi enviado
+if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK && $_FILES['logo']['size'] > 0) {
+    $foto_blob = file_get_contents($_FILES['logo']['tmp_name']);
+    
+    if ($foto_blob && strlen($foto_blob) > 0) {
+        $logos_existentes = Logo::read(null, $id);
+        if ($logos_existentes) {
+            $logo = $logos_existentes[0];
+            $logo->foto = $foto_blob;
+            Logo::update($logo);
+        } else {
+            $logo = new Logo(null, $id, $foto_blob);
+            Logo::create($logo);
+        }
+    }
+}
+
 header('Location: index.php');
 exit;
 
@@ -135,7 +157,7 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'adicionar') {
     $tolerancia_atividade = $_POST['tolerancia'] ?? null;
     $celular1_atividade = $_POST['cel1'] ?? null;
     $celular2_atividade = $_POST['cel2'] ?? null;
-    
+    $parceiro = $_POST['parceiro'] ?? null;
 
     $empresa = new Empresa(
         null, // id
@@ -163,7 +185,8 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'adicionar') {
         ativ_inicio: $inicio_atividade,
         tolerancia: $tolerancia_atividade,
         celular1_atividade: $celular1_atividade,
-        celular2_atividade: $celular2_atividade
+        celular2_atividade: $celular2_atividade,
+        parceiro: $parceiro,
     );
 $gestor = new Usuario(
     null, // id_usuario
@@ -192,6 +215,18 @@ if(!Empresa::read(null, $email) && !Usuario::read(null, $email)) {
     $empresaid = $empresacriada[0];
     $gestor->id_empresa = $empresaid->id;
     Usuario::create($gestor);
+    
+    // Processar logo se arquivo foi enviado
+    if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK && $_FILES['logo']['size'] > 0) {
+        $foto_blob = file_get_contents($_FILES['logo']['tmp_name']);
+        if ($foto_blob && strlen($foto_blob) > 0) {
+            $logo = new Logo(null, $empresaid->id, $foto_blob);
+            Logo::create($logo);
+        }
+    }
+    
+    header('Location: index.php');
+    exit;
 } else {
     header('Location: index.php?erro=usado');
     exit;

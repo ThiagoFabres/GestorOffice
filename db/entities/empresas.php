@@ -29,12 +29,14 @@ class Empresa {
     public $tolerancia;
     public $celular1_atividade;
     public $celular2_atividade;
+    public $parceiro;
 
     public function __construct($id = null, $razao_soc = '', $nom_fant = '', $rua = '', $bairro = '', $cidade = '', $estado = '', $cpf = '',$cnpj = '', $email = '', $celular = '', $fixo = '',  $status = 1, $data_r = '', $cep = '', $cnpj_principal = '', $permissao_cartao = 1, $permissao_seguranca = 0, $permissao_financeiro = 1, $permissao_bancario = 1, $permissao_operacional = 0, $permissao_inicio = 0,
      $ativ_inicio = null,
      $tolerancia = null,
      $celular1_atividade = null,
      $celular2_atividade = null,
+     $parceiro = null
      ) {
         $this->id = $id;
         $this->razao_soc = $razao_soc;
@@ -62,12 +64,13 @@ class Empresa {
         $this->tolerancia = $tolerancia;
         $this->celular1_atividade = $celular1_atividade;
         $this->celular2_atividade = $celular2_atividade;
+        $this->parceiro = $parceiro;
     }
 
     public static function create($empresa) {
         $pdo = (new Database())->connect();
-        $sql = 'INSERT INTO empresas (razao_soc, nom_fant, rua, bairro, cidade, estado, cpf, cnpj, email, celular, fixo, status, data_r, cep, cnpj_principal, permissao_cartao, permissao_seguranca, permissao_financeiro, permissao_bancario, permissao_operacional, permissao_inicio, ativ_inicio, tolerancia, celular1_atividade, celular2_atividade) 
-        VALUES (:razao_soc, :nom_fant, :rua, :bairro, :cidade, :estado, :cpf, :cnpj, :email, :celular, :fixo, :status, :data_r, :cep, :cnpj_principal, :permissao_cartao, :permissao_seguranca, :permissao_financeiro, :permissao_bancario, :permissao_operacional, :permissao_inicio, :ativ_inicio, :tolerancia, :celular1_atividade, :celular2_atividade)';
+        $sql = 'INSERT INTO empresas (razao_soc, nom_fant, rua, bairro, cidade, estado, cpf, cnpj, email, celular, fixo, status, data_r, cep, cnpj_principal, permissao_cartao, permissao_seguranca, permissao_financeiro, permissao_bancario, permissao_operacional, permissao_inicio, ativ_inicio, tolerancia, celular1_atividade, celular2_atividade, parceiro) 
+        VALUES (:razao_soc, :nom_fant, :rua, :bairro, :cidade, :estado, :cpf, :cnpj, :email, :celular, :fixo, :status, :data_r, :cep, :cnpj_principal, :permissao_cartao, :permissao_seguranca, :permissao_financeiro, :permissao_bancario, :permissao_operacional, :permissao_inicio, :ativ_inicio, :tolerancia, :celular1_atividade, :celular2_atividade, :parceiro)';
         $stmt = $pdo->prepare($sql);
 
         $stmt->bindValue(':razao_soc', $empresa->razao_soc);
@@ -95,7 +98,7 @@ class Empresa {
         $stmt->bindValue(':tolerancia', $empresa->tolerancia);
         $stmt->bindValue(':celular1_atividade', $empresa->celular1_atividade);
         $stmt->bindValue(':celular2_atividade', $empresa->celular2_atividade);
-
+        $stmt->bindValue(':parceiro', $empresa->parceiro);
        return $stmt->execute(); 
     }
 
@@ -108,7 +111,10 @@ class Empresa {
             $estado = null, 
             $cidade = null, 
             $bairro = null, 
-            $cnpj_principal = null): array {
+            $cnpj_principal = null,
+            $parceiro = null,
+            
+            ): array {
 
         $pdo = (new Database())->connect();
         $query = 'SELECT * FROM empresas';
@@ -122,6 +128,7 @@ class Empresa {
         if ($cidade != null) $conditions[] = 'cidade = :cidade';
         if ($bairro != null) $conditions[] = 'bairro = :bairro';
         if ($cnpj_principal != null) $conditions[] = 'cnpj_principal = :cnpj_principal';
+        if ($parceiro != null) $conditions[] = 'parceiro LIKE :parceiro';
         
         
         if ($conditions) {
@@ -158,6 +165,9 @@ class Empresa {
         if($cnpj_principal != null) {
             $stmt->bindValue(':cnpj_principal', $cnpj_principal);
         }
+        if($parceiro != null) {
+            $stmt->bindValue(':parceiro', '%' . $parceiro . '%');
+        }
         $stmt->execute();
         
             return $stmt->fetchAll(PDO::FETCH_OBJ);
@@ -190,7 +200,8 @@ class Empresa {
         ativ_inicio = :ativ_inicio,
         tolerancia = :tolerancia,
         celular1_atividade = :celular1_atividade,
-        celular2_atividade = :celular2_atividade
+        celular2_atividade = :celular2_atividade,
+        parceiro = :parceiro
 
 
     WHERE id = :id';
@@ -223,7 +234,7 @@ class Empresa {
     $stmt->bindValue(':tolerancia', $empresa->tolerancia);
     $stmt->bindValue(':celular1_atividade', $empresa->celular1_atividade);
     $stmt->bindValue(':celular2_atividade', $empresa->celular2_atividade);
-
+    $stmt->bindValue(':parceiro', $empresa->parceiro);
        return $stmt->execute(); 
         
     }

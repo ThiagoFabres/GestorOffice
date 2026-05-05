@@ -57,6 +57,14 @@ if (isset($_POST['email']) && isset($_POST['senha'])) {
         header('Location: /index.php?erro=empresa_inativa');
     }
             break;
+        case 4:
+            $empresa = Empresa::read($usuario[0]->id_empresa);
+           if ($empresa[0]->status == 1) {
+            header('Location: /index.php?erro=usuario_seguranca');
+           } else {
+            header('Location: /index.php?erro=empresa_inativa');
+        }
+                break;
 
     }
     exit;
