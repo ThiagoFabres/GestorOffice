@@ -3,7 +3,7 @@
 require_once __DIR__ . '/../db/entities/usuarios.php';
 require_once __DIR__ . '/../db/entities/empresas.php';
 require_once __DIR__ . '/../db/entities/cargo.php';
-
+require_once __DIR__ . '/../db/entities/logo.php';
 session_start();
 
 
@@ -12,9 +12,23 @@ if(!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 2) {
     header('Location: /');
     exit();
 }
-$nomeEmpresa = Empresa::read($_SESSION['usuario']->id_empresa)[0]->nom_fant;
+$empresa_usuario_obj = Empresa::read($_SESSION['usuario']->id_empresa)[0];
+$nomeEmpresa = $empresa_usuario_obj->nom_fant;
 require_once __DIR__ . '/gestor.php';
 $erro = filter_input(INPUT_GET, 'erro');
+$logo_image = null;
+$logo_blob = null;
+    $logos = Logo::read(null, $_SESSION['usuario']->id_empresa);
+    if ($logos && isset($logos[0]->foto) && !empty($logos[0]->foto)) {
+        $logo_blob = $logos[0]->foto;
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime_type = finfo_buffer($finfo, $logo_blob);
+        unset($finfo);
+        if (!$mime_type) {
+            $mime_type = 'image/png';
+        }
+        $logo_image = 'data:' . $mime_type . ';base64,' . base64_encode($logo_blob);
+    }
 
 ?>
 <!DOCTYPE html>
@@ -39,15 +53,20 @@ $erro = filter_input(INPUT_GET, 'erro');
 <body id="body" >
 
 
-    <div id="barra-lateral" style="">
+    <div id="barra-lateral">
         <div id="logo-container">
+            <?php  if($logo_image): ?>
+            <img width="220px" height="220px" src="<?= $logo_image ?>" alt="Logo" class="logo">
+            <?php else: ?>
             <img width="220px" height="220px" src="/gestor-office.png" alt="Logo" class="logo">
+            <?php endif; ?>
         </div>
     <div id="itens-menu">
 
         <div class="menu-item">
-            <a href="/gestor/"> <div style="padding: 0.5em; align-items:center;"><i class="bi bi-person"></i></div> Adicionar Usuario </a>
+            <a href="/gestor/"> <div ><i class="bi bi-person"></i></div> Adicionar Usuario</a>
         </div>
+        
 
         </div>
 
@@ -99,21 +118,18 @@ $erro = filter_input(INPUT_GET, 'erro');
                         <label for="nome" class="form-label">Nome:</label>
                         <div class="input-group">
                             <input name="nome" value="<?= htmlspecialchars($get_nome, ENT_QUOTES, 'UTF-8') ?? "" ?>" type="text" class="form-control" id="dataInicio" placeholder="Nome">
-                            
                         </div>
                     </div>
                     <div class="col-md-2" style="width: 20%;">
                         <label for="dataInicio" class="form-label">Data inicial:</label>
                         <div class="input-group">
                             <input name="dataInicial" value="<?= htmlspecialchars($get_data_inicial, ENT_QUOTES, 'UTF-8') ?? "" ?>" type="date" class="form-control" id="dataInicio" placeholder="dd/mm/aaaa">
-                            
                         </div>
                     </div>
                     <div class="col-md-2" style="width: 20%;">
                         <label for="dataFinal" class="form-label">Data final:</label>
                         <div class="input-group">
                             <input name="dataFinal"  value="<?= htmlspecialchars($get_data_final, ENT_QUOTES, 'UTF-8') ?? "" ?>" type="date" class="form-control" id="dataFinal" placeholder="dd/mm/aaaa">
-                            
                         </div>
                     </div>
 
@@ -126,7 +142,6 @@ $erro = filter_input(INPUT_GET, 'erro');
                             <a type="button" style="border: 0;" href="index.php" class="btn btn-secondary">Limpar</a>
                         </div>
                     </div>
-                    
                 </form>
                 </div>
                 </div>
@@ -145,13 +160,15 @@ $erro = filter_input(INPUT_GET, 'erro');
                 </thead>
                 <tbody>
             <?php 
-            $cadastros_reg = Usuario::read(null,
+            $cadastros_reg = Usuario::read(
+            null,
             null,
             $_SESSION['usuario']->id_empresa,
-            Cargo::USUARIO,
+            'usuario',
             $get_nome,
             $get_data_inicial,
-            $get_data_final);
+            $get_data_final
+            );
 
             if (!empty($cadastros_reg)) { ?>
                         <?php foreach ($cadastros_reg as $cadastro) {?>
@@ -162,7 +179,7 @@ $erro = filter_input(INPUT_GET, 'erro');
                                             </td>
 
                                             <td>
-                                                <?php if($cadastro->processar == 1) {echo 'PROCESSAR';} else {echo 'CONSULTAR';} ?>
+                                                <?= $cadastro->cargo == 4 ? 'SEGURANÇA' : (($cadastro->processar == 1)? 'PROCESSAR' : 'CONSULTAR') ?>
                                             </td>
                                             <td>
                                                 <?php if($cadastro->status == 1) {echo 'ATIVO';} else {echo 'INATIVO';} ?>
@@ -192,7 +209,7 @@ $erro = filter_input(INPUT_GET, 'erro');
     
     <?php 
     
-    $usuario = Usuario::read($get_id)[0];
+    $usuario = Usuario::read($get_id, idempresa: $_SESSION['usuario']->id_empresa)[0];
     
      ?>
     
@@ -216,26 +233,32 @@ $erro = filter_input(INPUT_GET, 'erro');
     </div>
 
     
+    <div class="d-flex flex-row justify-content-between w-100 mb-3">
+        <div class="d-flex flex-column">
+            <div style="margin-left:1.25em; margin-top:0;" class="d-flex flex-column">
+                <label for="status" style="margin-bottom:0;">Ativo</label>
+                <input type="checkbox" <?php if($usuario->status == 1) {?> checked <?php }; ?> value="1" onchange="" name="status" class="form-check-input" value="">
+            </div>
 
-    <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
-            <label for="status" style="margin-bottom:0;">Ativo</label>
-            <input type="checkbox" <?php if($usuario->status == 1) {?> checked <?php }; ?> value="1" onchange="" name="status" class="form-check-input"
-            value="">
+            <div style="margin-left:1.25em; margin-top:0;" class="d-flex flex-column">
+                <label for="consultar" style="margin-bottom:0;">Consultar</label>
+                <input type="checkbox" checked  onchange="checar()" name="consultar" class="form-check-input" value="1">
+            </div>
+
+            <div style="margin-left:1.25em; margin-top:0;" class="d-flex flex-column">
+                <label for="processar" style="margin-bottom:0;">Processar</label>
+                <input type="checkbox" <?php if($usuario->processar == 1) {?> checked <?php } ?> onchange="" name="processar" class="form-check-input" value="1">
+            </div>
+        </div>
+        <div class="d-flex flex-column">
+            <div style="margin-left:1.25em; margin-top:0;" class="d-flex flex-column">
+                <label for="seguranca" style="margin-bottom:0;">Posto de Serviço (Aplicativo)</label>
+                <input type="checkbox" <?php if($usuario->cargo == Cargo::SEGURANCA) {?> checked <?php } ?> onchange="" name="seguranca" class="form-check-input" value="1">
+            </div>
+        </div>
     </div>
 
-                            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
-                            <label for="consultar" style="margin-bottom:0;">Consultar</label>
-                            <input type="checkbox" checked  onchange="checar()" name="consultar" class="form-check-input"
-                                 value="1">
-                        </div>
-
-                        <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
-                            <label for="processar" style="margin-bottom:0;">Processar</label>
-                            <input type="checkbox" <?php if($usuario->processar == 1) {?> checked <?php } ?> onchange="" name="processar" class="form-check-input"
-                                 value="1">
-                        </div>
-
-    <button name="acao" value="editar" type="submit" style="background-color:#5856d6; padding-inline:1.5em; " class="btn btn-primary">Salvar</button>
+    <button name="acao" value="editar" type="submit" style="background-color:#5856d6; padding-inline:1.5em; float:right;" class="btn btn-primary">Salvar</button>
 </form>
 
     </div>
@@ -274,30 +297,37 @@ $erro = filter_input(INPUT_GET, 'erro');
                         </div>
 
                         
+                        <div class="d-flex flex-row justify-content-between ">
+                            <div class="d-flex flex-column gap-3" style="margin-left: 20px; margin-bottom: 40px;">
+                                <div class="d-flex flex-column">
+                                    <label for="status" style="margin-bottom: 0;">Ativo</label>
+                                    <input type="checkbox" checked name="status" class="form-check-input" value="1">
+                                </div>
 
-                        <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
-                            <label for="status" style="margin-bottom:0;">Ativo</label>
-                            <input type="checkbox" checked onchange="" name="status" class="form-check-input"
-                                 value="1">
+                                <div class="d-flex flex-column">
+                                    <label for="consultar" style="margin-bottom: 0;">Consultar</label>
+                                    <input type="checkbox" checked  name="consultar" class="form-check-input" value="1">
+                                </div>
+
+                                <div class="d-flex flex-column">
+                                    <label for="processar" style="margin-bottom: 0;">Processar</label>
+                                    <input type="checkbox" name="processar" class="form-check-input" value="1">
+                                </div>
+                            </div>
+                            <div class="d-flex flex-column gap-3">
+                                <div  class="d-flex flex-column">
+                                    <label for="seguranca" style="margin-bottom: 0;">Posto de Serviço (Aplicativo)</label>
+                                    <input type="checkbox" name="seguranca" class="form-check-input" value="1">
+                                </div>
+                            </div>
                         </div>
 
-                        <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
-                            <label for="consultar" style="margin-bottom:0;">Consultar</label>
-                            <input type="checkbox" checked  onchange=" checar()" name="consultar" class="form-check-input"
-                                 value="1">
+
+                        <div style="margin-bottom: 1em;" class="footer">
+                        <div class="d-flex flex-row justify-content-between">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >Fechar</button>
+                            <button name="acao" value="inserir_cliente" class="btn btn-success btn-primary"  href="consulta_cliente.php">Salvar</button>
                         </div>
-
-                        <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
-                            <label for="processar" style="margin-bottom:0;">Processar</label>
-                            <input type="checkbox"  onchange=" checar()" name="processar" class="form-check-input"
-                                 value="1">
-                        </div>
-
-
-                        <div style="margin-bottom: 3em;" class="footer">
-
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Fechar</button>
-                        <button name="acao" value="inserir_cliente" class="btn btn-success" style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0;" href="consulta_cliente.php">Salvar</button>
                         
                             
 
@@ -365,6 +395,32 @@ const consultar = document.querySelector('input[name="consultar"]');
 
 const processar = document.querySelector('input[name="processar"]');
 
+const seguranca = document.querySelector('input[name="seguranca"]');
+document.addEventListener('change', function() {
+    console.log('Segurança ativada');
+    if(seguranca.checked) {
+        processar.checked = false;
+        consultar.checked = false;
+        processar.disabled = true;
+        consultar.disabled = true;
+    } else {
+        consultar.checked = true;
+        processar.disabled = false;
+        consultar.disabled = false;
+    }
+});
+console.log(seguranca.checked);
+if(seguranca.checked) {
+    
+    processar.checked = false;
+    consultar.checked = false;
+    processar.disabled = true;
+    consultar.disabled = true;
+} else {
+    processar.disabled = false;
+    consultar.disabled = false;
+}
+
 if (!consultar.checked) {
             processar.checked = false;
         }
@@ -373,7 +429,6 @@ if (!consultar.checked) {
             consultar.checked = true;
         }
 
-    // }
 <?php if (isset($get_acao) && $get_acao == 'adicionar') { ?>
         window.addEventListener('DOMContentLoaded', function () {
             var modalEl = document.getElementById('modal_usuario');

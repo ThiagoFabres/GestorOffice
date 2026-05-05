@@ -1,12 +1,30 @@
 <?php 
 require_once __DIR__ . '/../../db/entities/empresas.php';
+require_once __DIR__ . '/../../db/entities/logo.php';
 $empresa_usuario_id = $_SESSION['usuario']->id_empresa;
 $empresa_usuario_obj = Empresa::read($empresa_usuario_id)[0];
+$logo_image = null;
+$logo_blob = null;
+    $logos = Logo::read(null, $_SESSION['usuario']->id_empresa);
+    if ($logos && isset($logos[0]->foto) && !empty($logos[0]->foto)) {
+        $logo_blob = $logos[0]->foto;
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime_type = finfo_buffer($finfo, $logo_blob);
+        unset($finfo);
+        if (!$mime_type) {
+            $mime_type = 'image/png';
+        }
+        $logo_image = 'data:' . $mime_type . ';base64,' . base64_encode($logo_blob);
+    }
 ?>
 <nav id="barra-lateral">
         <div id="logo-container">
             <div class="d-flex flex-column">
+                <?php  if($logo_image): ?>
+                <img width="220px" height="220px" src="<?= $logo_image ?>" alt="Logo" class="logo">
+                <?php else: ?>
                 <img width="220px" height="220px" src="/gestor-office.png" alt="Logo" class="logo">
+                <?php endif; ?>
                 <p id="versao-lateral" class="text-center position-absolute" style="color: #ffffff7c; top: 170px; left: 110px;">V.2.3</p>
             </div>
         </div>
@@ -110,26 +128,6 @@ $empresa_usuario_obj = Empresa::read($empresa_usuario_id)[0];
                     </div>
                 </div>
                 <?php } ?>
-
-                <?php if($empresa_usuario_obj->permissao_seguranca){ ?>
-                <div class="menu-item accordion <?php if( isset($lateral_seguranca) && $lateral_seguranca ){ 
-                    ?>menu-item-atual<?php } ?>">
-                    <a class="nav-link text-white" data-bs-toggle="collapse" href="#segurancaMenu" role="button"
-                        aria-expanded="false" aria-controls="segurancaMenu">
-                        <div style=" align-items:center;"><i class="bi bi-shield"></i></div>Segurança
-                    </a>
-                    <div class="<?php if( !isset($lateral_seguranca) || !$lateral_seguranca ){ ?>collapse<?php } ?>" id="segurancaMenu">
-                        <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
-                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'cadastro_cartao') { ?> menu-li-atual <?php } ?>"><a href="/usuario/seguranca/escala.php" class="link-light text-decoration-none">
-                                <i class="bi bi-calendar-week"></i>Escala</a></li>
-                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'cartao_vendas') { ?> menu-li-atual <?php } ?>"><a href="/usuario/seguranca/ocorrencias.php" class="link-light text-decoration-none">
-                                <i class="bi bi-cone"></i></i>Ocorrências</a></li>
-    
-                        </ul>
-                    </div>
-                </div>
-                <?php } ?>
-
 
                 <?php if($empresa_usuario_obj->permissao_financeiro){ ?>
                 <div class="menu-item accordion <?php if( isset($lateral_recorrente) && $lateral_recorrente ){ 

@@ -127,7 +127,7 @@
                                     $i++;
                                     } 
                                  ?>
-                                 <input type="hidden" name="total_linhas" value="<?=$id_linha?>"></input>
+                                 <input type="hidden" name="total_linhas" value="<?=$i?>"></input>
 
                                 </tbody>
                             </table>

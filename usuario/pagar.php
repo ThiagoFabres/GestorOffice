@@ -251,11 +251,10 @@ if ($filtros != []) {
 
                                                     <div class="r-inputs-data" >
                                                         <div>
-                                                            <label for="filtro_descricao"
-                                                            >Documento:</label>
+                                                            <label for="filtro_descricao">Descricao:</label>
                                                             <input type="text" id="filtro_descricao" name="filtro_descricao"
                                                                 class="form-control" value="<?= $get_filtro_descricao; ?>"
-                                                                placeholder="Documento" style="border-radius: 0;">
+                                                                placeholder="Descricao" style="border-radius: 0;">
                                                         </div>
 
                                                         <!-- Tipo de pagamento -->

@@ -39,21 +39,21 @@ foreach($desmembramentos as $desmembramento) {
 
                             <div class="d-flex flex-column" style="width: calc(100%/3);">
                                 <label>Documento:</label>
-                                <p class="form-control" readonly value=""><?=$ban02->documento?></p>
+                                <p class="form-control" readonly value=""><?= $ban02 ? $ban02->documento : ''?></p>
                             </div>
                             <div class="d-flex flex-column" style="width: calc(100%/3);">
                                 <label>Data:</label>
-                                <p class="form-control" readonly value=""><?=$data_formatada?></p>
+                                <p class="form-control" readonly value=""><?= $ban02 ? $data_formatada : ''?></p>
                             </div>
                             <div class="d-flex flex-column" style="width: calc(100%/3);">
                                 <label>Valor:</label>
-                                <p class="form-control" readonly value=""><?=$ban02->valor?></p>
+                                <p class="form-control" readonly value=""><?= $ban02 ? $ban02->valor : null?></p>
                             </div>
                         </div>
                         <div class="d-flex flex-row gap-2">
                             <div class="d-flex flex-column w-50">
                                 <label>Descrição:</label>
-                                <p type="text" class="form-control"<?php if($ban02->descricao == '') echo 'style=background-color:#ccc'?>><?=$ban02->descricao == '' ? 'Sem Descrição' : $ban02->descricao?></p>
+                                <p type="text" class="form-control"<?php if($ban02 && $ban02->descricao == '') echo 'style=background-color:#ccc'?>><?=$ban02->descricao == '' ? 'Sem Descrição' : $ban02->descricao ?? ''?></p>
                             </div>
                             <div class="d-flex flex-column w-50">
                                 <label>Descrição Complementar:</label>
@@ -71,7 +71,7 @@ foreach($desmembramentos as $desmembramento) {
                     <?php } ?>
                     
                     
-                    <input type="hidden" name="id" value="<?=$ban02->id?>"> 
+                    <input type="hidden" name="id" value="<?=$ban02 ? $ban02->id : ''?>"> 
                     <input type="hidden" name="acao" value="desmembrar">
                     
                 <?php if($_SESSION['usuario']->processar === 1) { ?>
@@ -80,10 +80,10 @@ foreach($desmembramentos as $desmembramento) {
                 <?php if($_SESSION['usuario']->processar === 1) { ?>
                 <form method="post" action="movimentacao_manager.php">
                     <?php } ?>
-                    <input type="hidden" name="id" value="<?=$get_id?>">
-                    <input type="hidden" name="valor" value="<?=$ban02->valor?>">
+                    <input type="hidden" name="id" value="<?=$get_id ?? null?>">
+                    <input type="hidden" name="valor" value="<?=$ban02 ? $ban02->valor : null?>">
                     <input type="hidden" name="caminho" value="<?=$caminho?>">
-                    <input id="desc_comp_original_destino2" type="hidden" name="descricao_comp_original" value="<?=$ban02->descricao_comp?>">
+                    <input id="desc_comp_original_destino2" type="hidden" name="descricao_comp_original" value="<?=$ban02 ? $ban02->descricao_comp : ''?>">
                 <?php if($desmembramentos != null) { ?>
                 
                     
