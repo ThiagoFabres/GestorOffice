@@ -25,7 +25,6 @@ $logo_blob = null;
                 <?php else: ?>
                 <img width="220px" height="220px" src="/gestor-office.png" alt="Logo" class="logo">
                 <?php endif; ?>
-                <p id="versao-lateral" class="text-center position-absolute" style="color: #ffffff7c; top: 170px; left: 110px;">V.2.3</p>
             </div>
         </div>
         <div id="itens-menu">
