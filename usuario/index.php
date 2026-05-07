@@ -49,7 +49,7 @@ foreach($pagamentos_hoje as $pag02) {
 }
 $total_pag_hoje = number_format($total_pag_hoje, 2, ',', '.');
 
-$pagamentos_a_vencer = Pag02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, $data_final, null, null, null, null, true, 'a_vencer');
+$pagamentos_a_vencer = Pag02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_inicial, $data_final, null, null, null, null, true, 'a_vencer');
 $total_pag_a_vencer = 0;
 foreach($pagamentos_a_vencer as $pag02) {
     $total_pag_a_vencer += $pag02->valor_par;
@@ -71,7 +71,7 @@ foreach($recebimentos_hoje as $rec02) {
 }
 $total_rec_hoje = number_format($total_rec_hoje, 2, ',', '.');
 
-$recebimentos_a_vencer = Rec02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_atual, $data_final, null, null, null, null, true, 'a_vencer');
+$recebimentos_a_vencer = Rec02::read(null, $_SESSION['usuario']->id_empresa, null, null, null, $data_inicial, $data_final, null, null, null, null, true, 'a_vencer');
 $total_rec_a_vencer = 0;
 foreach($recebimentos_a_vencer as $rec02) {
     $total_rec_a_vencer += $rec02->valor_par;
@@ -205,7 +205,7 @@ $total_rec_pagamento = number_format($total_rec_pagamento, 2, ',', '.');
                                 </td>
 
                                 <td>
-                                    <table class="table-bordered" onclick="window.location.href='receber.php?&filtro_data_inicial=<?= $data_amanha ?>&filtro_por=vencimento&opcao_filtro=abertos'">
+                                    <table class="table-bordered" onclick="window.location.href='receber.php?&filtro_data_inicial=<?= $data_inicial ?>&filtro_data_final=<?= $data_final ?>&filtro_por=vencimento&opcao_filtro=abertos'">
                                         <thead>
                                             <tr class="tr-clientes-dash parcela_cor_azul">
                                                 <th>A vencer</th>
@@ -278,7 +278,7 @@ $total_rec_pagamento = number_format($total_rec_pagamento, 2, ',', '.');
                                 </td>
 
                                 <td>
-                                    <table class="table-bordered" onclick="window.location.href='pagar.php?&filtro_data_inicial=<?= $data_amanha ?>&filtro_por=vencimento&opcao_filtro=abertos'">
+                                    <table class="table-bordered" onclick="window.location.href='pagar.php?&filtro_data_inicial=<?= $data_inicial ?>&filtro_data_final=<?= $data_final ?>&filtro_por=vencimento&opcao_filtro=abertos'">
                                         <thead>
                                             <tr class="tr-clientes-dash parcela_cor_azul">
                                                 <th>A vencer</th>

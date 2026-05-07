@@ -41,35 +41,42 @@ if($todas_empresas) {
     $empresa_lista = Empresa::read(id: $_SESSION['usuario']->id_empresa);
 }
 
-// Buscar totais por tipo de pagamento apenas do Contas a Receber (Rec)
 $totais_tipo_pagamento = [];
-    foreach($empresa_lista as $empresa) {
-        $recebimentos_quitados = Rec02::read(
-            id_empresa: $empresa->id,
-            filtro_data_inicial: $get_data_inicial,
-            filtro_data_final: $get_data_final,
-            filtro_por: 'pagamento',
-            filtro_opcao: 'quitados',
-            filtro_custos: $get_custos,
-            filtro_descricao: $get_descricao
-        );
-        // Processar apenas recebimentos
-        foreach($recebimentos_quitados as $rec) {
-            if(!$rec->id_pgto) continue;
-            if($get_titulo || $get_subtitulo) {
-                $obj_principal = Rec01::read($rec->id_rec01)[0];
-                $id_titulo = $obj_principal->id_con01 ?? 0;
-                $id_subtitulo = $obj_principal->id_con02 ?? 0;
-                if (($get_titulo && $id_titulo != $get_titulo) || ($get_subtitulo && $id_subtitulo != $get_subtitulo)) {
-                    continue;
-                }
+
+foreach($empresa_lista as $empresa) {
+    $recebimentos_quitados = Rec02::read(
+        id_empresa: $empresa->id,
+        filtro_data_inicial: $get_data_inicial,
+        filtro_data_final: $get_data_final,
+        filtro_por: 'pagamento',
+        filtro_opcao: 'quitados',
+        filtro_custos: $get_custos,
+        filtro_descricao: $get_descricao
+    );
+
+    foreach($recebimentos_quitados as $rec) {
+        if (!$rec->id_pgto) continue;
+
+        if ($get_titulo || $get_subtitulo) {
+            $obj_principal = Rec01::read($rec->id_rec01)[0];
+            $id_titulo    = $obj_principal->id_con01 ?? 0;
+            $id_subtitulo = $obj_principal->id_con02 ?? 0;
+
+            if (($get_titulo    && $id_titulo    != $get_titulo) ||
+                ($get_subtitulo && $id_subtitulo != $get_subtitulo)) {
+                continue;
             }
-            if (!isset($totais_tipo_pagamento[$rec->id_pgto])) {
-                $totais_tipo_pagamento[$rec->id_pgto] = ['total' => 0];
-            }
-            $totais_tipo_pagamento[$rec->id_pgto]['total'] += $rec->valor_pag;
         }
+
+        $nome_pgto = TipoPagamento::read($rec->id_pgto)[0]->nome ?? 'Indefinido';
+
+        if (!isset($totais_tipo_pagamento[$nome_pgto])) {
+            $totais_tipo_pagamento[$nome_pgto] = ['total' => 0];
+        }
+
+        $totais_tipo_pagamento[$nome_pgto]['total'] += $rec->valor_pag;
     }
+}
 
 
 
@@ -223,14 +230,12 @@ if (!empty($totais_tipo_pagamento)) {
         </thead>
         <tbody>
             <?php
-            foreach($totais_tipo_pagamento as $id_tipo_pag => $totais) {
-                $tipo_pag_obj = TipoPagamento::read($id_tipo_pag)[0];
+            foreach($totais_tipo_pagamento as $nome_tipo_pag => $totais) {
                 $total = $totais['total'];
-                
                 $total_geral += $total;
                 ?>
                 <tr>
-                    <td><?= htmlspecialchars($tipo_pag_obj->nome) ?></td>
+                    <td><?= htmlspecialchars($nome_tipo_pag) ?></td>
                     <td>
                         <div class="valor-monetario">
                             <div>R$</div>
@@ -255,8 +260,7 @@ if (!empty($totais_tipo_pagamento)) {
         </tfoot>
     </table>
     <?php
-}
-                ?>
+}?>
             </div>
             
             <?php if (!empty($totais_tipo_pagamento)) { ?>
