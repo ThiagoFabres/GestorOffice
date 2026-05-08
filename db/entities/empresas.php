@@ -245,4 +245,16 @@ class Empresa {
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         return $stmt->execute();
     }
+
+    public static function salvarChatId1(int $id_empresa, ?int $chat_id): void {
+    $pdo = (new Database())->connect();
+    $stmt = $pdo->prepare("UPDATE empresas SET celular1_atividade = ? WHERE id = ?");
+    $stmt->execute([$chat_id, $id_empresa]);
+}
+
+public static function salvarChatId2(int $id_empresa, ?int $chat_id): void {
+    $pdo = (new Database())->connect();
+    $stmt = $pdo->prepare("UPDATE empresas SET celular2_atividade = ? WHERE id = ?");
+    $stmt->execute([$chat_id, $id_empresa]);
+}
 }
