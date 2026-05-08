@@ -1,1 +1,3 @@
 db/base.php
+.env
+/vendor/

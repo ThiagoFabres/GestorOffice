@@ -5,20 +5,20 @@ require_once __DIR__ . '/../db/entities/empresas.php';
 require_once __DIR__ . '/../db/entities/cargo.php';
 require_once __DIR__ . '/../db/entities/logo.php';
 session_start();
-
-
+$env = parse_ini_file(__DIR__ . '/../.env');
     
 if(!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 2) {
     header('Location: /');
     exit();
 }
-$empresa_usuario_obj = Empresa::read($_SESSION['usuario']->id_empresa)[0];
+$id_empresa = $_SESSION['usuario']->id_empresa;
+$empresa_usuario_obj = Empresa::read($id_empresa)[0];
 $nomeEmpresa = $empresa_usuario_obj->nom_fant;
 require_once __DIR__ . '/gestor.php';
 $erro = filter_input(INPUT_GET, 'erro');
 $logo_image = null;
 $logo_blob = null;
-    $logos = Logo::read(null, $_SESSION['usuario']->id_empresa);
+    $logos = Logo::read(null, $id_empresa);
     if ($logos && isset($logos[0]->foto) && !empty($logos[0]->foto)) {
         $logo_blob = $logos[0]->foto;
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
@@ -29,7 +29,9 @@ $logo_blob = null;
         }
         $logo_image = 'data:' . $mime_type . ';base64,' . base64_encode($logo_blob);
     }
-
+$bot_username = $env['TELEGRAM_BOT_USERNAME'];
+$link_vinculo_1 = "https://web.telegram.org/#/im?tgaddr=tg%3A%2F%2Fresolve%3Fdomain%3D{$bot_username}%26start%3D{$id_empresa}_1"; 
+$link_vinculo_2 = "https://web.telegram.org/#/im?tgaddr=tg%3A%2F%2Fresolve%3Fdomain%3D{$bot_username}%26start%3D{$id_empresa}_2";
 ?>
 <!DOCTYPE html>
 <head>
@@ -61,12 +63,42 @@ $logo_blob = null;
             <img width="220px" height="220px" src="/gestor-office.png" alt="Logo" class="logo">
             <?php endif; ?>
         </div>
-    <div id="itens-menu">
+    <div id="itens-menu" style="height: 100%;">
 
         <div class="menu-item">
             <a href="/gestor/"> <div ><i class="bi bi-person"></i></div> Adicionar Usuario</a>
         </div>
-        
+            <!-- quero que isso fique embaixo -->
+        <div class="d-flex flex-column" style="margin-top: auto;">
+            <div class="menu-item">
+                <div class="d-flex flex-column">
+                    <?php if($empresa_usuario_obj->celular1_atividade === null) { ?>
+                        <label style="color: red; white-space: wrap;">
+                            Telegram 1 Não Vinculado
+                        </label>
+                    
+                        <a href="<?= $link_vinculo_1 ?>" target="_blank" style="padding: 0;"> <div><i></i></div> Vincular Telegram (1)</a>
+                    <?php } else {?>
+                        <a href="<?= $link_vinculo_1 ?>" target="_blank" style="padding: 0;"> <div><i></i></div> Revincular Telegram (1)</a>
+                    <?php } ?>
+                    
+                </div>
+            </div>
+            <div class="menu-item" style="margin-top: 2em; margin-bottom: 1em;">
+                <div class="d-flex flex-column">
+                    <?php if($empresa_usuario_obj->celular2_atividade === null) { ?>
+                        <label style="color: red; white-space: wrap;">
+                            Telegram 2 Não Vinculado
+                        </label>
+                    
+                        <a href="<?= $link_vinculo_2 ?>" target="_blank" style="padding: 0;"> <div><i></i></div> Vincular Telegram (2)</a>
+                    <?php } else {?>
+                        <a href="<?= $link_vinculo_2 ?>" target="_blank" style="padding: 0;"> <div><i></i></div> Revincular Telegram (2)</a>
+                    <?php } ?>
+                    
+                </div>
+            </div>
+        </div>
 
         </div>
 
@@ -163,7 +195,7 @@ $logo_blob = null;
             $cadastros_reg = Usuario::read(
             id:null,
             email:null,
-            idempresa:$_SESSION['usuario']->id_empresa,
+            idempresa:$id_empresa,
             nome:$get_nome,
             filtro_data_inicial:$get_data_inicial,
             filtro_data_final:$get_data_final
@@ -213,7 +245,7 @@ $logo_blob = null;
     
     <?php 
     
-    $usuario = Usuario::read($get_id, idempresa: $_SESSION['usuario']->id_empresa)[0];
+    $usuario = Usuario::read($get_id, idempresa: $id_empresa)[0];
     
      ?>
     
