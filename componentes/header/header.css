@@ -16,7 +16,7 @@
 
 }
 #header div {
-    width: calc(100%/3);
+    width: auto;
     
 }
 
@@ -29,7 +29,8 @@
 #titulo-header {
     display: flex;
     align-items: center;     
-    height: auto;           
+    height: auto;
+    width: fit-content;
 }
 
 #titulo-header a {
@@ -44,11 +45,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden; 
 }
 
 #nome-empresa h1 {
-    text-align: center;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    font-size: clamp(0.7rem, 2vw, 1.5rem); /* mín, ideal, máx */
 }
 #conta-header {
     display: flex;

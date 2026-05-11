@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/db/entities/empresas.php';
+require_once __DIR__ . '/../../../db/entities/empresas.php';
 
 // Recebe o JSON do Telegram
 $update = json_decode(file_get_contents('php://input'), true);

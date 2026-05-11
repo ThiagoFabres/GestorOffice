@@ -10,8 +10,6 @@ require_once __DIR__ . '/../../../db/entities/pagamento.php';
 require_once __DIR__ . '/../../../db/entities/ativ01.php';
 session_start();
 
-
-
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     header('Location: /');
     exit;
@@ -28,7 +26,10 @@ $lateral_target = 'operacional_atividade';
 $lateral_operacional = true;
 $tipo_pagamento_lista = TipoPagamento::read(idempresa: $_SESSION['usuario']->id_empresa);
 $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)[0] ?? null;
+$atividades = Ativ01::read(id_empresa: $_SESSION['usuario']->id_empresa);
+$ultimo_registro = !empty($atividades) ? $atividades[0] : null;
 
+$proximo_tipo = (!$ultimo_registro || $ultimo_registro->tipo === 'fechamento') ? 'inicio' : 'fechamento';
 ?>
 <!DOCTYPE html>
 
@@ -77,11 +78,14 @@ $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)[0] ?? nul
             <div class="card-body">
                 <form action="atividade_manager.php" method="post">
                     <input type="hidden" name="localizacao" id="input-localizacao" value="">
+                    <input type="hidden" name="tipo" value="<?= $proximo_tipo ?>">
                     <div class="mb-3">
                         <label for="nome" class="form-label">Nome</label>
                         <input type="text" class="form-control" id="nome" name="nome" placeholder="Nome" required>
                     </div>
-                    <button type="submit" class="btn btn-primary">Registrar Inicio De Atividade</button>
+                    <button type="submit" class="btn <?= $proximo_tipo === 'inicio' ? 'btn-primary' : 'btn-danger' ?>">
+                        <?= $proximo_tipo === 'inicio' ? 'Registrar Início de Atividade' : 'Registrar Fim de Atividade' ?>
+                    </button>
                 </form>
 
                 <div class="d-flex">
@@ -96,7 +100,6 @@ $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)[0] ?? nul
                         </thead>
                         <tbody>
                             <?php 
-                            $atividades = Ativ01::read(id_empresa: $_SESSION['usuario']->id_empresa);
                             $empresa = Empresa::read(id: $_SESSION['usuario']->id_empresa)[0] ?? null;
                             $hora_inicio = $empresa && $empresa->ativ_inicio ? date('H:i:s', strtotime($empresa->ativ_inicio)) : null;
                             $tolerancia = $empresa && $empresa->tolerancia ? date('H:i:s', strtotime($empresa->tolerancia)) : '00:00:00';
@@ -109,8 +112,11 @@ $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)[0] ?? nul
                                 $hora_limite = date('H:i:s', $timestamp_inicio + $timestamp_tolerancia);
                             }
 
-                            foreach($atividades as $atividade):
-                                if ($hora_inicio && $hora_limite) {
+                           foreach($atividades as $atividade):
+                                // Fechamentos não recebem cor de horário
+                                if ($atividade->tipo === 'fechamento') {
+                                    $cor_atividade = ''; // sem cor
+                                } elseif ($hora_inicio && $hora_limite) {
                                     $hora_atividade = strtotime($atividade->hora);
                                     $hora_inicio_ts = strtotime($hora_inicio);
                                     $hora_limite_ts = strtotime($hora_limite);
@@ -126,12 +132,16 @@ $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)[0] ?? nul
                                     $cor_atividade = 'parcela_cor_azul';
                                 }
                             ?>
-                            
                                 <tr class="<?= $cor_atividade ?>">
-                                    <td><?php echo date('d/m/Y', strtotime($atividade->data)); ?></td>
-                                    <td><?php echo date('H:i:s', strtotime($atividade->hora)); ?></td>
-                                    <td><?php echo htmlspecialchars($atividade->nome); ?></td>
-                                    <td><?php echo htmlspecialchars($atividade->localizacao); ?></td>
+                                    <td><?= date('d/m/Y', strtotime($atividade->data)) ?></td>
+                                    <td><?= date('H:i:s', strtotime($atividade->hora)) ?></td>
+                                    <td><?= htmlspecialchars($atividade->nome) ?></td>
+                                    <td><?= htmlspecialchars($atividade->localizacao) ?></td>
+                                    <td>
+                                        <span class="badge <?= $atividade->tipo === 'inicio' ? 'bg-success' : 'bg-secondary' ?>">
+                                            <?= $atividade->tipo === 'inicio' ? 'Início' : 'Fechamento' ?>
+                                        </span>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>

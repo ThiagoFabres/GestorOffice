@@ -12,13 +12,13 @@ if($_SESSION['usuario']->status == 0 && $_SESSION['usuario']->cargo == 3) {
 <link rel="stylesheet" href="/usuario/style/responsivo.css"> 
 
 <div id="header">
-       <div id="titulo-header">
+       <div id="titulo-header" >
             <button class="btn mb-0" onclick="encolher()">
                 <span class="btn bi bi-list mb-0"></span>
             </button>
         </div>
 
-        <div id="nome-empresa">
+        <div id="nome-empresa" class="w-100">
             <?php if(isset($todas_empresas) && $todas_empresas) {?>
             <h1>TODAS AS EMPRESAS</h1>
             <?php } else {?>
