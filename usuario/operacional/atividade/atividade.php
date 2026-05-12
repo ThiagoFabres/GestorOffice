@@ -84,7 +84,7 @@ $proximo_tipo = (!$ultimo_registro || $ultimo_registro->tipo === 'fechamento') ?
                         <input type="text" class="form-control" id="nome" name="nome" placeholder="Nome" required>
                     </div>
                     <button type="submit" class="btn <?= $proximo_tipo === 'inicio' ? 'btn-primary' : 'btn-danger' ?>">
-                        <?= $proximo_tipo === 'inicio' ? 'Registrar Início de Atividade' : 'Registrar Fim de Atividade' ?>
+                        <?= $proximo_tipo === 'inicio' ? 'Registrar Início de Atividade' : 'Registrar Término de Atividade' ?>
                     </button>
                 </form>
 
@@ -139,7 +139,7 @@ $proximo_tipo = (!$ultimo_registro || $ultimo_registro->tipo === 'fechamento') ?
                                     <td><?= htmlspecialchars($atividade->localizacao) ?></td>
                                     <td>
                                         <span class="badge <?= $atividade->tipo === 'inicio' ? 'bg-success' : 'bg-secondary' ?>">
-                                            <?= $atividade->tipo === 'inicio' ? 'Início' : 'Fechamento' ?>
+                                            <?= $atividade->tipo === 'inicio' ? 'Início' : 'Término' ?>
                                         </span>
                                     </td>
                                 </tr>

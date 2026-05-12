@@ -175,7 +175,7 @@ $logo_blob = null;
                         <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
                         <?php if($empresa_usuario_obj->permissao_inicio){ ?>      
                             <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'operacional_atividade') { ?> menu-li-atual <?php } ?>"><a href="/usuario/operacional/atividade/atividade.php" class="link-light text-decoration-none">
-                                <i class="bi bi-clock"></i>Inicio de atividade</a></li>
+                                <i class="bi bi-clock"></i>Início/Término</a></li>
                         <?php } ?>
                             <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'fechamento_caixa') { ?> menu-li-atual <?php } ?>"><a href="/usuario/operacional/fechamento/fechamento.php" class="link-light text-decoration-none">
                                 <i class="bi bi-cart3"></i>Fechamento de Caixa</a></li>
