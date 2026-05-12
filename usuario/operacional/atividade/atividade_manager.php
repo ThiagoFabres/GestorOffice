@@ -19,7 +19,7 @@ $env = parse_ini_file(__DIR__ . '/../../../.env');
 
 $data_atual = date('Y-m-d');
 $hora_atual = date('H:i:s');
-function enviarNotificacaoTelegram($id_empresa, $nome, $localizacao, $data, $hora, $empresa_usuario_obj, $env) {
+function enviarNotificacaoTelegram($id_empresa, $nome, $localizacao, $data, $hora, $empresa_usuario_obj, $env, $tipo_atividade) {
     // Suas credenciais do Telegram Bot
     $TELEGRAM_TOKEN = $env['TELEGRAM_TOKEN'];
     $CHAT_ID_LISTA = [0 => $empresa_usuario_obj->celular1_atividade, 1 => $empresa_usuario_obj->celular2_atividade]; // ID do chat (usuário, grupo ou canal)
@@ -27,7 +27,7 @@ function enviarNotificacaoTelegram($id_empresa, $nome, $localizacao, $data, $hor
         if($CHAT_ID === null || $CHAT_ID === '') {
             continue; // Pula se o chat_id não estiver configurado
         }
-        $mensagem = "*Início de Atividade Registrado*\n\n";
+        $mensagem = "*{$tipo_atividade} de Atividade Registrado*\n\n";
         $mensagem .= "*Nome:* " . htmlspecialchars($nome) . "\n";
         $mensagem .= "*Localização:* " . htmlspecialchars($localizacao) . "\n";
         $mensagem .= "*Data:* " . date('d/m/Y', strtotime($data)) . "\n";
@@ -87,7 +87,8 @@ enviarNotificacaoTelegram(
     $data_atual,
     $hora_atual,
     $empresa_usuario_obj,
-    $env
+    $env,
+    $_POST['tipo'] == 'inicio' ? 'Início' : 'Término'
 );
 
 header('Location: atividade.php?status=sucesso');
