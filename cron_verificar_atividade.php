@@ -1,15 +1,11 @@
 <?php
 require_once __DIR__ . '/db/entities/empresas.php';
 require_once __DIR__ . '/db/entities/ativ01.php';
+session_start();
 
-if (php_sapi_name() !== 'cli') {
-    $token_esperado = 'uma_senha_secreta_aqui';
-    $token_recebido = $_GET['token'] ?? '';
-    
-    if ($token_recebido !== $token_esperado) {
-        http_response_code(403);
-        exit('Acesso negado');
-    }
+if(!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
+    header('Location: /');
+    exit;
 }
 
 $env   = parse_ini_file(__DIR__ . '/.env');
