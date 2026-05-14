@@ -23,6 +23,8 @@ foreach ($empresas as $empresa) {
     if (empty($empresa->hora_inicio) || empty($empresa->tolerancia)) {
         file_put_contents(__DIR__ . '/cron_log.txt', 'continue(1)' . "\n", FILE_APPEND);
         continue;
+    } else {
+        file_put_contents(__DIR__ . '/cron_log.txt', 'passou continue(1)' . "\n", FILE_APPEND);
     }
 
     // Calcula o horário limite (inicio + tolerância em minutos)
