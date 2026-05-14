@@ -1,12 +1,6 @@
 <?php
 require_once __DIR__ . '/db/entities/empresas.php';
 require_once __DIR__ . '/db/entities/ativ01.php';
-session_start();
-
-if(!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
-    header('Location: /');
-    exit;
-}
 
 $env   = parse_ini_file(__DIR__ . '/.env');
 $token = $env['TELEGRAM_TOKEN'];
