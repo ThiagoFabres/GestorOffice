@@ -19,8 +19,11 @@ $hora_atual = date('H:i:s');
 $empresas = Empresa::read(); // ajuste conforme seu método
 
 foreach ($empresas as $empresa) {
+    if($empresa->tolerancia == null) {
+        $empresa->tolerancia = 0; 
+    }
     // Pula se não tem horário configurado
-    if (empty($empresa->hora_inicio) || empty($empresa->tolerancia)) {
+    if ($empresa->hora_inicio == null) {
         file_put_contents(__DIR__ . '/cron_log.txt', 'continue(1)' . "\n", FILE_APPEND);
         continue;
     } else {
