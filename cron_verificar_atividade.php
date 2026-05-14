@@ -2,10 +2,10 @@
 require_once __DIR__ . '/db/entities/empresas.php';
 require_once __DIR__ . '/db/entities/ativ01.php';
 
+file_put_contents(__DIR__ . '/cron_log.txt', date('Y-m-d H:i:s') . "\n", FILE_APPEND);
+
 $env   = parse_ini_file(__DIR__ . '/.env');
 $token = $env['TELEGRAM_TOKEN'];
-
-$env = parse_ini_file(__DIR__ . '/.env');
 
 if (!$env || empty($env['TELEGRAM_TOKEN'])) {
     die('TELEGRAM_TOKEN não configurado.');
