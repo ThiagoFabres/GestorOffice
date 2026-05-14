@@ -21,6 +21,7 @@ $empresas = Empresa::read(); // ajuste conforme seu método
 foreach ($empresas as $empresa) {
     // Pula se não tem horário configurado
     if (empty($empresa->hora_inicio) || empty($empresa->tolerancia)) {
+        file_put_contents(__DIR__ . '/cron_log.txt', 'continue(1)' . "\n", FILE_APPEND);
         continue;
     }
 
@@ -29,6 +30,7 @@ foreach ($empresas as $empresa) {
     $hora_limite_timestamp = $hora_inicio_normalizada + ($empresa->tolerancia * 60);
 
     if (time() < $hora_limite_timestamp) {
+        file_put_contents(__DIR__ . '/cron_log.txt', 'continue(2)' . "\n", FILE_APPEND);
         continue;
     }
 
@@ -37,11 +39,13 @@ foreach ($empresas as $empresa) {
     // Verifica se já registrou atividade hoje
     $atividade = Ativ01::read(id_empresa: $empresa->id, data: $data_atual);
     if ($atividade) {
+        file_put_contents(__DIR__ . '/cron_log.txt', 'continue(3)' . "\n", FILE_APPEND);
         continue; // já registrou, ignora
     }
 
     // Verifica se já enviou notificação hoje (para não ficar reenviando)
     if ($empresa->notificacao_atraso_data === $data_atual) {
+        file_put_contents(__DIR__ . '/cron_log.txt', 'continue(4)' . "\n", FILE_APPEND);
         continue;
     }
 
@@ -57,6 +61,7 @@ foreach ($empresas as $empresa) {
 }
 
 function enviarAlerta($token, $chat_id, $nome_empresa, $hora_inicio, $hora_limite) {
+    file_put_contents(__DIR__ . '/cron_log.txt', 'enviarAlerta' . "\n", FILE_APPEND);
     $mensagem  = "*Atividade não registrada!*\n\n";
     $mensagem .= "*Empresa:* {$nome_empresa}\n";
     $mensagem .= "*Deveria iniciar às:* " . date('H:i', strtotime($hora_inicio)) . "\n";
@@ -78,6 +83,9 @@ function enviarAlerta($token, $chat_id, $nome_empresa, $hora_inicio, $hora_limit
         error_log('Erro Telegram: ' . curl_error($ch));
     }
     curl_close($ch);
-    
+    file_put_contents(__DIR__ . '/cron_log.txt', 'enviarAlerta - Resposta: ' . $resposta . "\n", FILE_APPEND);
     return json_decode($resposta, true);
+    if (isset($resposta['ok']) && !$resposta['ok']) {
+        error_log('Erro Telegram: ' . $resposta['description']);
+    }
 }
