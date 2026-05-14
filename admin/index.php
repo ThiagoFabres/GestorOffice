@@ -435,19 +435,19 @@ $lista_cidades = [];
     <div class="d-flex flex-row mb-3">
                             <div class="d-flex flex-column" style="width: calc(100%/3);">
                                 <label for="ativ_inicio">Inicio de Atividade:</label>
-                                <input type="time" onchange="checar()" name="ativ_inicio" class="form-control rounded-0" placeholder="Inicio de Atividade" value="<?= $empresa->ativ_inicio ?? '' ?>" required style="height: 2.75em;">
+                                <input type="time" onchange="checar()" name="ativ_inicio" class="form-control rounded-0" placeholder="Inicio de Atividade" value="<?= $empresa->ativ_inicio ?? '' ?>" style="height: 2.75em;">
                             </div>
                             <div class="d-flex flex-column" style="width: calc(100%/3);">
                                 <label for="tolerancia">Tolerância (Minutos)</label>
-                                <input type="number" onchange="checar()" name="tolerancia" class="form-control rounded-0" placeholder="Tolerância" value="<?= $empresa->tolerancia ?? '' ?>" required>
+                                <input type="number" onchange="checar()" name="tolerancia" class="form-control rounded-0" placeholder="Tolerância" value="<?= $empresa->tolerancia ?? '' ?>">
                             </div>
                             <div class="d-flex flex-column" style="width: calc(100%/3);">
                                 <label for="cel1">Celular 1 (Atividade)</label>
-                                <input type="text" onchange="checar()" name="cel1" class="form-control rounded-0" placeholder="Celular 1" value="<?= $empresa->celular1_atividade ?? '' ?>" required>
+                                <input type="text" onchange="checar()" name="cel1" class="form-control rounded-0" placeholder="Celular 1" value="<?= $empresa->celular1_atividade ?? '' ?>">
                             </div>
                             <div class="d-flex flex-column" style="width: calc(100%/3);">
                                 <label for="cel2">Celular 2 (Atividade)</label>
-                                <input type="text" onchange="checar()" name="cel2" class="form-control rounded-0" placeholder="Celular 2" value="<?= $empresa->celular2_atividade ?? '' ?>" required>
+                                <input type="text" onchange="checar()" name="cel2" class="form-control rounded-0" placeholder="Celular 2" value="<?= $empresa->celular2_atividade ?? '' ?>">
                             </div>
                             
                         </div>
