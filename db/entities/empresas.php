@@ -30,13 +30,33 @@ class Empresa {
     public $celular1_atividade;
     public $celular2_atividade;
     public $parceiro;
+    public $notificacao_atraso_data;
 
-    public function __construct($id = null, $razao_soc = '', $nom_fant = '', $rua = '', $bairro = '', $cidade = '', $estado = '', $cpf = '',$cnpj = '', $email = '', $celular = '', $fixo = '',  $status = 1, $data_r = '', $cep = '', $cnpj_principal = '', $permissao_cartao = 1, $permissao_seguranca = 0, $permissao_financeiro = 1, $permissao_bancario = 1, $permissao_operacional = 0, $permissao_inicio = 0,
-     $ativ_inicio = null,
-     $tolerancia = null,
-     $celular1_atividade = null,
-     $celular2_atividade = null,
-     $parceiro = null
+    public function __construct(
+        $id = null, $razao_soc = '', 
+        $nom_fant = '', $rua = '', 
+        $bairro = '', $cidade = '', 
+        $estado = '', $cpf = '', 
+        $cnpj = '', 
+        $email = '', 
+        $celular = '', 
+        $fixo = '',  
+        $status = 1, 
+        $data_r = '', 
+        $cep = '', 
+        $cnpj_principal = '', 
+        $permissao_cartao = 1, 
+        $permissao_seguranca = 0, 
+        $permissao_financeiro = 1, 
+        $permissao_bancario = 1, 
+        $permissao_operacional = 0, 
+        $permissao_inicio = 0,
+        $ativ_inicio = null,
+        $tolerancia = null,
+        $celular1_atividade = null,
+        $celular2_atividade = null,
+        $parceiro = null,
+        $notificacao_atraso_data = null
      ) {
         $this->id = $id;
         $this->razao_soc = $razao_soc;
@@ -65,6 +85,7 @@ class Empresa {
         $this->celular1_atividade = $celular1_atividade;
         $this->celular2_atividade = $celular2_atividade;
         $this->parceiro = $parceiro;
+        $this->notificacao_atraso_data = $notificacao_atraso_data;
     }
 
     public static function create($empresa) {
@@ -256,5 +277,10 @@ public static function salvarChatId2(int $id_empresa, ?int $chat_id): void {
     $pdo = (new Database())->connect();
     $stmt = $pdo->prepare("UPDATE empresas SET celular2_atividade = ? WHERE id = ?");
     $stmt->execute([$chat_id, $id_empresa]);
+}
+public static function registrarNotificacaoAtraso(int $id, string $data): void {
+    $pdo = (new Database())->connect();
+    $stmt = $pdo->prepare("UPDATE empresas SET notificacao_atraso_data = ? WHERE id = ?");
+    $stmt->execute([$data, $id]);
 }
 }
