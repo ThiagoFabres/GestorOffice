@@ -5,6 +5,12 @@ require_once __DIR__ . '/db/entities/ativ01.php';
 $env   = parse_ini_file(__DIR__ . '/.env');
 $token = $env['TELEGRAM_TOKEN'];
 
+$env = parse_ini_file(__DIR__ . '/.env');
+
+if (!$env || empty($env['TELEGRAM_TOKEN'])) {
+    die('TELEGRAM_TOKEN não configurado.');
+}
+
 date_default_timezone_set('America/Sao_Paulo');
 $data_atual = date('Y-m-d');
 $hora_atual = date('H:i:s');
@@ -19,13 +25,14 @@ foreach ($empresas as $empresa) {
     }
 
     // Calcula o horário limite (inicio + tolerância em minutos)
-    $hora_inicio_normalizada = date('H:i:s', strtotime($empresa->hora_inicio));
-    $hora_limite = date('H:i:s', strtotime($hora_inicio_normalizada) + ($empresa->tolerancia * 60));
+    $hora_inicio_normalizada = strtotime($empresa->hora_inicio);
+    $hora_limite_timestamp = $hora_inicio_normalizada + ($empresa->tolerancia * 60);
 
-    // Só verifica se já passou do horário limite
-    if ($hora_atual < $hora_limite) {
+    if (time() < $hora_limite_timestamp) {
         continue;
     }
+
+    $hora_limite = date('H:i:s', $hora_limite_timestamp);
 
     // Verifica se já registrou atividade hoje
     $atividade = Ativ01::read(id_empresa: $empresa->id, data: $data_atual);
@@ -64,7 +71,13 @@ function enviarAlerta($token, $chat_id, $nome_empresa, $hora_inicio, $hora_limit
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    curl_exec($ch);
+    
+    $resposta = curl_exec($ch);
+
+    if (curl_errno($ch)) {
+        error_log('Erro Telegram: ' . curl_error($ch));
+    }
     curl_close($ch);
+    
+    return json_decode($resposta, true);
 }
