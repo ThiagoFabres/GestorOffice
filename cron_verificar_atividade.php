@@ -49,7 +49,7 @@ foreach ($empresas as $empresa) {
         continue;
     }
 
-
+    file_put_contents(__DIR__ . '/cron_log.txt', 'passou os continues' . "\n", FILE_APPEND);
     // Envia notificação para cada Telegram vinculado
     $chats = array_filter([$empresa->celular1_atividade, $empresa->celular2_atividade]);
     foreach ($chats as $chat_id) {
