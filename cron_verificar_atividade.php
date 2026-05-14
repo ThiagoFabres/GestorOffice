@@ -23,7 +23,7 @@ foreach ($empresas as $empresa) {
         $empresa->tolerancia = 0; 
     }
     // Pula se não tem horário configurado
-    if ($empresa->hora_inicio == null) {
+    if ($empresa->ativ_inicio == null) {
         file_put_contents(__DIR__ . '/cron_log.txt', 'continue(1)' . "\n", FILE_APPEND);
         continue;
     } else {
@@ -31,8 +31,8 @@ foreach ($empresas as $empresa) {
     }
 
     // Calcula o horário limite (inicio + tolerância em minutos)
-    $hora_inicio_normalizada = strtotime($empresa->hora_inicio);
-    $hora_limite_timestamp = $hora_inicio_normalizada + ($empresa->tolerancia * 60);
+    $ativ_inicio_normalizada = strtotime($empresa->ativ_inicio);
+    $hora_limite_timestamp = $ativ_inicio_normalizada + ($empresa->tolerancia * 60);
 
     if (time() < $hora_limite_timestamp) {
         file_put_contents(__DIR__ . '/cron_log.txt', 'continue(2)' . "\n", FILE_APPEND);
@@ -58,18 +58,18 @@ foreach ($empresas as $empresa) {
     // Envia notificação para cada Telegram vinculado
     $chats = array_filter([$empresa->celular1_atividade, $empresa->celular2_atividade]);
     foreach ($chats as $chat_id) {
-        enviarAlerta($token, $chat_id, $empresa->nom_fant, $empresa->hora_inicio, $hora_limite);
+        enviarAlerta($token, $chat_id, $empresa->nom_fant, $empresa->ativ_inicio, $hora_limite);
     }
 
     // Registra que já notificou hoje
     Empresa::registrarNotificacaoAtraso($empresa->id, $data_atual);
 }
 
-function enviarAlerta($token, $chat_id, $nome_empresa, $hora_inicio, $hora_limite) {
+function enviarAlerta($token, $chat_id, $nome_empresa, $ativ_inicio, $hora_limite) {
     file_put_contents(__DIR__ . '/cron_log.txt', 'enviarAlerta' . "\n", FILE_APPEND);
     $mensagem  = "*Atividade não registrada!*\n\n";
     $mensagem .= "*Empresa:* {$nome_empresa}\n";
-    $mensagem .= "*Deveria iniciar às:* " . date('H:i', strtotime($hora_inicio)) . "\n";
+    $mensagem .= "*Deveria iniciar às:* " . date('H:i', strtotime($ativ_inicio)) . "\n";
     $mensagem .= "*Tolerância até:* " . date('H:i', strtotime($hora_limite)) . "\n";
     $mensagem .= "*Data:* " . date('d/m/Y') . "\n";
 
