@@ -5,6 +5,13 @@ require_once __DIR__ . '/db/entities/ativ01.php';
 $env   = parse_ini_file(__DIR__ . '/.env');
 $token = $env['TELEGRAM_TOKEN'];
 
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+ini_set('error_log', __DIR__ . '/cron_error.log');
+
+// Adicione também logs manuais para acompanhar o fluxo
+file_put_contents(__DIR__ . '/cron_error.log', "=== Cron rodou: " . date('d/m/Y H:i:s') . " ===\n", FILE_APPEND);
+
 date_default_timezone_set('America/Sao_Paulo');
 $data_atual = date('Y-m-d');
 $hora_atual = date('H:i:s');
@@ -19,7 +26,8 @@ foreach ($empresas as $empresa) {
     }
 
     // Calcula o horário limite (inicio + tolerância em minutos)
-    $hora_limite = date('H:i:s', strtotime($empresa->hora_inicio) + ($empresa->tolerancia * 60));
+    $hora_inicio_normalizada = date('H:i:s', strtotime($empresa->hora_inicio));
+    $hora_limite = date('H:i:s', strtotime($hora_inicio_normalizada) + ($empresa->tolerancia * 60));
 
     // Só verifica se já passou do horário limite
     if ($hora_atual < $hora_limite) {
