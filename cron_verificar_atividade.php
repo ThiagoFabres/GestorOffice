@@ -2,17 +2,8 @@
 require_once __DIR__ . '/db/entities/empresas.php';
 require_once __DIR__ . '/db/entities/ativ01.php';
 
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-ini_set('error_log', __DIR__ . '/cron_error.log');
-
 $env   = parse_ini_file(__DIR__ . '/.env');
 $token = $env['TELEGRAM_TOKEN'];
-
-
-
-// Adicione também logs manuais para acompanhar o fluxo
-file_put_contents(__DIR__ . '/cron_error.log', "=== Cron rodou: " . date('d/m/Y H:i:s') . " ===\n", FILE_APPEND);
 
 date_default_timezone_set('America/Sao_Paulo');
 $data_atual = date('Y-m-d');
