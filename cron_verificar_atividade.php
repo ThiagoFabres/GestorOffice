@@ -2,7 +2,6 @@
 require_once __DIR__ . '/db/entities/empresas.php';
 require_once __DIR__ . '/db/entities/ativ01.php';
 
-file_put_contents(__DIR__ . '/cron_log.txt', date('Y-m-d H:i:s') . "\n", FILE_APPEND);
 
 $env   = parse_ini_file(__DIR__ . '/.env');
 $token = $env['TELEGRAM_TOKEN'];
@@ -24,10 +23,7 @@ foreach ($empresas as $empresa) {
     }
     // Pula se não tem horário configurado
     if ($empresa->ativ_inicio == null) {
-        file_put_contents(__DIR__ . '/cron_log.txt', 'continue(1)' . "\n", FILE_APPEND);
         continue;
-    } else {
-        file_put_contents(__DIR__ . '/cron_log.txt', 'passou continue(1)' . "\n", FILE_APPEND);
     }
 
     // Calcula o horário limite (inicio + tolerância em minutos)
@@ -35,7 +31,6 @@ foreach ($empresas as $empresa) {
     $hora_limite_timestamp = $ativ_inicio_normalizada + ($empresa->tolerancia * 60);
 
     if (time() < $hora_limite_timestamp) {
-        file_put_contents(__DIR__ . '/cron_log.txt', 'continue(2)' . "\n", FILE_APPEND);
         continue;
     }
 
@@ -44,17 +39,13 @@ foreach ($empresas as $empresa) {
     // Verifica se já registrou atividade hoje
     $atividade = Ativ01::read(id_empresa: $empresa->id, data: $data_atual);
     if ($atividade) {
-        file_put_contents(__DIR__ . '/cron_log.txt', 'continue(3)' . "\n", FILE_APPEND);
         continue; // já registrou, ignora
     }
 
     // Verifica se já enviou notificação hoje (para não ficar reenviando)
     if ($empresa->notificacao_atraso_data === $data_atual) {
-        file_put_contents(__DIR__ . '/cron_log.txt', 'continue(4)' . "\n", FILE_APPEND);
         continue;
     }
-
-    file_put_contents(__DIR__ . '/cron_log.txt', 'passou os continues' . "\n", FILE_APPEND);
     // Envia notificação para cada Telegram vinculado
     $chats = array_filter([$empresa->celular1_atividade, $empresa->celular2_atividade]);
     foreach ($chats as $chat_id) {
@@ -66,7 +57,6 @@ foreach ($empresas as $empresa) {
 }
 
 function enviarAlerta($token, $chat_id, $nome_empresa, $ativ_inicio, $hora_limite) {
-    file_put_contents(__DIR__ . '/cron_log.txt', 'enviarAlerta' . "\n", FILE_APPEND);
     $mensagem  = "*Atividade não registrada!*\n\n";
     $mensagem .= "*Empresa:* {$nome_empresa}\n";
     $mensagem .= "*Deveria iniciar às:* " . date('H:i', strtotime($ativ_inicio)) . "\n";
@@ -88,9 +78,5 @@ function enviarAlerta($token, $chat_id, $nome_empresa, $ativ_inicio, $hora_limit
         error_log('Erro Telegram: ' . curl_error($ch));
     }
     curl_close($ch);
-    file_put_contents(__DIR__ . '/cron_log.txt', 'enviarAlerta - Resposta: ' . $resposta . "\n", FILE_APPEND);
     return json_decode($resposta, true);
-    if (isset($resposta['ok']) && !$resposta['ok']) {
-        error_log('Erro Telegram: ' . $resposta['description']);
-    }
 }
