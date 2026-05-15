@@ -28,6 +28,7 @@ function enviarNotificacaoTelegram($id_empresa, $nome, $localizacao, $data, $hor
             continue; // Pula se o chat_id não estiver configurado
         }
         $mensagem = "*{$tipo_atividade} de Atividade Registrado*\n\n";
+        $mensagem .= "*Empresa:* " . htmlspecialchars($empresa_usuario_obj->nom_fant) . "\n";
         $mensagem .= "*Nome:* " . htmlspecialchars($nome) . "\n";
         $mensagem .= "*Localização:* " . htmlspecialchars($localizacao) . "\n";
         $mensagem .= "*Data:* " . date('d/m/Y', strtotime($data)) . "\n";
