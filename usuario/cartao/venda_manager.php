@@ -117,14 +117,7 @@ function parse_excel($numero_arquivo = null) {
         }
         
     }
-
     
-    $vendas_invalidas = [];
-
-    //criar uma lista com as vendas que possuem parcelas ou bandeiras que não foram cadastradas
-    
-    
-
     $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file['tmp_name']);
     $worksheet = $spreadsheet->getActiveSheet();
     $transactions = [];
@@ -220,6 +213,7 @@ function parse_excel($numero_arquivo = null) {
     ){
         break;
     }
+       
         if(isset($operadora_sup['suporte_pix']) && $operadora_sup['suporte_pix'] == true) {
             
             $cells[2] = 'pix';
@@ -380,8 +374,9 @@ function parse_excel($numero_arquivo = null) {
             continue;
         }
    
-        if(str_starts_with(strtolower($cells[2]), 'pix')) {
+        if(str_starts_with(strtolower($cells[2]), 'pix') || str_starts_with(strtolower($cells[1]), 'pix')) {
             $cells[2] = 'pix';
+            $cells[1] = 'pix';
         }
         if(str_starts_with($tipo_preg, 'debit')) {
             $cells[2] = 'debito';
@@ -397,7 +392,10 @@ function parse_excel($numero_arquivo = null) {
             $cells[3] = 1;
         }
         $cells[2] = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $cells[2])));
-        $tipo_preg = $cells[2];        
+        $tipo_preg = $cells[2];
+        
+        // Recalcular $bandeira_preg após possíveis alterações em $cells[1]
+        $bandeira_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $cells[1])));
         
         if(!empty($bandeiras_obj)){
             foreach($bandeiras_obj as $obj) {
@@ -639,6 +637,13 @@ function parse_csv(string $caminhoCsv): array {
             $tipo = 'credito';
         }
 
+        // Definir bandeira como 'pix' antes de procurar nos bandeiras_obj
+        $bandeira = mb_convert_encoding($linha[$mapa[$operadora_sup['colunas']['bandeira']]], 'UTF-8', $operadora_sup['encoding']);
+        if($tipo == 'pix' || str_starts_with($tipo_preg, 'pix')) {
+            $bandeira = 'pix';
+            $bandeira_preg = 'pix';
+        }
+
         foreach($bandeiras_obj as $obj) {
             $obj_nome_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $obj->descricao)));
             $obj_tipo_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $obj->tipo)));
@@ -647,11 +652,6 @@ function parse_csv(string $caminhoCsv): array {
             }
         }
         $tipo = mb_convert_encoding($tipo, 'UTF-8', $operadora_sup['encoding']);
-        $bandeira = mb_convert_encoding($linha[$mapa[$operadora_sup['colunas']['bandeira']]], 'UTF-8', $operadora_sup['encoding']);
-
-        if($tipo == 'pix') {
-            $bandeira = 'pix';
-        }
         
         $transactions['lancamentos'][$i] = [
             'data'          => $data,
