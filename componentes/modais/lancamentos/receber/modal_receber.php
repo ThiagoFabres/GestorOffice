@@ -8,7 +8,10 @@
                     </div>
                     <?php
     $get_acao = filter_input(INPUT_GET, 'acao');
+    $id_passado = $id_passado ?? null;
     $id_ban = filter_input(INPUT_GET, 'id_ban') ?? filter_input(INPUT_POST, 'id_ban') ?? null;
+    $ban02_valor = null;
+    $ban02_desc = null;
     if(isset($id_ban) && $id_ban != null) {
         $ban02 = Ban02::read($id_ban, $_SESSION['usuario']->id_empresa)[0];
         $ban02_valor = $ban02->valor < 0 ? $ban02->valor * (-1) : $ban02->valor;
@@ -75,7 +78,7 @@
     if(isset($recebimento)) {
         $documento = $recebimento->documento ?? '';
     } else {
-        $documento = $novo_documento;
+        $documento = null;
     }
 }
 
@@ -474,7 +477,7 @@
                                 </table>
                             </div>
                             <div class="card-footer" style="display:flex; flex-direction: row; width: 100%; justify-content: space-between;">
-                            <?php if((!empty($parcelas) && $get_acao != 'visualizar') && !isset($recebimento->valor_b) || $recebimento->valor_b == 0){ ?>
+                            <?php if((!empty($parcelas) && $get_acao != 'visualizar') && (!isset($recebimento->valor_b) || $recebimento->valor_b == 0)){ ?>
                                 <button name="acao"
                                     value="excluir"
                                     class="btn btn-danger" type="submit" id="botao-excluir-parcela"

@@ -8,6 +8,7 @@
                     </div>
                     <?php
     $get_acao = filter_input(INPUT_GET, 'acao');
+    $id_passado = $id_passado ?? null;
 
     if($get_acao == 'editar' && (!isset($get_id) || $get_id == null)) {
         $get_id= filter_input(INPUT_POST, 'id');
@@ -39,6 +40,8 @@
     
 }
     $id_ban = filter_input(INPUT_GET, 'id_ban') ?? filter_input(INPUT_POST, 'id_ban') ?? $recebimento->id_convertido ?? null;
+    $ban02_valor = null;
+    $ban02_desc = null;
     if($id_ban != null) {
         $ban02 = Ban02::read($id_ban, $_SESSION['usuario']->id_empresa)[0];
         $ban02_valor = $ban02->valor < 0 ? $ban02->valor * (-1) : $ban02->valor;
@@ -73,7 +76,7 @@
         if(isset($recebimento)) {
         $documento = $recebimento->documento;
     } else {
-        $documento = $novo_documento;
+        $documento = null;
     }
     }
     
