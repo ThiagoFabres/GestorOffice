@@ -76,7 +76,7 @@
         if(isset($recebimento)) {
         $documento = $recebimento->documento;
     } else {
-        $documento = null;
+        $documento = buscarDocumentoPag();
     }
     }
     
