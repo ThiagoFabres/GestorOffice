@@ -114,8 +114,8 @@ function criarBan02Dinheiro($ban01_dinheiro, $valor, $data, $descricao, $documen
         $documento,
         $fecha01->id_titulo ?? null,
         $fecha01->id_subtitulo ?? null,
-        'Venda em Dinheiro',
-        $descricao,
+        'Venda em Dinheiro' . ' - ' . $descricao,
+        null,
         $valor,
         null,
         1
