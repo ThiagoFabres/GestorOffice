@@ -156,10 +156,6 @@ if($acao == 'processar') {
                 
                 $transactions['current'][] = $current;
             }
-            echo '<pre>';
-            echo 'a';
-            print_r($transactions);
-            exit;
 
             return $transactions;
         } catch (Exception $e) {
