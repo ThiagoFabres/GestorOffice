@@ -37,14 +37,16 @@ class Ban02 {
     public static function create($ban02) {
         $pdo = (new Database())->connect();
 
-        $sql = 'INSERT INTO ban02 (id_empresa, id_ban01, valor, descricao, documento, ativo, data, id_original, descricao_comp) 
-                  VALUES (:id_empresa, :id_ban01, :valor, :descricao, :documento, :ativo, :data, :id_original, :descricao_comp)';
+        $sql = 'INSERT INTO ban02 (id_empresa, id_ban01, valor, descricao, documento, id_con01, id_con02, ativo, data, id_original, descricao_comp) 
+                  VALUES (:id_empresa, :id_ban01, :valor, :descricao, :documento, :id_con01, :id_con02, :ativo, :data, :id_original, :descricao_comp)';
 
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id_empresa', $ban02->id_empresa);
         $stmt->bindValue(':id_ban01', $ban02->id_ban01);
         $stmt->bindValue(':valor', $ban02->valor);
         $stmt->bindValue(':descricao', $ban02->descricao);
+        $stmt->bindValue(':id_con01', $ban02->id_con01);
+        $stmt->bindValue(':id_con02', $ban02->id_con02);
         $stmt->bindValue(':ativo', $ban02->ativo);
         $stmt->bindValue(':data', $ban02->data); // já está formatado no construtor
         $stmt->bindValue(':documento', $ban02->documento);
