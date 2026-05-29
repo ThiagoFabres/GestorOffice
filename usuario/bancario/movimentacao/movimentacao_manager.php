@@ -78,8 +78,9 @@ if($acao == 'processar') {
                         $transactions['debug']['cells'][] = $cell->getValue();
                     }
                 }
+                
                 if(count($cells) == 0 || count($cells) > 3) {
-                    return;
+                    return $transactions;
                 }
                 
                 if(empty($cells)) {
@@ -94,7 +95,7 @@ if($acao == 'processar') {
                 
                 $descricao = trim((string)$cells[1]);
                 $valor_str = $cells[2];
-
+                
                 
                 // Se não houver data ou valor, pula a linha
                 if (empty($data_raw) || empty($valor_str)) {
@@ -126,6 +127,7 @@ if($acao == 'processar') {
                     continue;
                 }
                 
+
                 // Valida se já foi importada
                 if (isset($importadas_set[$data_analizada])) {
                     continue;
@@ -137,6 +139,7 @@ if($acao == 'processar') {
                 if($data_analizada >= $data_atual) {
                     continue;
                 }
+                
                 
                 // Converte valor para número (suporta formato brasileiro)
                 $valor = (float)$valor_str;
@@ -150,8 +153,13 @@ if($acao == 'processar') {
                     'valor' => number_format($valor, 2, ',', '.'),
                 ];
                 
+                
                 $transactions['current'][] = $current;
             }
+            echo '<pre>';
+            echo 'a';
+            print_r($transactions);
+            exit;
 
             return $transactions;
         } catch (Exception $e) {
@@ -412,6 +420,8 @@ if(str_ends_with(strtolower($fileName), '.ofx')) {
     $fileExt = 'unknown';
 }
 
+
+
 if ($fileExt === 'ofx') {
 
     // Lê o conteúdo do OFX
@@ -427,24 +437,16 @@ if ($fileExt === 'ofx') {
     $transactions = parse_ofx($conteudoFormatado);
 
 } elseif ($fileExt === 'xlsx' || $fileExt === 'xls') {
-            $transactions = parse_excel($fileExt, $filePath);
+            $transactions = parse_xlsx($filePath);
         } else if($fileExt === 'csv') {
             $transactions = parse_csv($filePath);
         } else {
-            // Tenta OFX por padrão
             $transactions = parse_ofx($filePath);
         }
         
 
-        if(!empty($transactions['current'])){
-            $transactions_current = $transactions['current'];
-        }
-        if(!empty($transactions['debug'])){
-            $transactions_debug = $transactions['debug'];
-        }
-        // echo '<pre>';
-        // print_r($transactions);
-        // exit;
+        $transactions_current = $transactions['current'] ?? [];
+        $transactions_debug   = $transactions['debug'] ?? [];
 
         if(empty($transactions_current)) {
             if(isset($transactions_debug['erro'][0])) {
