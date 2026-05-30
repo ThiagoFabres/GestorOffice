@@ -213,6 +213,13 @@ function parse_excel($numero_arquivo = null) {
     ){
         break;
     }
+
+    if($operadora_sup['suporte_numero'] == 'formatado') {
+        $cells[4] = str_replace('.', '', $cells[4]);
+        $cells[5] = str_replace('.', '', $cells[5]);
+        $cells[4] = str_replace(',', '.', $cells[4]);
+        $cells[5] = str_replace(',', '.', $cells[5]);
+    }
        
         if(isset($operadora_sup['suporte_pix']) && $operadora_sup['suporte_pix'] == true) {
             

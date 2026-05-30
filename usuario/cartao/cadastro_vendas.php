@@ -1,9 +1,16 @@
 <?php
 require_once __DIR__ . '/../../db/entities/usuarios.php';
+require_once __DIR__ . '/../../db/entities/empresas.php';
 session_start();
 
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
     header('Location: /');
+    exit;
+}
+$empresa_usuario_id = $_SESSION['usuario']->id_empresa;
+$empresa_usuario_obj = Empresa::read($empresa_usuario_id)[0];
+if(!$empresa_usuario_obj->permissao_cartao) {
+    header('Location: index.php?erro=permissao');
     exit;
 }
 require_once __DIR__ . '/../../db/entities/ope01.php';
@@ -21,6 +28,7 @@ require_once __DIR__ . '/../../db/entities/categoria.php';
 require_once __DIR__ . '/../../db/entities/centrocustos.php';
 require_once __DIR__ . '/../../db/entities/banco02.php';
 require_once __DIR__ . '/../../db/entities/banco01.php';
+
 require_once __DIR__ . '/../../db/base.php';
 // if(isset($_SESSION['vendas_invalidas'])) {
 //     unset($_SESSION['vendas_invalidas']);
@@ -551,7 +559,7 @@ if ($filtros != []) {
     </div>
 
     <?php require_once __DIR__ . '/../../componentes/modais/cartao/modal_cadastro_vendas.php' ?>
-</div>
+    </div>
     <?php require_once __DIR__ . '/../../componentes/modais/lancamentos/receber/modal_quitar.php'; ?>
     </div>                          
     <?php require_once __DIR__ . '/../../componentes/modais/lancamentos/receber/modal_cadastro_pagamento.php'; ?>
@@ -570,7 +578,6 @@ if ($filtros != []) {
     </div>  
     <?php require_once __DIR__ . '/../../componentes/modais/lancamentos/receber/modal_cadastro_custos.php'; ?>
     </div>  
-    <?php require_once __DIR__ . '/../../componentes/modais/lancamentos/receber/modal_receber.php'; ?>
 
 
 
