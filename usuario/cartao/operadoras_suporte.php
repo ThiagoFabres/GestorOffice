@@ -17,6 +17,7 @@ $operadoras_suporte = [
                 'estado' => 6
             ],
             'suporte_data' => 'hora',
+            'suporte_numero' => 'formatado',
         ],
     ],
 
