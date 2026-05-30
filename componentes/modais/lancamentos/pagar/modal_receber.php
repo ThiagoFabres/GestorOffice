@@ -7,6 +7,9 @@
                         <h5 class="modal-title" id="modal_receber_long_title">Novo Lançamento</h5>
                     </div>
                     <?php
+    if(!buscarDocumentoPag()) {
+        require_once __DIR__ . '../../../../db/buscar_documento_pag.php';
+    }
     $get_acao = filter_input(INPUT_GET, 'acao');
     $id_passado = $id_passado ?? null;
 
