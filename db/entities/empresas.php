@@ -293,7 +293,7 @@ LEFT JOIN ativ01 a
 WHERE 
     e.ativ_inicio IS NOT NULL
 
-    AND e.permissao_operacional = 1
+    AND e.permissao_inicio = 1
 
     
     AND (
