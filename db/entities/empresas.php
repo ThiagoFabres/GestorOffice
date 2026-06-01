@@ -134,7 +134,6 @@ class Empresa {
             $bairro = null, 
             $cnpj_principal = null,
             $parceiro = null,
-            
             ): array {
 
         $pdo = (new Database())->connect();
@@ -282,5 +281,36 @@ public static function registrarNotificacaoAtraso(int $id, string $data): void {
     $pdo = (new Database())->connect();
     $stmt = $pdo->prepare("UPDATE empresas SET notificacao_atraso_data = ? WHERE id = ?");
     $stmt->execute([$data, $id]);
+}
+
+public static function readEmpresasAtrasadas() {
+    $pdo = (new Database())->connect();
+    $sql = "SELECT e.*
+FROM empresas e
+LEFT JOIN ativ01 a 
+    ON a.id_empresa = e.id
+    AND a.data = CURDATE()
+WHERE 
+    e.ativ_inicio IS NOT NULL
+
+    AND e.permissao_operacional = 1
+
+    
+    AND (
+        e.notificacao_atraso_data IS NULL
+        OR e.notificacao_atraso_data <> CURDATE()
+    )
+
+    
+    AND a.id IS NULL
+
+    
+    AND TIME(NOW()) >= ADDTIME(
+        e.ativ_inicio,
+        SEC_TO_TIME(COALESCE(e.tolerancia, 0) * 60)
+    )";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_OBJ);
 }
 }
