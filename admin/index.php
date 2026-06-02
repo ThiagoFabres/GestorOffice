@@ -459,6 +459,11 @@ $lista_cidades = [];
                     <label for="parceiro">Parceiro</label>
                     <input type="text" onchange="checar()" name="parceiro" class="form-control rounded-0" placeholder="Parceiro" value="<?= $empresa->parceiro ?? '' ?>" required>
                 </div>
+                <div class="d-flex flex-column">
+                    <label for="royalty">Royalty</label>
+                    <input type="text" onchange="checar()" name="royalty" class="form-control rounded-0" placeholder="Royalty" value="<?= $empresa->royalty ? number_format($empresa->royalty ?? 0, 2, ',', '.') : '' ?>">
+                </div>
+                
             
                 <div class="d-flex flex-column">
                     <label for="logo">Logo Customizada:</label>
@@ -506,6 +511,12 @@ $lista_cidades = [];
                     <input type="checkbox" <?php if($empresa->permissao_inicio == 1 ) {?> checked <?php }; ?> onchange="" name="permissao_inicio" class="form-check-input"
                     value="">
             </div>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Notificação</label>
+                    <input type="checkbox" <?php if($empresa->permissao_notificacao == 1 ) {?> checked <?php }; ?> onchange="" name="permissao_notificacao" class="form-check-input"
+                    value="">
+            </div>
+            
         </div>
     </div>
 

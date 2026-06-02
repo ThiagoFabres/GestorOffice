@@ -48,7 +48,11 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'editar') {
     $celular1_atividade = $_POST['cel1'] ?? null;
     $celular2_atividade = $_POST['cel2'] ?? null;
     $parceiro = $_POST['parceiro'] ?? null;
-
+    $permissao_notificacao = isset($_POST['permissao_notificacao']) ? 1 : 0;
+    $royalty = $_POST['royalty'] == '' ? null : floatval(str_replace(',', '.', $_POST['royalty'])) ?? null;
+    if($royalty == '0,00') {
+        $royalty = null;
+    }
 
     if(strlen($estado) == 2){$estado = mb_strtoupper($estado);};
 
@@ -80,7 +84,10 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'editar') {
         celular1_atividade: $celular1_atividade,
         celular2_atividade: $celular2_atividade,
         parceiro: $parceiro,
+        permissao_notificacao: $permissao_notificacao,
+        royalty: $royalty
 );
+
 $gestor_atual = Usuario::read(idempresa:$id, cargo:Cargo::GESTOR)[0];
 
 $gestor = new Usuario(
