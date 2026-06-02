@@ -15,45 +15,29 @@ $data_atual = date('Y-m-d');
 $hora_atual = date('H:i:s');
 
 // Busca todas as empresas ativas com horário de início configurado
-$empresas = Empresa::read(); // ajuste conforme seu método
+$empresas = Empresa::readEmpresasAtrasadas(); // ajuste conforme seu método
 
 foreach ($empresas as $empresa) {
-    if($empresa->tolerancia == null) {
-        $empresa->tolerancia = 0; 
-    }
-    // Pula se não tem horário configurado
-    if ($empresa->ativ_inicio == null) {
-        continue;
-    }
 
-    // Calcula o horário limite (inicio + tolerância em minutos)
-    $ativ_inicio_normalizada = strtotime($empresa->ativ_inicio);
-    $hora_limite_timestamp = $ativ_inicio_normalizada + ($empresa->tolerancia * 60);
+    $chats = array_filter([
+        $empresa->celular1_atividade,
+        $empresa->celular2_atividade
+    ]);
 
-    if (time() < $hora_limite_timestamp) {
-        continue;
-    }
-
-    $hora_limite = date('H:i:s', $hora_limite_timestamp);
-
-    // Verifica se já registrou atividade hoje
-    $atividade = Ativ01::read(id_empresa: $empresa->id, data: $data_atual);
-    if ($atividade) {
-        continue; // já registrou, ignora
-    }
-
-    // Verifica se já enviou notificação hoje (para não ficar reenviando)
-    if ($empresa->notificacao_atraso_data === $data_atual) {
-        continue;
-    }
-    // Envia notificação para cada Telegram vinculado
-    $chats = array_filter([$empresa->celular1_atividade, $empresa->celular2_atividade]);
     foreach ($chats as $chat_id) {
-        enviarAlerta($token, $chat_id, $empresa->nom_fant, $empresa->ativ_inicio, $hora_limite);
+        enviarAlerta(
+            $token,
+            $chat_id,
+            $empresa->nom_fant,
+            $empresa->ativ_inicio,
+            $hora_limite = date('H:i:s', strtotime($empresa->ativ_inicio . ' +'. $empresa->tolerancia . ' minutes'))
+        );
     }
 
-    // Registra que já notificou hoje
-    Empresa::registrarNotificacaoAtraso($empresa->id, $data_atual);
+    Empresa::registrarNotificacaoAtraso(
+        $empresa->id,
+        date('Y-m-d')
+    );
 }
 
 function enviarAlerta($token, $chat_id, $nome_empresa, $ativ_inicio, $hora_limite) {

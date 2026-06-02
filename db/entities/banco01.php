@@ -37,11 +37,11 @@ class Ban01 {
         $stmt->bindValue(':data', $ban01->data);
 
         
-
+    
         return $stmt->execute();
     }
 
-    public static function read($id = null, $id_empresa = null, $banco = null, $nome = null, $con01 = null, $con02 = null, $data_inicial = null, $data_final = null): array {
+    public static function read($id = null, $id_empresa = null, $banco = null, $nome = null, $con01 = null, $con02 = null, $data_inicial = null, $data_final = null, $fltro_nome = null): array {
         $pdo = (new Database())->connect();
         $query = 'SELECT * FROM ban01';
         $conditions = [];

@@ -452,8 +452,62 @@ public static function readPagos() {
         return $ids;
 
 }
+//pegar o total em valor da parcela que vence no dia em uma variavel e outra variavel pegando o total do valor da parcela que vence em 1 semana
+public static function readDetalhesSemana($id_empresa) {
+    $pdo = (new Database())->connect();
+    $query = '
+        SELECT 
+            p1.documento,
+            p1.descricao,
+            p2.vencimento,
+            p2.valor_par,
+            CASE
+                WHEN p2.vencimento < CURDATE() THEN "vencida"
+                ELSE "a_vencer"
+            END AS situacao
+        FROM pag02 p2
+        INNER JOIN pag01 p1 ON p2.id_pag01 = p1.id
+        WHERE p1.id_empresa = :id_empresa
+          AND p2.valor_pag = 0
+          AND (
+              p2.vencimento < CURDATE()
+              OR (p2.vencimento >= CURDATE() AND p2.vencimento <= DATE_ADD(CURDATE(), INTERVAL 7 DAY))
+          )
+        ORDER BY p2.vencimento ASC
+    ';
+
+    $stmt = $pdo->prepare($query);
+    $stmt->bindValue(':id_empresa', $id_empresa);
+    $stmt->execute();
+
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Separar e totalizar no PHP
+    $result = [
+        'vencidas'          => [],
+        'a_vencer'          => [],
+        'total_vencidas'    => 0,
+        'total_a_vencer'    => 0,
+    ];
+
+    foreach ($rows as $row) {
+        if ($row['situacao'] === 'vencida') {
+            $result['vencidas'][]       = $row;
+            $result['total_vencidas']   += $row['valor_par'];
+        } else {
+            $result['a_vencer'][]       = $row;
+            $result['total_a_vencer']   += $row['valor_par'];
+        }
+    }
+
+    $result['total_vencidas'] = number_format($result['total_vencidas'], 2, ',', '.');
+    $result['total_a_vencer'] = number_format($result['total_a_vencer'], 2, ',', '.');
+
+    return $result;
+}
 
 }
+
 
 
 ?>

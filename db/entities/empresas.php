@@ -31,6 +31,8 @@ class Empresa {
     public $celular2_atividade;
     public $parceiro;
     public $notificacao_atraso_data;
+    public $permissao_notificacao;
+    public $royalty;
 
     public function __construct(
         $id = null, $razao_soc = '', 
@@ -56,7 +58,9 @@ class Empresa {
         $celular1_atividade = null,
         $celular2_atividade = null,
         $parceiro = null,
-        $notificacao_atraso_data = null
+        $notificacao_atraso_data = null,
+        $permissao_notificacao = 0,
+        $royalty = null
      ) {
         $this->id = $id;
         $this->razao_soc = $razao_soc;
@@ -86,12 +90,14 @@ class Empresa {
         $this->celular2_atividade = $celular2_atividade;
         $this->parceiro = $parceiro;
         $this->notificacao_atraso_data = $notificacao_atraso_data;
+        $this->permissao_notificacao = $permissao_notificacao;
+        $this->royalty = $royalty;
     }
 
     public static function create($empresa) {
         $pdo = (new Database())->connect();
-        $sql = 'INSERT INTO empresas (razao_soc, nom_fant, rua, bairro, cidade, estado, cpf, cnpj, email, celular, fixo, status, data_r, cep, cnpj_principal, permissao_cartao, permissao_seguranca, permissao_financeiro, permissao_bancario, permissao_operacional, permissao_inicio, ativ_inicio, tolerancia, celular1_atividade, celular2_atividade, parceiro) 
-        VALUES (:razao_soc, :nom_fant, :rua, :bairro, :cidade, :estado, :cpf, :cnpj, :email, :celular, :fixo, :status, :data_r, :cep, :cnpj_principal, :permissao_cartao, :permissao_seguranca, :permissao_financeiro, :permissao_bancario, :permissao_operacional, :permissao_inicio, :ativ_inicio, :tolerancia, :celular1_atividade, :celular2_atividade, :parceiro)';
+        $sql = 'INSERT INTO empresas (razao_soc, nom_fant, rua, bairro, cidade, estado, cpf, cnpj, email, celular, fixo, status, data_r, cep, cnpj_principal, permissao_cartao, permissao_seguranca, permissao_financeiro, permissao_bancario, permissao_operacional, permissao_inicio, ativ_inicio, tolerancia, celular1_atividade, celular2_atividade, parceiro, permissao_notificacao, royalty) 
+        VALUES (:razao_soc, :nom_fant, :rua, :bairro, :cidade, :estado, :cpf, :cnpj, :email, :celular, :fixo, :status, :data_r, :cep, :cnpj_principal, :permissao_cartao, :permissao_seguranca, :permissao_financeiro, :permissao_bancario, :permissao_operacional, :permissao_inicio, :ativ_inicio, :tolerancia, :celular1_atividade, :celular2_atividade, :parceiro, :permissao_notificacao, :royalty)';
         $stmt = $pdo->prepare($sql);
 
         $stmt->bindValue(':razao_soc', $empresa->razao_soc);
@@ -120,6 +126,8 @@ class Empresa {
         $stmt->bindValue(':celular1_atividade', $empresa->celular1_atividade);
         $stmt->bindValue(':celular2_atividade', $empresa->celular2_atividade);
         $stmt->bindValue(':parceiro', $empresa->parceiro);
+        $stmt->bindValue(':permissao_notificacao', $empresa->permissao_notificacao);
+        $stmt->bindValue(':royalty', $empresa->royalty);
        return $stmt->execute(); 
     }
 
@@ -221,10 +229,10 @@ class Empresa {
         tolerancia = :tolerancia,
         celular1_atividade = :celular1_atividade,
         celular2_atividade = :celular2_atividade,
-        parceiro = :parceiro
-
-
-    WHERE id = :id';
+        parceiro = :parceiro,
+        permissao_notificacao = :permissao_notificacao,
+        royalty = :royalty 
+        WHERE id = :id';
 
         $stmt = $pdo->prepare($sql);
 
@@ -255,6 +263,8 @@ class Empresa {
     $stmt->bindValue(':celular1_atividade', $empresa->celular1_atividade);
     $stmt->bindValue(':celular2_atividade', $empresa->celular2_atividade);
     $stmt->bindValue(':parceiro', $empresa->parceiro);
+    $stmt->bindValue(':permissao_notificacao', $empresa->permissao_notificacao);
+    $stmt->bindValue(':royalty', $empresa->royalty);
        return $stmt->execute(); 
         
     }
@@ -309,6 +319,18 @@ WHERE
         e.ativ_inicio,
         SEC_TO_TIME(COALESCE(e.tolerancia, 0) * 60)
     )";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_OBJ);
+}
+
+public static function readEmpresasNotificacaoSemanal() {
+    $pdo = (new Database())->connect();
+
+    $sql = "SELECT * 
+FROM empresas 
+WHERE permissao_notificacao = 1 
+AND status = 1";
     $stmt = $pdo->prepare($sql);
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_OBJ);
