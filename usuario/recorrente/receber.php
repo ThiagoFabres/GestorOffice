@@ -7,12 +7,14 @@ require_once __DIR__ . '/../../db/entities/recebimentos.php';
 require_once __DIR__ . '/../../db/entities/pagamento.php';
 require_once __DIR__ . '/../../db/entities/centrocustos.php';
 require_once __DIR__ . '/../../db/base.php'; 
+require_once __DIR__ . '/../../db/entities/empresas.php';
 
 session_start();
 
 
-
-if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
+$empresa_usuario_id = $_SESSION['usuario']->id_empresa;
+$empresa_usuario_obj = Empresa::read($empresa_usuario_id)[0];
+if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSION['usuario']->permissao_financeiro != 1 || $empresa_usuario_obj->permissao_financeiro != 1) {
     header('Location: /');
     exit;
 }
@@ -88,7 +90,7 @@ $novo_documento = buscarDocumentoRec();
                                                     <select name="cadastro" class="form-select" id="cadastro">
                                                         <option value="">Selecione</option>
                                                         <?php
-                                                        $cadastros = Cadastro::read($id_passado, null, $_SESSION['usuario']->id_empresa);
+                                                        $cadastros = Cadastro::read($id_passado ?? null, null, $_SESSION['usuario']->id_empresa);
                                                         foreach ($cadastros as $cadastro) { ?>
                                                             <option value="<?= $cadastro->id_cadastro ?>">
                                                                 <?= htmlspecialchars($cadastro->nom_fant, ENT_QUOTES, 'UTF-8') ?>

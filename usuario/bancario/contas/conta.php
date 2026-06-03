@@ -1,10 +1,15 @@
 <?php 
 require_once __DIR__ . '/../../../db/entities/usuarios.php';
+require_once __DIR__ . '/../../../db/entities/empresas.php';
+
 session_start();
-if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
+$empresa_usuario_id = $_SESSION['usuario']->id_empresa;
+$empresa_usuario_obj = Empresa::read($empresa_usuario_id)[0];
+if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSION['usuario']->permissao_bancario != 1 || $empresa_usuario_obj->permissao_bancario != 1) {
     header('Location: /');
     exit;
 }
+
 require_once __DIR__ . '/../../../db/entities/banco01.php';
 
 
@@ -377,7 +382,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             subtituloFiltroChoice.setChoiceByValue(valorAtual);
                         }, 50);
                     } else {
-                        subtituloFiltroChoice.setChoiceByValue('<?= $get_filtro_subtitulo; ?>');
+                        subtituloFiltroChoice.setChoiceByValue('<?= $get_filtro_subtitulo ?? ''; ?>');
                     }
                 } else {
                     subtituloFiltroElement.innerHTML = '<option value="">Selecione</option>';

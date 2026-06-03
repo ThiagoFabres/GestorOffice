@@ -3,13 +3,14 @@
 require_once __DIR__ . '/../../../db/entities/usuarios.php';
 require_once __DIR__ . '/../../../db/entities/contas.php';
 require_once __DIR__ . '/../../../db/entities/cadastro.php';
-/* Removido: recebimentos/pagamento/pagar - agora usamos apenas Ban02 */
 require_once __DIR__ . '/../../../db/entities/banco02.php';
 require_once __DIR__ . '/../../../db/entities/empresas.php';
 require_once __DIR__ . '/../../../db/entities/centrocustos.php';
 
 session_start();
-if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
+$empresa_usuario_id = $_SESSION['usuario']->id_empresa;
+$empresa_usuario_obj = Empresa::read($empresa_usuario_id)[0];
+if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSION['usuario']->permissao_bancario != 1 || $empresa_usuario_obj->permissao_bancario != 1) {
     header('Location: /');
     exit;
 }
@@ -19,7 +20,6 @@ $lateral_target = 'dreBancario';
 
 function format_valor_alinhado($valor) {
     $formatado = number_format($valor, 2, ',', '.');
-    // 12 caracteres para alinhar valores grandes e pequenos
     $formatado = str_pad($formatado, 12, ' ', STR_PAD_LEFT);
     return $formatado;
 }
