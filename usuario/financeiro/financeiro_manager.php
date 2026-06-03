@@ -1,11 +1,16 @@
 <?php
 require_once '../../vendor/autoload.php';
 require_once '../../db/entities/usuarios.php';
+require_once '../../db/entities/empresas.php';
 
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
+
 session_start();
-if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
+
+$empresa_usuario_id = $_SESSION['usuario']->id_empresa;
+$empresa_usuario_obj = Empresa::read($empresa_usuario_id)[0];
+if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSION['usuario']->permissao_financeiro != 1 || $empresa_usuario_obj->permissao_financeiro != 1) {
     header('Location: /');
     exit;
 }

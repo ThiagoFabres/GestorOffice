@@ -54,7 +54,7 @@ class Ban01 {
         if ($con02 != null) $conditions[] = 'conta = :con02';
         if ($data_inicial != null) $conditions[] = 'data >= :data_inicial';
         if ($data_final != null) $conditions[] = 'data <= :data_final';
-
+        if ($fltro_nome != null) $conditions[] = 'nome LIKE :fltro_nome';
         if ($conditions) {
             $query .= ' WHERE ' . implode(' AND ', $conditions);
         }

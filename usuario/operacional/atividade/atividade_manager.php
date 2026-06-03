@@ -3,7 +3,10 @@ require_once __DIR__ . '/../../../db/entities/ativ01.php';
 require_once __DIR__ . '/../../../db/entities/usuarios.php';
 require_once __DIR__ . '/../../../db/entities/empresas.php';
 session_start();
-if(!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
+
+$empresa_usuario_id = $_SESSION['usuario']->id_empresa;
+$empresa_usuario_obj = Empresa::read($empresa_usuario_id)[0];
+if(!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSION['usuario']->permissao_inicio != 1 || $empresa_usuario_obj->permissao_inicio != 1) {
     header('Location: /');
     exit;
 }
@@ -20,12 +23,12 @@ $env = parse_ini_file(__DIR__ . '/../../../.env');
 $data_atual = date('Y-m-d');
 $hora_atual = date('H:i:s');
 function enviarNotificacaoTelegram($id_empresa, $nome, $localizacao, $data, $hora, $empresa_usuario_obj, $env, $tipo_atividade) {
-    // Suas credenciais do Telegram Bot
+    
     $TELEGRAM_TOKEN = $env['TELEGRAM_TOKEN'];
-    $CHAT_ID_LISTA = [0 => $empresa_usuario_obj->celular1_atividade, 1 => $empresa_usuario_obj->celular2_atividade]; // ID do chat (usuário, grupo ou canal)
+    $CHAT_ID_LISTA = [0 => $empresa_usuario_obj->celular1_atividade, 1 => $empresa_usuario_obj->celular2_atividade]; 
     foreach($CHAT_ID_LISTA as $CHAT_ID) {
         if($CHAT_ID === null || $CHAT_ID === '') {
-            continue; // Pula se o chat_id não estiver configurado
+            continue; 
         }
         $mensagem = "*{$tipo_atividade} de Atividade Registrado*\n\n";
         $mensagem .= "*Empresa:* " . htmlspecialchars($empresa_usuario_obj->nom_fant) . "\n";

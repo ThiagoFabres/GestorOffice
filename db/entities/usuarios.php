@@ -11,10 +11,15 @@ class Usuario {
     public $consultar;
     public $cargo;
     public $status;
-    
+    public $permissao_cartao;
+    public $permissao_seguranca;
+    public $permissao_financeiro;
+    public $permissao_bancario;
+    public $permissao_operacional;
+    public $permissao_inicio;
 
 
-    public function __construct($id = null, $id_empresa = null, $nome = '', $email = '', $senha = '', $processar = 0, $consultar = 0, $cargo = null, $status = 0) {
+    public function __construct($id = null, $id_empresa = null, $nome = '', $email = '', $senha = '', $processar = 0, $consultar = 0, $cargo = null, $status = 0, $permissao_cartao = 1, $permissao_seguranca = 0, $permissao_financeiro = 1, $permissao_bancario = 1, $permissao_operacional = 1, $permissao_inicio = 1) {
         $this->id = $id;
         $this->id_empresa = $id_empresa;
         $this->nome = $nome;
@@ -24,6 +29,12 @@ class Usuario {
         $this->consultar = $consultar;
         $this->cargo = $cargo;
         $this->status = $status;
+        $this->permissao_cartao = $permissao_cartao;
+        $this->permissao_seguranca = $permissao_seguranca;
+        $this->permissao_financeiro = $permissao_financeiro;
+        $this->permissao_bancario = $permissao_bancario;
+        $this->permissao_operacional = $permissao_operacional;
+        $this->permissao_inicio = $permissao_inicio;
     }
 
 public static function create($usuario) {
@@ -32,8 +43,8 @@ public static function create($usuario) {
     // Senha padrão fixa "123456"
     $senhaHash = password_hash('123456', PASSWORD_DEFAULT);
 
-    $sql = 'INSERT INTO usuario (id_empresa, nome, email, senha, processar, consultar, cargo, status) 
-            VALUES (:id_empresa, :nome, :email, :senha, :processar, :consultar, :cargo, :status)';
+    $sql = 'INSERT INTO usuario (id_empresa, nome, email, senha, processar, consultar, cargo, status, permissao_cartao, permissao_seguranca, permissao_financeiro, permissao_bancario, permissao_operacional, permissao_inicio) 
+            VALUES (:id_empresa, :nome, :email, :senha, :processar, :consultar, :cargo, :status, :permissao_cartao, :permissao_seguranca, :permissao_financeiro, :permissao_bancario, :permissao_operacional, :permissao_inicio)';
     $stmt = $pdo->prepare($sql);
     $stmt->bindValue(':id_empresa', $usuario->id_empresa);
     $stmt->bindValue(':nome', $usuario->nome);
@@ -43,6 +54,12 @@ public static function create($usuario) {
     $stmt->bindValue(':consultar', $usuario->consultar, PDO::PARAM_INT);
     $stmt->bindValue(':cargo', $usuario->cargo);
     $stmt->bindValue(':status', $usuario->status, PDO::PARAM_INT);
+    $stmt->bindValue(':permissao_cartao', $usuario->permissao_cartao, PDO::PARAM_INT);
+    $stmt->bindValue(':permissao_seguranca', $usuario->permissao_seguranca, PDO::PARAM_INT);
+    $stmt->bindValue(':permissao_financeiro', $usuario->permissao_financeiro, PDO::PARAM_INT);
+    $stmt->bindValue(':permissao_bancario', $usuario->permissao_bancario, PDO::PARAM_INT);
+    $stmt->bindValue(':permissao_operacional', $usuario->permissao_operacional, PDO::PARAM_INT);
+    $stmt->bindValue(':permissao_inicio', $usuario->permissao_inicio, PDO::PARAM_INT);
 
     
 
@@ -57,10 +74,15 @@ public static function create($usuario) {
     if ($id != null) $conditions[] = 'id = :id';
     if ($email != null) $conditions[] = 'email = :email';
     if ($idempresa != null) $conditions[] = 'id_empresa = :id_empresa';
-    if ($cargo != null) $conditions[] = 'cargo = :cargo';
     if ($nome != null) $conditions[] = 'nome LIKE :nome';
     if ($filtro_data_inicial != null) $conditions[] = 'data_criacao >= :data_inicial';
     if ($filtro_data_final != null) $conditions[] = 'data_criacao <= :data_final';
+    if ($cargo == 'usuario') {
+        $conditions[] = 'cargo IN (3, 4)';
+    }
+    if($cargo != null && $cargo != 'usuario') {
+        $conditions[] = 'cargo = :cargo';
+    }
 
 
     if ($conditions) {
@@ -76,7 +98,7 @@ public static function create($usuario) {
     if ($id != null) $stmt->bindValue(':id', $id);
     if ($email != null) $stmt->bindValue(':email', $email);
     if ($idempresa != null) $stmt->bindValue(':id_empresa', $idempresa);
-    if ($cargo != null) $stmt->bindValue(':cargo', $cargo);
+    if ($cargo != null && $cargo != 'usuario') $stmt->bindValue(':cargo', $cargo);
     if ($nome != null) $stmt->bindValue(':nome', '%' . $nome . '%');
     if ($filtro_data_inicial != null) $stmt->bindValue(':data_inicial', $filtro_data_inicial);
     if ($filtro_data_final != null) $stmt->bindValue(':data_final', $filtro_data_final);
@@ -95,7 +117,14 @@ return $stmt->fetchAll();
                 email = :email,
                 processar = :processar, 
                 consultar = :consultar, 
-                status = :status 
+                status = :status,
+                cargo = :cargo,
+                permissao_cartao = :permissao_cartao,
+                permissao_seguranca = :permissao_seguranca,
+                permissao_financeiro = :permissao_financeiro,
+                permissao_bancario = :permissao_bancario,
+                permissao_operacional = :permissao_operacional,
+                permissao_inicio = :permissao_inicio
             WHERE id = :id';
 
     $stmt = $pdo->prepare($sql);
@@ -107,7 +136,14 @@ return $stmt->fetchAll();
     $stmt->bindValue(':processar', $usuario->processar, PDO::PARAM_INT);
     $stmt->bindValue(':consultar', $usuario->consultar, PDO::PARAM_INT);
     $stmt->bindValue(':status', $usuario->status, PDO::PARAM_INT);
+    $stmt->bindValue(':cargo', $usuario->cargo);
     $stmt->bindValue(':id', $usuario->id, PDO::PARAM_INT);
+    $stmt->bindValue(':permissao_cartao', $usuario->permissao_cartao, PDO::PARAM_INT);
+    $stmt->bindValue(':permissao_seguranca', $usuario->permissao_seguranca, PDO::PARAM_INT);
+    $stmt->bindValue(':permissao_financeiro', $usuario->permissao_financeiro, PDO::PARAM_INT);
+    $stmt->bindValue(':permissao_bancario', $usuario->permissao_bancario, PDO::PARAM_INT);
+    $stmt->bindValue(':permissao_operacional', $usuario->permissao_operacional, PDO::PARAM_INT);
+    $stmt->bindValue(':permissao_inicio', $usuario->permissao_inicio, PDO::PARAM_INT);
 
     return $stmt->execute();
 }

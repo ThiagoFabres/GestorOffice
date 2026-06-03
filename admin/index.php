@@ -119,6 +119,7 @@ $lista_cidades = [];
 
     <link rel="stylesheet" href="/style.css">
     <link rel="stylesheet" href="../choices/choices.css">
+    <link rel="stylesheet" href="/../usuario/responsivo.css">
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -777,53 +778,66 @@ document.addEventListener('DOMContentLoaded', function() {
     //     }
     // }
 
-    function encolher() {
-        let barra = document.getElementById('barra-lateral');
-        let container = document.getElementById('container');
-        let superior = document.getElementById('header');
-        let body = document.getElementById('body');
+        function encolher(acao) {
+        const barra = document.getElementById('barra-lateral');
+        const container = document.getElementById('container');
+        const superior = document.getElementById('header');
+
+        
 
 
 
+        if ( barra.style.animationName != 'encolher-lateral'){
+            
 
+            if(document.querySelector('body').clientWidth >= 800) {                
+            localStorage.setItem('tela', 'cheia')
+           
 
+            container.style.animationName = 'encolher-container'
+            container.style.animationDuration = '0.5s';
+            container.style.animationFillMode = 'forwards';
 
-if (barra.style.animationName === 'encolher') {
-
-            superior.style.animationName = 'expandir-header'
+            }
+            superior.style.animationName = 'encolher-header'
             superior.style.animationDuration = '0.5s';
-            superior.style.animationFillMode = 'backwards';
-
-            barra.style.animationName = 'expandir';
+            superior.style.animationFillMode = 'forwards';
+            barra.style.animationName = 'encolher-lateral';
             barra.style.animationDuration = '0.5s';
-            barra.style.animationFillMode = 'backwards';
+            barra.style.animationFillMode = 'forwards';
+        } else if( barra.style.animationName == 'encolher-lateral') {
+            if(document.querySelector('body').clientWidth >= 800) {
+                localStorage.setItem('tela', 'normal')
             
             container.style.animationName = 'expandir-container'
             container.style.animationDuration = '0.5s';
             container.style.animationFillMode = 'backwards';
 
-            body.style.animationName = 'expandir-container'
-            body.style.animationDuration = '0.5s';
-            body.style.animationFillMode = 'backwards';
+            }
+            superior.style.animationName = 'expandir-header'
+            superior.style.animationDuration = '0.5s';
+            superior.style.animationFillMode = 'backwards';
+            barra.style.animationName = 'expandir-lateral';
+            barra.style.animationDuration = '0.5s';
+            barra.style.animationFillMode = 'backwards';
+
+            
+
             return;
-        } else {
+        } 
+    }
+    if(!document.querySelector('body').clientWidth >= 800) {
+        if(localStorage.getItem('tela') == 'cheia') {
+        setTimeout(
+            () => {
+                encolher('encolher')
+            }, 100
+        )
+        
+    }
+    }
 
-        superior.style.animationName = 'encolher-header'
-        superior.style.animationDuration = '0.5s';
-        superior.style.animationFillMode = 'forwards';
 
-        barra.style.animationName = 'encolher';
-        barra.style.animationDuration = '0.5s';
-        barra.style.animationFillMode = 'forwards';
-
-        container.style.animationName = 'encolher'
-        container.style.animationDuration = '0.5s';
-        container.style.animationFillMode = 'forwards';
-
-        body.style.animationName = 'encolher'
-        body.style.animationDuration = '0.5s';
-        body.style.animationFillMode = 'forwards';
-    }}
 
 <?php if ( isset($_GET['acao']) && $_GET['acao'] == 'adicionar') { ?>
         window.addEventListener('DOMContentLoaded', function () {

@@ -8,11 +8,16 @@ require_once __DIR__ . '/../../db/entities/pagamento.php';
 require_once __DIR__ . '/../../db/entities/pagar.php';
 require_once __DIR__ . '/../../db/entities/centrocustos.php';
 require_once __DIR__ . '/../../db/entities/empresas.php';
+
 session_start();
-if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
+
+$empresa_usuario_id = $_SESSION['usuario']->id_empresa;
+$empresa_usuario_obj = Empresa::read($empresa_usuario_id)[0];
+if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSION['usuario']->permissao_financeiro != 1 || $empresa_usuario_obj->permissao_financeiro != 1) {
     header('Location: /');
     exit;
 }
+
 $lateral_target = 'dre';
 $lateral_financeiro = true;
 function format_valor_alinhado($valor) {

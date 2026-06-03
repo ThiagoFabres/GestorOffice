@@ -48,6 +48,7 @@ $link_vinculo_2 = "https://web.telegram.org/#/im?tgaddr=tg%3A%2F%2Fresolve%3Fdom
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
     <link rel="stylesheet" href="/../components/header/header.css"> 
+    <link rel="stylesheet" href="/../usuario/style/responsivo.css"> 
     <link rel="stylesheet" href="/../components/lateral/lateral.css">
     <title>Gestor Office Control</title>
 </head>
@@ -286,11 +287,57 @@ $link_vinculo_2 = "https://web.telegram.org/#/im?tgaddr=tg%3A%2F%2Fresolve%3Fdom
                 <input type="checkbox" <?php if($usuario->processar == 1) {?> checked <?php } ?> onchange="" name="processar" class="form-check-input" value="1">
             </div>
         </div>
+        <?php if($empresa_usuario_obj->permissao_seguranca) {?>
         <div class="d-flex flex-column">
             <div style="margin-left:1.25em; margin-top:0;" class="d-flex flex-column">
                 <label for="seguranca" style="margin-bottom:0;">Posto de Serviço (Aplicativo)</label>
                 <input type="checkbox" <?php if($usuario->cargo == Cargo::SEGURANCA) {?> checked <?php } ?> onchange="" name="seguranca" class="form-check-input" value="1">
             </div>
+        </div>
+        <?php } ?>
+        <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 1em;">
+            <?php if($empresa_usuario_obj->permissao_cartao) {?>
+                <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                        <label for="status" style="margin-bottom:0;">Cartão</label>
+                        <input type="checkbox" <?php if($usuario->permissao_cartao == 1) {?> checked <?php } ?> onchange="" name="permissao_cartao" class="form-check-input"
+                        value="">
+                </div>
+            <?php } ?>
+            <?php if($empresa_usuario_obj->permissao_seguranca) {?>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Segurança</label>
+                    <input type="checkbox" <?php if($usuario->permissao_seguranca == 1) {?> checked <?php } ?> onchange="" name="permissao_seguranca" class="form-check-input"
+                    value="">
+            </div>
+            <?php } ?>
+            <?php if($empresa_usuario_obj->permissao_financeiro) {?>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Financeiro</label>
+                    <input type="checkbox" <?php if($usuario->permissao_financeiro == 1) {?> checked <?php } ?> onchange="" name="permissao_financeiro" class="form-check-input"
+                    value="">
+            </div>
+            <?php } ?>
+            <?php if($empresa_usuario_obj->permissao_bancario) {?>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Bancario</label>
+                    <input type="checkbox" <?php if($usuario->permissao_bancario == 1) {?> checked <?php } ?> onchange="" name="permissao_bancario" class="form-check-input"
+                    value="">
+            </div>
+            <?php } ?>
+            <?php if($empresa_usuario_obj->permissao_operacional) {?>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Operacional</label>
+                    <input type="checkbox" <?php if($usuario->permissao_operacional == 1) {?> checked <?php } ?> onchange="" name="permissao_operacional" class="form-check-input"
+                    value="">
+            </div>
+            <?php } ?>
+            <?php if($empresa_usuario_obj->permissao_inicio) {?>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Inicio</label>
+                    <input type="checkbox" <?php if($usuario->permissao_inicio == 1) {?> checked <?php } ?> onchange="" name="permissao_inicio" class="form-check-input"
+                    value="">
+            </div>
+            <?php } ?>
         </div>
     </div>
 
@@ -350,13 +397,61 @@ $link_vinculo_2 = "https://web.telegram.org/#/im?tgaddr=tg%3A%2F%2Fresolve%3Fdom
                                     <input type="checkbox" name="processar" class="form-check-input" value="1">
                                 </div>
                             </div>
+                            <?php if($empresa_usuario_obj->permissao_seguranca) {?>
                             <div class="d-flex flex-column gap-3">
                                 <div  class="d-flex flex-column">
                                     <label for="seguranca" style="margin-bottom: 0;">Posto de Serviço (Aplicativo)</label>
                                     <input type="checkbox" name="seguranca" class="form-check-input" value="1">
                                 </div>
                             </div>
+                            <?php } ?>
                         </div>
+        <hr>
+
+        <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 1em;">
+            <?php if($empresa_usuario_obj->permissao_cartao) {?>
+                <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                        <label for="status" style="margin-bottom:0;">Cartão</label>
+                        <input type="checkbox" checked onchange="" name="permissao_cartao" class="form-check-input"
+                        value="">
+                </div>
+            <?php } ?>
+            <?php if($empresa_usuario_obj->permissao_seguranca) {?>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Segurança</label>
+                    <input type="checkbox" checked onchange="" name="permissao_seguranca" class="form-check-input"
+                    value="">
+            </div>
+            <?php } ?>
+            <?php if($empresa_usuario_obj->permissao_financeiro) {?>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Financeiro</label>
+                    <input type="checkbox"  checked  onchange="" name="permissao_financeiro" class="form-check-input"
+                    value="">
+            </div>
+            <?php } ?>
+            <?php if($empresa_usuario_obj->permissao_bancario) {?>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Bancario</label>
+                    <input type="checkbox" checked onchange="" name="permissao_bancario" class="form-check-input"
+                    value="">
+            </div>
+            <?php } ?>
+            <?php if($empresa_usuario_obj->permissao_operacional) {?>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Operacional</label>
+                    <input type="checkbox" checked onchange="" name="permissao_operacional" class="form-check-input"
+                    value="">
+            </div>
+            <?php } ?>
+            <?php if($empresa_usuario_obj->permissao_inicio) {?>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="status" style="margin-bottom:0;">Inicio</label>
+                    <input type="checkbox" checked onchange="" name="permissao_inicio" class="form-check-input"
+                    value="">
+            </div>
+            <?php } ?>
+        </div>
 
 
                         <div style="margin-bottom: 1em;" class="footer">
@@ -478,6 +573,68 @@ if (!consultar.checked) {
                 alert('Não é possível adicionar esse usuario, pois já existe um usuario ou gestor com esse e-mail');
                 window.location.href = 'index.php';
 <?php } ?>
+
+        
+        
+        function encolher(acao) {
+        const barra = document.getElementById('barra-lateral');
+        const container = document.getElementById('container');
+        const superior = document.getElementById('header');
+
+        
+
+
+
+        if ( barra.style.animationName != 'encolher-lateral'){
+            
+
+            if(document.querySelector('body').clientWidth >= 800) {                
+            localStorage.setItem('tela', 'cheia')
+           
+
+            container.style.animationName = 'encolher-container'
+            container.style.animationDuration = '0.5s';
+            container.style.animationFillMode = 'forwards';
+
+            }
+            superior.style.animationName = 'encolher-header'
+            superior.style.animationDuration = '0.5s';
+            superior.style.animationFillMode = 'forwards';
+            barra.style.animationName = 'encolher-lateral';
+            barra.style.animationDuration = '0.5s';
+            barra.style.animationFillMode = 'forwards';
+        } else if( barra.style.animationName == 'encolher-lateral') {
+            if(document.querySelector('body').clientWidth >= 800) {
+                localStorage.setItem('tela', 'normal')
+            
+            container.style.animationName = 'expandir-container'
+            container.style.animationDuration = '0.5s';
+            container.style.animationFillMode = 'backwards';
+
+            }
+            superior.style.animationName = 'expandir-header'
+            superior.style.animationDuration = '0.5s';
+            superior.style.animationFillMode = 'backwards';
+            barra.style.animationName = 'expandir-lateral';
+            barra.style.animationDuration = '0.5s';
+            barra.style.animationFillMode = 'backwards';
+
+            
+
+            return;
+        } 
+    }
+    if(!document.querySelector('body').clientWidth >= 800) {
+        if(localStorage.getItem('tela') == 'cheia') {
+        setTimeout(
+            () => {
+                encolher('encolher')
+            }, 100
+        )
+        
+    }
+    }
+
 
 </script>
 

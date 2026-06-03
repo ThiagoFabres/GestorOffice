@@ -1,8 +1,12 @@
 <?php
 
 require_once __DIR__ . '/../../db/entities/usuarios.php';
+require_once __DIR__ . '/../../db/entities/empresas.php';
 session_start();
-if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
+
+$empresa_usuario_id = $_SESSION['usuario']->id_empresa;
+$empresa_usuario_obj = Empresa::read($empresa_usuario_id)[0];
+if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSION['usuario']->permissao_cartao != 1 || $empresa_usuario_obj->permissao_cartao != 1) {
     header('Location: /');
     exit;
 }

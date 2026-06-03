@@ -8,19 +8,16 @@ require_once __DIR__ . '/../../../db/entities/contas.php';
 require_once __DIR__ . '/../../../db/entities/fecha01.php';
 require_once __DIR__ . '/../../../db/entities/pagamento.php';
 require_once __DIR__ . '/../../../db/entities/ativ01.php';
+
 session_start();
 
-if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
+$empresa_usuario_id = $_SESSION['usuario']->id_empresa;
+$empresa_usuario_obj = Empresa::read($empresa_usuario_id)[0];
+if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSION['usuario']->permissao_inicio != 1 || $empresa_usuario_obj->permissao_inicio != 1) {
     header('Location: /');
     exit;
 }
 
-$empresa_usuario_id = $_SESSION['usuario']->id_empresa;
-$empresa_usuario_obj = Empresa::read($empresa_usuario_id)[0];
-if($empresa_usuario_obj->permissao_inicio == 0) {
-    header('Location: ../../index.php?erro=permissao');
-    exit;
-}
 
 $lateral_target = 'operacional_atividade';
 $lateral_operacional = true;
