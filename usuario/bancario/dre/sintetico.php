@@ -271,25 +271,35 @@ $titulos = array_values($titulos_array);
                                                     <tbody>
                                                         <?php
                                                         $total_subtitulo = 0;
-                                                        
+                                                        $parcelas_por_nome = [];
                                                         foreach ($subtitulos_consolidados_nomes as $nome_subtitulo => $dados) {
-                                                            $ids_subtitulo = $dados['ids'];
-                                                            $receita = 0;
+                                                            $parcelas_por_nome[$nome_subtitulo] = [];
+                                                        }
 
-                                                            // calcular soma dos valores dos lançamentos que têm esses ids_con02
-                                                            $soma = 0.0;
-                                                            if (!empty($lancamentos)) {
-                                                                foreach ($lancamentos as $lancamentos_lista) {
-                                                                    foreach($lancamentos_lista as $lan) {
-                                                                        if (in_array($lan->id_con02, $ids_subtitulo)) {
-                                                                            $soma += floatval($lan->valor);
+                                                        if (!empty($lancamentos)) {
+                                                            foreach ($lancamentos as $lancamentos_lista) {
+                                                                foreach($lancamentos_lista as $lan) {
+                                                                    foreach ($subtitulos_consolidados_nomes as $nome_subtitulo => $dados) {
+                                                                        if (in_array($lan->id_con02, $dados['ids'])) {
+                                                                            $parcelas_por_nome[$nome_subtitulo][] = $lan;
                                                                         }
                                                                     }
                                                                 }
                                                             }
+                                                        }
 
+                                                        foreach ($subtitulos_consolidados_nomes as $nome_subtitulo => $dados) {
+                                                            $parcelas = $parcelas_por_nome[$nome_subtitulo] ?? [];
+                                                            $receita = 0;
+                                                            if (count($parcelas) > 0) {
+                                                                foreach ($parcelas as $rec) {
+                                                                    $receita += floatval($rec->valor);
+                                                                }
+                                                            }
 
-                                                            $receita = $soma;
+                                                            if ($receita == 0) {
+                                                                continue;
+                                                            }
 
                                                             $total_subtitulo += $receita;
                                                             $receita_formatada = format_valor_alinhado($receita);
