@@ -33,17 +33,28 @@ $get_titulo = filter_input(INPUT_GET, 'titulo') ?: null;
 $get_subtitulo = null;
 $get_custos = filter_input(INPUT_GET, 'filtro_custos') ?? null;
 $get_operacional = filter_input(INPUT_GET, 'filtro_operacional') ?: null;
-$todas_empresas = filter_input(INPUT_GET, 'todas_empresas') == 'on' ? 1 : 0;
+$todas_empresas = filter_input(INPUT_GET, 'todas_empresas', FILTER_VALIDATE_BOOLEAN) ? 1 : 0;
 if ($get_titulo != null)
     $get_subtitulo = filter_input(INPUT_GET, 'subtitulo') ?: null;
-if($todas_empresas) {
+if ($todas_empresas) {
     $empresa = Empresa::read(id: $_SESSION['usuario']->id_empresa)[0];
     $empresa_lista = Empresa::read(cnpj_principal: $empresa->cnpj_principal);
 } else {
     $empresa_lista = Empresa::read(id: $_SESSION['usuario']->id_empresa);
 }
 
-if ($get_data_inicial != '' || $get_data_final != '' || $get_custos != '' || $get_operacional != '') {
+// Carrega centros de custo conforme empresas selecionadas
+$centros_custos = [];
+foreach ($empresa_lista as $empresa) {
+    foreach (CentroCustos::read(id_empresa: $empresa->id) as $custo) {
+        if (!isset($centros_custos[$custo->id])) {
+            $centros_custos[$custo->id] = $custo;
+        }
+    }
+}
+$centros_custos = array_values($centros_custos);
+
+if ($get_data_inicial != '' || $get_data_final != '' || $get_custos != '' || $get_operacional != '' || $todas_empresas) {
     $recebimentos = [];
     $pagamentos = [];
     foreach($empresa_lista as $empresa) {
@@ -98,24 +109,27 @@ if ($get_data_inicial != '' || $get_data_final != '' || $get_custos != '' || $ge
     }
     $titulos_array = [];
     $subtitulos_agrupados = [];
-    foreach($empresa_lista as $empresa) {
-        foreach ($subtitulos as $subtitulo) {
-            $titulo = Con01::read($subtitulo->id_con01, $empresa->id, filtro_operacional:$get_operacional);
-            if($titulo && isset($titulo[0])) {
-                $nome_titulo = $titulo[0]->nome;
-                if(!isset($titulos_array[$nome_titulo])) {
-                    $titulos_array[$nome_titulo] = $titulo[0];
-                    $subtitulos_agrupados[$nome_titulo] = [];
-                }
-                if (!in_array($subtitulo, $subtitulos_agrupados[$nome_titulo])) {
-                    $subtitulos_agrupados[$nome_titulo][] = $subtitulo;
+    foreach ($subtitulos as $subtitulo) {
+        $titulo = Con01::read($subtitulo->id_con01);
+        if ($titulo && isset($titulo[0])) {
+            $titulo = $titulo[0];
+            if ($get_operacional != null) {
+                if (($get_operacional == 1 && $titulo->operacional != 1) ||
+                    ($get_operacional == 2 && $titulo->operacional != 0)) {
+                    continue;
                 }
             }
+            $nome_titulo = $titulo->nome;
+            if (!isset($titulos_array[$nome_titulo])) {
+                $titulos_array[$nome_titulo] = $titulo;
+                $subtitulos_agrupados[$nome_titulo] = [];
+            }
+            $subtitulos_agrupados[$nome_titulo][$subtitulo->nome][] = $subtitulo;
         }
     }
     uasort($titulos_array, function($a, $b) {
-    return strcasecmp($a->nome, $b->nome);
-});
+        return strcasecmp($a->nome, $b->nome);
+    });
 
 $titulos = array_values($titulos_array);
     
@@ -220,8 +234,8 @@ $titulos = array_values($titulos_array);
                                             </select>
                                                 </div>
                                                 <div class="d-flex flex-column align-items-center">
-                                                <label for="data_final" id="input-label-todas-empresas" >Todas as Empresas:</label>
-                                                <input <?php if($todas_empresas) echo 'checked' ?> type="checkbox" name="todas_empresas">
+                                                <label for="todas_empresas" id="input-label-todas-empresas">Todas as Empresas:</label>
+                                                <input <?php if($todas_empresas) echo 'checked' ?> type="checkbox" id="todas_empresas" name="todas_empresas" value="1">
                                         </div>  
                                         
 
@@ -264,15 +278,13 @@ $titulos = array_values($titulos_array);
                         $total_despesas = [];
                             foreach ($titulos as $i => $titulo) {
                                 $subtitulos_do_titulo = $subtitulos_agrupados[$titulo->nome] ?? [];
-                                
-                                // Agrupar subtítulos por nome
-                                $subtitulos_agrupados_por_nome = [];
-                                foreach ($subtitulos_do_titulo as $subtitulo) {
-                                    if (!isset($subtitulos_agrupados_por_nome[$subtitulo->nome])) {
-                                        $subtitulos_agrupados_por_nome[$subtitulo->nome] = $subtitulo;
-                                    }
+                                $subtitulos_filtrados = [];
+                                foreach ($subtitulos_do_titulo as $nome_subtitulo => $subtitulos_multiples) {
+                                    $subtitulos_filtrados[] = [
+                                        'nome' => $nome_subtitulo,
+                                        'subtitulos' => $subtitulos_multiples,
+                                    ];
                                 }
-                                $subtitulos_filtrados = array_values($subtitulos_agrupados_por_nome);
 
                                 ?>
 
@@ -304,21 +316,37 @@ $titulos = array_values($titulos_array);
                                                         <tbody>
                                                             <?php
                                                             $total_subtitulo = 0;
-                                                            foreach ($subtitulos_filtrados as $subtitulo) {
+                                                            foreach ($subtitulos_filtrados as $subtitulo_group) {
                                                                 $receita = 0;
-                                                                if ($titulo->tipo == 'D') {
-
-                                                                    $recebimentos_parcelas = Pag02::read(null, filtro_con02: $subtitulo->id, filtro_opcao: 'quitados', filtro_por: 'pagamento', filtro_data_inicial: $get_data_inicial, filtro_data_final: $get_data_final, filtro_custos: $get_custos);
-                                                                   
-                                                                } else {
-                                                                    $recebimentos_parcelas = Rec02::read(null, filtro_con02: $subtitulo->id, filtro_opcao: 'quitados', filtro_por: 'pagamento', filtro_data_inicial: $get_data_inicial, filtro_data_final: $get_data_final, filtro_custos: $get_custos);
-                                                                
+                                                            $recebimentos_parcelas = [];
+                                                            $subtitulos_ids = array_column($subtitulo_group['subtitulos'], 'id');
+                                                            foreach ($empresa_lista as $empresa) {
+                                                                foreach ($subtitulo_group['subtitulos'] as $subtitulo) {
+                                                                    if ($titulo->tipo == 'D') {
+                                                                        $recebimentos_parcelas = array_merge($recebimentos_parcelas, Pag02::read(
+                                                                            id_empresa: $empresa->id,
+                                                                            filtro_con02: $subtitulo->id,
+                                                                            filtro_opcao: 'quitados',
+                                                                            filtro_por: 'pagamento',
+                                                                            filtro_data_inicial: $get_data_inicial,
+                                                                            filtro_data_final: $get_data_final,
+                                                                            filtro_custos: $get_custos
+                                                                        ));
+                                                                    } else {
+                                                                        $recebimentos_parcelas = array_merge($recebimentos_parcelas, Rec02::read(
+                                                                            id_empresa: $empresa->id,
+                                                                            filtro_con02: $subtitulo->id,
+                                                                            filtro_opcao: 'quitados',
+                                                                            filtro_por: 'pagamento',
+                                                                            filtro_data_inicial: $get_data_inicial,
+                                                                            filtro_data_final: $get_data_final,
+                                                                            filtro_custos: $get_custos
+                                                                        ));
+                                                                    }
                                                                 }
-
-                                                                
-
+                                                            }
                                                                 foreach ($recebimentos_parcelas as $rec) {
-                                                                    if ($rec->id_con02 == $subtitulo->id) {
+                                                                    if (in_array($rec->id_con02, $subtitulos_ids, true)) {
                                                                         $receita += $rec->valor_pag;
                                                                     }
 
@@ -334,7 +362,7 @@ $titulos = array_values($titulos_array);
                                                                 ?>
 
                                                                 <tr class="tr-dre-sintetico">
-                                                                    <td style="width:75%;"><?= htmlspecialchars($subtitulo->nome, ENT_QUOTES, 'UTF-8') ?></td>
+                                                                    <td style="width:75%;"><?= htmlspecialchars($subtitulo_group['nome'], ENT_QUOTES, 'UTF-8') ?></td>
                                                                     <td style="width:25%;" ><div class="valor-monetario"><div>R$</div> <div> <?=$receita_formatada?> </div></div></td>
                                                                 </tr>
 

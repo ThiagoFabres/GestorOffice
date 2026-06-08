@@ -361,9 +361,8 @@ $titulos = [];
                                                             <?php
                                                             $total_subtitulo = 0;
                                                             $total_bancario = 0;
+                                                            $total_diferenca_titulo = 0;
 
-                                                           
-                                                            
                                                             foreach ($subtitulos_filtrados as $subtitulo) {
                                                                 $receita_financeiro = 0;
                                                                 $receita_bancario = 0;
@@ -376,16 +375,14 @@ $titulos = [];
                                                                     $recebimentos_parcelas = Rec02::read(null, filtro_con02: $subtitulo->id, filtro_opcao: 'quitados', filtro_por: 'pagamento', filtro_data_inicial: $get_data_inicial, filtro_data_final: $get_data_final, filtro_custos: $get_custos);
                                                                 
                                                                 }
+                                                                $recebimentos_bancario = [];
                                                                 foreach($empresa_lista as $empresa) {
-                                                                    $recebimentos_bancario = Ban02::read(id_empresa: $empresa->id, filtro_subtitulo: $subtitulo->id, filtro_data_inicial: $get_data_inicial, filtro_data_final: $get_data_final);
+                                                                    $recebimentos_bancario = array_merge($recebimentos_bancario, Ban02::read(id_empresa: $empresa->id, filtro_subtitulo: $subtitulo->id, filtro_data_inicial: $get_data_inicial, filtro_data_final: $get_data_final));
                                                                 }
-
-
-                                                                
 
                                                                 foreach ($recebimentos_parcelas as $rec) {
                                                                     if ($rec->id_con02 == $subtitulo->id) {
-                                                                        $receita_fincanceiro += $rec->valor_pag;
+                                                                        $receita_financeiro += $rec->valor_pag;
                                                                     }
 
                                                                 }
@@ -394,21 +391,19 @@ $titulos = [];
                                                                         $receita_bancario += $rec->valor;
                                                                     }
                                                                 }
-                                                                
-                                            
-                                                                
+
                                                                 if ($titulo->tipo == 'D') {
-                                                                    $receita_fincanceiro = $receita_fincanceiro * (-1);
+                                                                    $receita_financeiro = $receita_financeiro * (-1);
                                                                 }
-                                                                $diferenca = $receita_fincanceiro - $receita_bancario;
-                                                                $total_subtitulo += $receita_fincanceiro;
+                                                                $diferenca = $receita_financeiro - $receita_bancario;
+                                                                $total_subtitulo += $receita_financeiro;
                                                                 $total_bancario += $receita_bancario;
 
-                                                                $saldo_financeiro += $receita_fincanceiro;
+                                                                $saldo_financeiro += $receita_financeiro;
                                                                 $saldo_bancario += $receita_bancario;
-                                                                $total_diferenca += $receita_fincanceiro - $receita_bancario;
+                                                                $total_diferenca += $diferenca;
 
-                                                                $receita_fincanceiro_formatada = format_valor_alinhado($receita_fincanceiro);
+                                                                $receita_financeiro_formatada = format_valor_alinhado($receita_financeiro);
                                                                 $receita_bancario_formatada = format_valor_alinhado($receita_bancario);
                                                                 $diferenca_formatada = format_valor_alinhado($diferenca);
                                                                 
@@ -416,7 +411,7 @@ $titulos = [];
 
                                                                 <tr class="tr-dre-sintetico">
                                                                     <td style="width:25%;"><?= htmlspecialchars($subtitulo->nome, ENT_QUOTES, 'UTF-8') ?></td>
-                                                                    <td style="width:25%;" ><div class="valor-monetario"><div>R$</div> <div> <?=$receita_fincanceiro_formatada?> </div></div></td>
+                                                                    <td style="width:25%;" ><div class="valor-monetario"><div>R$</div> <div> <?=$receita_financeiro_formatada?> </div></div></td>
                                                                     <td style="width:25%;" ><div class="valor-monetario"><div>R$</div> <div> <?=$receita_bancario_formatada?> </div></div></td>
                                                                     <td style="width:25%;" ><div class="valor-monetario"><div>R$</div> <div> <?=$diferenca_formatada?> </div></div></td>
                                                                 </tr>
@@ -429,7 +424,7 @@ $titulos = [];
                                                                 <td>Total do Titulo:</td>
                                                                 <td id="total-dre-sintetico"><div>R$</div><div><?= number_format($total_subtitulo, 2, ',', '.') ?></div></td>
                                                                 <td> <div class="d-flex flex-row justify-content-between"><div>R$</div><div><?= number_format($total_bancario, 2, ',', '.') ?></div></div></td>
-                                                                <td> <div class="d-flex flex-row justify-content-between"><div>R$</div><div><?= number_format($total_diferenca, 2, ',', '.') ?></div></div></td>
+                                                                <td> <div class="d-flex flex-row justify-content-between"><div>R$</div><div><?= number_format($total_diferenca_titulo, 2, ',', '.') ?></div></div></td>
                                                             </tr>
                                                             </tbody>
                                                         </tbody>
