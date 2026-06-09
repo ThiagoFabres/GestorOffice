@@ -159,6 +159,25 @@ $operadoras_suporte = [
             'suporte_data' => 'hora',
             'suporte_numero' => 'formatado',
         ],
+        'csv' => [
+            'colunas' => [
+                'data' =>'Data da venda',
+                'status' => 'Status',
+                'valor_b' => 'Valor bruto',
+                'valor_l' => 'Valor lï¿½quido',
+                'tipo' => 'Produto',
+                'bandeira' => 'Bandeira',
+                'parcela' => 'Parcelas'
+            ],
+            'suporte_encoding' => false,
+            'linha_inicial' => null,
+            'suporte_status' => true,
+            'suporte_parcela' => true,
+            'suporte_data' => 'hora',
+            
+            'separator' => ';',
+            'encoding' => 'ISO-8859-1',
+        ]
     ],
     'fazpay' => [
         'xlsx' => [

@@ -540,27 +540,55 @@ function parse_csv(string $caminhoCsv): array {
         throw new Exception('Arquivo CSV não encontrado.');
     }
 
-    if (($handle = fopen($caminhoCsv, 'r')) === false) {
-        throw new Exception('Não foi possível abrir o CSV.');
-    }
+    // Ler arquivo inteiro e converter encoding
+    $conteudo = file_get_contents($caminhoCsv);
+    $conteudo = mb_convert_encoding($conteudo, 'UTF-8', $operadora_sup['encoding']);
     
-
-    // Lê o cabeçalho
-    $cabecalho = fgetcsv($handle, 0, $operadora_sup['separator']);
-    $linha = 0;
+    
+    // Dividir em linhas
+    $linhas = preg_split('/\r\n|\r|\n/', $conteudo);
+    
+    // Processar cabeçalho
+    $cabecalho_str = array_shift($linhas);
+    $cabecalho = str_getcsv($cabecalho_str, $operadora_sup['separator']);
+    $cabecalho = array_map('trim', $cabecalho);
+    
+    $linha_num = 1;
     if($operadora_sup['linha_inicial'] != null){
-        while (($row = fgetcsv($handle, 0, ';')) !== false) {
-            $linha++;
-
-            if ($linha === $operadora_sup['linha_inicial'] - 1) {
-                $cabecalho = array_map('trim', mb_convert_encoding($row, 'UTF-8', $operadora_sup['encoding']));
-                break;
-            }
+        while($linha_num < $operadora_sup['linha_inicial'] && !empty($linhas)) {
+            array_shift($linhas);
+            $linha_num++;
+        }
+        if(!empty($linhas)) {
+            $cabecalho_str = array_shift($linhas);
+            $cabecalho = str_getcsv($cabecalho_str, $operadora_sup['separator']);
+            $cabecalho = array_map('trim', $cabecalho);
         }
     }
 
     // Normaliza o cabeçalho
-    $mapa = array_flip(array_map('trim', $cabecalho));
+    $mapa = array_flip($cabecalho);
+    // echo '<pre>';
+    // print_r($mapa);
+    // echo '</pre>';
+    // exit;
+    
+    // Função auxiliar para remover acentos
+    $remover_acentos = function($str) {
+        return strtolower(preg_replace('/[^a-z0-9]/i', '', iconv('UTF-8', 'ASCII//TRANSLIT', $str)));
+    };
+
+    // Criar mapa normalizado para busca
+    $mapa_normalizado = [];
+    foreach($cabecalho as $chave) {
+        $chave_normalizada = $remover_acentos($chave);
+        $mapa_normalizado[$chave_normalizada] = $chave;
+    }
+
+    // Aplicar variáveis globalmente para reutilização
+    $GLOBALS['mapa'] = $mapa;
+    $GLOBALS['mapa_normalizado'] = $mapa_normalizado;
+    $GLOBALS['remover_acentos'] = $remover_acentos;
     
     $bandeiras = Band01::read(null, $_SESSION['usuario']->id_empresa, $id_operadora);
     $parcelas = [];
@@ -583,12 +611,35 @@ function parse_csv(string $caminhoCsv): array {
     }
 
     $i = 0;
-    while (($linha = fgetcsv($handle, 0, $operadora_sup['separator'])) !== false) {
-        $status = $linha[$mapa[$operadora_sup['colunas']['status']]] ?? null;
+    foreach ($linhas as $linha_str) {
+        if (trim($linha_str) === '') continue;
+        
+        $linha = str_getcsv($linha_str, $operadora_sup['separator']);
+        
+        // Função auxiliar para obter valor da linha pela coluna
+        $get_valor_coluna = function($nome_coluna) use ($linha) {
+            $mapa_normalizado = $GLOBALS['mapa_normalizado'];
+            $mapa = $GLOBALS['mapa'];
+            $remover_acentos = $GLOBALS['remover_acentos'];
+            
+            $nome_normalizado = $remover_acentos($nome_coluna);
+            if(isset($mapa_normalizado[$nome_normalizado])) {
+                $chave_original = $mapa_normalizado[$nome_normalizado];
+                if(isset($mapa[$chave_original])) {
+                    $indice = $mapa[$chave_original];
+                    if(isset($linha[$indice])) {
+                        return $linha[$indice];
+                    }
+                }
+            }
+            return null;
+        };
+        
+        $status = $get_valor_coluna($operadora_sup['colunas']['status']) ?? null;
         if($operadora_sup['suporte_parcela'] === false) {
             $parcela = 1;
         } else {
-            $parcela = $linha[$mapa[$operadora_sup['colunas']['parcela']]];
+            $parcela = $get_valor_coluna($operadora_sup['colunas']['parcela']);
         }
 
         if(($parcela === null || $parcela == '')&& $operadora_sup['suporte_parcela'] === false) {
@@ -601,27 +652,33 @@ function parse_csv(string $caminhoCsv): array {
         if($status == 'cancelada' || $status == 'negada') {
             continue;
         }
-        $valorBruto = isset($linha[$mapa[$operadora_sup['colunas']['valor_b']]])
-            ? floatval(str_replace(['.', ','], ['', '.'], $linha[$mapa[$operadora_sup['colunas']['valor_b']]]))
+        
+        $valor_b_str = $get_valor_coluna($operadora_sup['colunas']['valor_b']);
+        // Limpar "R$" e espaços antes de converter
+        $valor_b_str = trim(str_replace('R$', '', $valor_b_str ?? ''));
+        $valorBruto = !empty($valor_b_str) 
+            ? floatval(str_replace(['.', ','], ['', '.'], $valor_b_str))
             : 0;
 
-        $valorLiquido = isset($linha[$mapa[$operadora_sup['colunas']['valor_l']]])
-            ? floatval(str_replace(['.', ','], ['', '.'], $linha[$mapa[$operadora_sup['colunas']['valor_l']]]))
+        $valor_l_str = $get_valor_coluna($operadora_sup['colunas']['valor_l']);
+        // Limpar "R$" e espaços antes de converter
+        $valor_l_str = trim(str_replace('R$', '', $valor_l_str ?? ''));
+        $valorLiquido = !empty($valor_l_str) 
+            ? floatval(str_replace(['.', ','], ['', '.'], $valor_l_str))
             : 0;
 
-        if($valorLiquido == 0|| $valorBruto == 0) {
-            continue;
+        if($valorLiquido == 0 || $valorBruto == 0) {
+            // continue;
         }
+        
         // Data e hora → só data
-        $data = $linha[$mapa[$operadora_sup['colunas']['data']]] ?? null;
+        $data = $get_valor_coluna($operadora_sup['colunas']['data']) ?? null;
 
         if($operadora_sup['suporte_data'] == 'hora'){
             $data = strtolower($data);
             $data = str_replace( ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez', ',', '/'], ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '', ' '], $data);
             $data = substr($data, 0, 10);
-
-
-                $data = (DateTime::createFromFormat('d m Y', $data))->format('Y-m-d');
+            $data = (DateTime::createFromFormat('d m Y', $data))->format('Y-m-d');
         }
         if($operadora_sup['suporte_data'] == 'formatada'){
             $data = (DateTime::createFromFormat('d/m/Y', $data))->format('Y-m-d');
@@ -636,10 +693,31 @@ function parse_csv(string $caminhoCsv): array {
         }
         $parcela = intval($parcela);
 
-        $bandeira_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', mb_convert_encoding($linha[$mapa[$operadora_sup['colunas']['bandeira']]], 'UTF-8', $operadora_sup['encoding']))));
-        $tipo_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', mb_convert_encoding($linha[$mapa[$operadora_sup['colunas']['tipo']]], 'UTF-8', $operadora_sup['encoding']))));
-        $tipo = $linha[$mapa[$operadora_sup['colunas']['tipo']]];
+        $bandeira_valor = $get_valor_coluna($operadora_sup['colunas']['bandeira']) ?? '';
+        $tipo_valor = $get_valor_coluna($operadora_sup['colunas']['tipo']) ?? '';
+        
+        // Normalizar: remover acentos, números e caracteres especiais
+        $bandeira_preg = strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $bandeira_valor));
+        $bandeira_preg = preg_replace('/[^a-z]/', '', $bandeira_preg);
+        
+        $tipo_preg = strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $tipo_valor));
+        $tipo_preg = preg_replace('/[^a-z]/', '', $tipo_preg);
+        if($tipo_preg == 'dibito') {
+            $tipo_preg = 'debito';
+        }
+        
+        if($tipo_preg == 'criditoivista' || $tipo_preg == 'creditoavista' || $tipo_preg == 'credav') {
+            $tipo_preg = 'credito';
+        }
+        if($tipo_preg == 'dibitoivista' || $tipo_preg == 'debitoavista' || $tipo_preg == 'debav') {
+            $tipo_preg = 'debito';
+        }
+        if(str_starts_with($tipo_preg, 'pix')) {
+            $tipo_preg = 'pix';
+        }
+        
         $tipo = $tipo_preg;
+        
         if(str_starts_with($tipo_preg, 'debito')) {
             $tipo = 'debito';
         } 
@@ -648,7 +726,7 @@ function parse_csv(string $caminhoCsv): array {
         }
 
         // Definir bandeira como 'pix' antes de procurar nos bandeiras_obj
-        $bandeira = mb_convert_encoding($linha[$mapa[$operadora_sup['colunas']['bandeira']]], 'UTF-8', $operadora_sup['encoding']);
+        $bandeira = $bandeira_valor;
         if($tipo == 'pix' || str_starts_with($tipo_preg, 'pix')) {
             $bandeira = 'pix';
             $bandeira_preg = 'pix';
@@ -661,7 +739,6 @@ function parse_csv(string $caminhoCsv): array {
                 $bandeira_id = $obj->id;
             }
         }
-        $tipo = mb_convert_encoding($tipo, 'UTF-8', $operadora_sup['encoding']);
         
         $transactions['lancamentos'][$i] = [
             'data'          => $data,
@@ -674,8 +751,6 @@ function parse_csv(string $caminhoCsv): array {
             'bandeira_id'   => $bandeira_id ?? null,
             'motivo'        => []
         ];
-
-        
 
         $bandeira_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $transactions['lancamentos'][$i]['bandeira'])));
         $tipo_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $transactions['lancamentos'][$i]['tipo'])));
@@ -711,8 +786,6 @@ function parse_csv(string $caminhoCsv): array {
 
     $i++;
     }
-
-    fclose($handle);
 
     return $transactions;
 }
