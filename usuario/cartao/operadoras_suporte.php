@@ -105,7 +105,7 @@ $operadoras_suporte = [
                 'data' =>'data da venda',
                 'status' => 'status da venda',
                 'valor_b' => 'valor da venda original',
-                'valor_l' => 'valor líquido',
+                'valor_l' => 'valor liquido',
                 'tipo' => 'modalidade',
                 'bandeira' => 'bandeira',
                 'parcela' => 'número de parcelas'
@@ -115,7 +115,6 @@ $operadoras_suporte = [
             'suporte_status' => true,
             'suporte_parcela' => true,
             'suporte_data' => 'formatada',
-            
             'separator' => ';',
             'encoding' => 'UTF-8',
         ]
