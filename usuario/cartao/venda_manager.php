@@ -678,7 +678,7 @@ function parse_csv(string $caminhoCsv): array {
             : 0;
 
         if($valorLiquido == 0 || $valorBruto == 0) {
-            // continue;
+            continue;
         }
         
         // Data e hora → só data
