@@ -36,6 +36,7 @@ Class Con01 {
         $tipo = null, 
         $ordenar_por = null,
         $filtro_operacional = null,
+        $nome = null,
         ) : array {
 
         $pdo = (new Database())->connect();
@@ -51,6 +52,9 @@ Class Con01 {
             } else if($filtro_operacional == 2) {
                 $conditions[] = ' operacional = 0';
             }
+        }
+        if ($nome != null) {
+            $conditions[] = ' nome LIKE :nome';
         }
 
         if ($conditions) {
@@ -71,6 +75,7 @@ Class Con01 {
         if ($id != null) $stmt->bindValue(':id', $id);
         if ($idempresa != null) $stmt->bindValue(':id_empresa', $idempresa);
         if ($tipo != null) $stmt->bindValue(':tipo', $tipo);
+        if ($nome != null) $stmt->bindValue(':nome', $nome);
         $stmt->execute();
         $stmt->setFetchMode(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, Con01::class);
         return $stmt->fetchAll();

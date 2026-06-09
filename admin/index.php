@@ -458,7 +458,7 @@ $lista_cidades = [];
             <div class="d-flex flex-row justify-content-between" >
                 <div class="d-flex flex-column">
                     <label for="parceiro">Parceiro</label>
-                    <input type="text" onchange="checar()" name="parceiro" class="form-control rounded-0" placeholder="Parceiro" value="<?= $empresa->parceiro ?? '' ?>" required>
+                    <input type="text" onchange="checar()" name="parceiro" class="form-control rounded-0" placeholder="Parceiro" value="<?= $empresa->parceiro ?? '' ?>">
                 </div>
                 <div class="d-flex flex-column">
                     <label for="royalty">Royalty</label>
@@ -623,19 +623,19 @@ $lista_cidades = [];
                         <div class="d-flex flex-row mb-3">
                             <div class="d-flex flex-column" style="width: calc(100%/3);">
                                 <label for="ativ_inicio">Inicio de Atividade:</label>
-                                <input type="time" onchange="checar()" name="ativ_inicio" class="form-control rounded-0" placeholder="Inicio de Atividade" value="" required style="height: 2.75em;">
+                                <input type="time" onchange="checar()" name="ativ_inicio" class="form-control rounded-0" placeholder="Inicio de Atividade" value=""  style="height: 2.75em;">
                             </div>
                             <div class="d-flex flex-column" style="width: calc(100%/3);">
                                 <label for="tolerancia">Tolerância (Minutos)</label>
-                                <input type="number" onchange="checar()" name="tolerancia" class="form-control rounded-0" placeholder="Tolerância" value="" required>
+                                <input type="number" onchange="checar()" name="tolerancia" class="form-control rounded-0" placeholder="Tolerância" value="" >
                             </div>
                             <div class="d-flex flex-column" style="width: calc(100%/3);">
                                 <label for="cel1">Celular 1 (Atividade)</label>
-                                <input type="text" onchange="checar()" name="cel1" class="form-control rounded-0" placeholder="Celular 1" value="" required>
+                                <input type="text" onchange="checar()" name="cel1" class="form-control rounded-0" placeholder="Celular 1" value="" >
                             </div>
                             <div class="d-flex flex-column" style="width: calc(100%/3);">
                                 <label for="cel2">Celular 2 (Atividade)</label>
-                                <input type="text" onchange="checar()" name="cel2" class="form-control rounded-0" placeholder="Celular 2" value="" required>
+                                <input type="text" onchange="checar()" name="cel2" class="form-control rounded-0" placeholder="Celular 2" value="" >
                             </div>
                             
                         </div>
@@ -647,7 +647,7 @@ $lista_cidades = [];
                 <div class="d-flex flex-row justify-content-between" >
                     <div class="d-flex flex-column">
                         <label for="parceiro">Parceiro</label>
-                        <input type="text" onchange="checar()" name="parceiro" class="form-control rounded-0" placeholder="Parceiro" value="<?= $empresa->parceiro ?? '' ?>" required>
+                        <input type="text" onchange="checar()" name="parceiro" class="form-control rounded-0" placeholder="Parceiro" value="<?= $empresa->parceiro ?? '' ?>" >
                     </div>
                 
                     <div class="d-flex flex-column">
