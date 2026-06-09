@@ -59,6 +59,10 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'editar') {
     if($royalty == '0,00') {
         $royalty = null;
     }
+    $taxa_marketing = $_POST['taxa_marketing'] == '' ? null : floatval(str_replace(',', '.', $_POST['taxa_marketing'])) ?? null;
+    if($taxa_marketing == '0,00') {
+        $taxa_marketing = null;
+    }
 
     if(strlen($estado) == 2){$estado = mb_strtoupper($estado);};
 
@@ -91,7 +95,8 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'editar') {
         celular2_atividade: $celular2_atividade,
         parceiro: $parceiro,
         permissao_notificacao: $permissao_notificacao,
-        royalty: $royalty
+        royalty: $royalty,
+        taxa_marketing: $taxa_marketing
 );
 
 $gestor_atual = Usuario::read(idempresa:$id, cargo:Cargo::GESTOR)[0];
@@ -171,6 +176,14 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'adicionar') {
     $celular1_atividade = $_POST['cel1'] ?? null;
     $celular2_atividade = $_POST['cel2'] ?? null;
     $parceiro = $_POST['parceiro'] ?? null;
+    $royalty = $_POST['royalty'] == '' ? null : floatval(str_replace(',', '.', $_POST['royalty'])) ?? null;
+    if($royalty == '0,00') {
+        $royalty = null;
+    }
+    $taxa_marketing = $_POST['taxa_marketing'] == '' ? null : floatval(str_replace(',', '.', $_POST['taxa_marketing'])) ?? null;
+    if($taxa_marketing == '0,00') {
+        $taxa_marketing = null;
+    }
 
     $empresa = new Empresa(
         null, // id
@@ -200,6 +213,8 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'adicionar') {
         celular1_atividade: $celular1_atividade,
         celular2_atividade: $celular2_atividade,
         parceiro: $parceiro,
+        royalty: $royalty,
+        taxa_marketing: $taxa_marketing
     );
     
 $gestor = new Usuario(

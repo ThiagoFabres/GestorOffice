@@ -464,6 +464,10 @@ $lista_cidades = [];
                     <label for="royalty">Royalty</label>
                     <input type="text" onchange="checar()" name="royalty" class="form-control rounded-0" placeholder="Royalty" value="<?= $empresa->royalty ? number_format($empresa->royalty ?? 0, 2, ',', '.') : '' ?>">
                 </div>
+                <div class="d-flex flex-column">
+                    <label for="taxa_marketing">Taxa de Marketing</label>
+                    <input type="text" onchange="checar()" name="taxa_marketing" class="form-control rounded-0" placeholder="Taxa de Marketing" value="<?= $empresa->taxa_marketing ? number_format($empresa->taxa_marketing ?? 0, 2, ',', '.') : '' ?>">
+                </div>
                 
             
                 <div class="d-flex flex-column">
@@ -641,27 +645,34 @@ $lista_cidades = [];
                         </div>
 
                         
-                        <div class="checkbox-group d-flex flex-row justify-content-between">
+                        <div class="checkbox-group d-flex flex-row justify-content-between gap-3">
 
                 <div class="d-flex flex-column">
-                <div class="d-flex flex-row justify-content-between" >
-                    <div class="d-flex flex-column">
-                        <label for="parceiro">Parceiro</label>
-                        <input type="text" onchange="checar()" name="parceiro" class="form-control rounded-0" placeholder="Parceiro" value="<?= $empresa->parceiro ?? '' ?>" >
+                    <div class="d-flex flex-row justify-content-between" >
+                        <div class="d-flex flex-column">
+                            <label for="parceiro">Parceiro</label>
+                            <input type="text" onchange="checar()" name="parceiro" class="form-control rounded-0" placeholder="Parceiro" value="<?= $empresa->parceiro ?? '' ?>" >
                     </div>
-                
+                        <div class="d-flex flex-column">
+                        <label for="royalty">Royalty</label>
+                        <input type="text" onchange="checar()" name="royalty" class="form-control rounded-0" placeholder="Royalty" value="<?= $empresa->royalty ? number_format($empresa->royalty ?? 0, 2, ',', '.') : '' ?>">
+                    </div>
                     <div class="d-flex flex-column">
-                        <label for="logo">Logo Customizada:</label>
-                        <input type="file" name="logo" class="form-control rounded-0" placeholder="Logo" value="<?= $empresa->logo ?? '' ?>" style="height:2.75em;">
+                        <label for="taxa_marketing">Taxa de Marketing</label>
+                        <input type="text" onchange="checar()" name="taxa_marketing" class="form-control rounded-0" placeholder="Taxa de Marketing" value="<?= $empresa->taxa_marketing ? number_format($empresa->taxa_marketing ?? 0, 2, ',', '.') : '' ?>">
+                    </div>
+                        <div class="d-flex flex-column">
+                            <label for="logo">Logo Customizada:</label>
+                            <input type="file" name="logo" class="form-control rounded-0" placeholder="Logo" value="<?= $empresa->logo ?? '' ?>" style="height:2.75em;">
+                        </div>
+                    </div>
+                    <div>
+                        <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                            <label for="status" style="margin-bottom:0;">Ativo</label>
+                            <input type="checkbox" checked onchange="" name="status" class="form-check-input"value="">
+                            </div>
                     </div>
                 </div>
-            <div>
-                <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
-                    <label for="status" style="margin-bottom:0;">Ativo</label>
-                    <input type="checkbox" checked onchange="" name="status" class="form-check-input"value="">
-                    </div>
-            </div>
-                                </div>
 
                             <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 1em;">
             <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
