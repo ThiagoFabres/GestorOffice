@@ -1,6 +1,12 @@
 <?php
 date_default_timezone_set('America/Sao_Paulo');
 require_once __DIR__ . '/../db/entities/logo.php';
+require_once __DIR__ . '/../db/entities/empresas.php';
+require_once __DIR__ . '/../db/entities/usuarios.php';
+require_once __DIR__ . '/../db/entities/cadastro.php';
+require_once __DIR__ . '/../db/entities/centrocustos.php';
+require_once __DIR__ . '/../db/entities/pagamento.php';
+require_once __DIR__ . '/../db/entities/contas.php';
 
 function permissao() {
         // Exemplo: só permite se o usuário logado for admin
@@ -195,6 +201,7 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'adicionar') {
         celular2_atividade: $celular2_atividade,
         parceiro: $parceiro,
     );
+    
 $gestor = new Usuario(
     null, // id_usuario
     null, // id_empresa
@@ -207,10 +214,10 @@ $gestor = new Usuario(
     $status
 );
 
-// Atribuindo cargo
+
+
 try {
     atribuirCargo($gestor->cargo);
-    // O cargo foi atribuído com sucesso
 } catch (Exception $e) {
     echo 'Erro: ' . $e->getMessage();
 }
@@ -218,16 +225,97 @@ try {
 if(!Empresa::read(null, $email) && !Usuario::read(null, $email)) { 
 
     Empresa::create($empresa);
-    $empresacriada = Empresa::read(null, $email);
-    $empresaid = $empresacriada[0];
-    $gestor->id_empresa = $empresaid->id;
+    $empresa_criada = Empresa::read(null, $email);
+    $empresa_id = $empresa_criada[0];
+    $gestor->id_empresa = $empresa_id->id;
     Usuario::create($gestor);
-    
+
+    //cadastro padrão
+
+$cliente_fornecedor = new Cadastro(
+    id_cadastro: null,
+    id_empresa: $empresa_id->id,
+    razao_soc: 'DIVERSOS',
+    nom_fant: 'DIVERSOS',
+    data_r: date('Y-m-d H:i:s')
+);
+Cadastro::create($cliente_fornecedor);
+$centro_custos_lista = ['EMPRESA', 'PARTICULAR'];
+foreach ($centro_custos_lista as $centro_custo) {
+    $centrocustos = new CentroCustos(id_empresa: $empresa_id->id, nome:$centro_custo);
+    CentroCustos::create($centrocustos);
+}
+$tipo_pagamento_lista = ['DINHEIRO', 'PIX', 'CRÉDITO', 'DÉBITO', 'BOLETO'];
+foreach ($tipo_pagamento_lista as $tipo_pagamento) {
+    $tipopagamento = new TipoPagamento(id_empresa: $empresa_id->id, nome:$tipo_pagamento);
+    TipoPagamento::create($tipopagamento);
+}
+
+$lista_plano_contas = [
+        '01 - RECEITAS' => [
+        'Operacional' => true,
+        'Tipo' => 'C',
+        'Subtitulos' => []
+    ], 
+        '02 - DESPESAS FIXAS' => [
+        'Operacional' => true,
+        'Tipo' => 'D',
+        'Subtitulos' => ['ALUGUEL', 'INTERNET E TELEFONE', 'FORNECEDORES', 'CONTABILIDADE', 'MANUTENÇÃO SISTEMAS', 'AGUA', 'ENERGIA', 'IMPOSTOS', 'TAXA BANCÁRIA']
+    ],
+        '03 - DESPESAS VARIÁVEIS' => [
+        'Operacional' => true,
+        'Tipo' => 'D',
+        'Subtitulos' => ['USO E CONSUMO', 'USO E CONSUMO', 'COMBUSTÍVEL', 'DIVERSOS', 'NÃO IDENTIFICADO']
+    ],
+        '04 - PRÓ-LABORE' => [
+        'Operacional' => true,
+        'Tipo' => 'D',
+        'Subtitulos' => ['PRÓ-LABORE']
+    ],
+        '05 - CRÉDITO NÃO OPERACIONAL' => [
+        'Operacional' => false,
+        'Tipo' => 'C',
+        'Subtitulos' => ['TRANSFERENCIA ENTRE CONTAS', 'RESGATE DE APLICAÇÃO']
+    ],
+        '06 - DÉBITO NÃO OPERACIONAL' => [
+        'Operacional' => false,
+        'Tipo' => 'D',
+        'Subtitulos' => ['TRANSFERENCIA ENTRE CONTAS', 'ACORDO', 'APLICAÇÃO', 'DEVOLUÇÃO']
+    ]
+];
+
+foreach ($lista_plano_contas as $titulo => $dados) {
+    $conta_criada = null;
+    $conta_id = null;
+
+    $conta = new Con01(
+        id_empresa: $empresa_id->id,
+        tipo: $dados['Tipo'],
+        nome: $titulo,
+        operacional: $dados['Operacional'] ? 1 : 0
+    );
+    Con01::create($conta);
+    $conta_criada = Con01::read(idempresa:$empresa_id->id, nome:$titulo);
+    $conta_id = $conta_criada[0]->id;
+    if(empty($lista_plano_contas[$titulo]['Subtitulos'])) {
+        continue;
+    }
+    foreach ($lista_plano_contas[$titulo]['Subtitulos'] as $subtitulo) {
+        $conta_sub = new Con02(
+            id_empresa: $empresa_id->id,
+            id_con01: $conta_id,
+            nome: $subtitulo,
+            codigo: 0
+        );
+        Con02::create($conta_sub);
+    }
+}
+
     // Processar logo se arquivo foi enviado
     if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK && $_FILES['logo']['size'] > 0) {
         $foto_blob = file_get_contents($_FILES['logo']['tmp_name']);
         if ($foto_blob && strlen($foto_blob) > 0) {
-            $logo = new Logo(null, $empresaid->id, $foto_blob);
+            $logo = new Logo(null, $empresa_id->id, $foto_blob);
             Logo::create($logo);
         }
     }
