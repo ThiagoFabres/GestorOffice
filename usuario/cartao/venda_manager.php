@@ -590,11 +590,20 @@ function parse_csv(string $caminhoCsv): array {
     $GLOBALS['mapa_normalizado'] = $mapa_normalizado;
     $GLOBALS['remover_acentos'] = $remover_acentos;
     
+    // Buscar lançamentos já importados para verificar duplicatas
+    $importadas = Rec03::read(id_empresa: $_SESSION['usuario']->id_empresa, operadora_id:$operadora->id);
+
+    $importadas_set = [];
+    foreach($importadas as $imp) {
+        $importadas_set[$imp->data_lanc][$imp->bandeira_id][$imp->prazo_id] = true;
+    }
+    
     $bandeiras = Band01::read(null, $_SESSION['usuario']->id_empresa, $id_operadora);
     $parcelas = [];
     $bandeiras_parcelas = [];
     $bandeiras_tipo = [];
     $bandeiras_obj = [];
+    $prazo_lista = [];
     foreach($bandeiras as $bandeira) {
         $bandeiras_obj[] = $bandeira;
         $prazo_bandeira = Pra01::read(null, $id_operadora, $_SESSION['usuario']->id_empresa, $bandeira->id);
@@ -602,6 +611,7 @@ function parse_csv(string $caminhoCsv): array {
         $prazo_tipo_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $bandeira->tipo)));
         $bandeiras_parcelas[] = $prazo_bandeira_preg;
         foreach($prazo_bandeira as $prazo) {
+            $prazo_lista[$bandeira->id][] = $prazo;
             $parcelas[] = $prazo->parcela;
             $bandeiras_tipo[] =  preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $bandeira->tipo)));
             $tipos_bandeira[$prazo_bandeira_preg][$prazo_tipo_preg][] = $bandeira->tipo;
@@ -738,6 +748,32 @@ function parse_csv(string $caminhoCsv): array {
             if($bandeira_preg == $obj_nome_preg && $tipo == $obj_tipo_preg) {
                 $bandeira_id = $obj->id;
             }
+        }
+        
+        // Buscar prazo_id correspondente
+        $prazo_id = null;
+        if(!empty($prazo_lista) && isset($bandeira_id)){
+            if($prazo_lista == null || !isset($prazo_lista[$bandeira_id])) {
+                $prazo_id = null;
+            } else {
+                foreach($prazo_lista[$bandeira_id] as $obj) {
+                    if($obj->parcela == $parcela) {
+                        $prazo_id = $obj->id;
+                    }
+                }
+            }
+        }
+        
+        // Verificar se o lançamento já foi cadastrado
+        $cadastrado = false;
+        if(isset($bandeira_id) && isset($prazo_id)) {
+            if(isset($importadas_set[$data][$bandeira_id][$prazo_id])) {
+                $cadastrado = true;
+            }
+        }
+        if(isset($cadastrado) && $cadastrado === true) {
+            $i++;
+            continue;
         }
         
         $transactions['lancamentos'][$i] = [
