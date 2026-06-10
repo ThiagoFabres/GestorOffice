@@ -124,10 +124,10 @@ $operadoras_suporte = [
     'sicredi' => [
         'xlsx' =>[
             'excluded_columns' => [
-                'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'L', 'O', 'Q'
+                'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'L', 'O', 'Q', 'R'
             ],
             'start_row' => 6,
-            'start_end_columns' => [ 'start' => 'A', 'end' => 'R'],
+            'start_end_columns' => [ 'start' => 'A', 'end' => 'S'],
             'organizador' => [
                 'data' => 0,
                 'bandeira' => 3,
@@ -138,7 +138,7 @@ $operadoras_suporte = [
                 'estado' => 4
             ],
             'suporte_data' => 'formatada',
-            'suporte_numero' => 'formatado',
+            
         ],
         'xlsx2' =>[
             'excluded_columns' => [
@@ -156,7 +156,7 @@ $operadoras_suporte = [
                 'estado' => 6
             ],
             'suporte_data' => 'hora',
-            'suporte_numero' => 'formatado',
+            
         ],
         'csv' => [
             'colunas' => [
