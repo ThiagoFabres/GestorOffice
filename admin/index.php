@@ -651,19 +651,19 @@ $lista_cidades = [];
                     <div class="d-flex flex-row justify-content-between" >
                         <div class="d-flex flex-column">
                             <label for="parceiro">Parceiro</label>
-                            <input type="text" onchange="checar()" name="parceiro" class="form-control rounded-0" placeholder="Parceiro" value="<?= $empresa->parceiro ?? '' ?>" >
+                            <input type="text" onchange="checar()" name="parceiro" class="form-control rounded-0" placeholder="Parceiro" >
                     </div>
                         <div class="d-flex flex-column">
                         <label for="royalty">Royalty</label>
-                        <input type="text" onchange="checar()" name="royalty" class="form-control rounded-0" placeholder="Royalty" value="<?= $empresa->royalty ? number_format($empresa->royalty ?? 0, 2, ',', '.') : '' ?>">
+                        <input type="text" onchange="checar()" name="royalty" class="form-control rounded-0" placeholder="Royalty">
                     </div>
                     <div class="d-flex flex-column">
                         <label for="taxa_marketing">Taxa de Marketing</label>
-                        <input type="text" onchange="checar()" name="taxa_marketing" class="form-control rounded-0" placeholder="Taxa de Marketing" value="<?= $empresa->taxa_marketing ? number_format($empresa->taxa_marketing ?? 0, 2, ',', '.') : '' ?>">
+                        <input type="text" onchange="checar()" name="taxa_marketing" class="form-control rounded-0" placeholder="Taxa de Marketing">
                     </div>
                         <div class="d-flex flex-column">
                             <label for="logo">Logo Customizada:</label>
-                            <input type="file" name="logo" class="form-control rounded-0" placeholder="Logo" value="<?= $empresa->logo ?? '' ?>" style="height:2.75em;">
+                            <input type="file" name="logo" class="form-control rounded-0" placeholder="Logo" style="height:2.75em;">
                         </div>
                     </div>
                     <div>
