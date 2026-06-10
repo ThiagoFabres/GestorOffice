@@ -33,6 +33,7 @@ class Empresa {
     public $notificacao_atraso_data;
     public $permissao_notificacao;
     public $royalty;
+    public $taxa_marketing;
 
     public function __construct(
         $id = null, $razao_soc = '', 
@@ -60,7 +61,8 @@ class Empresa {
         $parceiro = null,
         $notificacao_atraso_data = null,
         $permissao_notificacao = 0,
-        $royalty = null
+        $royalty = null,
+        $taxa_marketing = null,
      ) {
         $this->id = $id;
         $this->razao_soc = $razao_soc;
@@ -92,12 +94,13 @@ class Empresa {
         $this->notificacao_atraso_data = $notificacao_atraso_data;
         $this->permissao_notificacao = $permissao_notificacao;
         $this->royalty = $royalty;
+        $this->taxa_marketing = $taxa_marketing;
     }
 
     public static function create($empresa) {
         $pdo = (new Database())->connect();
-        $sql = 'INSERT INTO empresas (razao_soc, nom_fant, rua, bairro, cidade, estado, cpf, cnpj, email, celular, fixo, status, data_r, cep, cnpj_principal, permissao_cartao, permissao_seguranca, permissao_financeiro, permissao_bancario, permissao_operacional, permissao_inicio, ativ_inicio, tolerancia, celular1_atividade, celular2_atividade, parceiro, permissao_notificacao, royalty) 
-        VALUES (:razao_soc, :nom_fant, :rua, :bairro, :cidade, :estado, :cpf, :cnpj, :email, :celular, :fixo, :status, :data_r, :cep, :cnpj_principal, :permissao_cartao, :permissao_seguranca, :permissao_financeiro, :permissao_bancario, :permissao_operacional, :permissao_inicio, :ativ_inicio, :tolerancia, :celular1_atividade, :celular2_atividade, :parceiro, :permissao_notificacao, :royalty)';
+        $sql = 'INSERT INTO empresas (razao_soc, nom_fant, rua, bairro, cidade, estado, cpf, cnpj, email, celular, fixo, status, data_r, cep, cnpj_principal, permissao_cartao, permissao_seguranca, permissao_financeiro, permissao_bancario, permissao_operacional, permissao_inicio, ativ_inicio, tolerancia, celular1_atividade, celular2_atividade, parceiro, permissao_notificacao, royalty, taxa_marketing) 
+        VALUES (:razao_soc, :nom_fant, :rua, :bairro, :cidade, :estado, :cpf, :cnpj, :email, :celular, :fixo, :status, :data_r, :cep, :cnpj_principal, :permissao_cartao, :permissao_seguranca, :permissao_financeiro, :permissao_bancario, :permissao_operacional, :permissao_inicio, :ativ_inicio, :tolerancia, :celular1_atividade, :celular2_atividade, :parceiro, :permissao_notificacao, :royalty, :taxa_marketing)';
         $stmt = $pdo->prepare($sql);
 
         $stmt->bindValue(':razao_soc', $empresa->razao_soc);
@@ -128,6 +131,7 @@ class Empresa {
         $stmt->bindValue(':parceiro', $empresa->parceiro);
         $stmt->bindValue(':permissao_notificacao', $empresa->permissao_notificacao);
         $stmt->bindValue(':royalty', $empresa->royalty);
+        $stmt->bindValue(':taxa_marketing', $empresa->taxa_marketing);
        return $stmt->execute(); 
     }
 
@@ -231,7 +235,8 @@ class Empresa {
         celular2_atividade = :celular2_atividade,
         parceiro = :parceiro,
         permissao_notificacao = :permissao_notificacao,
-        royalty = :royalty 
+        royalty = :royalty,
+        taxa_marketing = :taxa_marketing
         WHERE id = :id';
 
         $stmt = $pdo->prepare($sql);
@@ -265,6 +270,7 @@ class Empresa {
     $stmt->bindValue(':parceiro', $empresa->parceiro);
     $stmt->bindValue(':permissao_notificacao', $empresa->permissao_notificacao);
     $stmt->bindValue(':royalty', $empresa->royalty);
+    $stmt->bindValue(':taxa_marketing', $empresa->taxa_marketing);
        return $stmt->execute(); 
         
     }

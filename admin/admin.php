@@ -24,8 +24,12 @@ function permissao() {
         }
         return true;
     }
-
-
+if(!empty($_POST)) {
+    echo '<pre>';
+    print_r($_POST);
+    echo '</pre>';
+    exit;
+}
 if (isset($_POST['acao']) && $_POST['acao'] == 'editar') {
     $id = $_POST['id'];
     $nome = $_POST['nome'];
