@@ -149,6 +149,14 @@ class Ban02 {
         if($filtro_conta != null) {
             $conditions[] = ' id_ban01 = :filtro_conta';
         }
+        // Filtrar por operacional (1 = operacional, 2 = não operacional)
+        if($filtro_operacional != null) {
+            if($filtro_operacional == 1) {
+                $conditions[] = ' id_con01 IN (SELECT id FROM con01 WHERE operacional = 1 AND id_empresa = :filtro_operacional_empresa)';
+            } else if($filtro_operacional == 2) {
+                $conditions[] = ' id_con01 IN (SELECT id FROM con01 WHERE operacional = 0 AND id_empresa = :filtro_operacional_empresa)';
+            }
+        }
         if($filtro_tipo != null) {
             if($filtro_tipo == 'C') {
                 $conditions[] = ' valor > 0';
@@ -216,6 +224,8 @@ class Ban02 {
             $query .= ' OFFSET ' . intval($numero_exibir *( $numero_pagina - 1));
         }
 
+        // echo $query;
+        // exit;
         $stmt = $pdo->prepare($query);
 
         if ($id !== null) {
@@ -247,6 +257,9 @@ class Ban02 {
         }
         if ($filtro_conta !== null) {
             $stmt->bindValue(':filtro_conta', $filtro_conta);
+        }
+        if ($filtro_operacional !== null) {
+            $stmt->bindValue(':filtro_operacional_empresa', $id_empresa);
         }
         if ($id_original !== null) {
             $stmt->bindValue(':id_original', $id_original);

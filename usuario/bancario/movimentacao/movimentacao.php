@@ -51,10 +51,14 @@ $get_filtro_descricao = filter_input(INPUT_GET, 'descricao');
 if($get_filtro_descricao === '') {
     $get_filtro_descricao = null;
 }
+$ordenar_por = filter_input(INPUT_GET, 'ordenar_por') ?? null;
+
+
+
 $erro = filter_input(INPUT_GET, 'erro');
 $get_pdf = filter_input(INPUT_GET, 'pdf') == 1 ? true : false;
 $get_excel = filter_input(INPUT_GET, 'excel') == 1 ? true : false;
-
+$direcao = filter_input(INPUT_GET, 'direcao') ?? filter_input(INPUT_POST, 'direcao') ?? 'ASC';
 
 $numero_pagina = intval($numero_pagina);
 $numero_exibir = intval($numero_exibir);
@@ -71,6 +75,8 @@ $bancario_paginas = Ban02::read(
     filtro_conta: $get_filtro_conta ?? null,
     filtro_tipo: $get_filtro_tipo,
     filtro_descricao: $get_filtro_descricao,
+    ordenar_por: $ordenar_por,
+    direcao: $direcao,
 ); 
 
 $total_paginas = ceil($bancario_paginas / $numero_exibir);
@@ -198,8 +204,6 @@ if ($get_filtro_conta != null) {
         $saldo_geral += $conta->valor;
     }
 }
-
-
 ?>
 <!DOCTYPE html>
 <head>
@@ -305,7 +309,7 @@ if ($get_filtro_conta != null) {
                                         <label for="filtro_data_final">Titulo:</label>
                                         <select id="titulo-filtro" name="filtro_titulo">
                                             <option value="">Selecione</option>
-                                            <?php $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa, $ban02_tipo);
+                                            <?php $titulos = Con01::read(null, $_SESSION['usuario']->id_empresa, $ban02_tipo ?? null);
                                         foreach ($titulos as $titulo) { ?>
                                             <option value="<?= $titulo->id ?>" <?php if($titulo->id == $get_filtro_titulo) echo 'selected' ?> >
                                                 <?= htmlspecialchars($titulo->nome, ENT_QUOTES, 'UTF-8') ?>
@@ -380,12 +384,35 @@ if ($get_filtro_conta != null) {
             <div class="card-body dragscroll" style="padding:0;">
                 <table class="table table-hover tabela-bancario" id="tabela-bancario">
                     <thead>
+                        <?php
+                            if ($direcao == 'ASC') {
+                                $seta = '▲';
+                            } else if ($direcao == 'DESC') {
+                                $seta = '▼';
+                            } else {
+                                $seta = '';
+                            }
+                            if($direcao == 'ASC') {
+                                $nova_direcao = 'DESC';
+                            } else {
+                                $nova_direcao = 'ASC';
+                            }
+                            ?>
                         <tr class="tr-header">
                             <th></th>
                             <th>Documento</th>
                             <th>Data de Lançamento</th>
                             <th>Tipo de Lançamento</th>
-                            <th>Valor</th>
+                            <th>
+                                <a
+                                style="color:inherit; text-decoration:none;"
+                                href="
+                                <?php if(empty($filtros)) {echo $caminho . '?'?>ordenar_por=valor&direcao=<?= $nova_direcao ?> 
+                                <?php } else { echo $caminho . 'ordenar_por=valor&direcao=' . $nova_direcao ?> <?php } ?>
+                                ">
+                                Valor <?php if($ordenar_por == 'valor') { echo $seta; } ?>
+                                </a>
+                            </th>
                             <th>Conta</th>
                             <th>Título</th>
                             <th>Subtítulo</th>
@@ -421,6 +448,8 @@ if ($get_filtro_conta != null) {
                             filtro_conta: $get_filtro_conta ?? null,
                             filtro_tipo: $get_filtro_tipo,
                             filtro_descricao: $get_filtro_descricao,
+                            ordenar_por: $ordenar_por,
+                            direcao: $direcao,
                         );
 
                          if(!empty($movimentacoes)) {
