@@ -142,10 +142,10 @@ $operadoras_suporte = [
         ],
         'xlsx2' =>[
             'excluded_columns' => [
-                'B', 'F', 'H', 'J',
+                'B', 'F', 'H', 'I', 'K'
             ],
             'start_row' => 17,
-            'start_end_columns' => [ 'start' => 'A', 'end' => 'K'],
+            'start_end_columns' => [ 'start' => 'A', 'end' => 'L'],
             'organizador' => [
                 'data' => 0,
                 'bandeira' => 3,
