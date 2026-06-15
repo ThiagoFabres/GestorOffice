@@ -52,10 +52,13 @@ function parse_excel($numero_arquivo = null) {
     ];
     
     // Verificar limite máximo de arquivos para o operador
+    $operadora_descricao_preg = $operadora_descricao_preg ?? null;
+    if($operadora_descricao_preg != null) {
     $limite_arquivo = $arquivos_multi[$operadora_descricao_preg] ?? 2;
     if($numero_arquivo > $limite_arquivo) {
         header('Location: cadastro_vendas.php?erro=arquivo');
         exit;
+    }
     }
     $operadoras_suportadas = [
         'stone',
