@@ -20,6 +20,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSIO
 
 $lateral_target = 'dre';
 $lateral_financeiro = true;
+$dre_target = 'sintetico';
 function format_valor_alinhado($valor) {
     $formatado = number_format($valor, 2, ',', '.');
     // 12 caracteres para alinhar valores grandes e pequenos
@@ -180,18 +181,7 @@ $titulos = array_values($titulos_array);
 
 
                 <div class="card">
-                    <div class="card-header">
-                        <button class="btn btn-primary btn-dre-selecionado dre-menu-btn" style="border-bottom: 2px solid #5856d6;" id="btn-sintetico">
-                            <h3>DRE - Sintético</h3>
-                        </button><!--
-    --><button class="btn btn-primary dre-menu-btn" id="btn-analitico" onclick="window.location.href='analitico.php'">
-                            <h3>DRE - Analitico</h3>
-                        </button>
-                        <button class="btn btn-primary dre-menu-btn" id="btn-pagamento" onclick="window.location.href='pagamento.php'">
-                            <h3>Tipo de Pagamento</h3>
-                        </button>
-                    </div>
-
+                    <?php require_once __DIR__ . '/../../componentes/financeiro/dre-header.php' ?>
                     <div class="card-header-div">
                         <div class="card-header-borda">
                                 <h5 class="card-title">Filtros</h5>
