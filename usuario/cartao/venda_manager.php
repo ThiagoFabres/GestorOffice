@@ -1,4 +1,7 @@
 <?php
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+error_reporting(E_ALL);
 require_once __DIR__ . '/../../db/entities/usuarios.php';
 require_once __DIR__ . '/../../db/entities/empresas.php';
 session_start();
@@ -54,11 +57,11 @@ function parse_excel($numero_arquivo = null) {
     // Verificar limite máximo de arquivos para o operador
     $operadora_descricao_preg = $operadora_descricao_preg ?? null;
     if($operadora_descricao_preg != null) {
-    $limite_arquivo = $arquivos_multi[$operadora_descricao_preg] ?? 2;
-    if($numero_arquivo > $limite_arquivo) {
-        header('Location: cadastro_vendas.php?erro=arquivo');
-        exit;
-    }
+        $limite_arquivo = $arquivos_multi[$operadora_descricao_preg] ?? 2;
+        if($numero_arquivo > $limite_arquivo) {
+            header('Location: cadastro_vendas.php?erro=arquivo');
+            exit;
+        }
     }
     $operadoras_suportadas = [
         'stone',
@@ -123,8 +126,16 @@ function parse_excel($numero_arquivo = null) {
         }
         
     }
+
+    $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($file['tmp_name']);
+    $reader->setReadDataOnly(true);
+    $reader->setReadEmptyCells(false);  
+
     
-    $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file['tmp_name']);
+
+    $spreadsheet = $reader->load($file['tmp_name']);
+
+    
     $worksheet = $spreadsheet->getActiveSheet();
     $transactions = [];
     $excluded_columns = [];
@@ -247,6 +258,11 @@ function parse_excel($numero_arquivo = null) {
             //     continue;
             // }
             if ($multi) {
+
+                if (isset($spreadsheet)) {
+                    $spreadsheet->disconnectWorksheets();
+                    unset($spreadsheet, $worksheet, $worksheet_lines);
+                }
 
             $transactions_next = parse_excel($numero_arquivo + 1);
 
@@ -491,6 +507,7 @@ function parse_excel($numero_arquivo = null) {
         if(!empty($transactions['lancamentos'][$i]['motivo'])) {
             $transactions['invalido'][] = $transactions['lancamentos'][$i];
         }
+        // usleep(50000); 
         
     }
 
@@ -499,7 +516,7 @@ function parse_excel($numero_arquivo = null) {
             'bandeiras_parcelas' => $bandeiras_parcelas,
             'bandeiras_tipo' => $bandeiras_tipo
         ];
-
+        
     return $transactions;
 }
 function parse_csv(string $caminhoCsv): array {
@@ -822,7 +839,7 @@ function parse_csv(string $caminhoCsv): array {
         }
         $transactions['lancamentos'][$i]['bandeira'] = ucfirst($transactions['lancamentos'][$i]['bandeira']);
         
-
+    // usleep(50000); 
     $i++;
     }
 
@@ -838,6 +855,7 @@ if($acao == 'processar') {
     }else {
         $transactions = parse_excel();
     }
+    
     if(empty($transactions['lancamentos'])) {
         header('Location: cadastro_vendas.php?erro=cadastrado');
         exit;
