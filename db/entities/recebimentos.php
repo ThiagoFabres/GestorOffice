@@ -260,6 +260,8 @@ class Rec02 {
         $read_totais = null,
         $read_vendas = null,
         $filtro_descricao = null,
+        $filtro_operacional = null,
+        $read_total = null,
         
     ) {
         $pdo = (new Database())->connect();
@@ -280,7 +282,13 @@ class Rec02 {
                 FROM rec02 r2
                 INNER JOIN rec01 r1 ON r2.id_rec01 = r1.id
             ';
-            } else {
+            } else if($read_total) {
+                if($read_total == 'valor_pag'){
+                    $query = 'SELECT SUM(valor_pag)
+                    FROM rec02 r2 
+                    INNER JOIN rec01 r1 ON r2.id_rec01 = r1.id';
+                }
+            }   else {
                 $query = 'SELECT r2.*, r1.documento, r1.id_con02
                 FROM rec02 r2
                 INNER JOIN rec01 r1 ON r2.id_rec01 = r1.id
@@ -322,6 +330,13 @@ class Rec02 {
                 $conditions[] = $filtro_por_data . ' <= :filtro_data_final';
             }
             
+        }
+        if($filtro_operacional != null) {
+            if($filtro_operacional == 1) {
+                $conditions[] = ' id_con01 IN (SELECT id FROM con01 WHERE operacional = 1 AND id_empresa = :filtro_operacional_empresa)';
+            } else if($filtro_operacional == 2) {
+                $conditions[] = ' id_con01 IN (SELECT id FROM con01 WHERE operacional = 0 AND id_empresa = :filtro_operacional_empresa)';
+            }
         }
         if ($dash_tipo != null && $filtro_data_inicial != null) {
         switch ($dash_tipo) {
@@ -474,7 +489,7 @@ switch($ordenar_por) {
         if($filtro_descricao != null && $hasParam(':filtro_descricao')) $stmt->bindValue(':filtro_descricao', '%' . $filtro_descricao . '%');
         $stmt->execute();
 
-        if(isset($read_paginas)) {
+        if(isset($read_paginas) || isset($read_total)) {
             return $stmt->fetchColumn();
         } else {
             return $stmt->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, self::class);
