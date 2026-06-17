@@ -15,8 +15,8 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSIO
     exit;
 }
 
-$lateral_bancario = true;
-$lateral_target = 'dreBancario';
+$lateral_financeiro = true;
+$lateral_target = 'dre';
 $dre_target = 'curva_abc';
 function format_valor_alinhado($valor) {
     $formatado = number_format($valor, 2, ',', '.');
