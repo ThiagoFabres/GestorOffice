@@ -19,6 +19,24 @@ $operadoras_suporte = [
             'suporte_data' => 'hora',
             'suporte_numero' => 'formatado',
         ],
+        'xls' =>[
+            'excluded_columns' => [
+                'F', 'J', 'K', 'L', 'M', 'N', 'O'
+            ],
+            'start_row' => 2,
+            'start_end_columns' => ['start' => 'C', 'end' => 'P'],
+            'organizador' => [
+                'data' => 0,
+                'bandeira' => 1,
+                'tipo' => 2,
+                'parcela' => 3,
+                'valor_b' => 4,
+                'valor_l' => 5,
+                'estado' => 6
+            ],
+            'suporte_data' => 'hora',
+            'suporte_numero' => 'formatado',
+        ]
     ],
 
 
