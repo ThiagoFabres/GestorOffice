@@ -157,13 +157,13 @@ for($i = 1, $documento = $documento_inicial ;  $i < $n_lanc + 1; $i++, $document
    
 }
 if($view == 'receber') {
-    header('Location: /usuario/receber.php');
+    header('Location: receber.php');
     exit;
 } else if($view == 'pagar') {
-    header('Location: /usuario/pagar.php');
+    header('Location: pagar.php');
     exit;
 } else {
-    header('Location: /usuario/index.php');
+    header('Location: /index.php');
     exit;
 }
 ?>
