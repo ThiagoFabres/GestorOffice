@@ -8,8 +8,12 @@
         <h3>DRE - Analitico</h3>
     </button>
 
-    <button class="btn btn-primary dre-menu-btn" <?php if($dre_target == 'pagamento') echo 'style="border-bottom: 2px solid #5856d6;"'; ?> onclick="window.location.href='pagamento.php'" id="btn-grafico">
-        <h3>Tipo de Pagamento</h3>
+    <button class="btn btn-primary dre-menu-btn" <?php if($dre_target == 'grafico') echo 'style="border-bottom: 2px solid #5856d6;"'; ?> onclick="window.location.href='grafico.php'" id="btn-grafico">
+        <h3>Gráfico</h3>
+    </button>
+
+    <button class="btn btn-primary dre-menu-btn" <?php if($dre_target == 'grafico_periodo') echo 'style="border-bottom: 2px solid #5856d6;"'; ?> onclick="window.location.href='grafico_periodo.php'"  id="btn-grafico-periodo">
+        <h3>Gráfico por período</h3>
     </button>
 
     <button class="btn btn-primary dre-menu-btn" <?php if($dre_target == 'curva_abc') echo 'style="border-bottom: 2px solid #5856d6;"'; ?> onclick="window.location.href='curva_abc.php'"  id="btn-curva-abc">

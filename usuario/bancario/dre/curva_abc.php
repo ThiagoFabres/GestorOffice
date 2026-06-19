@@ -1,11 +1,11 @@
 <?php
 
-require_once __DIR__ . '/../../db/entities/usuarios.php';
-require_once __DIR__ . '/../../db/entities/contas.php';
-require_once __DIR__ . '/../../db/entities/cadastro.php';
-require_once __DIR__ . '/../../db/entities/recebimentos.php';
-require_once __DIR__ . '/../../db/entities/empresas.php';
-require_once __DIR__ . '/../../db/entities/centrocustos.php';
+require_once __DIR__ . '/../../../db/entities/usuarios.php';
+require_once __DIR__ . '/../../../db/entities/contas.php';
+require_once __DIR__ . '/../../../db/entities/cadastro.php';
+require_once __DIR__ . '/../../../db/entities/banco02.php';
+require_once __DIR__ . '/../../../db/entities/empresas.php';
+require_once __DIR__ . '/../../../db/entities/centrocustos.php';
 
 session_start();
 $empresa_usuario_id = $_SESSION['usuario']->id_empresa;
@@ -15,8 +15,8 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSIO
     exit;
 }
 
-$lateral_financeiro = true;
-$lateral_target = 'dre';
+$lateral_bancario = true;
+$lateral_target = 'dreBancario';
 $dre_target = 'curva_abc';
 function format_valor_alinhado($valor) {
     $formatado = number_format($valor, 2, ',', '.');
@@ -26,6 +26,8 @@ function format_valor_alinhado($valor) {
 
 $get_data_final = filter_input(INPUT_GET, 'data_final') ?? null;
 $get_data_inicial = filter_input(INPUT_GET, 'data_inicial') ?? null;
+$get_titulo = filter_input(INPUT_GET, 'titulo') ?: null;
+$get_subtitulo = null;
 $get_custos = filter_input(INPUT_GET, 'filtro_custos') ?: null;
 $get_operacional = filter_input(INPUT_GET, 'filtro_operacional') ?: null;
 
@@ -39,14 +41,16 @@ $total_receita = 0;
 
 // Calcular totais primeiro
 foreach($empresa_lista as $i => $empresa) {
-    $lancamentos_empresa[$i] = Rec02::read(
-        id_empresa:          $empresa->id,
-        filtro_data_inicial: $get_data_inicial,
-        filtro_data_final:   $get_data_final,
-        filtro_por:'pagamento',
-        filtro_operacional:  $get_operacional,
-        filtro_opcao: 'quitados',
-        read_total: true
+    $lancamentos_empresa[$i] = Ban02::read(
+        id_empresa: $empresa->id,
+        filtro_data_inicial: $get_data_inicial ?? null,
+        filtro_data_final: $get_data_final ?? null,
+        filtro_titulo: $get_titulo ?? null,
+        filtro_subtitulo: $get_subtitulo ?? null,
+        filtro_operacional: $get_operacional ?? null,
+        dre_read: true,
+        filtro_tipo:'C',
+        read_total:true
     );
     $totais_empresa[$i] = $lancamentos_empresa[$i];
     $total_receita += $totais_empresa[$i];
@@ -97,14 +101,14 @@ $totais_empresa = $totais_empresa_ordenada;
 <body id="body">
 
 
-    <?php require_once __DIR__ . '/../../componentes/lateral/lateral.php'?>
-    <?php require_once __DIR__ . '/../../componentes/header/header.php' ?>
+    <?php require_once __DIR__ . '/../../../componentes/lateral/lateral.php'?>
+    <?php require_once __DIR__ . '/../../../componentes/header/header.php' ?>
 
 
     <div class="main" id="container">
             <div class="col-md-12" style="padding: 0;">
                 <div class="card">
-                    <?php require_once __DIR__ . '/../../componentes/financeiro/dre-header.php'; ?>
+                    <?php require_once __DIR__ . '/../../../componentes/bancario/dre-header.php'; ?>
                     <div class="card-header-div">
                         <div class="card-header-borda">
                             <div class="tab-pane fade show active" id="vendas" role="tabpanel"
@@ -179,9 +183,8 @@ $totais_empresa = $totais_empresa_ordenada;
                                 <?php } ?>
                                 <tr class="tr-dre-total">
                                     <td style="background-color: transparent;"><strong>Total Geral</strong></td>
-                                     <td id="total-dre-sintetico" style="background-color:transparent; justify-content:space-between" class="d-flex flex-row total-dre-sintetico"><div>R$ </div><div><?=number_format($total_receita, 2, ',', '.') ?></div></td>
+                                    <td id="total-dre-sintetico" style="background-color:transparent; justify-content:space-between" class="d-flex flex-row total-dre-sintetico"><div>R$ </div><div><?=number_format($total_receita, 2, ',', '.') ?></div></td>
                                     <td style="background-color: transparent;"></td>
-                                   
                                 </tr>
                             </tbody>
                         </table>
@@ -190,7 +193,7 @@ $totais_empresa = $totais_empresa_ordenada;
             </div> <!-- card -->
         </div>
     </div>
-<?php require_once __DIR__ . '/../../componentes/footer/footer.php' ?> 
+<?php require_once __DIR__ . '/../../../componentes/footer/footer.php' ?> 
 </body>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
@@ -264,8 +267,7 @@ $totais_empresa = $totais_empresa_ordenada;
         checarTitulo();
     }
 
-
-function prepararGeracao(target) {
+    function prepararGeracao(target) {
 
     let data_inicial = document.getElementById('data_inicial').value;
     let data_final = document.getElementById('data_final').value;
@@ -289,6 +291,7 @@ function prepararGeracao(target) {
         gerarexcel_curvaabc(dataTexto, nomeEmpresa);
     }
 }
+
   
 
 </script>

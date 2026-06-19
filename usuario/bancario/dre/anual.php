@@ -1,11 +1,11 @@
 <?php
 
-require_once __DIR__ . '/../../db/entities/usuarios.php';
-require_once __DIR__ . '/../../db/entities/contas.php';
-require_once __DIR__ . '/../../db/entities/cadastro.php';
-require_once __DIR__ . '/../../db/entities/recebimentos.php';
-require_once __DIR__ . '/../../db/entities/empresas.php';
-require_once __DIR__ . '/../../db/entities/centrocustos.php';
+require_once __DIR__ . '/../../../db/entities/usuarios.php';
+require_once __DIR__ . '/../../../db/entities/contas.php';
+require_once __DIR__ . '/../../../db/entities/cadastro.php';
+require_once __DIR__ . '/../../../db/entities/banco02.php';
+require_once __DIR__ . '/../../../db/entities/empresas.php';
+require_once __DIR__ . '/../../../db/entities/centrocustos.php';
 
 session_start();
 $empresa_usuario_id = $_SESSION['usuario']->id_empresa;
@@ -20,8 +20,8 @@ if (
     exit;
 }
 
-$lateral_financeiro = true;
-$lateral_target  = 'dre';
+$lateral_bancario = true;
+$lateral_target  = 'dreBancario';
 $dre_target      = 'anual';
 
 // ─── Filtros GET ─────────────────────────────────────────────────────────────
@@ -50,7 +50,6 @@ $meses_labels = [
 // Mapas: $map_titulos[id] = nome   |   $map_subtitulos[id] = nome
 $map_titulos    = [];
 $map_subtitulos = [];
-$map_rec01 = [];
 
 foreach ($empresa_lista as $empresa) {
     $con01_lista = Con01::read(idempresa: $empresa->id);
@@ -61,11 +60,6 @@ foreach ($empresa_lista as $empresa) {
     $con02_lista = Con02::read(idempresa: $empresa->id);
     foreach ($con02_lista as $c) {
         $map_subtitulos[(int)$c->id] = $c->nome;
-    }
-
-    $rec01_lista = Rec01::read(id_empresa: $empresa->id);
-    foreach ($rec01_lista as $c) {
-        $map_rec01[(int)$c->id] = ['titulo' => $c->id_con01, 'subtitulo' => $c->id_con02];
     }
 }
 
@@ -87,25 +81,23 @@ foreach ($empresa_lista as $empresa) {
         $data_inicial = sprintf('%04d-%02d-01', $get_ano, $mes);
         $data_final   = date('Y-m-t', strtotime($data_inicial));
 
-        $lancamentos = Rec02::read(
+        $lancamentos = Ban02::read(
             id_empresa:          $empresa->id,
             filtro_data_inicial: $data_inicial,
             filtro_data_final:   $data_final,
-            filtro_por:'pagamento',
             filtro_operacional:  $get_operacional,
-            filtro_opcao: 'quitados'
+            filtro_tipo:         $get_tipo,
+            dre_read:            true
         );
 
         if (empty($lancamentos)) continue;
-        
-        foreach ($lancamentos as $lanc) {
-            $rec01   = $map_rec01[$lanc->id_rec01];
 
-            $tid_raw = (int)($rec01['titulo'] ?? 0);
-            $sid_raw = (int)($rec01['subtitulo'] ?? 0);
+        foreach ($lancamentos as $lanc) {
+            $tid_raw = (int)($lanc->id_con01 ?? 0);
+            $sid_raw = (int)($lanc->id_con02 ?? 0);
             $tnom    = $map_titulos[$tid_raw]    ?? 'Sem Título';
             $snom    = $map_subtitulos[$sid_raw] ?? 'Sem Subtítulo';
-            $valor   = (float)($lanc->valor_pag      ?? 0);
+            $valor   = (float)($lanc->valor      ?? 0);
             
 
             // Chaves de agrupamento baseadas no nome (case-insensitive, sem espaços extras)
@@ -155,9 +147,8 @@ uasort($dados, function ($a, $b) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
-    <link rel="stylesheet" href="../../style/dre.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dragscroll/0.0.8/dragscroll.min.js"></script>
-    <link rel="stylesheet" href="../../choices/choices.css">
+    <link rel="stylesheet" href="/../../../style/dre.css">
+    <link rel="stylesheet" href="../../../choices/choices.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="/gestor-office.png" type="image/x-icon">
@@ -249,7 +240,7 @@ uasort($dados, function ($a, $b) {
 
         /* Toggle ícone */
         .toggle-icon { transition: transform 0.2s; display: inline-block; }
-        .collapsed .toggle-icon { transform: rotate(-90deg); }
+        .collapsed .toggle-icon { transform: rotate(90deg); }
 
         /* Zebra nas linhas de subtítulo visíveis */
         .row-subtitulo:nth-child(even) td { background-color: #f3f3ff !important; }
@@ -273,13 +264,15 @@ uasort($dados, function ($a, $b) {
 </head>
 <body id="body">
 
-    <?php require_once __DIR__ . '/../../componentes/lateral/lateral.php' ?>
-    <?php require_once __DIR__ . '/../../componentes/header/header.php' ?>
+    <?php require_once __DIR__ . '/../../../componentes/lateral/lateral.php' ?>
+    <?php require_once __DIR__ . '/../../../componentes/header/header.php' ?>
 
     <div class="main" id="container">
         <div class="col-md-12" style="padding: 0;">
             <div class="card">
-                <?php require_once __DIR__ . '/../../componentes/financeiro/dre-header.php'; ?>
+                <?php
+                 require_once __DIR__ . '/../../../componentes/bancario/dre-header.php'; 
+                 ?>
 
                 <!-- ── Filtros ──────────────────────────────────────────── -->
                 <div class="card-header-div">
@@ -301,8 +294,8 @@ uasort($dados, function ($a, $b) {
                                             <label for="filtro_operacional">Operacional:</label>
                                             <select id="filtro_operacional" name="filtro_operacional" class="form-control rounded-0">
                                                 <option value=""  <?= $get_operacional === null  ? 'selected' : '' ?>>Todos</option>
-                                                <option value="1" <?= $get_operacional == 1   ? 'selected' : '' ?>>Operacional</option>
-                                                <option value="2" <?= $get_operacional == 2   ? 'selected' : '' ?>>Não Operacional</option>
+                                                <option value="1" <?= $get_operacional === '1'   ? 'selected' : '' ?>>Operacional</option>
+                                                <option value="2" <?= $get_operacional === '2'   ? 'selected' : '' ?>>Não Operacional</option>
                                             </select>
                                         </div>
                                     </div>
@@ -332,13 +325,13 @@ uasort($dados, function ($a, $b) {
                 </div>
                 <!-- ── /Filtros ─────────────────────────────────────────── -->
 
-                <div class="card-body dragscroll">
+                <div class="card-body">
                     <?php if (empty($dados)): ?>
                         <div class="alert alert-info">Nenhum lançamento encontrado para o período selecionado.</div>
                     <?php else: ?>
 
-                    <div class="tabela-anual-wrap dragscroll" id="tabela-anual-wrap">
-                        <table class="tabela-anual table table-bordered dragscroll" id="tabela-anual">
+                    <div class="tabela-anual-wrap" id="tabela-anual-wrap">
+                        <table class="tabela-anual table table-bordered" id="tabela-anual">
                             <thead>
                                 <tr>
                                     <th style="text-align:left;">Título / Subtítulo</th>
@@ -360,7 +353,7 @@ uasort($dados, function ($a, $b) {
                                     data-bs-target=".<?= $grupo_id ?>"
                                     style="cursor:pointer;" id="tr-titulo-<?= $tid ?>">
                                     <td>
-                                        <span class="toggle-icon me-1">&#9660;</span>
+                                        <span class="toggle-icon me-1">&#9654;</span>
                                         <?= htmlspecialchars($info['_meta']['nome']) ?>
                                     </td>
                                     <?php foreach ($meses_labels as $m => $label): ?>
@@ -416,7 +409,7 @@ uasort($dados, function ($a, $b) {
         </div>
     </div>
 
-<?php require_once __DIR__ . '/../../componentes/footer/footer.php' ?>
+<?php require_once __DIR__ . '/../../../componentes/footer/footer.php' ?>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"/>
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
@@ -455,31 +448,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 /* ── Exportar Excel ──────────────────────────────────────────── */
-function exportarExcel() {
-    const wb   = XLSX.utils.book_new();
-    const rows = [];
-
-    // Cabeçalho
-    const header = ['Título / Subtítulo', 'Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez','Total'];
-    rows.push(header);
-
-    document.querySelectorAll('#tabela-anual tbody tr').forEach(function (tr) {
-        const row = [];
-        tr.querySelectorAll('td').forEach(function (td) {
-            // Remove espaços extras e converte valor numérico
-            const raw = td.innerText.trim().replace(/\./g,'').replace(',','.');
-            const num = parseFloat(raw);
-            row.push(isNaN(num) ? td.innerText.trim() : num);
-        });
-        rows.push(row);
-    });
-
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, 'Anual');
-    XLSX.writeFile(wb, 'relatorio_anual_<?= $get_ano ?>.xlsx');
-}
-
-    function prepararGeracao(target) {
+function prepararGeracao(target) {
     let titulo = null
     let subtitulo = null
     let nomeEmpresa = document.querySelector('#nome-empresa h1').innerHTML

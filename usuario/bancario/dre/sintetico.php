@@ -17,7 +17,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSIO
 
 $lateral_bancario = true;
 $lateral_target = 'dreBancario';
-
+$dre_target = 'sintetico';
 function format_valor_alinhado($valor) {
     $formatado = number_format($valor, 2, ',', '.');
     $formatado = str_pad($formatado, 12, ' ', STR_PAD_LEFT);
@@ -140,23 +140,7 @@ $titulos = array_values($titulos_array);
 
 
                 <div class="card">
-                    <div class="card-header">
-                        <button class="btn btn-primary btn-dre-selecionado dre-menu-btn" style="border-bottom: 2px solid #5856d6;" id="btn-sintetico">
-                            <h3>DRE - Sintético</h3>
-                        </button>
-
-                        <button class="btn btn-primary dre-menu-btn"  onclick="window.location.href='analitico.php'" id="btn-analitico">
-                            <h3>DRE - Analitico</h3>
-                        </button>
-
-                        <button class="btn btn-primary dre-menu-btn"  onclick="window.location.href='grafico.php'" id="btn-grafico">
-                            <h3>Gráfico</h3>
-                        </button>
-
-                        <button class="btn btn-primary dre-menu-btn" onclick="window.location.href='grafico_periodo.php'"  id="btn-grafico-periodo">
-                            <h3>Gráfico por período</h3>
-                        </button>
-                    </div>
+                    <?php require_once __DIR__ . '/../../../componentes/bancario/dre-header.php'; ?>
                     <div class="card-header-div">
                         <div class="card-header-borda">
                             <div class="tab-pane fade show active" id="vendas" role="tabpanel"
@@ -271,35 +255,25 @@ $titulos = array_values($titulos_array);
                                                     <tbody>
                                                         <?php
                                                         $total_subtitulo = 0;
-                                                        $parcelas_por_nome = [];
+                                                        
                                                         foreach ($subtitulos_consolidados_nomes as $nome_subtitulo => $dados) {
-                                                            $parcelas_por_nome[$nome_subtitulo] = [];
-                                                        }
+                                                            $ids_subtitulo = $dados['ids'];
+                                                            $receita = 0;
 
-                                                        if (!empty($lancamentos)) {
-                                                            foreach ($lancamentos as $lancamentos_lista) {
-                                                                foreach($lancamentos_lista as $lan) {
-                                                                    foreach ($subtitulos_consolidados_nomes as $nome_subtitulo => $dados) {
-                                                                        if (in_array($lan->id_con02, $dados['ids'])) {
-                                                                            $parcelas_por_nome[$nome_subtitulo][] = $lan;
+                                                            // calcular soma dos valores dos lançamentos que têm esses ids_con02
+                                                            $soma = 0.0;
+                                                            if (!empty($lancamentos)) {
+                                                                foreach ($lancamentos as $lancamentos_lista) {
+                                                                    foreach($lancamentos_lista as $lan) {
+                                                                        if (in_array($lan->id_con02, $ids_subtitulo)) {
+                                                                            $soma += floatval($lan->valor);
                                                                         }
                                                                     }
                                                                 }
                                                             }
-                                                        }
 
-                                                        foreach ($subtitulos_consolidados_nomes as $nome_subtitulo => $dados) {
-                                                            $parcelas = $parcelas_por_nome[$nome_subtitulo] ?? [];
-                                                            $receita = 0;
-                                                            if (count($parcelas) > 0) {
-                                                                foreach ($parcelas as $rec) {
-                                                                    $receita += floatval($rec->valor);
-                                                                }
-                                                            }
 
-                                                            if ($receita == 0) {
-                                                                continue;
-                                                            }
+                                                            $receita = $soma;
 
                                                             $total_subtitulo += $receita;
                                                             $receita_formatada = format_valor_alinhado($receita);

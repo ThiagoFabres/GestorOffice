@@ -21,6 +21,8 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSIO
 }
 $lateral_bancario = true;
 $lateral_target = 'dreBancario';
+$dre_target = 'analitico';
+
 function format_valor_alinhado($valor) {
     $formatado = number_format($valor, 2, ',', '.');
     $formatado = str_pad($formatado, 12, ' ', STR_PAD_LEFT);
@@ -90,24 +92,7 @@ if($todas_empresas) {
 
 
                 <div class="card">
-                    <div class="card-header">
-                        <button class="btn btn-primary dre-menu-btn" class="btn-dre-menu" onclick="window.location.href='sintetico.php'">
-                            <h3>DRE - Sintético</h3>
-                        </button>
-
-                        <button class="btn btn-primary btn-dre-selecionado dre-menu-btn" style="border-bottom: 2px solid #5856d6;" class="btn-dre-menu">
-                            <h3>DRE - Analitico</h3>
-                        </button>
-
-                        <button class="btn btn-primary dre-menu-btn"  onclick="window.location.href='grafico.php'" class="btn-dre-menu">
-                            <h3>Gráfico</h3>
-                        </button>
-
-                        <button class="btn btn-primary dre-menu-btn" onclick="window.location.href='grafico_periodo.php'" class="btn-dre-menu">
-                            <h3>Gráfico por período</h3>
-                        </button>
-                    </div>
-
+                    <?php require_once __DIR__ . '/../../../componentes/bancario/dre-header.php'; ?>
                     <div class="card-header-div">
                         <div class="card-header-borda">
                             <div class="tab-pane fade show active" id="vendas" role="tabpanel"
@@ -281,7 +266,7 @@ $titulos = array_values($titulos_array);
                                
                                 $collapseId = 'tituloCollapse' . $i;
                                 ?>
-                                <div class="accordion-item avoid-page-break">
+                                <div class="accordion-item avoid-page-break"> 
                                     <h2 class="accordion-header avoid-page-break" id="headingTitulo<?= $i ?>">
                                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                                             data-bs-target="#<?= $collapseId ?>" aria-expanded="false"

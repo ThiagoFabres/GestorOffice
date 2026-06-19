@@ -117,7 +117,7 @@ if($todas_empresas) {
     $empresa_lista = Empresa::read(id: $_SESSION['usuario']->id_empresa);
 }
 
-
+$dre_target = 'grafico_periodo';
 ?>
 <!DOCTYPE html>
 
@@ -160,24 +160,7 @@ if($todas_empresas) {
 
 
                 <div class="card">
-                    <div class="card-header">
-                        <button class="btn btn-primary dre-menu-btn" id="btn-sintetico" onclick="window.location.href='sintetico.php'"  id="btn-sintetico">
-                            <h3>DRE - Sintético</h3>
-                        </button>
-
-                        <button class="btn btn-primary dre-menu-btn" onclick="window.location.href='analitico.php'"  id="btn-analitico">
-                            <h3>DRE - Analitico</h3>
-                        </button>
-
-                        <button class="btn btn-primary btn-dre-selecionado dre-menu-btn" onclick="window.location.href='grafico.php'" id="btn-grafico">
-                            <h3>Gráfico</h3>
-                        </button>
-
-                        <button class="btn btn-primary dre-menu-btn" style="border-bottom: 2px solid #5856d6;"  id="btn-grafico-periodo">
-                            <h3>Gráfico por período</h3>
-                        </button>
-                    </div>
-
+                    <?php require_once __DIR__ . '/../../../componentes/bancario/dre-header.php'; ?>
                     <div class="card-header-div">
                         <div class="card-header-borda">
                             <div class="tab-pane fade show active" id="vendas" role="tabpanel"
