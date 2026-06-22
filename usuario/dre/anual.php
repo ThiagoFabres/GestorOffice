@@ -4,6 +4,7 @@ require_once __DIR__ . '/../../db/entities/usuarios.php';
 require_once __DIR__ . '/../../db/entities/contas.php';
 require_once __DIR__ . '/../../db/entities/cadastro.php';
 require_once __DIR__ . '/../../db/entities/recebimentos.php';
+require_once __DIR__ . '/../../db/entities/pagar.php';
 require_once __DIR__ . '/../../db/entities/empresas.php';
 require_once __DIR__ . '/../../db/entities/centrocustos.php';
 
@@ -25,9 +26,8 @@ $lateral_target  = 'dre';
 $dre_target      = 'anual';
 
 // ─── Filtros GET ─────────────────────────────────────────────────────────────
-$get_ano         = filter_input(INPUT_GET, 'ano')              ?: date('Y');
+$get_ano         = filter_input(INPUT_GET, 'ano')               ?: date('Y');
 $get_operacional = filter_input(INPUT_GET, 'filtro_operacional') ?: null;
-$get_tipo        = filter_input(INPUT_GET, 'filtro_tipo')        ?: 'C'; // C=Crédito D=Débito
 $get_todas_emp   = filter_input(INPUT_GET, 'todas_empresas') == 'on' ? 1 : 0;
 
 // ─── Empresas ────────────────────────────────────────────────────────────────
@@ -46,16 +46,20 @@ $meses_labels = [
     10 => 'Out', 11 => 'Nov', 12 => 'Dez',
 ];
 
-// ─── Pré-carregar Con01 e Con02 de todas as empresas envolvidas ───────────────
-// Mapas: $map_titulos[id] = nome   |   $map_subtitulos[id] = nome
-$map_titulos    = [];
-$map_subtitulos = [];
-$map_rec01 = [];
+// ─── Pré-carregar Con01, Con02, Rec01 e Pag01 de todas as empresas ────────────
+// $map_titulos[id]    = objeto Con01  (precisamos do ->tipo e ->nome)
+// $map_subtitulos[id] = nome do Con02
+// $map_rec01[id]      = ['titulo' => id_con01, 'subtitulo' => id_con02]
+// $map_pag01[id]      = ['titulo' => id_con01, 'subtitulo' => id_con02]
+$map_titulos    = [];   // id => Con01 objeto
+$map_subtitulos = [];   // id => nome
+$map_rec01      = [];
+$map_pag01      = [];
 
 foreach ($empresa_lista as $empresa) {
     $con01_lista = Con01::read(idempresa: $empresa->id);
     foreach ($con01_lista as $c) {
-        $map_titulos[(int)$c->id] = $c->nome;
+        $map_titulos[(int)$c->id] = $c;          // objeto completo (usamos ->tipo e ->nome)
     }
 
     $con02_lista = Con02::read(idempresa: $empresa->id);
@@ -65,7 +69,12 @@ foreach ($empresa_lista as $empresa) {
 
     $rec01_lista = Rec01::read(id_empresa: $empresa->id);
     foreach ($rec01_lista as $c) {
-        $map_rec01[(int)$c->id] = ['titulo' => $c->id_con01, 'subtitulo' => $c->id_con02];
+        $map_rec01[(int)$c->id] = ['titulo' => (int)$c->id_con01, 'subtitulo' => (int)$c->id_con02];
+    }
+
+    $pag01_lista = Pag01::read(id_empresa: $empresa->id);
+    foreach ($pag01_lista as $c) {
+        $map_pag01[(int)$c->id] = ['titulo' => (int)$c->id_con01, 'subtitulo' => (int)$c->id_con02];
     }
 }
 
@@ -73,12 +82,9 @@ foreach ($empresa_lista as $empresa) {
 // Agrupamento por NOME (normalizado) para unir títulos/subtítulos homônimos
 // de empresas diferentes.
 //
-// $dados[tkey]['_meta']              = ['nome' => ..., 'subtitulos' => [skey => nome]]
-// $dados[tkey]['_total'][1..12]      = soma mensal do título
-// $dados[tkey][skey][1..12]          = soma mensal do subtítulo
-//
-// tkey = strtolower(trim(nome_titulo))
-// skey = tkey . '||' . strtolower(trim(nome_subtitulo))
+// $dados[tkey]['_meta']          = ['nome' => ..., 'tipo' => 'C'|'D', 'subtitulos' => [skey => nome]]
+// $dados[tkey]['_total'][1..12]  = soma mensal do título (débitos já negativos)
+// $dados[tkey][skey][1..12]      = soma mensal do subtítulo
 $dados       = [];
 $total_geral = array_fill(1, 12, 0.0);
 
@@ -87,57 +93,105 @@ foreach ($empresa_lista as $empresa) {
         $data_inicial = sprintf('%04d-%02d-01', $get_ano, $mes);
         $data_final   = date('Y-m-t', strtotime($data_inicial));
 
-        $lancamentos = Rec02::read(
+        // ── Receitas (Rec02) ──────────────────────────────────────────────────
+        $lancamentos_rec = Rec02::read(
             id_empresa:          $empresa->id,
             filtro_data_inicial: $data_inicial,
             filtro_data_final:   $data_final,
-            filtro_por:'pagamento',
+            filtro_por:          'pagamento',
             filtro_operacional:  $get_operacional,
-            filtro_opcao: 'quitados'
+            filtro_opcao:        'quitados'
         );
 
-        if (empty($lancamentos)) continue;
-        
-        foreach ($lancamentos as $lanc) {
-            $rec01   = $map_rec01[$lanc->id_rec01];
+        foreach ($lancamentos_rec as $lanc) {
+            $meta = $map_rec01[(int)$lanc->id_rec01] ?? null;
+            if (!$meta) continue;
 
-            $tid_raw = (int)($rec01['titulo'] ?? 0);
-            $sid_raw = (int)($rec01['subtitulo'] ?? 0);
-            $tnom    = $map_titulos[$tid_raw]    ?? 'Sem Título';
-            $snom    = $map_subtitulos[$sid_raw] ?? 'Sem Subtítulo';
-            $valor   = (float)($lanc->valor_pag      ?? 0);
-            
+            $tid_raw = $meta['titulo'];
+            $sid_raw = $meta['subtitulo'];
+            $con01   = $map_titulos[$tid_raw] ?? null;
 
-            // Chaves de agrupamento baseadas no nome (case-insensitive, sem espaços extras)
-            $tkey = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $tnom))) ?? 'Sem Título';;
-            $skey = $tkey . '||' . strtolower(trim($snom));
-
-            // Inicializa título
-            if (!isset($dados[$tkey])) {
-                $dados[$tkey] = [
-                    '_meta'  => ['nome' => $tnom, 'subtitulos' => []],
-                    '_total' => array_fill(1, 12, 0.0),
-                ];
+            // Filtra por operacional se necessário
+            if ($get_operacional !== null && $con01) {
+                if ($get_operacional == 1 && $con01->operacional != 1) continue;
+                if ($get_operacional == 2 && $con01->operacional != 0) continue;
             }
 
-            // Inicializa subtítulo
-            if (!isset($dados[$tkey][$skey])) {
-                $dados[$tkey]['_meta']['subtitulos'][$skey] = $snom;
-                $dados[$tkey][$skey] = array_fill(1, 12, 0.0);
+            $tnom  = $con01->nome         ?? 'Sem Título';
+            $tipo  = $con01->tipo         ?? 'C';
+            $snom  = $map_subtitulos[$sid_raw] ?? 'Sem Subtítulo';
+            $valor = (float)($lanc->valor_pag ?? 0);
+
+            // Débitos viram negativos (consistência com sintetico.php)
+            if ($tipo === 'D') $valor *= -1;
+
+            _acumular_anual($dados, $total_geral, $tnom, $tipo, $snom, $mes, $valor);
+        }
+
+        // ── Despesas (Pag02) ──────────────────────────────────────────────────
+        $lancamentos_pag = Pag02::read(
+            id_empresa:          $empresa->id,
+            filtro_data_inicial: $data_inicial,
+            filtro_data_final:   $data_final,
+            filtro_por:          'pagamento',
+            filtro_operacional:  $get_operacional,
+            filtro_opcao:        'quitados'
+        );
+
+        foreach ($lancamentos_pag as $lanc) {
+            $meta = $map_pag01[(int)$lanc->id_pag01] ?? null;
+            if (!$meta) continue;
+
+            $tid_raw = $meta['titulo'];
+            $sid_raw = $meta['subtitulo'];
+            $con01   = $map_titulos[$tid_raw] ?? null;
+
+            // Filtra por operacional se necessário
+            if ($get_operacional !== null && $con01) {
+                if ($get_operacional == 1 && $con01->operacional != 1) continue;
+                if ($get_operacional == 2 && $con01->operacional != 0) continue;
             }
 
-            $dados[$tkey][$skey][$mes]     += $valor;
-            $dados[$tkey]['_total'][$mes]  += $valor;
-            $total_geral[$mes]             += $valor;
+            $tnom  = $con01->nome              ?? 'Sem Título';
+            $tipo  = $con01->tipo              ?? 'D';
+            $snom  = $map_subtitulos[$sid_raw] ?? 'Sem Subtítulo';
+            $valor = (float)($lanc->valor_pag  ?? 0);
+
+            // Pag02 são sempre despesas → negativo
+            $valor *= -1;
+
+            _acumular_anual($dados, $total_geral, $tnom, $tipo, $snom, $mes, $valor);
         }
     }
 }
 
-// Ordena títulos por total geral (desc)
-uasort($dados, function ($a, $b) {
-    return array_sum($b['_total']) <=> array_sum($a['_total']);
-});
+// ─── Função auxiliar de acumulação ───────────────────────────────────────────
+function _acumular_anual(array &$dados, array &$total_geral, string $tnom, string $tipo, string $snom, int $mes, float $valor): void
+{
+    $tkey = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $tnom)));
+    $skey = $tkey . '||' . strtolower(trim($snom));
 
+    if (!isset($dados[$tkey])) {
+        $dados[$tkey] = [
+            '_meta'  => ['nome' => $tnom, 'tipo' => $tipo, 'subtitulos' => []],
+            '_total' => array_fill(1, 12, 0.0),
+        ];
+    }
+
+    if (!isset($dados[$tkey][$skey])) {
+        $dados[$tkey]['_meta']['subtitulos'][$skey] = $snom;
+        $dados[$tkey][$skey] = array_fill(1, 12, 0.0);
+    }
+
+    $dados[$tkey][$skey][$mes]    += $valor;
+    $dados[$tkey]['_total'][$mes] += $valor;
+    $total_geral[$mes]            += $valor;
+}
+
+// Ordena títulos por total absoluto (desc)
+uasort($dados, function ($a, $b) {
+    return strcasecmp($a['_meta']['nome'], $b['_meta']['nome']);
+});
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">

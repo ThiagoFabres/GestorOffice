@@ -194,6 +194,7 @@ class Pag02 {
         $filtro_custos = null,
         $read_totais = null,
         $filtro_descricao = null,
+        $filtro_operacional = null
     ) {
         $pdo = (new Database())->connect();
 
@@ -252,6 +253,14 @@ class Pag02 {
                 $conditions[] = $filtro_por_data . ' <= :filtro_data_final';
             }
             
+        }
+
+        if($filtro_operacional != null) {
+            if($filtro_operacional == 1) {
+                $conditions[] = ' id_con01 IN (SELECT id FROM con01 WHERE operacional = 1 AND id_empresa = :filtro_operacional_empresa)';
+            } else if($filtro_operacional == 2) {
+                $conditions[] = ' id_con01 IN (SELECT id FROM con01 WHERE operacional = 0 AND id_empresa = :filtro_operacional_empresa)';
+            }
         }
         if ($dash_tipo != null && $filtro_data_inicial != null) {
         switch ($dash_tipo) {
@@ -396,6 +405,8 @@ switch($ordenar_por) {
         if($filtro_con02 != null && $hasParam(':filtro_con02')) $stmt->bindValue(':filtro_con02', $filtro_con02);
         if($filtro_custos != null && $hasParam(':filtro_custos')) $stmt->bindValue(':filtro_custos', $filtro_custos);
         if($filtro_descricao != null && $hasParam(':filtro_descricao')) $stmt->bindValue(':filtro_descricao', '%' . $filtro_descricao . '%');
+        if($filtro_operacional !== null && $id_empresa !== null && $hasParam(':filtro_operacional_empresa')) $stmt->bindValue(':filtro_operacional_empresa', $id_empresa);
+
 
         $stmt->execute();
 
