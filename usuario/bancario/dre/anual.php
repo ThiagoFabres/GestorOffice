@@ -27,7 +27,6 @@ $dre_target      = 'anual';
 // ─── Filtros GET ─────────────────────────────────────────────────────────────
 $get_ano         = filter_input(INPUT_GET, 'ano')              ?: date('Y');
 $get_operacional = filter_input(INPUT_GET, 'filtro_operacional') ?: null;
-$get_tipo        = filter_input(INPUT_GET, 'filtro_tipo')        ?: 'C'; // C=Crédito D=Débito
 $get_todas_emp   = filter_input(INPUT_GET, 'todas_empresas') == 'on' ? 1 : 0;
 
 // ─── Empresas ────────────────────────────────────────────────────────────────
@@ -86,7 +85,6 @@ foreach ($empresa_lista as $empresa) {
             filtro_data_inicial: $data_inicial,
             filtro_data_final:   $data_final,
             filtro_operacional:  $get_operacional,
-            filtro_tipo:         $get_tipo,
             dre_read:            true
         );
 
@@ -98,6 +96,8 @@ foreach ($empresa_lista as $empresa) {
             $tnom    = $map_titulos[$tid_raw]    ?? 'Sem Título';
             $snom    = $map_subtitulos[$sid_raw] ?? 'Sem Subtítulo';
             $valor   = (float)($lanc->valor      ?? 0);
+            
+
             
 
             // Chaves de agrupamento baseadas no nome (case-insensitive, sem espaços extras)
@@ -127,7 +127,7 @@ foreach ($empresa_lista as $empresa) {
 
 // Ordena títulos por total geral (desc)
 uasort($dados, function ($a, $b) {
-    return array_sum($b['_total']) <=> array_sum($a['_total']);
+    return strcasecmp($a['_meta']['nome'], $b['_meta']['nome']);
 });
 
 ?>
