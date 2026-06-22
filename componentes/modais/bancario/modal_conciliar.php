@@ -3,6 +3,7 @@
 <?php 
 $acao = $acao ?? null;
 $caminho = $caminho ?? null;
+$id = $id ?? null;
 if($acao == 'conciliar') {
   $id = filter_input(INPUT_GET, 'id');
   $ban02 = Ban02::read($id)[0];
@@ -99,79 +100,70 @@ if($acao == 'conciliar') {
     </div>
     <script>
 document.addEventListener('DOMContentLoaded', function () {
-    
-
     const modalConciliar = document.getElementById('modal_conciliar');
+
     modalConciliar.addEventListener('show.bs.modal', function (event) {
+        const tabelaMov = document.getElementById('tabela-bancario');
+        const formConciliar = document.getElementById('form-conciliar');
         const button = event.relatedTarget;
+
+        // ── Limpa inputs dinâmicos anteriores ───────────────────────
+        formConciliar.querySelectorAll('input[data-dinamico="true"]').forEach(el => el.remove());
+
+        const idsListaConciliar = [];
+        const tipoLista = [];
         const id = button.getAttribute('data-id');
-        document.getElementById('conciliar-id').value = id;
 
-    });
+        if (id) {
+            tipoLista.push(button.getAttribute('data-tipo'));
+            idsListaConciliar.push('id_check[' + id + ']');
 
-});
+            document.getElementById('conciliar-id').value = id;
 
-  document.addEventListener('show.bs.modal', function(event) {
-    const tabelaMov = document.getElementById('tabela-bancario');
-    const formConciliar = document.getElementById('form-conciliar');
-    const button = event.relatedTarget;
-
-    // ── Limpa inputs dinâmicos anteriores antes de recriar ──────────
-    formConciliar.querySelectorAll('input[data-dinamico="true"]').forEach(el => el.remove());
-
-    const idsListaConciliar = [];
-    const tipoLista = [];
-    const id = button.getAttribute('data-id');
-
-    if (id) {
-        tipoLista.push(button.getAttribute('data-tipo'));
-        idsListaConciliar.push('id_check[' + id + ']');
-
-        // Cria o input do botão clicado
-        var inputBtn = document.createElement('input');
-        inputBtn.setAttribute('name', 'id_check[' + id + ']');
-        inputBtn.setAttribute('type', 'hidden');
-        inputBtn.setAttribute('data-dinamico', 'true');
-        inputBtn.value = id;
-        formConciliar.appendChild(inputBtn);
-    }
-
-    // ── Apenas checkboxes MARCADAS ───────────────────────────────────
-    tabelaMov.querySelectorAll('tbody tr td input[type="checkbox"]:checked').forEach(function(el) {
-        const nome = el.getAttribute('name');
-        const dataId = el.getAttribute('data-id');
-        const dataTipo = el.getAttribute('data-tipo');
-
-        // Evita duplicar o mesmo ID (ex: checkbox do item clicado já foi adicionada acima)
-        if (idsListaConciliar.includes(nome)) return;
-
-        idsListaConciliar.push(nome);
-
-        if (!tipoLista.includes(dataTipo)) {
-            tipoLista.push(dataTipo);
+            var inputBtn = document.createElement('input');
+            inputBtn.setAttribute('name', 'id_check[' + id + ']');
+            inputBtn.setAttribute('type', 'hidden');
+            inputBtn.setAttribute('data-dinamico', 'true');
+            inputBtn.value = id;
+            formConciliar.appendChild(inputBtn);
         }
 
-        var inputEl = document.createElement('input');
-        inputEl.setAttribute('name', nome);
-        inputEl.setAttribute('type', 'hidden');
-        inputEl.setAttribute('data-dinamico', 'true');
-        inputEl.value = dataId;
-        formConciliar.appendChild(inputEl);
+        // ── Apenas checkboxes MARCADAS ───────────────────────────────
+        tabelaMov.querySelectorAll('tbody tr td input[type="checkbox"]:checked').forEach(function (el) {
+            const nome  = el.getAttribute('name');
+            const dataId  = el.getAttribute('data-id');
+            const dataTipo = el.getAttribute('data-tipo');
+
+            if (idsListaConciliar.includes(nome)) return;
+
+            idsListaConciliar.push(nome);
+
+            if (!tipoLista.includes(dataTipo)) {
+                tipoLista.push(dataTipo);
+            }
+
+            var inputEl = document.createElement('input');
+            inputEl.setAttribute('name', nome);
+            inputEl.setAttribute('type', 'hidden');
+            inputEl.setAttribute('data-dinamico', 'true');
+            inputEl.value = dataId;
+            formConciliar.appendChild(inputEl);
+        });
+
+        // ── Lógica de exibição dos botões ────────────────────────────
+        const temConflito = tipoLista.includes('C') && tipoLista.includes('D');
+        const multiplos   = idsListaConciliar.length > 1;
+
+        document.getElementById('mensagem-erro').innerHTML = temConflito
+            ? `<div class="w-100 d-flex justify-content-center">
+                   <p style="color:red">Mais de um tipo de lançamento marcado</p>
+               </div>`
+            : '';
+
+        document.getElementById('form-conciliar').style.display         = temConflito ? 'none'  : 'block';
+        document.getElementById('conciliar-btn').style.display           = (!temConflito && !multiplos) ? 'block' : 'none';
+        document.getElementById('conciliar-marcados-btn').style.display   = (!temConflito && multiplos)  ? 'block' : 'none';
     });
-
-    // ── Lógica de exibição dos botões ────────────────────────────────
-    const temConflito = tipoLista.includes('C') && tipoLista.includes('D');
-    const multiplos   = idsListaConciliar.length > 1;
-
-    document.getElementById('mensagem-erro').innerHTML = temConflito
-        ? `<div class="w-100 d-flex justify-content-center">
-               <p style="color:red">Mais de um tipo de lançamento marcado</p>
-           </div>`
-        : '';
-
-    document.getElementById('form-conciliar').style.display        = temConflito ? 'none'  : 'block';
-    document.getElementById('conciliar-btn').style.display          = (!temConflito && !multiplos) ? 'block' : 'none';
-    document.getElementById('conciliar-marcados-btn').style.display  = (!temConflito && multiplos)  ? 'block' : 'none';
 });
   
 var tituloModalElement = document.querySelector('#titulo');
