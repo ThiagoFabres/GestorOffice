@@ -607,7 +607,7 @@ if ($get_filtro_conta != null) {
         
         <div id="custom-context-menu" style="display:none; position:absolute; z-index:9999; background:#fff; border:1px solid #ccc; box-shadow:0 2px 8px rgba(0,0,0,0.2); min-width:200px; border-radius:6px; overflow:hidden;">
             <?php if($_SESSION['usuario']->processar === 1) { ?>
-                    <button id="menu-conciliar" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-clipboard-check"></i> Conciliar</button>
+                    <button data-bs-toggle="modal" data-bs-target="#modal_conciliar" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-clipboard-check"></i> Conciliar</button>
                     <button id="menu-desmembrar" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-code-slash"></i> Desmembrar</button>
             <?php } ?>
                     <button id="menu-editar-bancario" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi 
