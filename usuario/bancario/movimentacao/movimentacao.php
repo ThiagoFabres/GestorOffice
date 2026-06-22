@@ -1413,6 +1413,13 @@ document.addEventListener('DOMContentLoaded', function () {
         window.location.href="<?=$caminho?>"
     </script>
 <?php } ?>
+<?php if($erro == 'titulo') { ?>
+    <script>
+        alert('Titulo Inválido')
+        window.location.href="<?=$caminho?>"
+    </script>
+<?php } ?>
+
 
 
 </html>

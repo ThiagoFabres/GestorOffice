@@ -16,7 +16,7 @@ if($_SESSION['usuario']->processar !== 1) {
     header('Location: movimentacao.php?erro=permissao');
     exit;
 }
-
+require_once '../../../db/entities/contas.php';
 require_once '../../../db/entities/banco02.php';
 require_once '../../../db/entities/banco01.php';
 require_once '../../../db/entities/pagar.php';
@@ -569,6 +569,22 @@ if ($fileExt === 'ofx') {
     $subtitulo = ($subtitulo === '' ? null : $subtitulo);
     $id = filter_input(INPUT_POST, 'id');
     $movimentacao_antiga = Ban02::read($id)[0];
+    if($titulo == null|| $subtitulo == null ) {
+        header('Location: movimentacao.php?erro=titulo');
+    }
+    $titulo_obj = Con01::read($titulo)[0];
+        if($titulo != null && (($titulo_obj->tipo == 'C' && $movimentacao_antiga->valor < 0) || ($titulo_obj->tipo == 'D' && $movimentacao_antiga->valor > 0) || $titulo_obj->id_empresa != $_SESSION['usuario']->id_empresa)) {
+            if(str_ends_with($caminho, '.php')) {
+            header('Location: '. $caminho . '?erro=titulo');
+            exit;
+        } else if(str_ends_with($caminho, '&')) {
+            header('Location: ' . $caminho . 'erro=titulo');
+            exit;
+        } else {
+            header('Location: ' . $caminho . '&erro=titulo');
+            exit;
+        }
+    }
     
 
     $movimentacao = new Ban02(
@@ -606,18 +622,30 @@ if ($fileExt === 'ofx') {
 } else if($acao == 'conciliar_palavra') {
 
     require_once '../../../db/entities/palavra_chave.php';
-    require_once '../../../db/entities/contas.php';
 
 
     $id_palavra = filter_input(INPUT_POST, 'palavra_chave');
     $palavra = Pal01::read($id_palavra)[0];
-    $titulo = Con01::read($palavra->id_con01)[0];
-    $tipo = $titulo->tipo;
-    $titulo = $titulo->id;
+    $titulo_obj = Con01::read($palavra->id_con01)[0];
+    $tipo = $titulo_obj->tipo;
+    $titulo = $titulo_obj->id;
     $subtitulo = Con02::read($palavra->id_con02)[0]->id;
     $ban02_lista = Ban02::read(id_empresa: $_SESSION['usuario']->id_empresa, tipo:$tipo, palavra: strtolower($palavra->palavra));
 
     foreach($ban02_lista as $ban02) {
+        if($titulo_obj != null && (($titulo_obj->tipo == 'C' && $ban02->valor < 0) || ($titulo_obj->tipo == 'D' && $ban02->valor > 0) || $titulo_obj->id_empresa != $_SESSION['usuario']->id_empresa)) {
+        if(str_ends_with($caminho, '.php')) {
+            header('Location: '. $caminho . '?erro=titulo');
+            exit;
+        } else if(str_ends_with($caminho, '&')) {
+            header('Location: ' . $caminho . 'erro=titulo');
+            exit;
+        } else {
+            header('Location: ' . $caminho . '&erro=titulo');
+            exit;
+        }
+    }
+
         $novo_ban02 = new Ban02 (
             $ban02->id,
             $ban02->id_empresa,
@@ -655,6 +683,9 @@ else if($acao == 'conciliar_marcados') {
     $subtitulo = filter_input(INPUT_POST, 'subtitulo');
     $titulo = ($titulo === '' ? null : $titulo);
     $subtitulo = ($subtitulo === '' ? null : $subtitulo);
+    if($titulo != null) {
+        $titulo_obj = Con01::read($titulo)[0];
+    }
 
     if(empty($lista_ban) || $lista_ban == '') {
         header('Location: movimentacao.php?status=erro_dados');
@@ -662,6 +693,19 @@ else if($acao == 'conciliar_marcados') {
     }
     foreach($lista_ban as $id) {
         $ban02 = Ban02::read($id, $_SESSION['usuario']->id_empresa)[0];
+        
+    if($titulo != null && (($titulo_obj->tipo == 'C' && $ban02->valor < 0) || ($titulo_obj->tipo == 'D' && $ban02->valor > 0) || $titulo_obj->id_empresa != $_SESSION['usuario']->id_empresa)) {
+        if(str_ends_with($caminho, '.php')) {
+            header('Location: '. $caminho . '?erro=titulo');
+            exit;
+        } else if(str_ends_with($caminho, '&')) {
+            header('Location: ' . $caminho . 'erro=titulo');
+            exit;
+        } else {
+            header('Location: ' . $caminho . '&erro=titulo');
+            exit;
+        }
+    }
         $novo_ban02 = new Ban02 (
             $ban02->id,
             $ban02->id_empresa,
@@ -700,7 +744,7 @@ else if($acao == 'conciliar_todas'){
         exit;
     } else {
         foreach($palavras_lista as $i => $palavra) {
-            $titulo = Con01::read($palavra->id_con01)[0];
+            $titulo_obj = Con01::read($palavra->id_con01)[0];
             $tipo = $titulo->tipo;
             $titulo = $titulo->id;
             $subtitulo = Con02::read($palavra->id_con02)[0]->id;
@@ -709,6 +753,18 @@ else if($acao == 'conciliar_todas'){
                 continue;
             } 
             foreach($ban02_lista as $ban02) {
+                if($titulo_obj != null && (($titulo_obj->tipo == 'C' && $ban02->valor < 0) || ($titulo_obj->tipo == 'D' && $ban02->valor > 0) || $titulo_obj->id_empresa != $_SESSION['usuario']->id_empresa)) {
+        if(str_ends_with($caminho, '.php')) {
+            header('Location: '. $caminho . '?erro=titulo');
+            exit;
+        } else if(str_ends_with($caminho, '&')) {
+            header('Location: ' . $caminho . 'erro=titulo');
+            exit;
+        } else {
+            header('Location: ' . $caminho . '&erro=titulo');
+            exit;
+        }
+    }
                 $novo_ban02 = new Ban02 (
                     $ban02->id,
                     $ban02->id_empresa,
