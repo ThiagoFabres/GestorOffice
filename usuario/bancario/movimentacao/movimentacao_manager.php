@@ -21,6 +21,7 @@ require_once '../../../db/entities/banco02.php';
 require_once '../../../db/entities/banco01.php';
 require_once '../../../db/entities/pagar.php';
 require_once '../../../db/entities/recebimentos.php';
+
 require_once 'buscar_documento.php';
 
 
@@ -39,6 +40,7 @@ if($acao == 'processar') {
             } elseif ($fileName === 'xlsx' || $fileName === 'xls') {
                 
                 return parse_xlsx($filePath);
+
             }
             
             return ['current' => [], 'debug' => ['error' => 'Formato de arquivo não suportado']];
@@ -48,7 +50,10 @@ if($acao == 'processar') {
         }
     }
 
-    function parse_xlsx($filePath) {
+    function parse_xlsx_banco($filePath) {
+        require __DIR__ . '/banco_suporte.php';
+        
+        
         $conta = filter_input(INPUT_POST, 'conta');
         $data_atual = (new DateTime())->format('Y-m-d');
         $ultima_data = buscarData($conta);
@@ -58,29 +63,71 @@ if($acao == 'processar') {
             $importadas_set[$imp->data] = true;
             
         }
+
+        
         
         $conta_obj = Ban01::read($conta)[0];
+
+        $file = $_FILES['ofx'];
+        $fileName = $_FILES['ofx']['name'];
+        if(str_ends_with($fileName, '.xlsx')) {
+            $file_ext = 'xlsx';
+        } else if(str_ends_with($fileName, '.xls')) {
+            $file_ext = 'xls';
+        } else {
+            header('location: cadastro_vendas.php?erro=arquivo');
+            exit;
+        }
+        $nome_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $conta_obj->nome)));
+
+        $banco_suporte_i = isset($bancos_suporte[$nome_preg][$file_ext]) ? $bancos_suporte[$nome_preg][$file_ext] : [];
+
         $transactions = [];
         $transactions['current'] = [];
         $transactions['debug'] = [];
         
         try {
-            // Usar PhpSpreadsheet para ler XLSX
-            $spreadsheet = IOFactory::load($filePath);
+            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($file['tmp_name']);
+            $reader->setReadDataOnly(true);
+            $reader->setReadEmptyCells(false);  
+
+            
+
+            
+
+            $spreadsheet = $reader->load($file['tmp_name']);
             $worksheet = $spreadsheet->getActiveSheet();
             
-            // Começa a ler a partir da linha 2 (linha 1 é cabeçalho)
-            foreach ($worksheet->getRowIterator(2) as $row) {
-                $cellIterator = $row->getCellIterator('A', 'Z');
-                $cellIterator->setIterateOnlyExistingCells(false);
+            $banco_suporte['start_row'] = isset($banco_suporte_i['start_row']) ? $banco_suporte_i['start_row'] : 2;
+            $banco_suporte['start_end_columns'] = isset($banco_suporte_i['start_end_columns']) ? $banco_suporte_i['start_end_columns'] : ['start' => 'A', 'end' => 'Z'];
+            $banco_suporte['excluded_columns'] = isset($banco_suporte_i['excluded_columns']) ? $banco_suporte_i['excluded_columns'] : [];
+            $banco_suporte['organizador'] = isset($banco_suporte_i['organizador']) ? $banco_suporte_i['organizador'] : ['data' => 0, 'descricao' => 1, 'valor' => 2];
+            $banco_suporte['suporte_numero'] = isset($banco_suporte_i['suporte_numero']) ? $banco_suporte_i['suporte_numero'] : null;
+
+            
+
+
+            foreach ($worksheet->getRowIterator($banco_suporte['start_row']) as $row) {
                 
-                $cells = [];
-                foreach ($cellIterator as $cell) {
-                    if($cell->getValue() !== null) {
-                        $cells[] = $cell->getValue();
-                        $transactions['debug']['cells'][] = $cell->getValue();
+                $cellIterator = $row->getCellIterator($banco_suporte['start_end_columns']['start'], $banco_suporte['start_end_columns']['end']);
+                $cellIterator->setIterateOnlyExistingCells(false);
+                $cells_p = [];
+                foreach ($cellIterator as $i => $cell) {
+                    if(in_array($cell->getColumn(), $banco_suporte['excluded_columns'])) {
+                        continue;
+                    }
+                    if($cell->getCalculatedValue() !== null) {
+                        $cells_p[] = $cell->getCalculatedValue();
+                        $transactions['debug']['cells'][] = $cell->getCalculatedValue();
                     }
                 }
+
+                $banco_sup_org = $banco_suporte['organizador'];
+                $cells = [
+                    0 => $cells_p[$banco_sup_org['data']],
+                    1 => $cells_p[$banco_sup_org['descricao']],
+                    2 => $cells_p[$banco_sup_org['valor']],
+                ];
                 
                 if(count($cells) == 0 || count($cells) > 3) {
                     return $transactions;
@@ -99,6 +146,10 @@ if($acao == 'processar') {
                 $descricao = trim((string)$cells[1]);
                 $valor_str = $cells[2];
                 
+                if($banco_suporte['suporte_numero'] == 'formatado(1.000,00)') {
+                    $valor_str = str_replace('.', '', $valor_str);
+                    $valor_str = str_replace(',', '.', $valor_str);
+                }
                 
                 // Se não houver data ou valor, pula a linha
                 if (empty($data_raw) || empty($valor_str)) {
@@ -155,7 +206,129 @@ if($acao == 'processar') {
                     'data' => $data_formatada,
                     'descricao' => $descricao,
                     'valor' => number_format($valor, 2, ',', '.'),
+                ];                
+                
+                $transactions['current'][] = $current;
+            }
+
+            return $transactions;
+        } catch (Exception $e) {
+            error_log('Erro ao processar XLSX: ' . $e->getMessage());
+            return ['current' => [], 'debug' => ['error' => $e->getMessage()]];
+        }
+    }
+
+    function parse_xlsx($filePath) {
+        $conta = filter_input(INPUT_POST, 'conta');
+        $data_atual = (new DateTime())->format('Y-m-d');
+        $ultima_data = buscarData($conta);
+        $importadas = Ban02Imp::read($_SESSION['usuario']->id_empresa, $conta);      
+        $importadas_set = [];
+        foreach ($importadas as $imp) {
+            $importadas_set[$imp->data] = true;
+            
+        }
+        
+        $conta_obj = Ban01::read($conta)[0];
+        $transactions = [];
+        $transactions['current'] = [];
+        $transactions['debug'] = [];
+        
+        try {
+            // Usar PhpSpreadsheet para ler XLSX
+            $spreadsheet = IOFactory::load($filePath);
+            $worksheet = $spreadsheet->getActiveSheet();
+            
+            // Começa a ler a partir da linha 2 (linha 1 é cabeçalho)
+            foreach ($worksheet->getRowIterator(2) as $row) {
+                $cellIterator = $row->getCellIterator('A', 'Z');
+                $cellIterator->setIterateOnlyExistingCells(false);
+                $cells = [];
+                foreach ($cellIterator as $cell) {
+                    if($cell->getValue() !== null) {
+                        $cells[] = $cell->getValue();
+                        $transactions['debug']['cells'][] = $cell->getValue();
+                    }
+                }
+                
+                
+                if(count($cells) == 0 || count($cells) > 3) {
+                    return $transactions;
+                }
+                
+                if(empty($cells)) {
+                    continue;
+                }
+                // Verifica se a linha tem dados
+                if (empty($cells[0]) && empty($cells[1]) && empty($cells[2])) {
+                    continue;
+                }
+                
+                $data_raw = $cells[0];
+                
+                $descricao = trim((string)$cells[1]);
+                $valor_str = $cells[2];
+                
+                
+                // Se não houver data ou valor, pula a linha
+                if (empty($data_raw) || empty($valor_str)) {
+                    continue;
+                }
+                
+                // Converte data: pode ser número serial do Excel ou string
+                try {
+                    if (is_numeric($data_raw)) {
+                        // É número serial do Excel - converte para data
+                        $dateTime = ExcelDate::excelToDateTimeObject($data_raw);
+                        $data_analizada = $dateTime->format('Y-m-d');
+                        $data_formatada = $dateTime->format('d/m/Y');
+                    } else {
+                        // Tenta formato texto
+                        $data_str = trim((string)$data_raw);
+                        $data_str = str_replace('-', '/', $data_str);
+                        $data_obj = DateTime::createFromFormat('d/m/Y', $data_str);
+                        if (!$data_obj) {
+                            $data_obj = DateTime::createFromFormat('Y-m-d', $data_str);
+                        }
+                        if (!$data_obj) {
+                            continue;
+                        }
+                        $data_analizada = $data_obj->format('Y-m-d');
+                        $data_formatada = $data_obj->format('d/m/Y');
+                    }
+                } catch (Exception $e) {
+                    continue;
+                }
+
+
+                
+
+                // Valida se já foi importada
+                if (isset($importadas_set[$data_analizada])) {
+                    continue;
+                }
+                if(($ultima_data != null && ($data_analizada == $ultima_data) || $conta_obj->data > $data_analizada) || $data_analizada >= $data_atual) {
+                    continue;
+                }
+                
+                if($data_analizada >= $data_atual) {
+                    continue;
+                }
+                
+                
+                // Converte valor para número (suporta formato brasileiro)
+                $valor = (float)$valor_str;
+                if ($valor == 0) {
+                    continue;
+                }
+                $data_formatada = str_replace('-', '/', $data_formatada);
+                $current = [
+                    'data' => $data_formatada,
+                    'descricao' => $descricao,
+                    'valor' => number_format($valor, 2, ',', '.'),
                 ];
+
+                
                 
                 
                 $transactions['current'][] = $current;
@@ -438,6 +611,10 @@ if ($fileExt === 'ofx') {
 
 } elseif ($fileExt === 'xlsx' || $fileExt === 'xls') {
             $transactions = parse_xlsx($filePath);
+
+            if(empty($transactions['current'])) {
+                $transactions = parse_xlsx_banco($filePath);
+            }
         } else if($fileExt === 'csv') {
             $transactions = parse_csv($filePath);
         } else {
