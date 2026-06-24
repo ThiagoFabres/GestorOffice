@@ -545,20 +545,20 @@ if (isset($view) && $view == 'cadastro') {
     header('Location: contas.php' . $route);
     exit;
 } else if (isset($view) && ($view == 'receber' || $view == 'pagar')) {
-    $cadastro = filter_input(INPUT_POST, 'cadastro');
-    $titulo = filter_input(INPUT_POST, 'titulo');
-    $subtitulo = filter_input(INPUT_POST, 'subtitulo');
-    $documento = filter_input(INPUT_POST, 'documento');
+    $cadastro = filter_input(INPUT_POST, 'cadastro') != '' ? filter_input(INPUT_POST, 'cadastro') : null;
+    $titulo = filter_input(INPUT_POST, 'titulo') != '' ? filter_input(INPUT_POST, 'titulo') : null;
+    $subtitulo = filter_input(INPUT_POST, 'subtitulo') != '' ? filter_input(INPUT_POST, 'subtitulo') : null;
+    $documento = filter_input(INPUT_POST, 'documento') != '' ? filter_input(INPUT_POST, 'documento') : null;
     $descricao = filter_input(INPUT_POST, 'descricao');
-    $custo = filter_input(INPUT_POST, 'custo');
-    $valor = filter_input(INPUT_POST, 'valor');
+    $custo = filter_input(INPUT_POST, 'custo') != '' ? filter_input(INPUT_POST, 'custo') : null;
+    $valor = filter_input(INPUT_POST, 'valor') != '' ? filter_input(INPUT_POST, 'valor') : null;
     $valor = str_replace('.', '', $valor);
     $valor = str_replace(',', '.', $valor);
     $id_ban = filter_input(INPUT_POST, 'id_ban');
     
     $parcelas_d = filter_input(INPUT_POST, 'parcelas_d');
 
-    $data_lanc = filter_input(INPUT_POST, 'data_lanc') ?? null;
+    $data_lanc = filter_input(INPUT_POST, 'data_lanc') != '' ? filter_input(INPUT_POST, 'data_lanc') : null;
     $parcela = $_POST['parcela'] ?? [];
     $vencimento = $_POST['vencimento'] ?? [];
     $valor_par = $_POST['valor_par'] ?? [];
@@ -581,6 +581,26 @@ if (isset($view) && $view == 'cadastro') {
         $pagar = true;
     } else {
         $pagar = false;
+    }
+
+    if($cadastro == null || $titulo == null || $subtitulo == null || $custo == null || $valor == null || $data_lanc == null) {
+        if ($pagar) {
+            if($acao == 'editar') {
+                    header('Location: pagar.php?erro=campos_vazios&id=' . $id_rec . '&acao=editar');
+                    exit;
+            } else {
+                header('Location: pagar.php?erro=campos_vazios');
+                exit;
+            }
+        } else {
+            if($acao == 'editar') {
+                    header('Location: receber.php?erro=campos_vazios&id=' . $id_rec . '&acao=editar');
+                    exit;
+            } else {
+                header('Location: receber.php?erro=campos_vazios');
+                exit;
+            }
+        }
     }
 
 
