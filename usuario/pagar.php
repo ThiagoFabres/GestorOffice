@@ -55,6 +55,8 @@ $direcao_var = $direcao;
 $get_filtro_data_inicial = filter_input(INPUT_GET, 'filtro_data_inicial') ?? null;
 $get_filtro_data_final = filter_input(INPUT_GET, 'filtro_data_final') ?? null;
 
+$erro = filter_input(INPUT_GET, 'erro') ?? null;
+
 $get_filtro_descricao = filter_input(INPUT_GET, 'filtro_descricao') ?? null;
 $get_filtro_opcao = filter_input(INPUT_GET, 'opcao_filtro') ?? null;
 $get_filtro_por = filter_input(INPUT_GET, 'filtro_por') ?? null;
@@ -1432,6 +1434,15 @@ document.addEventListener('DOMContentLoaded', function () {
 <?php if(isset($erro) && $erro == 'permissao') { ?>
     alert('Você não tem permissão para acessar essa funcionalidade.');
     window.location.href = 'receber.php';
+<?php } ?>
+<?php if(isset($erro) && $erro == 'campos_vazios') { ?>
+    alert('Existem campos vazios no cadastro');
+    var modalEl = document.getElementById('modal_receber');
+            var Modal = new bootstrap.Modal(modalEl);
+            Modal.show();
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                window.location.href = 'pagar.php?pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>';
+            });
 <?php } ?>
 </script>
 

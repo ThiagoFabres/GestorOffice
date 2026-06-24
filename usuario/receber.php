@@ -1437,6 +1437,15 @@ document.addEventListener('DOMContentLoaded', function () {
     alert('Você não tem permissão para acessar essa funcionalidade.');
     window.location.href = 'receber.php';
 <?php } ?>
+<?php if(isset($erro) && $erro == 'campos_vazios') { ?>
+    alert('Existem campos vazios no cadastro');
+    var modalEl = document.getElementById('modal_receber');
+            var Modal = new bootstrap.Modal(modalEl);
+            Modal.show();
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                window.location.href = 'pagar.php?pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>';
+            });
+<?php } ?>
 </script>
 
 
