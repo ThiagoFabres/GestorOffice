@@ -583,23 +583,26 @@ if (isset($view) && $view == 'cadastro') {
         $pagar = false;
     }
 
-    if($cadastro == null || $titulo == null || $subtitulo == null || $custo == null || $valor == null || $data_lanc == null) {
-        if ($pagar) {
-            if($acao == 'editar') {
-                    header('Location: pagar.php?erro=campos_vazios&id=' . $id_rec . '&acao=editar');
-                    exit;
-            } else {
-                header('Location: pagar.php?erro=campos_vazios');
-                exit;
-            }
-        } else {
-            if($acao == 'editar') {
-                    header('Location: receber.php?erro=campos_vazios&id=' . $id_rec . '&acao=editar');
-                    exit;
-            } else {
-                header('Location: receber.php?erro=campos_vazios');
-                exit;
-            }
+    if($acao == 'adicionar' || $acao == 'editar') {
+
+        if($cadastro == null || $titulo == null || $subtitulo == null || $custo == null || $valor == null || $data_lanc == null) {
+                if ($pagar) {
+                    if($acao == 'editar') {
+                            header('Location: pagar.php?erro=campos_vazios&id=' . $id_rec . '&acao=editar');
+                            exit;
+                    } else {
+                        header('Location: pagar.php?erro=campos_vazios');
+                        exit;
+                    }
+                } else {
+                    if($acao == 'editar') {
+                            header('Location: receber.php?erro=campos_vazios&id=' . $id_rec . '&acao=editar');
+                            exit;
+                    } else {
+                        header('Location: receber.php?erro=campos_vazios');
+                        exit;
+                    }
+                }
         }
     }
 
