@@ -220,7 +220,7 @@
                                                     <div class="input-documento" style="width:100%;">
                                                         <!--Nome: -->
                                                     
-                                                        <input type="text" onchange="checar()" name="documento"<?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
+                                                        <input type="text" onchange="" name="documento"<?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
                                                             class="form-control" placeholder="Documento" id="documento"
                                                             value="<?= $documento ?>" readonly
                                                             required>
@@ -291,7 +291,7 @@
                                                 <div class="input-data-lanc">
                                                     <input type="date"
                                                     <?php if($id_ban != null) echo 'readonly'?>
-                                                    onchange="checar()" name="data_lanc" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
+                                                    onchange="" name="data_lanc" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
                                                         class="form-control" placeholder="Data de lançamento"
                                                         value="<?php echo $data_lanc ?>" required>
                                                 </div>
@@ -360,7 +360,7 @@
                                                 <div class="modal-input-group">
                                                         <label for="valor">Valor:</label>         
                                                     <div class="input-valor">
-                                                        <input type="text" id="valor" onchange="checar()" name="valor" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
+                                                        <input type="text" id="valor" onchange="" name="valor" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
                                                             class="form-control" placeholder="Valor"
                                                             <?php if($id_ban != null) echo 'readonly'?>
                                                             value="<?php if($id_ban != null) echo $ban02_valor; else echo $valor?>"
@@ -370,7 +370,7 @@
                                                 <div class="modal-input-group">
                                                     <label for="parcelas">Parcelas:</label>                   
                                                     <div class="input-parcelas">   
-                                                        <input type="number" id="parcelas" onchange="checar()" name="parcelas" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?> <?php if($id_ban != null) echo 'readonly'?>
+                                                        <input type="number" id="parcelas" onchange="" name="parcelas" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?> <?php if($id_ban != null) echo 'readonly'?>
                                                             class="form-control" placeholder="Parcelas"
                                                             value="<?php if($id_ban != null) echo 1; else echo $parcelas_d?>"
                                                             required>
@@ -381,7 +381,7 @@
                                             <div class="input-descricao" style="width: 100%;">
                                                 <!--Nome: -->
                                                 <label for="descricao">Descrição:</label>
-                                                <input type="text" onchange="checar()" <?php if($id_ban != null) echo 'readonly'?> id="descricao" name="descricao" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
+                                                <input type="text" onchange="" <?php if($id_ban != null) echo 'readonly'?> id="descricao" name="descricao" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
                                                     class="form-control" placeholder="Descrição"
                                                     value="<?php if($id_ban != null) echo $ban02_desc; else echo htmlspecialchars($descricao, ENT_QUOTES, 'UTF-8')?>"
                                                     required>
@@ -391,11 +391,11 @@
 
 
 
-                                        <?php if($get_acao != 'visualizar' && !isset($recebimento->valor_b) || $recebimento->valor_b == 0){ ?>                            
-                                            <div style="width: 100%;">
-                                                <button type="submit" class="btn btn-primary mt-4"
-                                                    style="float:right; background-color: #5856d6; border: 0;">Gerar
-                                                    parcelas</button>
+                                        <?php if($get_acao != 'visualizar' && !isset($recebimento->valor_b) || $recebimento->valor_b == 0){ ?>
+                                            <div style="width: 100%; display: flex; flex-direction: column; align-items: flex-end;">
+                                                <div id="msg-gerar-parcelas" style="color: #d9534f; font-size: 0.85rem; margin-top: 0.5rem; text-align: right;"></div>
+                                                <button type="submit" id="btn-gerar-parcelas" class="btn btn-primary mt-2"
+                                                    style="background-color: #5856d6; border: 0;" disabled>Gerar parcelas</button>
                                             </div>
                                         <?php } ?>
                                         </div>
@@ -501,6 +501,153 @@
 <?php } ?>
 
     <script>
+(function () {
+    
+
+    const botao = document.getElementById('btn-gerar-parcelas');
+    const msg   = document.getElementById('msg-gerar-parcelas');
+
+    
+
+    if (!botao || !msg) return;
+
+    function getSelectValue(id) {
+        const el = document.getElementById(id);
+
+        if (!el) return '';
+
+        // Choices.js
+        if (el._choices) {
+            const valor = el._choices.getValue(true);
+
+            if (Array.isArray(valor)) {
+                return valor.length ? valor[0] : '';
+            }
+
+            return valor || '';
+        }
+
+        return el.value || '';
+    }
+
+    function validarCampos() {
+
+    console.clear();
+
+    const tituloEl = document.getElementById('titulo');
+    const subtituloEl = document.getElementById('subtitulo');
+
+        const faltando = [];
+
+        // Título
+        const titulo = getSelectValue('titulo');
+        if (!titulo) {
+            faltando.push('Título');
+        }
+
+        // Subtítulo
+        const subtitulo = getSelectValue('subtitulo');
+        if (!subtitulo) {
+            faltando.push('Sub-Título');
+        }
+
+        // Valor
+        const valor = document.getElementById('valor')?.value?.trim() || '';
+        if (!valor) {
+            faltando.push('Valor');
+        }
+
+        const custo = document.getElementById('custo')?.value?.trim() || '';
+        if (!custo) {
+            faltando.push('Centro de Custos');
+        }
+
+        const cadastro = document.getElementById('cadastro')?.value?.trim() || '';
+        if (!cadastro) {
+            faltando.push('Cliente/Fornecedor');
+        }
+
+        // Parcelas
+        const parcelas = document.getElementById('parcelas')?.value?.trim() || '';
+        if (!parcelas || Number(parcelas) <= 0) {
+            faltando.push('Parcelas');
+        }
+
+        // Data lançamento
+        const dataLanc = document.querySelector('input[name="data_lanc"]')?.value?.trim() || '';
+        if (!dataLanc) {
+            faltando.push('Data de lançamento');
+        }
+
+        // Descrição
+        const descricao = document.getElementById('descricao')?.value?.trim() || '';
+        if (!descricao) {
+            faltando.push('Descrição');
+        }
+
+        msg.textContent = '⚠ Preencha: ' + faltando.join(', ');
+
+        if (faltando.length === 0) {
+            botao.disabled = false;
+            document.getElementById('botao-editar-parcela').disabled = false;
+            botao.style.opacity = '1';
+            msg.textContent = '';
+        } else {
+            botao.disabled = true;
+            document.getElementById('botao-editar-parcela').disabled = true;
+            botao.style.opacity = '0.6';
+            msg.textContent = '⚠ Preencha: ' + faltando.join(', ');
+        }
+    }
+
+    window.validarCamposGerar = validarCampos;
+
+    [
+        'valor',
+        'parcelas',
+        'descricao'
+    ].forEach(id => {
+
+        const el = document.getElementById(id);
+
+        if (!el) return;
+
+        el.addEventListener('input', validarCampos);
+        el.addEventListener('change', validarCampos);
+    });
+
+    const dataLanc = document.querySelector('input[name="data_lanc"]');
+
+    if (dataLanc) {
+        dataLanc.addEventListener('change', validarCampos);
+        dataLanc.addEventListener('input', validarCampos);
+    }
+
+    const titulo = document.getElementById('titulo');
+    const subtitulo = document.getElementById('subtitulo');
+    const custo = document.getElementById('custo')
+    const cadastro = document.getElementById('cadastro')
+
+    if (titulo) {
+        titulo.addEventListener('change', validarCampos);
+    }
+
+    if (custo) {
+        custo.addEventListener('change', validarCampos);
+    }
+
+    if (cadastro) {
+        cadastro.addEventListener('change', validarCampos);
+    }
+
+    if (subtitulo) {
+        subtitulo.addEventListener('change', validarCampos);
+    }
+
+    validarCampos();
+
+})();
+        // console.log('ARQUIVO JS CARREGOU');
 document.addEventListener("DOMContentLoaded", function () {
         const inputs = Array.from(document.querySelectorAll("input[name^='vencimento[']"));
 
@@ -791,9 +938,6 @@ if (document.readyState === 'loading') {
     syncHiddenInputs();
 }
 
-
-
-
 <?php if($get_acao != 'visualizar'  && $id_ban == null) {?>
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -892,8 +1036,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // 6) Listener para mudança no título
         // ========================================================================
         tituloSelect.addEventListener('change', (e) => {
-            filtrarSubtitulos(e.target.value, false);
-        });
+
+    filtrarSubtitulos(e.target.value, false);
+
+    if (window.validarCamposGerar) {
+        window.validarCamposGerar();
+    }
+
+});
 
         // ========================================================================
         // 7) PRÉ-SELEÇÃO DO PHP (título + subtítulo)
@@ -916,16 +1066,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Seleciona o subtítulo (com delay mínimo)
             setTimeout(() => {
-                try {
-                    subtituloChoices.setChoiceByValue(String(subtituloSelecionado));
-                } catch {
-                    console.warn("⚠ Não conseguiu selecionar via método. Tentando fallback...");
-                }
 
-                subtituloSelect.value = subtituloSelecionado;
-                subtituloSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    try {
+        subtituloChoices.setChoiceByValue(
+            String(subtituloSelecionado)
+        );
+    } catch (e) {
+        console.error(e);
+    }
 
-            }, 80);
+    subtituloSelect.value = subtituloSelecionado;
+
+    subtituloSelect.dispatchEvent(
+        new Event('change', { bubbles: true })
+    );
+
+    if (window.validarCamposGerar) {
+        window.validarCamposGerar();
+    }
+
+}, 80);
         }
 
         // Tempo para Choices terminar de construir
@@ -953,8 +1113,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 400);
 
 });
+<?php }?>
+
 
 
 
 </script>
-<?php }?>
