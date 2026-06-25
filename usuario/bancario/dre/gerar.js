@@ -504,11 +504,18 @@ function gerarpdf_anual(ano, nomeEmpresa) {
     // 13 colunas numéricas (Jan…Dez + Total) + 1 descritiva.
     // Cada coluna numérica precisa de ~14mm para "1.234.567,89" em fonte 6.5.
     // Coluna descritiva ocupa o restante.
-    const numColCount = headers.length - 1;          // 13
-    const numW        = 14.5;                        // mm por coluna numérica
-    const descW       = usableW - numW * numColCount; // ~87mm
+    // Cálculo dinâmico
+    const numColCount = headers.length - 1;
+    const numW        = 17;
+    const descW       = usableW - numW * numColCount; // espaço real da coluna descritiva
 
-    const colStyles = { 0: { cellWidth: descW, halign: 'left' } };
+    // Fonte responsiva baseada na largura disponível
+    // Referência: descW ~56mm → fontSize 6.5 | descW ~40mm → fontSize 5.5
+    const minFont  = 5;
+    const maxFont  = 7;
+    const fontSize = Math.min(maxFont, Math.max(minFont, 5 + (descW / 56) * 1.5));
+
+    const colStyles = { 0: { cellWidth: 'auto', halign: 'left' } };
     for (let i = 1; i < headers.length; i++) {
         colStyles[i] = { cellWidth: numW, halign: 'right' };
     }
@@ -517,15 +524,16 @@ function gerarpdf_anual(ano, nomeEmpresa) {
         startY:  cursorY,
         head:    [headers],
         body:    bodyRows.map(r => r.cells),
+        tableWidth:  'auto',
         margin:  { left: margin, right: margin },
-        styles:  { fontSize: 6.5, cellPadding: { top: 2, bottom: 2, left: 2, right: 2 }, overflow: 'visible' },
+        styles:  { fontSize: fontSize, cellPadding: { top: 2, bottom: 2, left: 2, right: 2 }, overflow: 'visible' },
 
         headStyles: {
             fillColor:  [52, 52, 52],
             textColor:  255,
             halign:     'center',
             fontStyle:  'bold',
-            fontSize:   7,
+            fontSize:   fontSize + 0.5,
         },
 
         columnStyles: colStyles,

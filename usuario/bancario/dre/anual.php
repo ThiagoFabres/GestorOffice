@@ -149,6 +149,7 @@ uasort($dados, function ($a, $b) {
     <link rel="stylesheet" href="/style.css">
     <link rel="stylesheet" href="/../../../style/dre.css">
     <link rel="stylesheet" href="../../../choices/choices.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dragscroll/0.0.8/dragscroll.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="/gestor-office.png" type="image/x-icon">
@@ -325,13 +326,13 @@ uasort($dados, function ($a, $b) {
                 </div>
                 <!-- ── /Filtros ─────────────────────────────────────────── -->
 
-                <div class="card-body">
+                <div class="card-body dragscroll">
                     <?php if (empty($dados)): ?>
                         <div class="alert alert-info">Nenhum lançamento encontrado para o período selecionado.</div>
                     <?php else: ?>
 
-                    <div class="tabela-anual-wrap" id="tabela-anual-wrap">
-                        <table class="tabela-anual table table-bordered" id="tabela-anual">
+                    <div class="tabela-anual-wrap dragscroll" id="tabela-anual-wrap">
+                        <table class="tabela-anual table table-bordered dragscroll" id="tabela-anual">
                             <thead>
                                 <tr>
                                     <th style="text-align:left;">Título / Subtítulo</th>
