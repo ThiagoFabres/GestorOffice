@@ -395,11 +395,11 @@
 
 
 
-                                        <?php if($get_acao != 'visualizar'){ ?>                            
-                                            <div style="width: 100%;">
-                                                <button type="submit" class="btn btn-primary mt-4"
-                                                    style="float:right; background-color: #5856d6; border: 0;">Gerar
-                                                    parcelas</button>
+                                        <?php if($get_acao != 'visualizar' && !isset($recebimento->valor_b) || $recebimento->valor_b == 0){ ?>
+                                            <div style="width: 100%; display: flex; flex-direction: column; align-items: flex-end;">
+                                                <div id="msg-gerar-parcelas" style="color: #d9534f; font-size: 0.85rem; margin-top: 0.5rem; text-align: right;"></div>
+                                                <button type="submit" id="btn-gerar-parcelas" class="btn btn-primary mt-2"
+                                                    style="background-color: #5856d6; border: 0;" disabled>Gerar parcelas</button>
                                             </div>
                                         <?php } ?>
                                         </div>
@@ -509,6 +509,151 @@
 <?php } ?>
 
     <script>
+(function () {
+
+    const botao = document.getElementById('btn-gerar-parcelas');
+    const msg   = document.getElementById('msg-gerar-parcelas');
+
+    if (!botao || !msg) return;
+
+    function getSelectValue(id) {
+        const el = document.getElementById(id);
+
+        if (!el) return '';
+
+        // Choices.js
+        if (el._choices) {
+            const valor = el._choices.getValue(true);
+
+            if (Array.isArray(valor)) {
+                return valor.length ? valor[0] : '';
+            }
+
+            return valor || '';
+        }
+
+        return el.value || '';
+    }
+
+    function validarCampos() {
+
+    console.clear();
+
+    const tituloEl = document.getElementById('titulo');
+    const subtituloEl = document.getElementById('subtitulo');
+
+        const faltando = [];
+
+        // Título
+        const titulo = getSelectValue('titulo');
+        if (!titulo) {
+            faltando.push('Título');
+        }
+
+        // Subtítulo
+        const subtitulo = getSelectValue('subtitulo');
+        if (!subtitulo) {
+            faltando.push('Sub-Título');
+        }
+
+        // Valor
+        const valor = document.getElementById('valor')?.value?.trim() || '';
+        if (!valor) {
+            faltando.push('Valor');
+        }
+
+        const custo = document.getElementById('custo')?.value?.trim() || '';
+        if (!custo) {
+            faltando.push('Centro de Custos');
+        }
+
+        const cadastro = document.getElementById('cadastro')?.value?.trim() || '';
+        if (!cadastro) {
+            faltando.push('Cliente/Fornecedor');
+        }
+
+        // Parcelas
+        const parcelas = document.getElementById('parcelas')?.value?.trim() || '';
+        if (!parcelas || Number(parcelas) <= 0) {
+            faltando.push('Parcelas');
+        }
+
+        // Data lançamento
+        const dataLanc = document.querySelector('input[name="data_lanc"]')?.value?.trim() || '';
+        if (!dataLanc) {
+            faltando.push('Data de lançamento');
+        }
+
+        // Descrição
+        const descricao = document.getElementById('descricao')?.value?.trim() || '';
+        if (!descricao) {
+            faltando.push('Descrição');
+        }
+
+        msg.textContent = '⚠ Preencha: ' + faltando.join(', ');
+
+        if (faltando.length === 0) {
+            botao.disabled = false;
+            document.getElementById('botao-editar-parcela').disabled = false;
+            botao.style.opacity = '1';
+            msg.textContent = '';
+        } else {
+            botao.disabled = true;
+            document.getElementById('botao-editar-parcela').disabled = true;
+            botao.style.opacity = '0.6';
+            msg.textContent = '⚠ Preencha: ' + faltando.join(', ');
+        }
+    }
+
+    
+
+    window.validarCamposGerar = validarCampos;
+
+    [
+        'valor',
+        'parcelas',
+        'descricao'
+    ].forEach(id => {
+
+        const el = document.getElementById(id);
+
+        if (!el) return;
+
+        el.addEventListener('input', validarCampos);
+        el.addEventListener('change', validarCampos);
+    });
+
+    const dataLanc = document.querySelector('input[name="data_lanc"]');
+
+    if (dataLanc) {
+        dataLanc.addEventListener('change', validarCampos);
+        dataLanc.addEventListener('input', validarCampos);
+    }
+
+    const titulo = document.getElementById('titulo');
+    const subtitulo = document.getElementById('subtitulo');
+    const custo = document.getElementById('custo')
+    const cadastro = document.getElementById('cadastro')
+
+    if (titulo) {
+        titulo.addEventListener('change', validarCampos);
+    }
+
+    if (custo) {
+        custo.addEventListener('change', validarCampos);
+    }
+
+    if (cadastro) {
+        cadastro.addEventListener('change', validarCampos);
+    }
+
+    if (subtitulo) {
+        subtitulo.addEventListener('change', validarCampos);
+    }
+
+    validarCampos();
+
+})();
 document.addEventListener("DOMContentLoaded", function () {
         const inputs = Array.from(document.querySelectorAll("input[name^='vencimento[']"));
 
