@@ -585,7 +585,7 @@
             faltando.push('Descrição');
         }
 
-        msg.textContent = '⚠ Preencha: ' + faltando.join(', ');
+        msg.textContent = faltando.join(', ');
 
         if (faltando.length === 0) {
             botao.disabled = false;
