@@ -922,8 +922,8 @@ else if($acao == 'conciliar_todas'){
             } 
             foreach($ban02_lista as $ban02) {
                 if($titulo_obj != null && (($titulo_obj->tipo == 'C' && $ban02->valor < 0) || ($titulo_obj->tipo == 'D' && $ban02->valor > 0) || $titulo_obj->id_empresa != $_SESSION['usuario']->id_empresa)) {
-        continue;
-    }
+                    continue;
+                }
                 $novo_ban02 = new Ban02 (
                     $ban02->id,
                     $ban02->id_empresa,
@@ -967,6 +967,11 @@ else if($acao == 'conciliar_todas'){
     $primeiro_ban02 = Ban02::read($id, $_SESSION['usuario']->id_empresa)[0];
     $valor_d_total = 0;
     foreach($valor_lista as $valor_d){
+
+        $valor_d = str_replace('.', '', $valor_d);
+        $valor_d = str_replace(',', '.', $valor_d);
+        $valor_d = floatval($valor_d);
+        
         if(preg_match('/[a-zA-Z]/', $valor_d)) {
         header('Location: ' . $caminho . 'erro=valor');
             exit;
@@ -1003,11 +1008,15 @@ else if($acao == 'conciliar_todas'){
     }
     }
     $i = 0;
+    
     foreach($valor_lista as $valor_d){
+        $valor_d = str_replace('.', '', $valor_d);
+        $valor_d = str_replace(',', '.', $valor_d);
         $descricao_comp_ban02 = $descricao_comp_lista[$i];
         if($primeiro_ban02->valor < 0) {
             $valor_d *= (-1);
         }
+    
     $ban02_novo = new Ban02(
         null,
             $primeiro_ban02->id_empresa,

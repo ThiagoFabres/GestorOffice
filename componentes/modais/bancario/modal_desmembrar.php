@@ -57,7 +57,7 @@ if($quantidade != null) {
                             </div>
                             <div class="d-flex flex-column">
                                 <label>Valor:</label>
-                                <input class="form-control" readonly value="<?=$ban02->valor?>"></input>
+                                <input class="form-control" readonly value="<?= number_format($ban02->valor, 2, ',', '.')?>"></input>
                             </div>
                         </div>
                         <div class="d-flex flex-row gap-2">

@@ -47,7 +47,7 @@ foreach($desmembramentos as $desmembramento) {
                             </div>
                             <div class="d-flex flex-column" style="width: calc(100%/3);">
                                 <label>Valor:</label>
-                                <p class="form-control" readonly value=""><?= $ban02 ? $ban02->valor : null?></p>
+                                <p class="form-control" readonly value=""><?= $ban02 ? number_format($ban02->valor, 2, ',', '.') : null?></p>
                             </div>
                         </div>
                         <div class="d-flex flex-row gap-2">
@@ -97,7 +97,7 @@ foreach($desmembramentos as $desmembramento) {
                         <div class=" gap-2 d-flex flex-row">
                             <div class="w-25">
                                 <label>Valor:</label>
-                                <input class="form-control" type="text" readonly value="<?=$ban02->valor?>"></input>
+                                <input class="form-control" type="text" readonly value="<?=number_format($ban02->valor, 2, ',', '.')?>"></input>
                             </div>
                             <div class="w-75">
                                 <label>Descrição Complementar:</label>
