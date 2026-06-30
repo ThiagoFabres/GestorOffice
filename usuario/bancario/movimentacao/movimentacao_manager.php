@@ -930,7 +930,7 @@ else if($acao == 'conciliar_todas'){
                     $ban02->id_ban01,
                     $ban02->data,
                     $ban02->documento,
-                    $titulo,
+                    $titulo_obj->id,
                     $subtitulo,
                     $ban02->descricao,
                     $ban02->descricao_comp,
