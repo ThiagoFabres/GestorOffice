@@ -811,16 +811,7 @@ if ($fileExt === 'ofx') {
 
     foreach($ban02_lista as $ban02) {
         if($titulo_obj != null && (($titulo_obj->tipo == 'C' && $ban02->valor < 0) || ($titulo_obj->tipo == 'D' && $ban02->valor > 0) || $titulo_obj->id_empresa != $_SESSION['usuario']->id_empresa)) {
-        if(str_ends_with($caminho, '.php')) {
-            header('Location: '. $caminho . '?erro=titulo');
-            exit;
-        } else if(str_ends_with($caminho, '&')) {
-            header('Location: ' . $caminho . 'erro=titulo');
-            exit;
-        } else {
-            header('Location: ' . $caminho . '&erro=titulo');
-            exit;
-        }
+        continue;
     }
 
         $novo_ban02 = new Ban02 (
@@ -931,16 +922,7 @@ else if($acao == 'conciliar_todas'){
             } 
             foreach($ban02_lista as $ban02) {
                 if($titulo_obj != null && (($titulo_obj->tipo == 'C' && $ban02->valor < 0) || ($titulo_obj->tipo == 'D' && $ban02->valor > 0) || $titulo_obj->id_empresa != $_SESSION['usuario']->id_empresa)) {
-        if(str_ends_with($caminho, '.php')) {
-            header('Location: '. $caminho . '?erro=titulo');
-            exit;
-        } else if(str_ends_with($caminho, '&')) {
-            header('Location: ' . $caminho . 'erro=titulo');
-            exit;
-        } else {
-            header('Location: ' . $caminho . '&erro=titulo');
-            exit;
-        }
+        continue;
     }
                 $novo_ban02 = new Ban02 (
                     $ban02->id,
