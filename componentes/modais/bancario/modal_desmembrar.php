@@ -3,6 +3,9 @@
 if($acao == 'desmembrar'){
 $get_id = filter_input(INPUT_GET, 'id');
 $ban02 = Ban02::read($get_id, $_SESSION['usuario']->id_empresa);
+$filtros_get = $filtros_get ?? [];
+
+
 if(!isset($get_id) || !$ban02) {
     header('Location: movimentacao.php');
     exit;
