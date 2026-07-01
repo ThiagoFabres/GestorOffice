@@ -98,8 +98,8 @@ if ($get_filtro_data_final != '')
     $filtros[] = 'filtro_data_final=' . $get_filtro_data_final;
     $filtros_get['filtro_data_final']  = $get_filtro_data_final;
 if ($get_filtro_conciliado)
-    $filtros[] = 'filtro_conciliado=on';
-    $filtros_get['filtro_conciliado']  = 'on';
+    $filtros[] = 'filtro_conciliado=' . $get_filtro_conciliado ? 'on' : '';
+    $filtros_get['filtro_conciliado']  = $get_filtro_conciliado ? 'on' : '';
 if($get_filtro_tipo != '')
     $filtros[] = 'filtro_tipo=' . $get_filtro_tipo;
     $filtros_get['filtro_tipo']  = $get_filtro_tipo;
@@ -773,13 +773,12 @@ if ($get_filtro_conta != null) {
                     const btnDes = document.getElementById('menu-desmembrar');
                     const btnEd = document.getElementById('menu-editar-bancario');
                     const btnQ = document.getElementById('menu-quitar-bancario');
-                    // visual highlight
-                    if(row.getAttribute('data-id-con01') == "" || row.getAttribute('data-id-con02') == "") {
-                        btnQ.disabled = 'true';
+                    // visual highlight and enable/disable actions
+                    const quitarDisabled = idCon01 === '' || idCon02 === '';
+                    btnQ.disabled = quitarDisabled;
 
-                    } else {
-                        btnQ.removeAttribute('disabled');
-                    }
+                    const desmembrarDisabled = idOriginal !== '';
+                    btnDes.disabled = desmembrarDisabled;
                     
                     row.classList.add('context-menu-open');
                 } else {
@@ -807,15 +806,50 @@ if ($get_filtro_conta != null) {
 
         function navigateTo(action, id) { window.location.href = base + 'acao=' + action + '&id=' + id; }
 
-        document.getElementById('menu-conciliar').addEventListener('click', function(){
-        document.getElementById('conciliar-id').value = window._mov_ctx_row.getAttribute('data-id')
-        document.getElementById('custom-context-menu').style.display = 'none';
-        Modal = new bootstrap.Modal(document.getElementById('modal_conciliar'));
-        Modal.show();
-         });
-        document.getElementById('menu-desmembrar').addEventListener('click', function(){ if (!window._mov_ctx_row) return; navigateTo('desmembrar', window._mov_ctx_row.getAttribute('data-id')); });
-        document.getElementById('menu-editar-bancario').addEventListener('click', function(){ if (!window._mov_ctx_row) return; navigateTo('visualizar', window._mov_ctx_row.getAttribute('data-id')); });
-        document.getElementById('menu-quitar-bancario').addEventListener('click', function(){ if (!window._mov_ctx_row) return; navigateTo('quitar_bancario', window._mov_ctx_row.getAttribute('data-id')); });
+        const menuConciliarBtn = document.getElementById('menu-conciliar');
+        const menuDesmembrarBtn = document.getElementById('menu-desmembrar');
+        const menuEditarBtn = document.getElementById('menu-editar-bancario');
+        const menuQuitarBtn = document.getElementById('menu-quitar-bancario');
+
+        if (menuConciliarBtn) {
+            menuConciliarBtn.addEventListener('click', function(event){
+                event.preventDefault();
+                if (!window._mov_ctx_row) return;
+                document.getElementById('conciliar-id').value = window._mov_ctx_row.getAttribute('data-id');
+                document.getElementById('custom-context-menu').style.display = 'none';
+                const modal = new bootstrap.Modal(document.getElementById('modal_conciliar'));
+                modal.show();
+            });
+        }
+
+        if (menuDesmembrarBtn) {
+            menuDesmembrarBtn.addEventListener('click', function(event){
+                console.log('menu-desmembrar click');
+                event.preventDefault();
+                event.stopPropagation();
+                if (!window._mov_ctx_row) return;
+                if (menuDesmembrarBtn.disabled) return;
+                const id = window._mov_ctx_row.getAttribute('data-id');
+                if (!id) return;
+                navigateTo('desmembrar', id);
+            });
+        }
+
+        if (menuEditarBtn) {
+            menuEditarBtn.addEventListener('click', function(event){
+                event.preventDefault();
+                if (!window._mov_ctx_row) return;
+                navigateTo('visualizar', window._mov_ctx_row.getAttribute('data-id'));
+            });
+        }
+
+        if (menuQuitarBtn) {
+            menuQuitarBtn.addEventListener('click', function(event){
+                event.preventDefault();
+                if (!window._mov_ctx_row) return;
+                navigateTo('quitar_bancario', window._mov_ctx_row.getAttribute('data-id'));
+            });
+        }
 
     });
 })();
