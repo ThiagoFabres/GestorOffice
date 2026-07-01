@@ -13,6 +13,20 @@ $bancos_suporte = [
         'suporte_data' => 'formatada(d-m-y)',
         'suporte_numero' => 'formatado(1.000,00)'
         ]
+    ],
+    'ton' => [
+        'xlsx' => [
+            'start_row' => 2,
+            'start_end_columns' => ['start' => 'A', 'end' => 'F'],
+            'excluded_columns' => ['C', 'D', 'E'],
+            'organizador' => [
+                'data' => 0,
+                'descricao' => 2,
+                'valor' => 1,
+            ],
+        'suporte_data' => 'formatada(d-m-y)',
+        'suporte_numero' => 'formatado(1.000,00)'
+        ]
     ]
 ]
 
