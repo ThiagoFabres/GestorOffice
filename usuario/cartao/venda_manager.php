@@ -68,7 +68,8 @@ function parse_excel($numero_arquivo = null) {
         'fazpay',
         'cielo',
         'capim',
-        'saudeservice'
+        'saudeservice',
+        'ton'
     ];
     
     $tipo_arquivo = filter_input(INPUT_POST, 'tipo_arquivo');

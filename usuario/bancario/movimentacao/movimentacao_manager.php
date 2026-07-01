@@ -50,6 +50,29 @@ if($acao == 'processar') {
         }
     }
 
+    function normalize_brazilian_number(string $valor_str): float {
+        $valor_str = trim((string)$valor_str);
+        $valor_str = str_replace(['R$', ' ', "\xc2\xa0"], '', $valor_str);
+        $valor_str = str_replace(['−', '–', '—', '\u2212'], '-', $valor_str);
+        $valor_str = preg_replace('/[^0-9\-\.,]/u', '', $valor_str);
+
+        $hasComma = strpos($valor_str, ',') !== false;
+        $hasDot = strpos($valor_str, '.') !== false;
+
+        if ($hasComma && $hasDot) {
+            $valor_str = str_replace('.', '', $valor_str);
+            $valor_str = str_replace(',', '.', $valor_str);
+        } elseif ($hasComma) {
+            $valor_str = str_replace(',', '.', $valor_str);
+        }
+
+        if ($valor_str === '' || $valor_str === '-') {
+            return 0.0;
+        }
+
+        return floatval($valor_str);
+    }
+
     function parse_xlsx_banco($filePath) {
         require __DIR__ . '/banco_suporte.php';
         
@@ -81,6 +104,8 @@ if($acao == 'processar') {
         $nome_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $conta_obj->nome)));
 
         $banco_suporte_i = isset($bancos_suporte[$nome_preg][$file_ext]) ? $bancos_suporte[$nome_preg][$file_ext] : [];
+
+        
 
         $transactions = [];
         $transactions['current'] = [];
@@ -128,33 +153,43 @@ if($acao == 'processar') {
                     1 => $cells_p[$banco_sup_org['descricao']],
                     2 => $cells_p[$banco_sup_org['valor']],
                 ];
+
+                
+                
                 
                 if(count($cells) == 0 || count($cells) > 3) {
                     return $transactions;
                 }
                 
+                
                 if(empty($cells)) {
                     continue;
                 }
+                
                 // Verifica se a linha tem dados
                 if (empty($cells[0]) && empty($cells[1]) && empty($cells[2])) {
                     continue;
                 }
+                
                 
                 $data_raw = $cells[0];
                 
                 $descricao = trim((string)$cells[1]);
                 $valor_str = $cells[2];
                 
+                $valor_str = str_replace(['R$', ' ', "\xc2\xa0"], '', $valor_str);
+                $valor_str = str_replace(['−', '–', '—', '\u2212'], '-', $valor_str);
+
                 if($banco_suporte['suporte_numero'] == 'formatado(1.000,00)') {
                     $valor_str = str_replace('.', '', $valor_str);
                     $valor_str = str_replace(',', '.', $valor_str);
                 }
                 
                 // Se não houver data ou valor, pula a linha
-                if (empty($data_raw) || empty($valor_str)) {
+                if (empty($data_raw) || $valor_str === '' || $valor_str === '-') {
                     continue;
                 }
+                
                 
                 // Converte data: pode ser número serial do Excel ou string
                 try {
@@ -177,15 +212,19 @@ if($acao == 'processar') {
                         $data_analizada = $data_obj->format('Y-m-d');
                         $data_formatada = $data_obj->format('d/m/Y');
                     }
+                    
                 } catch (Exception $e) {
                     continue;
                 }
+                
                 
 
                 // Valida se já foi importada
                 if (isset($importadas_set[$data_analizada])) {
                     continue;
                 }
+
+                
 
                 
                 if(($ultima_data != null && ($data_analizada == $ultima_data) || $conta_obj->data > $data_analizada) || $data_analizada >= $data_atual) {
@@ -210,6 +249,8 @@ if($acao == 'processar') {
                 
                 $transactions['current'][] = $current;
             }
+            
+            
 
             return $transactions;
         } catch (Exception $e) {
@@ -1081,7 +1122,12 @@ else if($acao == 'conciliar_todas'){
 
         Ban02::delete($id_ban02);
     }
-
+    // echo ($valor_desmembrado);
+    // echo '<br>';
+    // echo ($primeiro_ban02->valor);
+    // echo '<br>';
+    // echo ($primeiro_ban02->valor + $valor_desmembrado);
+    // exit;
     $ban02_atualizado = new Ban02(
             $id,
             $primeiro_ban02->id_empresa,
