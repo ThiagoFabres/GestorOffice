@@ -48,9 +48,10 @@ function parse_excel($numero_arquivo = null) {
     $arquivos_multi = [
         'sicredi' => 2,
         'getnet' => 2,
-        'saudeservice' => 2
+        'saudeservice' => 2,
+        'capim' => 2
     ];
-    
+
     // Verificar limite máximo de arquivos para o operador
     $operadora_descricao_preg = $operadora_descricao_preg ?? null;
     if($operadora_descricao_preg != null) {
@@ -81,7 +82,7 @@ function parse_excel($numero_arquivo = null) {
             exit;
         }
         $operadora_sup = $operadoras_suporte[$operadora_descricao_preg][$file_ext.$numero_arquivo];
-
+        
         
         if($operadora_sup == null) {
             header('location: cadastro_vendas.php?erro=arquivo');
@@ -104,6 +105,7 @@ function parse_excel($numero_arquivo = null) {
     foreach($prazos_lista as $prazo) {
         $prazos[$prazo->id_bandeira][] = $prazo;
     }
+    
 
     foreach($bandeiras as $bandeira) {
         $bandeiras_obj[] = $bandeira; 
@@ -151,6 +153,7 @@ function parse_excel($numero_arquivo = null) {
     'invalido' => []
 ];
 
+
     foreach ($worksheet_lines as $i => $row) {
             if($tipo_arquivo == 'padrao'){
                 $cellIterator = $row->getCellIterator($operadora_sup['start_end_columns']['start'], $operadora_sup['start_end_columns']['end']);
@@ -197,6 +200,8 @@ function parse_excel($numero_arquivo = null) {
 
         
 
+        
+
         if(isset($cells_p[$operadora_sup_org['estado']]) && $cells_p[$operadora_sup_org['estado']] != null) {
             //estado    
             $cells[6] = $cells_p[$operadora_sup_org['estado']];
@@ -228,6 +233,7 @@ function parse_excel($numero_arquivo = null) {
     ){
         break;
     }
+    
 
     if(isset($operadora_sup['suporte_numero']) && $operadora_sup['suporte_numero'] == 'formatado') {
         $cells[4] = str_replace('.', '', $cells[4]);
@@ -235,6 +241,7 @@ function parse_excel($numero_arquivo = null) {
         $cells[4] = str_replace(',', '.', $cells[4]);
         $cells[5] = str_replace(',', '.', $cells[5]);
     }
+    
        
         if(isset($operadora_sup['suporte_pix']) && $operadora_sup['suporte_pix'] == true) {
             
@@ -250,11 +257,13 @@ function parse_excel($numero_arquivo = null) {
                     $multi = true;
                 }
             }
+
+            
         
         if(($tipo_arquivo == 'personalizado' && isset($cells[6])) || ($tipo_arquivo == 'padrao' && !isset($cells[6])) ) {
-            // if(!empty($transactions['lancamentos'])) {
-            //     continue;
-            // }
+            if(!empty($transactions['lancamentos'])) {
+                continue;
+            }
             if ($multi) {
 
                 if (isset($spreadsheet)) {
@@ -304,12 +313,15 @@ function parse_excel($numero_arquivo = null) {
                 continue;
             }
         }
+        
         if (isset($operadora_sup['suporte_parcela']) && $operadora_sup['suporte_parcela'] == 'formatada(0/0)') {
             if (strpos($cells[3], '/') !== false) {
                 $partes = explode('/', $cells[3]);
                 $cells[3] = $partes[1];
             }
         }
+
+        
 
     $cells[3] = intval($cells[3]);
 
@@ -344,10 +356,11 @@ function parse_excel($numero_arquivo = null) {
         if($data_formatada >= $data_atual) {
             continue;
         }
+        
     } catch (Exception $e) {
-        // if(!empty($transactions['lancamentos'])) {
-        //     continue;
-        // }
+        if(!empty($transactions['lancamentos'])) {
+            continue;
+        }
         if (isset($multi) && $multi) {
             $transactions_next = parse_excel($numero_arquivo + 1);
             if (!empty($transactions_next['invalido'])) {

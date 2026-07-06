@@ -333,6 +333,24 @@ $operadoras_suporte = [
             'suporte_data' => 'formatada(Y-m-d)',
 
         ],
+        'xlsx2' => [
+            'excluded_columns' => [
+                'F', 'G'
+            ],
+            'start_row' => 2,
+            'start_end_columns' => [ 'start' => 'A', 'end' => 'H'],
+            'organizador' => [
+                'data' => 0, //A
+                'bandeira' => 4, //E
+                'tipo' => 2, //C
+                'parcela' => 3, //D
+                'valor_b' => 1, //B
+                'valor_l' => 5, //H
+                'estado' => null 
+            ],
+            'suporte_estado' => true,
+            'suporte_data' => 'formatada(Y-m-d)',
+        ]
     ],
     'saudeservice' => [
         'xls' => [
