@@ -51,7 +51,7 @@ $get_filtro_descricao = filter_input(INPUT_GET, 'descricao');
 if($get_filtro_descricao === '') {
     $get_filtro_descricao = null;
 }
-$ordenar_por = filter_input(INPUT_GET, 'ordenar_por') ?? null;
+$ordenar_por = filter_input(INPUT_GET, 'ordenar_por') ?? 'data';
 
 
 
