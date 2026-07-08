@@ -160,6 +160,8 @@ $movimentacoes_pdf = Ban02::read(
                             filtro_conta: $get_filtro_conta ?? null,
                             filtro_tipo: $get_filtro_tipo ?? null,
                             filtro_descricao: $get_filtro_descricao,
+                            ordenar_por:'data',
+                            direcao:'ASC',
                         );
 $movimentacoes_totais = $movimentacoes_pdf;
 
