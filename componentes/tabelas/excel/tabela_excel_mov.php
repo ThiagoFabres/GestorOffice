@@ -5,6 +5,7 @@
                             <th>Data</th>
                             <th>Tipo</th>
                             <th>Descrição</th>
+                            <th>Descrição Complementar</th>
                             <th>Valor</th>
                             <th>Conta</th>
                             <th>Título</th>
@@ -55,13 +56,14 @@
                             <td><?=$movimentacao->documento?></td>
                             <td><?=$data_lancamento?></td>
                             <td><?=$tipo?></td>
-                            <td><?php echo $movimentacao->descricao_comp != '' ? substr(substr($movimentacao->descricao, 0, 60) . ' - ' . substr($movimentacao->descricao_comp, 0,60), 0, 100) : $movimentacao->descricao ?></td>
+                            <td><?=$movimentacao->descricao?></td>
+                            <td><?=$movimentacao->descricao_comp ?? ''?></td>
                             <td>R$ <?=number_format($movimentacao->valor, 2, ',', '.', )?></td>
                             <td><?=$conta_nome?></td>
                             <td><?= isset($con01) ? substr($con01->nome, 0, 15) : ''?></td>
                             <td><?= isset($con02) ? substr($con02->nome, 0, 15) : ''?></td>
                             <td><?= isset($con02) ? $con02->codigo : ''?></td>
-                            
+                        
                         </tr>
                         <?php } } }?>
                     </tbody>
