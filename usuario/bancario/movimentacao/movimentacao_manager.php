@@ -143,21 +143,36 @@ if($acao == 'processar') {
                     }
                     if($cell->getCalculatedValue() !== null) {
                         $cells_p[] = $cell->getCalculatedValue();
+                        
                         $transactions['debug']['cells'][] = $cell->getCalculatedValue();
                     }
                 }
-
                 $banco_sup_org = $banco_suporte['organizador'];
-                $cells = [
-                    0 => $cells_p[$banco_sup_org['data']],
-                    1 => $cells_p[$banco_sup_org['descricao']],
-                    2 => $cells_p[$banco_sup_org['valor']],
-                ];
+
+                if(isset($banco_sup_org['valor_saida']) || isset($cells_p[3])) {
+                        $cells = [
+                            0 => $cells_p[$banco_sup_org['data']],
+                            1 => $cells_p[$banco_sup_org['descricao']] ?? '',
+                            2 => $cells_p[$banco_sup_org['valor']] ?? null,
+                            3 => $cells_p[$banco_sup_org['valor_saida']] ?? null,
+                        ];
+                } else {
+                    $cells = [
+                            0 => $cells_p[$banco_sup_org['data']],
+                            1 => $cells_p[$banco_sup_org['descricao']] ?? '',
+                            2 => $cells_p[$banco_sup_org['valor']] ?? null,
+                    ];
+                }
+
 
                 
+                if(count($cells) > 0 && count($cells) < 3) {
+                    continue;
+                }
+
+                              
                 
-                
-                if(count($cells) == 0 || count($cells) > 3) {
+                if(count($cells) == 0 || count($cells) > 4 ) {
                     return $transactions;
                 }
                 
@@ -166,15 +181,18 @@ if($acao == 'processar') {
                     continue;
                 }
                 
-                // Verifica se a linha tem dados
-                if (empty($cells[0]) && empty($cells[1]) && empty($cells[2])) {
-                    continue;
-                }
-                
                 
                 $data_raw = $cells[0];
                 
                 $descricao = trim((string)$cells[1]);
+                    
+
+                if(isset($cells[3])) {
+                    $valor_saida_str = $cells[3];
+                    $valor_str = $valor_saida_str;
+                } else {
+                    $valor_str = $cells[2];
+                }
                 $valor_str = $cells[2];
                 
                 $valor_str = str_replace(['R$', ' ', "\xc2\xa0"], '', $valor_str);
@@ -183,8 +201,9 @@ if($acao == 'processar') {
                 if($banco_suporte['suporte_numero'] == 'formatado(1.000,00)') {
                     $valor_str = str_replace('.', '', $valor_str);
                     $valor_str = str_replace(',', '.', $valor_str);
+                    
                 }
-                
+
                 // Se não houver data ou valor, pula a linha
                 if (empty($data_raw) || $valor_str === '' || $valor_str === '-') {
                     continue;
@@ -192,6 +211,7 @@ if($acao == 'processar') {
                 
                 
                 // Converte data: pode ser número serial do Excel ou string
+                
                 try {
                     if (is_numeric($data_raw)) {
                         // É número serial do Excel - converte para data
@@ -217,7 +237,7 @@ if($acao == 'processar') {
                     continue;
                 }
                 
-                
+               
 
                 // Valida se já foi importada
                 if (isset($importadas_set[$data_analizada])) {
@@ -248,8 +268,9 @@ if($acao == 'processar') {
                 ];                
                 
                 $transactions['current'][] = $current;
+
+                
             }
-            
             
 
             return $transactions;
@@ -374,7 +395,6 @@ if($acao == 'processar') {
                 
                 $transactions['current'][] = $current;
             }
-
             return $transactions;
         } catch (Exception $e) {
             error_log('Erro ao processar XLSX: ' . $e->getMessage());
@@ -383,103 +403,168 @@ if($acao == 'processar') {
     }
 
     
-    function parse_csv($filePath) {
-    $conta = filter_input(INPUT_POST, 'conta');
-    $data_atual = (new DateTime())->format('Y-m-d');
-    $ultima_data = buscarData($conta);
+//     function parse_csv($filePath) {
+//     require __DIR__ . '/banco_suporte.php';
+//     $conta = filter_input(INPUT_POST, 'conta');
+//     $data_atual = (new DateTime())->format('Y-m-d');
+//     $ultima_data = buscarData($conta);
 
-    $importadas = Ban02Imp::read($_SESSION['usuario']->id_empresa, $conta);      
-    $importadas_set = [];
-    foreach ($importadas as $imp) {
-        $importadas_set[$imp->data] = true;
-    }
+//     $importadas = Ban02Imp::read($_SESSION['usuario']->id_empresa, $conta);      
+//     $importadas_set = [];
+//     foreach ($importadas as $imp) {
+//         $importadas_set[$imp->data] = true;
+//     }
     
-    $conta_obj = Ban01::read($conta)[0];
+//     $conta_obj = Ban01::read($conta)[0];
 
-    $transactions = [
-        'current' => [],
-        'debug' => []
-    ];
+//     $transactions = [
+//         'current' => [],
+//         'debug' => []
+//     ];
 
-    try {
-        // IMPORTANTE: separador é ";"
-        $handle = fopen($filePath, 'r');
-        $row_number = 0;
+//     // Detecta encoding/sep/linha inicial a partir do suporte, se existir
+//     $conta_nome_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $conta_obj->nome)));
+//     $banco_sup = $bancos_suporte[$conta_nome_preg]['csv'] ?? null;
 
-        while (($row = fgetcsv($handle, 1000, ';')) !== false) {
-            $row_number++;
+//     // fallback defaults
+//     $separator = $banco_sup['separator'] ?? ';';
+//     $encoding = $banco_sup['encoding'] ?? 'ISO-8859-1';
+//     $linha_inicial = $banco_sup['linha_inicial'] ?? 1;
 
-            // Pula linhas inúteis (antes do cabeçalho)
-            if ($row_number < 3) continue;
-            
-            // Pula rodapés ou linhas inválidas
-            if (empty($row[0]) || !preg_match('/\d{2}\/\d{2}\/\d{4}/', $row[0])) {
-                continue;
-            }
+//     try {
+//         if (!file_exists($filePath)) {
+//             throw new Exception('Arquivo CSV não encontrado.');
+//         }
 
-            $data_str  = trim($row[0] ?? '');
-            $descricao = trim($row[1] ?? '');
-            $documento = trim($row[2] ?? '');
-            $credito   = trim($row[3] ?? '');
-            $debito    = trim($row[4] ?? '');
-            
+//         $conteudo = file_get_contents($filePath);
+//         if ($conteudo === false) throw new Exception('Falha ao ler arquivo CSV');
 
-            // Converte data
-            $data_obj = DateTime::createFromFormat('d/m/Y', $data_str);
-            if (!$data_obj) continue;
+//         // Converter encoding para UTF-8 usando o especificado
+//         $conteudo = mb_convert_encoding($conteudo, 'UTF-8', $encoding);
 
-            $data_analizada = $data_obj->format('Y-m-d');
-            $data_formatada = $data_obj->format('d/m/Y');
+//         // Dividir linhas
+//         $linhas = preg_split('/\r\n|\r|\n/', $conteudo);
+//         if (!$linhas) return $transactions;
 
-            // Validações
-            if (isset($importadas_set[$data_analizada])) continue;
+//         // Encontrar cabeçalho
+//         $cabecalho_str = null;
+//         $linhas_trim = $linhas;
+//         $linha_num = 1;
+//         if ($linha_inicial > 1) {
+//             while ($linha_num < $linha_inicial && !empty($linhas_trim)) {
+//                 array_shift($linhas_trim);
+//                 $linha_num++;
+//             }
+//         }
+//         if (!empty($linhas_trim)) {
+//             $cabecalho_str = array_shift($linhas_trim);
+//         }
 
-            if (
-                ($ultima_data != null && ($data_analizada >= $data_atual || $data_analizada == $ultima_data)) ||
-                $conta_obj->data > $data_analizada
-            ) {
-                continue;
-            }
+//         $cabecalho = $cabecalho_str ? str_getcsv($cabecalho_str, $separator) : [];
+//         $cabecalho = array_map('trim', $cabecalho);
 
-            if($data_analizada >= $data_atual) {
-                    continue;
-                }
+//         // Normaliza cabeçalho
+//         $remover_acentos = function($str) {
+//             return strtolower(preg_replace('/[^a-z0-9]/i', '', iconv('UTF-8', 'ASCII//TRANSLIT', $str)));
+//         };
+//         $mapa_normalizado = [];
+//         foreach ($cabecalho as $chave) {
+//             $mapa_normalizado[$remover_acentos($chave)] = $chave;
+//         }
 
-            // Converte valores BR → float
-            $credito = str_replace(['.', ','], ['', '.'], $credito);
-            $debito  = str_replace(['.', ','], ['', '.'], $debito);
+//         // Função auxiliar para obter valor pela coluna definida no suporte
+//         $get_valor_coluna = function($nome_coluna, $linha) use ($mapa_normalizado, $cabecalho, $remover_acentos, $separator) {
+//             if (!$nome_coluna) return null;
+//             // se nome_coluna for numérico (índice), usa diretamente
+//             if (is_int($nome_coluna) || ctype_digit((string)$nome_coluna)) {
+//                 $idx = intval($nome_coluna);
+//                 return $linha[$idx] ?? null;
+//             }
+//             $nome_normalizado = $remover_acentos($nome_coluna);
+//             if (isset($mapa_normalizado[$nome_normalizado])) {
+//                 $original = $mapa_normalizado[$nome_normalizado];
+//                 $idx = array_search($original, $cabecalho);
+//                 if ($idx !== false) return $linha[$idx] ?? null;
+//             }
+//             return null;
+//         };
 
-            $valor = 0;
-            $tipo  = '';
+//         // Processar linhas
+//         foreach ($linhas_trim as $raw) {
+//             if (trim($raw) === '') continue;
+//             $row = str_getcsv($raw, $separator);
 
-            if (!empty($credito)) {
-                $valor = (float)$credito;
-                $tipo = 'Crédito';
-            } elseif (!empty($debito)) {
-                $valor = -(float)$debito;
-                $tipo = 'Débito';
-            }
+//             // Heurística simples: primeira coluna deve ser data
+//             $data_str = trim($row[0] ?? '');
+//             if (!preg_match('/\d{2}\/\d{2}\/\d{4}/', $data_str)) {
+//                 // também tenta coluna por mapeamento se disponível
+//                 if ($banco_sup && isset($banco_sup['colunas']['data'])) {
+//                     $data_str = trim($get_valor_coluna($banco_sup['colunas']['data'], $row) ?? '');
+//                 } else {
+//                     continue;
+//                 }
+//             }
 
-            if ($valor == 0) continue;
+//             // Leitura de campos via suporte se disponível
+//             if ($banco_sup) {
+//                 $descricao = trim($get_valor_coluna($banco_sup['colunas']['descricao'] ?? 'descricao', $row) ?? '');
+//                 $documento = trim($get_valor_coluna($banco_sup['colunas']['documento'] ?? 'documento', $row) ?? '');
+//                 $credito_str = trim($get_valor_coluna($banco_sup['colunas']['credito'] ?? 'credito', $row) ?? '');
+//                 $debito_str = trim($get_valor_coluna($banco_sup['colunas']['debito'] ?? 'debito', $row) ?? '');
+//             } else {
+//                 $descricao = trim($row[1] ?? '');
+//                 $documento = trim($row[2] ?? '');
+//                 $credito_str = trim($row[3] ?? '');
+//                 $debito_str = trim($row[4] ?? '');
+//             }
 
-            $transactions['current'][] = [
-                'data' => $data_formatada,
-                'data_analizada' => $data_analizada,
-                'descricao' => $descricao,
-                'valor' => number_format($valor, 2, ',', '.'),
-                'tipo' => $tipo,
-                'documento' => $documento
-            ];
-        }
+//             // Converte data
+//             $data_obj = DateTime::createFromFormat('d/m/Y', $data_str);
+//             if (!$data_obj) continue;
+//             $data_analizada = $data_obj->format('Y-m-d');
+//             $data_formatada = $data_obj->format('d/m/Y');
 
-        fclose($handle);
-        return $transactions;
+//             // Validações
+//             if (isset($importadas_set[$data_analizada])) continue;
+//             if ((($ultima_data != null && ($data_analizada >= $data_atual || $data_analizada == $ultima_data)) || $conta_obj->data > $data_analizada)) { continue; }
+//             if ($data_analizada >= $data_atual) continue;
 
-    } catch (Exception $e) {
-        error_log('Erro ao processar CSV: ' . $e->getMessage());
-        return ['current' => [], 'debug' => ['error' => $e->getMessage()]];
-    }
-}
+//             // Normaliza valores
+//             $credito_str = str_replace(['R$', ' '], ['', ''], $credito_str);
+//             $debito_str = str_replace(['R$', ' '], ['', ''], $debito_str);
+//             $credito_str = str_replace('.', '', $credito_str);
+//             $credito_str = str_replace(',', '.', $credito_str);
+//             $debito_str = str_replace('.', '', $debito_str);
+//             $debito_str = str_replace(',', '.', $debito_str);
+
+//             $valor = 0;
+//             $tipo = '';
+//             if ($credito_str !== '' && $credito_str !== '0') {
+//                 $valor = (float)$credito_str;
+//                 $tipo = 'Crédito';
+//             } elseif ($debito_str !== '' && $debito_str !== '0') {
+//                 $valor = -(float)$debito_str;
+//                 $tipo = 'Débito';
+//             }
+//             if ($valor == 0) continue;
+
+//             $transactions['current'][] = [
+//                 'data' => $data_formatada,
+//                 'data_analizada' => $data_analizada,
+//                 'descricao' => $descricao,
+//                 'valor' => number_format($valor, 2, ',', '.'),
+//                 'tipo' => $tipo,
+//                 'documento' => $documento
+//             ];
+//         }
+
+//         return $transactions;
+
+//     } catch (Exception $e) {
+//         error_log('Erro ao processar CSV: ' . $e->getMessage());
+//         return ['current' => [], 'debug' => ['error' => $e->getMessage()]];
+//     }
+// }
     
     function parse_ofx($filePath) {
         if (is_file($filePath)) {
@@ -541,13 +626,6 @@ if($acao == 'processar') {
                      continue;
                      }
                 if(Ban02Imp::read($_SESSION['usuario']->id_empresa, $conta, $data_analizada)) continue;
-                // echo $conta_obj->data;
-                // echo '<br>';
-                // echo $data_analizada;
-                // exit;
-
-                // echo 'conta_obj->data: ' . $conta_obj->data . ' - data_analizada: ' . $data_analizada ;
-                // exit;
                 
                 if(($ultima_data != null && ($data_analizada == $ultima_data )) || $data_analizada >= $data_atual) {
                     $erro = 'uso';
@@ -1122,12 +1200,6 @@ else if($acao == 'conciliar_todas'){
 
         Ban02::delete($id_ban02);
     }
-    // echo ($valor_desmembrado);
-    // echo '<br>';
-    // echo ($primeiro_ban02->valor);
-    // echo '<br>';
-    // echo ($primeiro_ban02->valor + $valor_desmembrado);
-    // exit;
     $ban02_atualizado = new Ban02(
             $id,
             $primeiro_ban02->id_empresa,
