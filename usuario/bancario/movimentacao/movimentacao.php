@@ -51,7 +51,7 @@ $get_filtro_descricao = filter_input(INPUT_GET, 'descricao');
 if($get_filtro_descricao === '') {
     $get_filtro_descricao = null;
 }
-$ordenar_por = filter_input(INPUT_GET, 'ordenar_por') ?? 'data';
+$ordenar_por = filter_input(INPUT_GET, 'ordenar_por') ?? filter_input(INPUT_POST, 'ordenar_por') ?? 'data';
 
 
 
@@ -118,6 +118,12 @@ if($numero_exibir != 10)
 if($get_filtro_descricao != '')
     $filtros[] = 'descricao=' . $get_filtro_descricao;
     $filtros_get['descricao']  = $get_filtro_descricao;
+if($ordenar_por != '') 
+    $filtros[] = 'ordenar_por=' . $ordenar_por;
+    $filtros_get['ordenar_por']  = $ordenar_por;
+if($direcao != '')
+    $filtros[] = 'direcao=' . $direcao;
+    $filtros_get['direcao']  = $direcao;
 
 $caminho_exibir = 'movimentacao.php?' . implode('&', $filtros) . '&';
 if($numero_pagina != 1) 
@@ -160,8 +166,8 @@ $movimentacoes_pdf = Ban02::read(
                             filtro_conta: $get_filtro_conta ?? null,
                             filtro_tipo: $get_filtro_tipo ?? null,
                             filtro_descricao: $get_filtro_descricao,
-                            ordenar_por:'data',
-                            direcao:'ASC',
+                            ordenar_por:$ordenar_por,
+                            direcao:$direcao,
                         );
 $movimentacoes_totais = $movimentacoes_pdf;
 
@@ -403,7 +409,16 @@ if ($get_filtro_conta != null) {
                         <tr class="tr-header">
                             <th></th>
                             <th>Documento</th>
-                            <th>Data de Lançamento</th>
+                             <th>
+                                <a
+                                style="color:inherit; text-decoration:none;"
+                                href="
+                                <?php if(empty($filtros)) {echo $caminho . '?'?>ordenar_por=data&direcao=<?= $nova_direcao ?> 
+                                <?php } else { echo $caminho . 'ordenar_por=data&direcao=' . $nova_direcao ?> <?php } ?>
+                                ">
+                                Data de Lançamento <?php if($ordenar_por == 'data') { echo $seta; } ?>
+                                </a>
+                            </th>
                             <th>Tipo de Lançamento</th>
                             <th>
                                 <a
