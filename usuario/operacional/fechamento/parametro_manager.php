@@ -7,6 +7,7 @@ session_start();
 
 $empresa_usuario_id = $_SESSION['usuario']->id_empresa;
 $empresa_usuario_obj = Empresa::read($empresa_usuario_id)[0];
+$target = filter_input(INPUT_POST, 'target') == 'pagar' ? 'D' : 'C';
 
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSION['usuario']->permissao_operacional != 1 || $empresa_usuario_obj->permissao_operacional != 1) {
     header('Location: /');
@@ -21,7 +22,7 @@ if(
     header('Location: parametro.php?erro=campos_obrigatorios');
     exit;
 }
-if(Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)) {
+if(Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa, tipo:$target)) {
     $acao = 'atualizar';
 } else {
     $acao = 'adicionar';
@@ -33,7 +34,10 @@ if($acao == 'adicionar') {
         id_cadastro: filter_input(INPUT_POST, 'id_cadastro'),
         id_custos: filter_input(INPUT_POST, 'id_custos'),
         id_titulo: filter_input(INPUT_POST, 'id_titulo'),
-        id_subtitulo: filter_input(INPUT_POST, 'id_subtitulo')
+        id_subtitulo: filter_input(INPUT_POST, 'id_subtitulo'),
+        tipo: $target,
+        tipo_pagamento: filter_input(INPUT_POST, 'tipo_pagamento') ?? null,
+        descricao: filter_input(INPUT_POST, 'descricao') ?? null
     );
 
     Fecha01::create($fecha);
@@ -46,10 +50,21 @@ if($acao == 'adicionar') {
         id_cadastro: filter_input(INPUT_POST, 'id_cadastro'),
         id_custos: filter_input(INPUT_POST, 'id_custos'),
         id_titulo: filter_input(INPUT_POST, 'id_titulo'),
-        id_subtitulo: filter_input(INPUT_POST, 'id_subtitulo')
+        id_subtitulo: filter_input(INPUT_POST, 'id_subtitulo'),
+        tipo: $target,
+        tipo_pagamento: filter_input(INPUT_POST, 'tipo_pagamento') ?? null,
+        descricao: filter_input(INPUT_POST, 'descricao') ?? null
     );
     Fecha01::update($fecha);
 }
 
-header('Location: parametro.php');
-exit;
+if($target == 'C') {
+    header('Location: parametro_receber.php');
+    exit;
+} else if($target == 'D') {
+    header('Location: parametro_pagar.php');
+    exit;
+} else {
+    header('Location: parametro_receber.php');
+    exit;
+}

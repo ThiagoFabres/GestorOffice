@@ -103,7 +103,11 @@ class Pag01 {
         $stmt->bindValue(':descricao', $pag01->descricao);
         $stmt->bindValue(':valor', $pag01->valor);
         $stmt->bindValue(':parcelas', $pag01->parcelas);
-        $stmt->bindValue(':data_lanc', $pag01->data_lanc->format('Y-m-d H:i:s'));
+        if($pag01->data_lanc instanceof DateTime) {
+            $stmt->bindValue(':data_lanc', $pag01->data_lanc->format('Y-m-d H:i:s'));
+        } else {
+            $stmt->bindValue(':data_lanc', $pag01->data_lanc);
+        }
         $stmt->bindValue(':id_usuario', $pag01->id_usuario);
         $stmt->bindValue(':centro_custos', $pag01->centro_custos);
         $stmt->bindValue(':id_convertido', $pag01->id_convertido);
@@ -430,7 +434,11 @@ switch($ordenar_por) {
         $stmt->bindValue(':parcela', $pag02->parcela);
         $stmt->bindValue(':vencimento', $pag02->vencimento);
         $stmt->bindValue(':valor_pag', $pag02->valor_pag);
-        $stmt->bindValue(':data_pag', $pag02->data_pag ? $pag02->data_pag->format('Y-m-d') : null);
+        if($pag02->data_pag instanceof DateTime) {
+            $stmt->bindValue(':data_pag', $pag02->data_pag->format('Y-m-d'));
+        } else {
+            $stmt->bindValue(':data_pag', $pag02->data_pag);
+        }
         $stmt->bindValue(':obs', $pag02->obs);
         $stmt->bindValue(':id_pgto', $pag02->id_pgto); 
 
