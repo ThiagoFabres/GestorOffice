@@ -21,7 +21,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSIO
 $lateral_target = 'fechamento_caixa';
 $lateral_operacional = true;
 $tipo_pagamento_lista = TipoPagamento::read(idempresa: $_SESSION['usuario']->id_empresa);
-$fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)[0] ?? null;
+$fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa, tipo: 'C')[0] ?? null;
 
 ?>
 <!DOCTYPE html>
@@ -68,15 +68,25 @@ $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)[0] ?? nul
     <div class="main" id="container">
         <div class="card card-fechamento-responsivo" style="overflow:visible !important;">
             <div class="card-header">
-                <h3>Fechamento de Caixa</h3>
+                <h3>Fechamento de Caixa - Receitas</h3>
+            </div>
+            <div class="card-header d-flex flex-row justify-content-between g-3">
+                <button class="w-50 d-flex btn btn-primary dre-menu-btn" style="border-bottom: 2px solid #5856d6;" onclick="window.location.href='fechamento_receber.php'">
+                    <h3>Receitas</h3>
+                </button>
+
+                <button class="w-50 d-flex btn btn-primary dre-menu-btn"  onclick="window.location.href='fechamento_pagar.php'">
+                    <h3>Despesas</h3>
+                </button>
             </div>
             <div class="card-body" style="overflow: visible; padding-bottom: 0;">
                 <?php 
-                if(!Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)) {
+                if(!Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa, tipo: 'C')) {
                     echo '<div class="alert alert-danger" style="text-align:center;">Não Existe um Parametro de fechamento cadastrado.</div>';
                 } else {
                 ?>
                 <form action="fechamento_manager.php" method="post">
+                    <input type="hidden" name="target" value="receber">
                     <div class="d-flex flex-row justify-content-evenly gap-3 mb-3">
                         <div class="d-flex flex-column w-50">
                             <label>Data</label>

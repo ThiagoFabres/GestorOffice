@@ -19,7 +19,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
 $lateral_target = 'cadastro';
 $get_cadastro = 'parametro';
 
-$fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)[0] ?? null;
+$fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa, tipo: 'C')[0] ?? null;
 
 ?>
 <!DOCTYPE html>
@@ -65,12 +65,23 @@ $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)[0] ?? nul
 
     <div class="main" id="container" >
         <div class="card card-fechamento-responsivo" style=" overflow:visible !important;">
+            
             <div class="card-header">
                 <h3>Parametro de Fechamento de Caixa</h3>
+            </div>
+            <div class="card-header d-flex flex-row justify-content-between g-3">
+                <button class="w-50 d-flex btn btn-primary dre-menu-btn" style="border-bottom: 2px solid #5856d6;" onclick="window.location.href='parametro_receber.php'">
+                    <h3>Receitas</h3>
+                </button>
+
+                <button class="w-50 d-flex btn btn-primary dre-menu-btn"  onclick="window.location.href='parametro_pagar.php'">
+                    <h3>Despesas</h3>
+                </button>
             </div>
             <div class="card-body" style="overflow:visible !important;">
                 <div class="d-flex flex-column justify-content-between">
                     <form action="parametro_manager.php" method="post">
+                        <input type="hidden" name="target" value="receber">
                         <div class="d-flex flex-row justify-content-evenly">
                             <div class="d-flex flex-column" style="width: 40%;">
                                 <label>Cliente:</label>
@@ -97,7 +108,7 @@ $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)[0] ?? nul
                                 <label>Titulo:</label>
                                 <select type="text" class="form-control" id="titulo" name="id_titulo">
                                     <option>Selecione</option>
-                                    <?php foreach(Con01::read(idempresa: $_SESSION['usuario']->id_empresa) as $conta) { ?>
+                                    <?php foreach(Con01::read(idempresa: $_SESSION['usuario']->id_empresa, tipo: 'C') as $conta) { ?>
                                         <option value="<?= $conta->id ?>" <?= $fecha01 && $fecha01->id_titulo == $conta->id ? 'selected' : '' ?>><?= $conta->nome ?></option>
                                     <?php } ?>
                                 </select>
