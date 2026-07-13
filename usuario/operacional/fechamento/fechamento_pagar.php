@@ -111,13 +111,13 @@ $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa, tipo: 'D'
                                 </div>
 
                                 <div class="d-flex flex-column w-50">
-                                    <input class="form-control valor" type="text" inputmode="decimal" pattern="[0-9.,]*" onkeypress="return /[0-9,]/.test(event.key)" name="valor" placeholder="Valor">
+                                    <input class="form-control valor" type="text" id="total-valor" inputmode="decimal" pattern="[0-9.,]*" onkeypress="return /[0-9,]/.test(event.key)" name="valor" placeholder="Valor">
                                 </div>
                             </div>
                         </div>
                     </div>
                     <hr>
-                    <div class="d-flex flex-row justify-content-between align-items-center mt-3" style="float: right;">
+                    <div class="d-flex flex-row justify-content-between align-items-center mt-3">
                         <button type="submit" class="btn btn-primary">Processar</button>
                     </div>
                 </form>
@@ -183,10 +183,13 @@ function atualizarTotal() {
             total += valor;
         }
     });
-    document.getElementById('total-valor').textContent = total.toLocaleString('pt-BR', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    });
+    const totalValorElement = document.getElementById('total-valor');
+    if (totalValorElement) {
+        totalValorElement.textContent = total.toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
 }
 
 function definirTurnoPadrao(turnos) {
