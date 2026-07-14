@@ -333,115 +333,124 @@ if($target == 'C') {
 }
 
 if($target == 'D') {
-    $descricao_busca = 'Turno ' . $post_turno . ' - ' . $post_nome_caixa;
-    if($fecha01->descricao != '') {
-        $descricao_busca .= ' - ' . $fecha01->descricao;
-    }
-    $valor = filter_input(INPUT_POST, 'valor');
-    $valor = str_replace(',', '.', $valor);
+    $post_descricao_lista = $_POST['descricao'] ?? [];
+    $post_valor_lista = $_POST['valor'] ?? [];
+
     require_once __DIR__ . '/../../../db/buscar_documento_pag.php';
-        $documento = buscarDocumentoPag();
-    
-    
-    $pag02_criado = Pag02::read(
-        id_empresa: $_SESSION['usuario']->id_empresa,
-        filtro_descricao: $descricao_busca,
-        filtro_data_inicial: $data,
-        filtro_data_final: $data,
-        filtro_por: 'pagamento',
-    ) ?? null;
 
-    if($valor == 0 && $pag02_criado) {
-        $acao = 'excluir';
-    } else if($valor != 0 && $pag02_criado) {
-        $acao = 'atualizar';
-    } else if($pag02_criado) {
-        header('Location: fechamento_pagar.php?erro=vazio');
-        exit;
-    } else {
-        $acao = 'adicionar';
-    }
-    //apenas Pag01/Pag02
-    if($acao == 'adicionar') {
-        $pag01 = new Pag01(
-            id_empresa: $_SESSION['usuario']->id_empresa,
-            id_cadastro: $fecha01->id_cadastro,
-            id_con01: $fecha01->id_titulo,
-            id_con02: $fecha01->id_subtitulo,
-            documento: $documento,
-            descricao: $descricao_busca,
-            valor: $valor,
-            parcelas: 1,
-            data_lanc: $data,
-            id_usuario: $_SESSION['usuario']->id,
-            centro_custos: $fecha01->id_custos,
-        );
-        Pag01::create($pag01);
-        $pag01_id = Pag01::read(id_empresa: $_SESSION['usuario']->id_empresa, documento: $documento)[0]->id;
+    $created = false;
+    $updated = false;
+    $deleted = false;
+    $hasAnyValue = false;
 
-        $pag02 = new Pag02(
-            id_empresa: $_SESSION['usuario']->id_empresa,
-            id_pag01: $pag01_id,
-            valor_par: $valor,
-            parcela: 1,
-            vencimento: $data,
-            valor_pag: $valor,
-            data_pag: $data,
-            obs: '',
-            id_pgto: $fecha01->tipo_pagamento
-        );
-        Pag02::create($pag02);
+    foreach($post_descricao_lista as $i => $descricao) {
+        $descricao = trim((string) $descricao);
+        $descricao_pag01 = 'Turno ' . $post_turno . ' - ' . $post_nome_caixa . ' - ' . $descricao;
+        $valor = $post_valor_lista[$i] ?? 0;
+        $valor = parseBrazilianDecimal($valor);
 
-        header('Location: fechamento_pagar.php?sucesso=adicionado');
-        exit;
-    } else if($acao == 'atualizar') {
-        $pag02_base = $pag02_criado[0];
-        $pag01_id = $pag02_base->id_pag01;
-        $pag01 = Pag01::read(
-            id_empresa: $_SESSION['usuario']->id_empresa,
-            id: $pag01_id
-        )[0];
-        
-        if ($pag01) {
-            $pag01->valor = $valor;
-            Pag01::update($pag01);
+        if ($descricao === '') {
+            continue;
         }
 
-        $pag02_base->valor_par = $valor;
-        $pag02_base->valor_pag = $valor;
-        $pag02_base->vencimento = $data;
-        $pag02_base->data_pag = $data;
-        Pag02::update($pag02_base);
+        $descricao_busca = 'Turno ' . $post_turno . ' - ' . $post_nome_caixa . ' - ' . $descricao;
 
-        header('Location: fechamento_pagar.php?sucesso=atualizado');
-        exit;
-    } else if($acao == 'excluir') {
-        if($pag02_criado) {
-            $pag02_base = $pag02_criado[0];
-            $pag01_id = $pag02_base->id_pag01;
+        $pag02_existentes = Pag02::read(
+            id_empresa: $_SESSION['usuario']->id_empresa,
+            filtro_descricao: $descricao_busca,
+            filtro_data_inicial: $data,
+            filtro_data_final: $data,
+            filtro_por: 'pagamento'
+        ) ?? [];
 
+        if ($valor <= 0) {
+            if (!empty($pag02_existentes)) {
+                foreach ($pag02_existentes as $pag02_item) {
+                    Pag02::delete($pag02_item->id);
+                    Pag01::delete($pag02_item->id_pag01);
+                }
+                $deleted = true;
+            }
+            continue;
+        }
+
+        $hasAnyValue = true;
+
+        if (empty($pag02_existentes)) {
+            $documento = buscarDocumentoPag();
+            $pag01 = new Pag01(
+                id_empresa: $_SESSION['usuario']->id_empresa,
+                id_cadastro: $fecha01->id_cadastro,
+                id_con01: $fecha01->id_titulo,
+                id_con02: $fecha01->id_subtitulo,
+                documento: $documento,
+                descricao: $descricao_pag01,
+                valor: $valor,
+                parcelas: 1,
+                data_lanc: $data,
+                id_usuario: $_SESSION['usuario']->id,
+                centro_custos: $fecha01->id_custos,
+            );
+            Pag01::create($pag01);
+            $pag01_id = Pag01::read(id_empresa: $_SESSION['usuario']->id_empresa, documento: $documento)[0]->id;
+
+            $pag02 = new Pag02(
+                null,
+                $_SESSION['usuario']->id_empresa,
+                $pag01_id,
+                $valor,
+                1,
+                $data,
+                $valor,
+                $data,
+                $descricao,
+                $fecha01->tipo_pagamento
+            );
+            Pag02::create($pag02);
+            $created = true;
+        } else {
+            $pag02_base = $pag02_existentes[0];
             $pag01 = Pag01::read(
                 id_empresa: $_SESSION['usuario']->id_empresa,
-                id: $pag01_id
+                id: $pag02_base->id_pag01
             )[0];
 
-            $pag02_lista = Pag02::read(
-                id_empresa: $_SESSION['usuario']->id_empresa,
-                id_pag01: $pag01_id
-            );
-
-            foreach($pag02_lista as $pag02) {
-                Pag02::delete($pag02->id);
+            if ($pag01) {
+                $pag01->valor = $valor;
+                Pag01::update($pag01);
             }
-            Pag01::delete($pag01_id);
+
+            $pag02_base->valor_par = $valor;
+            $pag02_base->valor_pag = $valor;
+            $pag02_base->vencimento = $data;
+            $pag02_base->data_pag = $data;
+            Pag02::update($pag02_base);
+
+            for ($j = 1; $j < count($pag02_existentes); $j++) {
+                Pag02::delete($pag02_existentes[$j]->id);
+            }
+
+            $updated = true;
         }
+    }
 
+    if (!$hasAnyValue && !$deleted) {
+        header('Location: fechamento_pagar.php?erro=vazio');
+        exit;
+    }
 
+    if ($deleted && !$created && !$updated) {
         header('Location: fechamento_pagar.php?sucesso=excluido');
         exit;
     }
 
+    if ($created && !$updated) {
+        header('Location: fechamento_pagar.php?sucesso=adicionado');
+        exit;
+    }
 
+    header('Location: fechamento_pagar.php?sucesso=atualizado');
+    exit;
 }
 
 
