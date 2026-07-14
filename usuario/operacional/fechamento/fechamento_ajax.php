@@ -14,6 +14,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
 $action = filter_input(INPUT_GET, 'action', FILTER_SANITIZE_STRING);
 $date = filter_input(INPUT_GET, 'data', FILTER_SANITIZE_STRING);
 $turno = filter_input(INPUT_GET, 'turno', FILTER_SANITIZE_NUMBER_INT);
+$nome_funcionario = trim(filter_input(INPUT_GET, 'nome', FILTER_SANITIZE_STRING));
 $descricao_padrao = filter_input(INPUT_GET, 'descricao', FILTER_SANITIZE_STRING);
 $target = filter_input(INPUT_GET, 'target', FILTER_SANITIZE_STRING);
 $id_empresa = $_SESSION['usuario']->id_empresa;
@@ -95,24 +96,41 @@ if ($action === 'getDadosTurno') {
         $stmtDespesa = $pdo->prepare($sqlDespesa);
         $stmtDespesa->bindValue(':id_empresa', $id_empresa);
         $stmtDespesa->bindValue(':data', $date);
-        $stmtDespesa->bindValue(':filtro_descricao', 'Turno ' . $turno . ' - %');
+        if ($nome_funcionario !== '') {
+            $stmtDespesa->bindValue(':filtro_descricao', 'Turno ' . $turno . ' - ' . $nome_funcionario . '%');
+        } else {
+            $stmtDespesa->bindValue(':filtro_descricao', 'Turno ' . $turno . ' - %');
+        }
         $stmtDespesa->execute();
 
+        $descricao_names = [];
         while ($row = $stmtDespesa->fetch(PDO::FETCH_ASSOC)) {
             if (!$nome_caixa) {
                 $nome_caixa = extractNomeCaixa($row['descricao'], $turno);
             }
-            $descricao_item = $row['descricao_item'];
+            $descricao_item = trim($row['descricao_item'] ?? '');
             $valor = (float)$row['valor_par'];
-            if ($descricao_item !== '') {
-                if (!isset($valores[$descricao_item])) {
-                    $valores[$descricao_item] = 0.0;
-                }
-                $valores[$descricao_item] += $valor;
+
+            if ($descricao_item === '') {
+                continue;
+            }
+
+            if (!isset($valores[$descricao_item])) {
+                $valores[$descricao_item] = 0.0;
+            }
+            $valores[$descricao_item] += $valor;
+
+            if (!in_array($descricao_item, $descricao_names, true)) {
+                $descricao_names[] = $descricao_item;
             }
         }
 
-        echo json_encode(['success' => true, 'nome_caixa' => $nome_caixa, 'valores' => $valores]);
+        echo json_encode([
+            'success' => true,
+            'nome_caixa' => $nome_caixa,
+            'descricoes' => $descricao_names,
+            'valores' => $valores
+        ]);
         exit;
     }
 
