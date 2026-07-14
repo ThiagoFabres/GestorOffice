@@ -23,6 +23,9 @@ $lateral_operacional = true;
 $tipo_pagamento_lista = TipoPagamento::read(idempresa: $_SESSION['usuario']->id_empresa);
 $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa, tipo: 'D')[0] ?? null;
 
+$descricao_str = $fecha01->descricao ?? '';
+
+$descricao_array = array_map('trim', explode('/', $descricao_str));
 ?>
 <!DOCTYPE html>
 
@@ -105,15 +108,18 @@ $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa, tipo: 'D'
                     <hr>
                     <div class="d-flex flex-column">
                         <div class="d-flex flex-column gap-3">
+                            <?php foreach($descricao_array as $i => $descricao) {?>
                             <div class="d-flex flex-row">
                                 <div class="d-flex flex-column w-50">
-                                    <input type="text" id="input_descricao_padrao" class="form-control rounded-0" placeholder="Descrição" value="<?= $fecha01->descricao ?? '' ?>" readonly>
+                                    <input type="text" class="form-control rounded-0 descricao_padrao" placeholder="Descrição" name="descricao[<?= $i ?>]" value="<?= $descricao ?>" readonly>
                                 </div>
 
                                 <div class="d-flex flex-column w-50">
-                                    <input class="form-control valor" type="text" id="total-valor" inputmode="decimal" pattern="[0-9.,]*" onkeypress="return /[0-9,]/.test(event.key)" name="valor" placeholder="Valor">
+                                    <input class="form-control valor" type="text" inputmode="decimal" pattern="[0-9.,]*" onkeypress="return /[0-9,]/.test(event.key)" name="valor[<?= $i ?>]" placeholder="Valor">
                                 </div>
                             </div>
+                            <?php } ?>
+
                         </div>
                     </div>
                     <hr>
@@ -234,18 +240,21 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             document.getElementById('input_nome_caixa').value = dados.nome_caixa || '';
+            const descricaoInputs = document.querySelectorAll('.descricao_padrao');
+            const valorInputs = document.querySelectorAll('.valor');
 
-            const valorInput = document.querySelector('.valor');
-            if (valorInput) {
-                if (typeof dados.valor !== 'undefined' && dados.valor !== null) {
-                    valorInput.value = formatBrazilianDecimal(dados.valor);
-                } else if (dados.valores) {
-                    const firstValor = Object.values(dados.valores)[0] || 0;
-                    valorInput.value = formatBrazilianDecimal(firstValor);
+            descricaoInputs.forEach((descricaoInput, index) => {
+                const descricao = descricaoInput.value || '';
+                const valorInput = valorInputs[index];
+                if (!valorInput) {
+                    return;
+                }
+                if (descricao && dados.valores && dados.valores[descricao] !== undefined) {
+                    valorInput.value = formatBrazilianDecimal(dados.valores[descricao]);
                 } else {
                     valorInput.value = '';
                 }
-            }
+            });
 
             atualizarTotal();
         }
@@ -285,8 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            const descricaoPadrao = document.getElementById('input_descricao_padrao')?.value || '';
-            const url = `${fechamentoApiUrl}?action=getDadosTurno&data=${encodeURIComponent(data)}&turno=${encodeURIComponent(turno)}&target=pagar&descricao=${encodeURIComponent(descricaoPadrao)}`;
+            const url = `${fechamentoApiUrl}?action=getDadosTurno&data=${encodeURIComponent(data)}&turno=${encodeURIComponent(turno)}&target=pagar`;
             const response = await fetch(url, { credentials: 'same-origin' });
             const text = await response.text();
             let json;

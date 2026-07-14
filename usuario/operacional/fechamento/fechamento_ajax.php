@@ -86,7 +86,7 @@ if ($action === 'getDadosTurno') {
     $descricao_final = '';
 
     if ($target === 'pagar') {
-        $sqlDespesa = 'SELECT p1.descricao, p2.id_pgto, p2.valor_par
+        $sqlDespesa = 'SELECT p1.descricao, p2.obs AS descricao_item, p2.valor_par
                 FROM pag02 p2
                 INNER JOIN pag01 p1 ON p2.id_pag01 = p1.id
                 WHERE p1.id_empresa = :id_empresa
@@ -95,24 +95,24 @@ if ($action === 'getDadosTurno') {
         $stmtDespesa = $pdo->prepare($sqlDespesa);
         $stmtDespesa->bindValue(':id_empresa', $id_empresa);
         $stmtDespesa->bindValue(':data', $date);
-
-        if ($descricao_padrao) {
-            $stmtDespesa->bindValue(':filtro_descricao', 'Turno ' . $turno . ' - % - ' . trim($descricao_padrao));
-        } else {
-            $stmtDespesa->bindValue(':filtro_descricao', 'Turno ' . $turno . ' - %');
-        }
+        $stmtDespesa->bindValue(':filtro_descricao', 'Turno ' . $turno . ' - %');
         $stmtDespesa->execute();
 
         while ($row = $stmtDespesa->fetch(PDO::FETCH_ASSOC)) {
             if (!$nome_caixa) {
                 $nome_caixa = extractNomeCaixa($row['descricao'], $turno);
-                $descricao_final = extractDescricaoPagar($row['descricao'], $turno);
             }
+            $descricao_item = $row['descricao_item'];
             $valor = (float)$row['valor_par'];
-            $descricao_valor += $valor;
+            if ($descricao_item !== '') {
+                if (!isset($valores[$descricao_item])) {
+                    $valores[$descricao_item] = 0.0;
+                }
+                $valores[$descricao_item] += $valor;
+            }
         }
 
-        echo json_encode(['success' => true, 'nome_caixa' => $nome_caixa, 'valor' => $descricao_valor, 'descricao' => $descricao_final]);
+        echo json_encode(['success' => true, 'nome_caixa' => $nome_caixa, 'valores' => $valores]);
         exit;
     }
 
