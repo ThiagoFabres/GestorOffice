@@ -124,6 +124,11 @@ $descricao_array = array_map('trim', explode('/', $descricao_str));
                     </div>
                     <hr>
                     <div class="d-flex flex-row justify-content-between align-items-center mt-3">
+                        <div>
+                            <div>
+                                Total: R$ <span id="total-valor">0.00</span>
+                            </div>
+                        </div>
                         <button type="submit" class="btn btn-primary">Processar</button>
                     </div>
                 </form>
@@ -240,8 +245,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             document.getElementById('input_nome_caixa').value = dados.nome_caixa || '';
+
             const descricaoInputs = document.querySelectorAll('.descricao_padrao');
             const valorInputs = document.querySelectorAll('.valor');
+
+            if (Array.isArray(dados.descricoes) && dados.descricoes.length > 0) {
+                descricaoInputs.forEach((descricaoInput, index) => {
+                    descricaoInput.value = dados.descricoes[index] || descricaoInput.value || '';
+                });
+            }
 
             descricaoInputs.forEach((descricaoInput, index) => {
                 const descricao = descricaoInput.value || '';
@@ -263,7 +275,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         async function carregarTurnos(data) {
             if (!data) return;
-            const url = `${fechamentoApiUrl}?action=getTurnos&data=${encodeURIComponent(data)}&target=pagar`;
+            const nome = document.getElementById('input_nome_caixa')?.value || '';
+            const url = `${fechamentoApiUrl}?action=getTurnos&data=${encodeURIComponent(data)}&target=pagar&nome=${encodeURIComponent(nome)}`;
             const response = await fetch(url, { credentials: 'same-origin' });
             const text = await response.text();
             let json;
@@ -294,7 +307,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            const url = `${fechamentoApiUrl}?action=getDadosTurno&data=${encodeURIComponent(data)}&turno=${encodeURIComponent(turno)}&target=pagar`;
+            const nome = document.getElementById('input_nome_caixa')?.value || '';
+            const descricaoPadrao = document.getElementById('input_descricao_padrao')?.value || '';
+            const url = `${fechamentoApiUrl}?action=getDadosTurno&data=${encodeURIComponent(data)}&turno=${encodeURIComponent(turno)}&target=pagar&nome=${encodeURIComponent(nome)}&descricao=${encodeURIComponent(descricaoPadrao)}`;
             const response = await fetch(url, { credentials: 'same-origin' });
             const text = await response.text();
             let json;
