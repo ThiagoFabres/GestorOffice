@@ -162,7 +162,8 @@ $prazo = Pra01::read(id_empresa:$_SESSION['usuario']->id_empresa, id_bandeira: $
         $operadora->id_custos,
         null,
         $valor_b_total,
-        $valor_liq_go
+        $valor_liq_go,
+        $prazo->taxa
     );
     
     $rec03[$documento] = new Rec03 (
@@ -219,10 +220,12 @@ $prazo = Pra01::read(id_empresa:$_SESSION['usuario']->id_empresa, id_bandeira: $
         );
         $rec02_lista[] = $rec02_entry;
         
+        
         Rec02::create($rec02_entry);
         $last_rec02 = $rec02_entry;
     }
-
+    
+    
 
         $grupo_feito[] = [
             $rec01[$documento],
