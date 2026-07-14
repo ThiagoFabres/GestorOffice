@@ -18,7 +18,8 @@ class Rec01 {
     public $id_convertido;
     public $valor_b;
     public $valor_liq_go;
-    public function __construct($id = null, $id_empresa = null, $id_cadastro = null, $id_con01 = null, $id_con02 = null, $documento = '', $descricao = '', $valor = 0.0, $parcelas = 1, $data_lanc = null, $id_usuario = null, $centro_custos = null, $id_convertido = null, $valor_b = null, $valor_liq_go = null) {
+    public $taxa_cadastrada;
+    public function __construct($id = null, $id_empresa = null, $id_cadastro = null, $id_con01 = null, $id_con02 = null, $documento = '', $descricao = '', $valor = 0.0, $parcelas = 1, $data_lanc = null, $id_usuario = null, $centro_custos = null, $id_convertido = null, $valor_b = null, $valor_liq_go = null, $taxa_cadastrada = null) {
         $this->id = $id;
         $this->id_empresa = $id_empresa;
         $this->id_cadastro = $id_cadastro;
@@ -34,13 +35,14 @@ class Rec01 {
         $this->id_convertido = $id_convertido;
         $this->valor_b = $valor_b;
         $this->valor_liq_go = $valor_liq_go;
+        $this->taxa_cadastrada = $taxa_cadastrada;
     }
 
     public static function create($rec01) {
         $pdo = (new Database())->connect();
 
-        $sql = 'INSERT INTO rec01 (centro_custos, id_empresa, id_cadastro, id_con01, id_con02, documento, descricao, valor, parcelas, data_lanc, id_usuario, id_convertido, valor_b, valor_liq_go) 
-                VALUES (:centro_custos, :id_empresa, :id_cadastro, :id_con01, :id_con02, :documento, :descricao, :valor, :parcelas, :data_lanc, :id_usuario, :id_convertido, :valor_b, :valor_liq_go)';
+        $sql = 'INSERT INTO rec01 (centro_custos, id_empresa, id_cadastro, id_con01, id_con02, documento, descricao, valor, parcelas, data_lanc, id_usuario, id_convertido, valor_b, valor_liq_go, taxa_cadastrada) 
+                VALUES (:centro_custos, :id_empresa, :id_cadastro, :id_con01, :id_con02, :documento, :descricao, :valor, :parcelas, :data_lanc, :id_usuario, :id_convertido, :valor_b, :valor_liq_go, :taxa_cadastrada)';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id_empresa', $rec01->id_empresa);
         $stmt->bindValue(':id_cadastro', $rec01->id_cadastro);
@@ -56,7 +58,7 @@ class Rec01 {
         $stmt->bindValue(':id_convertido', $rec01->id_convertido);
         $stmt->bindValue(':valor_b', $rec01->valor_b);
         $stmt->bindValue(':valor_liq_go', $rec01->valor_liq_go);
-
+        $stmt->bindValue(':taxa_cadastrada', $rec01->taxa_cadastrada);
         
 
         return $stmt->execute();

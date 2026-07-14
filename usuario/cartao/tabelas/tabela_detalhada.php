@@ -81,7 +81,7 @@
                                     $data_lanc = $data_lanc->format('d-m-Y');
                                     $cadastro = Cadastro::read($rec01->id_cadastro)[0];
                                     $centro_custos = CentroCustos::read($rec01->centro_custos, $_SESSION['usuario']->id_empresa)[0];
-                                    $taxa = (($rec01->valor_b - $rec01->valor_liq_go) / $rec01->valor_b) * 100;
+                                    $taxa = $rec01->taxa_cadastrada ?? (($rec01->valor_b - $rec01->valor_liq_go) / $rec01->valor_b) * 100;
                                     $taxa_aplicada = (($rec01->valor_b - $rec01->valor) / $rec01->valor_b) * 100;
 
                                     ?>
