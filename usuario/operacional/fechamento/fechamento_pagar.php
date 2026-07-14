@@ -111,7 +111,7 @@ $descricao_array = array_map('trim', explode('/', $descricao_str));
                             <?php foreach($descricao_array as $i => $descricao) {?>
                             <div class="d-flex flex-row">
                                 <div class="d-flex flex-column w-50">
-                                    <input type="text" class="form-control rounded-0 descricao_padrao" placeholder="Descrição" name="descricao[<?= $i ?>]" value="<?= $descricao ?>" readonly>
+                                    <input type="text" class="form-control rounded-0 descricao_padrao" placeholder="Descrição" name="descricao[<?= $i ?>]" value="<?= $descricao ?>">
                                 </div>
 
                                 <div class="d-flex flex-column w-50">

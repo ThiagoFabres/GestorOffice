@@ -72,7 +72,12 @@ if($target == 'C') {
     }
 
     if($excluir) {
-        $acao = 'excluir';
+        if ($rec02_criado) {
+            $acao = 'excluir';
+        } else {
+            header('Location: fechamento_receber.php?sucesso=excluido');
+            exit;
+        }
     } else if($rec02_criado) {
         $acao = 'atualizar';
     } else {
