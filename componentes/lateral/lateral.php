@@ -142,7 +142,7 @@ $logo_blob = null;
                             <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'operacional_atividade') { ?> menu-li-atual <?php } ?>"><a href="/usuario/operacional/atividade/atividade.php" class="link-light text-decoration-none">
                                 <i class="bi bi-clock"></i>Início/Término</a></li>
                         <?php } ?>
-                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'fechamento_caixa') { ?> menu-li-atual <?php } ?>"><a href="/usuario/operacional/fechamento/fechamento_receber.php" class="link-light text-decoration-none">
+                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'fechamento_caixa') { ?> menu-li-atual <?php } ?>"><a href="/usuario/operacional/fechamento/fechamento.php" class="link-light text-decoration-none">
                                 <i class="bi bi-cart3"></i>Fechamento de Caixa</a></li>
     
                         </ul>
