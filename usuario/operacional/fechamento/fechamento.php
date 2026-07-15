@@ -21,8 +21,12 @@ if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSIO
 $lateral_target = 'fechamento_caixa';
 $lateral_operacional = true;
 $tipo_pagamento_lista = TipoPagamento::read(idempresa: $_SESSION['usuario']->id_empresa);
-$fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa, tipo: 'C')[0] ?? null;
+$fecha01_rec = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa, tipo: 'C')[0] ?? null;
+$fecha01_pag = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa, tipo: 'D')[0] ?? null;
 
+$descricao_str = $fecha01_pag->descricao ?? '';
+
+$descricao_array = array_map('trim', explode('/', $descricao_str));
 ?>
 <!DOCTYPE html>
 
@@ -68,16 +72,7 @@ $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa, tipo: 'C'
     <div class="main" id="container">
         <div class="card card-fechamento-responsivo" style="overflow:visible !important;">
             <div class="card-header">
-                <h3>Fechamento de Caixa - Receitas</h3>
-            </div>
-            <div class="card-header d-flex flex-row justify-content-between g-3">
-                <button class="w-50 d-flex btn btn-primary dre-menu-btn" style="border-bottom: 2px solid #5856d6;" onclick="window.location.href='fechamento_receber.php'">
-                    <h3>Receitas</h3>
-                </button>
-
-                <button class="w-50 d-flex btn btn-primary dre-menu-btn"  onclick="window.location.href='fechamento_pagar.php'">
-                    <h3>Despesas</h3>
-                </button>
+                <h3>Fechamento de Caixa</h3>
             </div>
             <div class="card-body" style="overflow: visible; padding-bottom: 0;">
                 <?php 
@@ -85,8 +80,8 @@ $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa, tipo: 'C'
                     echo '<div class="alert alert-danger" style="text-align:center;">Não Existe um Parametro de fechamento cadastrado.</div>';
                 } else {
                 ?>
-                <form action="fechamento_manager.php" method="post">
-                    <input type="hidden" name="target" value="receber">
+                <form id="fechamento-form" action="fechamento_manager.php" method="post">
+                    <input type="hidden" name="target" value="both">
                     <div class="d-flex flex-row justify-content-evenly gap-3 mb-3">
                         <div class="d-flex flex-column w-50">
                             <label>Data</label>
@@ -102,32 +97,65 @@ $fecha01 = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa, tipo: 'C'
                             <input class="form-control rounded-0" type="text" id="input_nome_caixa" name="nome_caixa" placeholder="Nome">
                         </div>
                     </div>
+                    
                     <hr>
+                    <div class="card-header d-flex flex-row justify-content-center gap-3 mb-3" style="border-bottom: 0;">
+                        <h3>Receitas</h3>
+                    </div>
+                    
                     <div class="d-flex flex-column">
                         <div class="d-flex flex-column gap-3">
                             <?php foreach($tipo_pagamento_lista as $i => $tipo_pagamento) {?>
                             <div class="d-flex flex-row">
                                 <div class="d-flex flex-column w-50">
-                                    <select class="form-select tipo-pagamento form-control rounded-0" name="tipo_pagamento[<?= $i ?>]" style="height:2.75em; appearance: none; background-image: none; pointer-events:none;">
+                                    <select class="form-select tipo-pagamento-receita form-control rounded-0" name="tipo_pagamento_receita[<?= $i ?>]" style="height:2.75em; appearance: none; background-image: none; pointer-events:none;">
                                             <option value="<?=$tipo_pagamento->id?>"><?=$tipo_pagamento->nome?></option>
                                     </select>
                                 </div>
 
                                 <div class="d-flex flex-column w-50">
-                                    <input class="form-control valor" type="text" inputmode="decimal" pattern="[0-9.,]*" onkeypress="return /[0-9,]/.test(event.key)" name="valor[<?= $i ?>]" placeholder="Valor">
+                                    <input class="form-control valor valor-receita" type="text" inputmode="decimal" pattern="[0-9.,]*" onkeypress="return /[0-9,]/.test(event.key)" name="valor_receita[<?= $i ?>]" placeholder="Valor">
                                 </div>
                             </div>
                             <?php } ?>
+                            <div class="d-flex flex-row justify-content-between align-items-center mt-3">
+                                <div>
+                                    <div>
+                                        Total: R$ <span id="total-valor-rec">0.00</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <hr>
-                    <div class="d-flex flex-row justify-content-between align-items-center mt-3">
+                    <div class="card-header d-flex flex-row justify-content-center gap-3 mb-3" style="border-bottom: 0;">
+                        <h3>Despesas</h3>
+                    </div>
+                    <div class="d-flex flex-column">
+                        <div class="d-flex flex-column gap-3">
+                            <?php foreach($descricao_array as $i => $descricao) {?>
+                            <div class="d-flex flex-row">
+                                <div class="d-flex flex-column w-50">
+                                    <input type="text" class="form-control rounded-0 descricao_padrao" placeholder="Descrição" name="descricao_despesa[<?= $i ?>]" value="<?= $descricao ?>">
+                                </div>
+
+                                <div class="d-flex flex-column w-50">
+                                    <input class="form-control valor valor-despesa" type="text" inputmode="decimal" pattern="[0-9.,]*" onkeypress="return /[0-9,]/.test(event.key)" name="valor_despesa[<?= $i ?>]" placeholder="Valor">
+                                </div>
+                            </div>
+                            <?php } ?>
+                            <div class="d-flex flex-row justify-content-between align-items-center mt-3">
                         <div>
                             <div>
-                                Total: R$ <span id="total-valor">0.00</span>
+                                Total: R$ <span id="total-valor-pag">0.00</span>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary">Processar</button>
+                    </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="d-flex flex-row justify-content-between align-items-center mt-3 w-100">
+                        <button type="submit" class="btn btn-primary w-100">Processar</button>
                     </div>
                 </form>
                 <?php } ?>
@@ -183,19 +211,38 @@ function formatBrazilianDecimal(valor) {
     });
 }
 
-// Função para atualizar o total
-function atualizarTotal() {
-    let total = 0;
-    document.querySelectorAll('.valor').forEach(input => {
+function atualizarTotais() {
+    let totalRec = 0;
+    let totalPag = 0;
+
+    document.querySelectorAll('.valor-receita').forEach(input => {
         const valor = parseBrazilianDecimal(input.value);
         if (!isNaN(valor)) {
-            total += valor;
+            totalRec += valor;
         }
     });
-    document.getElementById('total-valor').textContent = total.toLocaleString('pt-BR', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
+
+    document.querySelectorAll('.valor-despesa').forEach(input => {
+        const valor = parseBrazilianDecimal(input.value);
+        if (!isNaN(valor)) {
+            totalPag += valor;
+        }
     });
+
+    const totalRecElement = document.getElementById('total-valor-rec');
+    const totalPagElement = document.getElementById('total-valor-pag');
+    if (totalRecElement) {
+        totalRecElement.textContent = totalRec.toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+    if (totalPagElement) {
+        totalPagElement.textContent = totalPag.toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
 }
 
 function definirTurnoPadrao(turnos) {
@@ -218,38 +265,56 @@ function definirTurnoPadrao(turnos) {
 
 // Atualiza o total quando qualquer input de valor é alterado
 document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.valor').forEach(input => {
-        input.addEventListener('change', atualizarTotal);
-        input.addEventListener('input', atualizarTotal);
+    document.querySelectorAll('.valor-receita, .valor-despesa').forEach(input => {
+        input.addEventListener('change', atualizarTotais);
+        input.addEventListener('input', atualizarTotais);
     });
-    atualizarTotal();
+    atualizarTotais();
 
         const dataInput = document.getElementById('data_fechamento');
         const turnoInput = document.getElementById('input_turno');
 
         function clearDadosTurno() {
             document.getElementById('input_nome_caixa').value = '';
-            document.querySelectorAll('.valor').forEach(input => input.value = '');
-            atualizarTotal();
+            document.querySelectorAll('.valor-receita, .valor-despesa').forEach(input => input.value = '');
+            atualizarTotais();
         }
 
         function preencherValoresPorTurno(dados) {
-            if (!dados || !dados.valores) {
-                clearDadosTurno();
+            if (!dados) {
                 return;
             }
 
-            document.getElementById('input_nome_caixa').value = dados.nome_caixa || '';
-            document.querySelectorAll('.tipo-pagamento').forEach((select, index) => {
+            if (dados.nome_caixa !== undefined && dados.nome_caixa !== '') {
+                document.getElementById('input_nome_caixa').value = dados.nome_caixa;
+            }
+
+            const valoresReceitas = dados.valores_receitas || {};
+            const valoresDespesas = dados.valores_despesas || {};
+
+            document.querySelectorAll('.tipo-pagamento-receita').forEach((select, index) => {
                 const tipoId = select.value;
-                const valorInput = document.querySelectorAll('.valor')[index];
-                if (dados.valores[tipoId] !== undefined) {
-                    valorInput.value = formatBrazilianDecimal(dados.valores[tipoId]);
-                } else {
-                    valorInput.value = '';
+                const valorInput = document.querySelectorAll('.valor-receita')[index];
+                if (!valorInput) {
+                    return;
+                }
+                if (valoresReceitas[tipoId] !== undefined) {
+                    valorInput.value = formatBrazilianDecimal(valoresReceitas[tipoId]);
                 }
             });
-            atualizarTotal();
+
+            document.querySelectorAll('.descricao_padrao').forEach((descricaoInput, index) => {
+                const descricao = descricaoInput.value || '';
+                const valorInput = document.querySelectorAll('.valor-despesa')[index];
+                if (!valorInput) {
+                    return;
+                }
+                if (descricao && valoresDespesas[descricao] !== undefined) {
+                    valorInput.value = formatBrazilianDecimal(valoresDespesas[descricao]);
+                }
+            });
+
+            atualizarTotais();
         }
 
         const fechamentoApiUrl = './fechamento_ajax.php';
@@ -281,13 +346,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        async function carregarDadosTurno(data, turno) {
+        async function carregarDadosTurno(data, turno, nome) {
             if (!data || !turno) {
                 clearDadosTurno();
                 return;
             }
 
-            const url = `${fechamentoApiUrl}?action=getDadosTurno&data=${encodeURIComponent(data)}&turno=${encodeURIComponent(turno)}`;
+            const url = `${fechamentoApiUrl}?action=getDadosTurno&data=${encodeURIComponent(data)}&turno=${encodeURIComponent(turno)}&nome=${encodeURIComponent(nome || '')}&target=both`;
             const response = await fetch(url, { credentials: 'same-origin' });
             const text = await response.text();
             let json;
@@ -311,11 +376,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         turnoInput.addEventListener('change', function() {
-            carregarDadosTurno(dataInput.value, this.value);
+            carregarDadosTurno(dataInput.value, this.value, document.getElementById('input_nome_caixa').value);
         });
 
-        turnoInput.addEventListener('blur', function() {
-            carregarDadosTurno(dataInput.value, this.value);
+        document.getElementById('input_nome_caixa').addEventListener('change', function() {
+            carregarDadosTurno(dataInput.value, turnoInput.value, this.value);
         });
 
         carregarTurnos(dataInput.value);

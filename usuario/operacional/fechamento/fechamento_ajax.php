@@ -81,12 +81,20 @@ if ($action === 'getDadosTurno') {
         exit;
     }
 
-    $valores = [];
     $nome_caixa = '';
-    $descricao_valor = 0.0;
-    $descricao_final = '';
+    $valores_receitas = [];
+    $valores_despesas = [];
 
-    if ($target === 'pagar') {
+    $filtro_turno = 'Turno ' . $turno . ' - ';
+    $filtro_recepcao = $filtro_turno . '%';
+    $filtro_despesa = $filtro_turno . '%';
+
+    if ($nome_funcionario !== '') {
+        $filtro_recepcao = 'Turno ' . $turno . ' - ' . $nome_funcionario . '%';
+        $filtro_despesa = 'Turno ' . $turno . ' - ' . $nome_funcionario . '%';
+    }
+
+    if ($target === 'pagar' || $target === 'both' || $target === '') {
         $sqlDespesa = 'SELECT p1.descricao, p2.obs AS descricao_item, p2.valor_par
                 FROM pag02 p2
                 INNER JOIN pag01 p1 ON p2.id_pag01 = p1.id
@@ -96,14 +104,9 @@ if ($action === 'getDadosTurno') {
         $stmtDespesa = $pdo->prepare($sqlDespesa);
         $stmtDespesa->bindValue(':id_empresa', $id_empresa);
         $stmtDespesa->bindValue(':data', $date);
-        if ($nome_funcionario !== '') {
-            $stmtDespesa->bindValue(':filtro_descricao', 'Turno ' . $turno . ' - ' . $nome_funcionario . '%');
-        } else {
-            $stmtDespesa->bindValue(':filtro_descricao', 'Turno ' . $turno . ' - %');
-        }
+        $stmtDespesa->bindValue(':filtro_descricao', $filtro_despesa);
         $stmtDespesa->execute();
 
-        $descricao_names = [];
         while ($row = $stmtDespesa->fetch(PDO::FETCH_ASSOC)) {
             if (!$nome_caixa) {
                 $nome_caixa = extractNomeCaixa($row['descricao'], $turno);
@@ -115,51 +118,46 @@ if ($action === 'getDadosTurno') {
                 continue;
             }
 
-            if (!isset($valores[$descricao_item])) {
-                $valores[$descricao_item] = 0.0;
+            if (!isset($valores_despesas[$descricao_item])) {
+                $valores_despesas[$descricao_item] = 0.0;
             }
-            $valores[$descricao_item] += $valor;
-
-            if (!in_array($descricao_item, $descricao_names, true)) {
-                $descricao_names[] = $descricao_item;
-            }
-        }
-
-        echo json_encode([
-            'success' => true,
-            'nome_caixa' => $nome_caixa,
-            'descricoes' => $descricao_names,
-            'valores' => $valores
-        ]);
-        exit;
-    }
-
-    $sqlReceita = 'SELECT r1.descricao, r2.id_pgto, r2.valor_par
-            FROM rec02 r2
-            INNER JOIN rec01 r1 ON r2.id_rec01 = r1.id
-            WHERE r1.id_empresa = :id_empresa
-              AND DATE(r1.data_lanc) = :data
-              AND r1.descricao LIKE :filtro_descricao';
-    $stmtReceita = $pdo->prepare($sqlReceita);
-    $stmtReceita->bindValue(':id_empresa', $id_empresa);
-    $stmtReceita->bindValue(':data', $date);
-    $stmtReceita->bindValue(':filtro_descricao', 'Turno ' . $turno . ' - %');
-    $stmtReceita->execute();
-
-    while ($row = $stmtReceita->fetch(PDO::FETCH_ASSOC)) {
-        if (!$nome_caixa) {
-            $nome_caixa = extractNomeCaixa($row['descricao'], $turno);
-        }
-        $tipo = (string)$row['id_pgto'];
-        $valor = (float)$row['valor_par'];
-        if (!isset($valores[$tipo])) {
-            $valores[$tipo] = $valor;
-        } else {
-            $valores[$tipo] += $valor;
+            $valores_despesas[$descricao_item] += $valor;
         }
     }
 
-    echo json_encode(['success' => true, 'nome_caixa' => $nome_caixa, 'valores' => $valores]);
+    if ($target !== 'pagar') {
+        $sqlReceita = 'SELECT r1.descricao, r2.id_pgto, r2.valor_par
+                FROM rec02 r2
+                INNER JOIN rec01 r1 ON r2.id_rec01 = r1.id
+                WHERE r1.id_empresa = :id_empresa
+                  AND DATE(r1.data_lanc) = :data
+                  AND r1.descricao LIKE :filtro_descricao';
+        $stmtReceita = $pdo->prepare($sqlReceita);
+        $stmtReceita->bindValue(':id_empresa', $id_empresa);
+        $stmtReceita->bindValue(':data', $date);
+        $stmtReceita->bindValue(':filtro_descricao', $filtro_recepcao);
+        $stmtReceita->execute();
+
+        while ($row = $stmtReceita->fetch(PDO::FETCH_ASSOC)) {
+            if (!$nome_caixa) {
+                $nome_caixa = extractNomeCaixa($row['descricao'], $turno);
+            }
+            $tipo = (string)$row['id_pgto'];
+            $valor = (float)$row['valor_par'];
+            if (!isset($valores_receitas[$tipo])) {
+                $valores_receitas[$tipo] = $valor;
+            } else {
+                $valores_receitas[$tipo] += $valor;
+            }
+        }
+    }
+
+    echo json_encode([
+        'success' => true,
+        'nome_caixa' => $nome_caixa,
+        'valores_receitas' => $valores_receitas,
+        'valores_despesas' => $valores_despesas,
+    ]);
     exit;
 }
 
