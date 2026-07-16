@@ -432,7 +432,7 @@
 
 
                             <div class="tabelas-edit">
-                                <table class="table table-striped table-bordered" style="margin-bottom: 0;">
+                                <table class="table table-bordered" style="margin-bottom: 0;">
                                     <thead>
                                         <tr>
                                             <th>Parcela</th>
