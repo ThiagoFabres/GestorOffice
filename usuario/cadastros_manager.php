@@ -564,6 +564,9 @@ if (isset($view) && $view == 'cadastro') {
     $valor_par = $_POST['valor_par'] ?? [];
     $obs02 = $_POST['obs02'] ?? [];
     $id = $_POST['id'] ?? [];
+    $valor_pag = $_POST['valor_pago'] ?? [];
+    $data_pag_lista = $_POST['data_pag'] ?? [];
+    $tipo_pagamento = $_POST['tipo_pagamento'] ?? [];
     $id_rec = filter_input(INPUT_POST, 'id_lancamento');
     $data_pag = filter_input(INPUT_POST, 'data');
     $insta = filter_input(INPUT_POST, 'insta') ?? null;
@@ -679,33 +682,36 @@ if (isset($view) && $view == 'cadastro') {
 
             $vencimento_data = $vencimento[$i];
             $obs_parcela = $obs02[$i];
+            $tipo_pagamento[$i] == 'Tipo de Pagamento' ? $tipo_pagamento[$i] = null : $tipo_pagamento[$i];
+            $data_pag_lista[$i] = isset($data_pag_lista[$i]) ? $data_pag_lista[$i] : null;
 
             if ($pagar) {
                 $parcelas[$i] = new Pag02(
-                    null,                           // id (PK da parcela)
+                    null,                           
                     $_SESSION['usuario']->id_empresa,
-                    $rec01->id,                     // id_pag01 (FK)
+                    $rec01->id,                     
                     $valor_parcela,
                     $i,
                     $vencimento_data,
-                    0,
-                    null,
+                    $valor_pag[$i] ?? 0,
+                    $data_pag_lista[$i] ?? 0,
                     $obs_parcela,
-                    null
+                    $tipo_pagamento[$i] ?? null
                 );
+                
                 Pag02::create($parcelas[$i]);
             } else {
                 $parcelas[$i] = new Rec02(
-                    null,                           // id (PK da parcela)
+                    null,                           
                     $_SESSION['usuario']->id_empresa,
-                    $rec01->id,                     // id_rec01 (FK)
+                    $rec01->id,                     
                     $valor_parcela,
                     $i,
                     $vencimento_data,
-                    0,
-                    null,
+                    $valor_pag[$i] ?? 0,
+                    $data_pag_lista[$i] ?? 0,
                     $obs_parcela,
-                    null
+                    $tipo_pagamento[$i] ?? null
                 );
                 Rec02::create($parcelas[$i]);
             }
@@ -713,6 +719,7 @@ if (isset($view) && $view == 'cadastro') {
 
 
         }
+
         if(isset($insta)) {
             if($insta == 'movimentacao') {
                 header('Location: /usuario/movimentacao/movimentacao.php');
@@ -821,6 +828,8 @@ if (isset($view) && $view == 'cadastro') {
             $valor_parcela = str_replace('.', '', $valor_par[$i]);
             $valor_parcela = str_replace(',', '.', $valor_parcela);
             $valor_parcela = floatval($valor_parcela);
+            $tipo_pagamento[$i] == 'Tipo de Pagamento' ? $tipo_pagamento[$i] = null : $tipo_pagamento[$i];
+            $data_pag_lista[$i] = isset($data_pag_lista[$i]) ? $data_pag_lista[$i]->format('Y-m-d') : null;
             
             $vencimento_data = $vencimento[$i];
             $obs_parcela = $obs02[$i];
@@ -833,10 +842,10 @@ if (isset($view) && $view == 'cadastro') {
                     $valor_parcela,
                     $i,
                     $vencimento_data,
-                    0,
-                    null,
+                    $valor_pag[$i] ?? 0,
+                    $data_pag_lista[$i] ?? 0,
                     $obs_parcela,
-                    null
+                    $tipo_pagamento[$i] ?? null
                 );
                 
                 Pag02::create($parcelas[$i]);
@@ -849,10 +858,10 @@ if (isset($view) && $view == 'cadastro') {
                     $valor_parcela,
                     $i,
                     $vencimento_data,
-                    0,
-                    null,
+                    $valor_pag[$i] ?? 0,
+                    $data_pag_lista[$i] ?? 0,
                     $obs_parcela,
-                    null
+                    $tipo_pagamento[$i] ?? null
                 );
                 Rec02::create($parcelas[$i]);
             }

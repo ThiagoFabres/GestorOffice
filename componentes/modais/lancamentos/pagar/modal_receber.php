@@ -1,5 +1,10 @@
 <div class="modal fade" id="modal_receber" tabindex="-1" role="dialog" aria-labelledby="modal_receber_title"
             aria-hidden="true">
+            <style>
+            #modal_receber select {
+                color: #000 !important;
+            }
+        </style>
         <div class="modal-dialog modal-xl modal-dialog-centered" role="document" style="max-width:1100px;">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -395,7 +400,7 @@
 
 
 
-                                        <?php if($get_acao != 'visualizar' && !isset($recebimento->valor_b) || $recebimento->valor_b == 0){ ?>
+                                        <?php if($get_acao != 'visualizar'){ ?>
                                             <div style="width: 100%; display: flex; flex-direction: column; align-items: flex-end;">
                                                 <div id="msg-gerar-parcelas" style="color: #d9534f; font-size: 0.85rem; margin-top: 0.5rem; text-align: right;"></div>
                                                 <button type="submit" id="btn-gerar-parcelas" class="btn btn-primary mt-2"
@@ -429,36 +434,63 @@
                             <input type="hidden" id="custo2" name="custo" value="<?= $post_custo ?>">
 
                             <div class="tabelas-edit">
-                                <table class="table table-striped table-bordered" style="margin-bottom: 0;">
+                                <table class="table table-bordered" style="margin-bottom: 0;">
                                     <thead>
                                         <tr>
                                             <th>Parcela</th>
-                                            <th>Vencimento</th>
+                                            <th>Vencimento / Pagamento</th>
                                             <th>Valor</th>
                                             <th>OBS</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php foreach ($parcelas as $parcela) {
+                                        <?php foreach ($parcelas as $parcela_numero => $parcela) {
                                             $valor_parcela = number_format($parcela->valor_par, 2, ',', '.');
+                                            
+
+                                            if($parcela_numero % 2 == 1) {
+                                                $cor_linha = '#f2f2f2';
+                                            } else {
+                                                $cor_linha = '#ffffff';
+                                            }
                                             ?>
                                             <!-- <?php if (isset($get_id) && !empty($get_id)) { ?> <input type="hidden" name="id[<?= $parcela->parcela ?>]" value="<?= $parcela->id ?>"> <?php } ?> -->
                                             <input type="hidden" name="parcela[<?= $parcela->parcela ?>]"
                                                 value="<?= $parcela->parcela ?>">
-                                            <tr>
-                                                <td><?= htmlspecialchars($parcela->parcela, ENT_QUOTES, 'UTF-8') ?></td>
-                                                <td><input type="date" class="form-control" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
+                                            <tr style="background-color: <?= $cor_linha ?>;">
+                                                <td style="background-color: <?= $cor_linha ?>;"><?= htmlspecialchars($parcela->parcela, ENT_QUOTES, 'UTF-8') ?></td>
+                                                <td style="background-color: <?= $cor_linha ?>;"><input type="date" class="form-control" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
                                                         name="vencimento[<?= $parcela->parcela ?>]"
                                                         value="<?php if (!isset($get_id) || empty($_GET['id'])) {
                                                             echo $parcela->vencimento->format('Y-m-d');
                                                         } else
                                                             echo $parcela->vencimento ?>"
                                                             placeholder="vencimento"></td>
-                                                    <td><input class="form-control valor-parcela vencimento" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
+                                                    <td style="background-color: <?= $cor_linha ?>;"><input class="form-control valor-parcela vencimento" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
                                                             name="valor_par[<?= $parcela->parcela ?>]"
                                                         value="<?= $valor_parcela; ?>"></input></td>
-                                                <td><input class="form-control" name="obs02[<?= $parcela->parcela ?>]" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
+                                                <td style="background-color: <?= $cor_linha ?>;"><input class="form-control" name="obs02[<?= $parcela->parcela ?>]" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
                                                         value="<?= $parcela->obs ?>"></input></td>
+                                                
+                                            </tr>
+                                            <tr style="background-color: <?= $cor_linha ?>;">
+                                                <td style="background-color: <?= $cor_linha ?>;"></td>
+                                                <td style="background-color: <?= $cor_linha ?>;"><input type="date" class="form-control" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
+                                                        name="data_pag[<?= $parcela->parcela ?>]"
+                                                        value="<?= isset($parcela->data_pag) ? $parcela->data_pag : '' ?>"
+                                                        placeholder="Data de Pagamento"></td>
+                                                <td style="background-color: <?= $cor_linha ?>;"><input class="form-control" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
+                                                        name="valor_pago[<?= $parcela->parcela ?>]"
+                                                        value="<?= isset($parcela->valor_pag) ? number_format($parcela->valor_pag, 2, ',', '.') : '' ?>"
+                                                        placeholder="Valor Pago"></td>
+                                                <td style="background-color: <?= $cor_linha ?>;"  >
+                                                    <select  name="tipo_pagamento[<?= $parcela->parcela ?>]"<?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?> <?php if($id_ban != null) echo 'readonly' ?> >
+                                                        <option>Tipo de Pagamento</option>
+                                                        <?php foreach(TipoPagamento::read(idempresa: $_SESSION['usuario']->id_empresa) as $tipo_pagamento) { ?>
+                                                            <option  value="<?= $tipo_pagamento->id ?>" <?php if(isset($parcela->id_pgto) && $parcela->id_pgto == $tipo_pagamento->id) { ?> selected <?php } ?>><?= $tipo_pagamento->nome ?></option>
+                                                        <?php } ?>
+                                                    </select>
+                                                </td>
                                             </tr>
                                         <?php } ?>
                                     </tbody>
