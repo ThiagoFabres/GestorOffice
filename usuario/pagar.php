@@ -665,7 +665,7 @@ if ($filtros != []) {
                                         <?php } ?>
                                         <td class="td-acoes">
                                             <button class="btn btn-primary"
-                                                onclick="window.location.href='pagar.php?id=<?= $pag01->id ?>&acao=visualizar'"><i class="bi bi-eye"></i></button>
+                                                onclick="window.location.href='pagar.php?id=<?= $pag01->id ?>&acao=visualizar&pagina=<?= $numero_pagina ?>&numero_exibido=<?= $numero_exibir ?>'"><i class="bi bi-eye"></i></button>
                                         </td>
                                         
                                     </tr>
