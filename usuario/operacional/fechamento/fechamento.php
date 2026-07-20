@@ -76,7 +76,7 @@ $descricao_array = array_map('trim', explode('/', $descricao_str));
             </div>
             <div class="card-body" style="overflow: visible; padding-bottom: 0;">
                 <?php 
-                if(!Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa, tipo: 'C')) {
+                if(!Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa)) {
                     echo '<div class="alert alert-danger" style="text-align:center;">Não Existe um Parametro de fechamento cadastrado.</div>';
                 } else {
                 ?>
@@ -99,25 +99,32 @@ $descricao_array = array_map('trim', explode('/', $descricao_str));
                     </div>
                     
                     <hr>
+                    <?php if(Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa, tipo:'C')) { ?>
                     <div class="card-header d-flex flex-row justify-content-center gap-3 mb-3" style="border-bottom: 0;">
                         <h3>Receitas</h3>
                     </div>
                     
                     <div class="d-flex flex-column">
                         <div class="d-flex flex-column gap-3">
-                            <?php foreach($tipo_pagamento_lista as $i => $tipo_pagamento) {?>
-                            <div class="d-flex flex-row">
-                                <div class="d-flex flex-column w-50">
-                                    <select class="form-select tipo-pagamento-receita form-control rounded-0" name="tipo_pagamento_receita[<?= $i ?>]" style="height:2.75em; appearance: none; background-image: none; pointer-events:none;">
-                                            <option value="<?=$tipo_pagamento->id?>"><?=$tipo_pagamento->nome?></option>
-                                    </select>
-                                </div>
+                            
+                            <?php
+                            if(empty($tipo_pagamento_lista)) {
+                                echo '<div class="alert alert-danger" style="text-align:center;">Não existe nenhum tipo de pagamento cadastrado.</div>';
+                            } else {
+                                foreach($tipo_pagamento_lista as $i => $tipo_pagamento) {?>
+                                    <div class="d-flex flex-row">
+                                        <div class="d-flex flex-column w-50">
+                                            <select class="form-select tipo-pagamento-receita form-control rounded-0" name="tipo_pagamento_receita[<?= $i ?>]" style="height:2.75em; appearance: none; background-image: none; pointer-events:none;">
+                                                    <option value="<?=$tipo_pagamento->id?>"><?=$tipo_pagamento->nome?></option>
+                                            </select>
+                                        </div>
 
-                                <div class="d-flex flex-column w-50">
-                                    <input class="form-control valor valor-receita" type="text" inputmode="decimal" pattern="[0-9.,]*" onkeypress="return /[0-9,]/.test(event.key)" name="valor_receita[<?= $i ?>]" placeholder="Valor">
-                                </div>
-                            </div>
+                                        <div class="d-flex flex-column w-50">
+                                            <input class="form-control valor valor-receita" type="text" inputmode="decimal" pattern="[0-9.,]*" onkeypress="return /[0-9,]/.test(event.key)" name="valor_receita[<?= $i ?>]" placeholder="Valor">
+                                        </div>
+                                    </div>
                             <?php } ?>
+                            
                             <div class="d-flex flex-row justify-content-between align-items-center mt-3">
                                 <div>
                                     <div>
@@ -125,12 +132,17 @@ $descricao_array = array_map('trim', explode('/', $descricao_str));
                                     </div>
                                 </div>
                             </div>
+                            <?php } ?>
                         </div>
                     </div>
                     <hr>
+                    <?php } if(Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa, tipo: 'D')) { ?>
                     <div class="card-header d-flex flex-row justify-content-center gap-3 mb-3" style="border-bottom: 0;">
                         <h3>Despesas</h3>
                     </div>
+                    <?php if(empty($descricao_array)) {
+                        echo '<div class="alert alert-danger" style="text-align:center;">Não existe nenhuma descrição cadastrada.</div>';
+                    } else { ?>
                     <div class="d-flex flex-column">
                         <div class="d-flex flex-column gap-3">
                             <?php foreach($descricao_array as $i => $descricao) {?>
@@ -154,6 +166,7 @@ $descricao_array = array_map('trim', explode('/', $descricao_str));
                         </div>
                     </div>
                     <hr>
+                    <?php } }?>
                     <div class="d-flex flex-row justify-content-between align-items-center mt-3 w-100">
                         <button type="submit" class="btn btn-primary w-100">Processar</button>
                     </div>

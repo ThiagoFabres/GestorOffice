@@ -396,7 +396,7 @@
 
 
 
-                                        <?php if($get_acao != 'visualizar' && !isset($recebimento->valor_b) || $recebimento->valor_b == 0){ ?>
+                                        <?php if($get_acao != 'visualizar'){ ?>
                                             <div style="width: 100%; display: flex; flex-direction: column; align-items: flex-end;">
                                                 <div id="msg-gerar-parcelas" style="color: #d9534f; font-size: 0.85rem; margin-top: 0.5rem; text-align: right;"></div>
                                                 <button type="submit" id="btn-gerar-parcelas" class="btn btn-primary mt-2"
@@ -436,7 +436,7 @@
                                     <thead>
                                         <tr>
                                             <th>Parcela</th>
-                                            <th>Vencimento</th>
+                                            <th>Vencimento / Pagamento</th>
                                             <th>Valor</th>
                                             <th>OBS</th>
                                         </tr>
@@ -473,18 +473,24 @@
                                                 <td style="background-color: <?= $cor_linha ?>;"></td>
                                                 <td style="background-color: <?= $cor_linha ?>;"><input type="date" class="form-control" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
                                                         name="data_pag[<?= $parcela->parcela ?>]"
-                                                        value="<?= isset($parcela->data_pag) ? $parcela->data_pag->format('Y-m-d') : '' ?>"
+                                                        value="<?= isset($parcela->data_pag) ? $parcela->data_pag : '' ?>"
                                                         placeholder="Data de Pagamento"></td>
                                                 <td style="background-color: <?= $cor_linha ?>;"><input class="form-control" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
                                                         name="valor_pago[<?= $parcela->parcela ?>]"
-                                                        value="<?= isset($parcela->valor_pago) ? number_format($parcela->valor_pago, 2, ',', '.') : '' ?>"
+                                                        value="<?= isset($parcela->valor_pag) ? number_format($parcela->valor_pag, 2, ',', '.') : '' ?>"
                                                         placeholder="Valor Pago"></td>
                                                 <td style="background-color: <?= $cor_linha ?>;">
-                                                    <select name="tipo_pagamento[<?= $parcela->parcela ?>]">
+                                                    <select  name="tipo_pagamento[<?= $parcela->parcela ?>]"<?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?> <?php if($id_ban != null) echo 'readonly' ?> >
+                                                    <?php if($get_acao != 'visualizar') {?>    
                                                         <option>Tipo de Pagamento</option>
-                                                        <?php foreach(TipoPagamento::read(idempresa: $_SESSION['usuario']->id_empresa) as $tipo_pagamento) { ?>
-                                                            <option  value="<?= $tipo_pagamento->id ?>" <?php if(isset($parcela->id_pgto) && $parcela->id_pgto == $tipo_pagamento->id) { ?> selected <?php } ?>><?= $tipo_pagamento->nome ?></option>
-                                                        <?php } ?>
+                                                    <?php } ?>
+                                                    <?php if($get_acao == 'visualizar' && $parcela->id_pgto == null) { ?>
+                                                        <option selected></option>
+                                                    <?php } ?>
+                                                            <?php foreach(TipoPagamento::read(idempresa: $_SESSION['usuario']->id_empresa) as $tipo_pagamento) { ?>
+                                                                <option value="<?= $tipo_pagamento->id ?>" <?php if(isset($parcela->id_pgto) && $parcela->id_pgto == $tipo_pagamento->id) { ?> selected <?php } ?>><?= $tipo_pagamento->nome ?></option>
+                                                            <?php } ?>
+                                                        
                                                     </select>
                                                 </td>
                                             </tr>

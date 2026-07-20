@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <?php $erro = filter_input(INPUT_GET, 'erro'); if($erro == 'campos_obrigatorios') {
     echo "alert('Todos os campos são obrigatórios.');";
-    echo "window.location.href = 'parametro.php';";
+    echo "window.location.href = 'parametro_receber.php';";
 } ?>
 </script>
 
