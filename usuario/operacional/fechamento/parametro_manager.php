@@ -19,8 +19,16 @@ if(
     (filter_input(INPUT_POST, 'id_titulo') == null || filter_input(INPUT_POST, 'id_titulo') == 'Selecione') ||
     (filter_input(INPUT_POST, 'id_subtitulo') == null || filter_input(INPUT_POST, 'id_subtitulo') == 'Selecione')
 ) {
-    header('Location: parametro.php?erro=campos_obrigatorios');
+    if($target == 'C') {
+    header('Location: parametro_receber.php?erro=campos_obrigatorios');
     exit;
+} else if($target == 'D') {
+    header('Location: parametro_pagar.php?erro=campos_obrigatorios');
+    exit;
+} else {
+    header('Location: parametro_receber.php?erro=campos_obrigatorios');
+    exit;
+}
 }
 if(Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa, tipo:$target)) {
     $acao = 'atualizar';
