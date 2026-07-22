@@ -14,7 +14,11 @@ if (!isset($_SESSION['usuario'])) {
     header('Location: /');
     exit;
 }
-
+function checarNull($valor, $padrao) {
+    return ($valor === 'Selecione' || $valor === '' || $valor === null)
+        ? $padrao
+        : $valor;
+}
 $empresa_usuario_id = $_SESSION['usuario']->id_empresa;
 $empresa_usuario_obj = Empresa::read($empresa_usuario_id)[0];
 if ($_SESSION['usuario']->cargo != 3 || $_SESSION['usuario']->permissao_operacional != 1 || $empresa_usuario_obj->permissao_operacional != 1) {
@@ -99,6 +103,22 @@ if ($fecha01_rec) {
     $post_valor_lista = $_POST['valor_receita'] ?? [];
     $tipo_dinheiro = TipoPagamento::read(idempresa: $_SESSION['usuario']->id_empresa, nome: 'dinheiro')[0] ?? null;
     $ban01_dinheiro = Ban01::read(id_empresa: $_SESSION['usuario']->id_empresa, nome: 'dinheiro')[0] ?? null;
+
+
+
+$campos = [
+    'id_cadastro'  => 'cadastro_receitas',
+    'id_custos'    => 'centro_custos_receitas',
+    'id_titulo'    => 'titulo_receitas',
+    'id_subtitulo' => 'subtitulo_receitas',
+];
+
+foreach ($campos as $propriedade => $post) {
+    $fecha01_rec->$propriedade = checarNull(
+        filter_input(INPUT_POST, $post),
+        $fecha01_rec->$propriedade
+    );
+}
 
     $rec02_criado = Rec02::read(
         id_empresa: $_SESSION['usuario']->id_empresa,
@@ -307,6 +327,22 @@ if ($fecha01_rec) {
 if ($fecha01_pag) {
     $post_descricao_lista = $_POST['descricao_despesa'] ?? [];
     $post_valor_lista = $_POST['valor_despesa'] ?? [];
+
+
+    $campos = [
+        'id_cadastro'  => 'cadastro_despesas',
+        'id_custos'    => 'centro_custos_despesas',
+        'id_titulo'    => 'titulo_despesas',
+        'id_subtitulo' => 'subtitulo_despesas',
+        'tipo_pagamento' => 'tipo_pagamento_despesas'
+    ];
+
+    foreach ($campos as $propriedade => $post) {
+        $fecha01_pag->$propriedade = checarNull(
+            filter_input(INPUT_POST, $post),
+            $fecha01_pag->$propriedade
+        );
+    }
 
     foreach ($post_descricao_lista as $i => $descricao) {
         $descricao = trim((string) $descricao);

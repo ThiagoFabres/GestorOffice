@@ -32,6 +32,10 @@
             if (select.classList.contains('choices-initialized')) return;
             if (select.id === 'titulo-filtro' || 
                 select.id === 'subtitulo-filtro' || 
+                select.id === 'titulo-pagar' ||
+                select.id === 'subtitulo-pagar' ||
+                select.id === 'titulo-receber' ||
+                select.id === 'subtitulo-receber' ||
                 select.id === 'titulo' || 
                 select.id === 'subtitulo') {
                 return; // Pula este select
