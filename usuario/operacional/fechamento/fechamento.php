@@ -271,6 +271,7 @@ $todosSubtitulos = Con02::read(null, $_SESSION['usuario']->id_empresa);
                                     <div class="d-flex flex-column gap-3">
                                         <?php foreach ($descricao_array as $i => $descricao) { ?>
                                             <div class="d-flex flex-row">
+                                                <div style="margin-right: 1em;"><input type="checkbox" name="custom_despesa[<?= $i ?>]"></div>
                                                 <div class="d-flex flex-column w-50">
                                                     <input type="text" class="form-control rounded-0 descricao_padrao"
                                                         placeholder="Descrição" name="descricao_despesa[<?= $i ?>]"
