@@ -33,6 +33,7 @@ $target = filter_input(INPUT_POST, 'target');
 $fecha01_rec = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa, tipo: 'C')[0] ?? null;
 $fecha01_pag = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa, tipo: 'D')[0] ?? null;
 
+
 if ($post_turno === '' || $post_nome_caixa === '') {
     header('Location: fechamento.php?erro=parametros');
     exit;
@@ -103,7 +104,6 @@ if ($fecha01_rec) {
     $post_valor_lista = $_POST['valor_receita'] ?? [];
     $tipo_dinheiro = TipoPagamento::read(idempresa: $_SESSION['usuario']->id_empresa, nome: 'dinheiro')[0] ?? null;
     $ban01_dinheiro = Ban01::read(id_empresa: $_SESSION['usuario']->id_empresa, nome: 'dinheiro')[0] ?? null;
-
 
 
 $campos = [
@@ -325,9 +325,12 @@ foreach ($campos as $propriedade => $post) {
 }
 
 if ($fecha01_pag) {
+
     $post_descricao_lista = $_POST['descricao_despesa'] ?? [];
     $post_valor_lista = $_POST['valor_despesa'] ?? [];
-
+    $fecha01_custom_pag = clone $fecha01_pag;
+    $fecha01_default_pag = clone $fecha01_pag;
+    $fecha01_atual_pag = null;
 
     $campos = [
         'id_cadastro'  => 'cadastro_despesas',
@@ -338,11 +341,12 @@ if ($fecha01_pag) {
     ];
 
     foreach ($campos as $propriedade => $post) {
-        $fecha01_pag->$propriedade = checarNull(
+        $fecha01_custom_pag->$propriedade = checarNull(
             filter_input(INPUT_POST, $post),
-            $fecha01_pag->$propriedade
+            $fecha01_custom_pag->$propriedade
         );
     }
+
 
     foreach ($post_descricao_lista as $i => $descricao) {
         $descricao = trim((string) $descricao);
@@ -350,10 +354,13 @@ if ($fecha01_pag) {
             continue;
         }
 
+        $fecha01_atual_pag = (isset($_POST['custom_despesa'][$i]) && $_POST['custom_despesa'][$i] === 'on') ? $fecha01_custom_pag : $fecha01_default_pag;
         $valor = $post_valor_lista[$i] ?? '0';
         $valor = parseBrazilianDecimal($valor);
         $descricao_pag01 = 'Turno ' . $post_turno . ' - ' . $post_nome_caixa . ' - ' . $descricao;
         $descricao_busca = $descricao_pag01;
+
+        
 
         $pag02_existentes = Pag02::read(
             id_empresa: $_SESSION['usuario']->id_empresa,
@@ -382,16 +389,16 @@ if ($fecha01_pag) {
 
             $pag01 = new Pag01(
                 id_empresa: $_SESSION['usuario']->id_empresa,
-                id_cadastro: $fecha01_pag->id_cadastro,
-                id_con01: $fecha01_pag->id_titulo,
-                id_con02: $fecha01_pag->id_subtitulo,
+                id_cadastro: $fecha01_atual_pag->id_cadastro,
+                id_con01: $fecha01_atual_pag->id_titulo,
+                id_con02: $fecha01_atual_pag->id_subtitulo,
                 documento: $documento,
                 descricao: $descricao_pag01,
                 valor: $valor,
                 parcelas: 1,
                 data_lanc: $data,
                 id_usuario: $_SESSION['usuario']->id,
-                centro_custos: $fecha01_pag->id_custos
+                centro_custos: $fecha01_atual_pag->id_custos
             );
             Pag01::create($pag01);
             $pag01_id = Pag01::read(id_empresa: $_SESSION['usuario']->id_empresa, documento: $documento)[0]->id;
@@ -406,7 +413,7 @@ if ($fecha01_pag) {
                 $valor,
                 $data,
                 $descricao,
-                $fecha01_pag->tipo_pagamento
+                $fecha01_atual_pag->tipo_pagamento
             );
             Pag02::create($pag02);
             $hasCreated = true;
