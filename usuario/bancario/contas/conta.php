@@ -22,11 +22,6 @@ $erro = filter_input(INPUT_GET, 'erro');
 
 ?>
 <!DOCTYPE html>
-<script>
-    function abrirModalEdicao() {
-    console.log('a')
-}
-</script>
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.3/html2pdf.bundle.min.js"

@@ -11,6 +11,7 @@
     $consultar_req = filter_input(INPUT_POST, 'consultar');
     $processar_req = filter_input(INPUT_POST, 'processar');
     $seguranca_req = filter_input(INPUT_POST, 'seguranca');
+    $principal_req = filter_input(INPUT_POST, 'principal');
 
     $permissao_cartao_req = isset($_POST['permissao_cartao']) ? 1 : 0;
     $permissao_seguranca_req = isset($_POST['permissao_seguranca']) ? 1 : 0;
@@ -26,9 +27,22 @@
     $consultar = isset($consultar_req) ? 1 : 0;
     $processar = isset($processar_req) ? 1 : 0;
     $seguranca = isset($seguranca_req) ? 1 : 0;
+    $principal = isset($principal_req) ? 1 : 0;
+
+    
+    
+
+$usuario_principal = Usuario::read(idempresa:$_SESSION['usuario']->id_empresa, principal:true)[0] ?? false;
 
 if(isset($post_acao) && $post_acao == 'editar') {
-$senha_antiga = Usuario::read($id, null, $_SESSION['usuario']->id_empresa)[0]->senha;
+$usuario_antigo = Usuario::read($id, null, $_SESSION['usuario']->id_empresa)[0] ?? null;
+$senha_antiga = $usuario_antigo->senha;
+
+    if($principal == 1 && $usuario_antigo->principal === 0 && $usuario_principal) {
+        header('Location: index.php?erro=principal_extra');
+        exit;
+    }
+
 $usuario = new Usuario(
     $id,
     $_SESSION['usuario']->id_empresa,
@@ -44,14 +58,19 @@ $usuario = new Usuario(
     $permissao_financeiro_req,
     $permissao_bancario_req,
     $permissao_operacional_req,
-    $permissao_inicio_req
+    $permissao_inicio_req,
+    $principal
 );
 
     Usuario::update($usuario);
 }
 
-if (isset($post_acao) && $post_acao == 'inserir_cliente') {
+if (isset($post_acao) && $post_acao == 'adicionar') {
 
+    if($principal == 1 && $usuario_principal) {
+        header('Location: index.php?erro=principal_extra');
+        exit;
+    }
 
     function permissao() {
         // Exemplo: só permite se o usuário logado for admin
@@ -88,7 +107,8 @@ $usuario = new Usuario(
     $permissao_financeiro_req,
     $permissao_bancario_req,
     $permissao_operacional_req,
-    $permissao_inicio_req
+    $permissao_inicio_req,
+    $principal,
 );
 
 

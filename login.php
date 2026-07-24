@@ -152,7 +152,47 @@ if (isset($_POST['email']) && isset($_POST['senha'])) {
     }
 
     echo isset($success) ? $success : $error;
-}
+} else if(isset($_POST['acao']) && $_POST['acao'] == 'autenticacao_insta') {
+        
+        $post_target = filter_input(INPUT_POST, 'target');
+        $post_url = filter_input(INPUT_POST, 'url_atual');
+
+        $empresa_target = Empresa::read(id:$post_target)[0] ?? null;
+
+        $empresa_session = Empresa::read(id:$_SESSION['usuario']->id_empresa)[0] ?? null;
+        if($empresa_target === null || $empresa_session === null) {
+            header('Location: index.php?erro=empresa_nao_encontrada');
+            exit;
+        }
+
+        if($empresa_target->cnpj_principal != $empresa_session->cnpj_principal) {
+            header('Location: index.php?erro=sem_permissao_cnpj');
+            exit;
+        }
+
+        $usuario_principal_target = Usuario::read(idempresa:$empresa_target->id, principal:true, cargo:3)[0] ?? Usuario::read(idempresa:$empresa_target->id, cargo:3)[0] ?? null;
+        
+
+        if($usuario_principal_target === null) {
+            header('Location: index.php?erro=sem_usuario');
+            exit;
+        }
+        
+        $_SESSION['usuario'] = $usuario_principal_target;
+        
+        
+
+        if (!$post_url || strpos($post_url, '/') !== 0) {
+            $post_url = '/usuario/index.php';
+        }
+        
+
+        header("Location: $post_url");
+        exit;
+
+    }
+
+    
 header('Location: index.php');
 exit;
 ?>
