@@ -299,7 +299,7 @@ $link_vinculo_2 = "https://web.telegram.org/#/im?tgaddr=tg%3A%2F%2Fresolve%3Fdom
                                     <?php 
                                     $usuario_principal = Usuario::read(idempresa:$_SESSION['usuario']->id_empresa, principal:true)[0] ?? false;
                                     if($usuario_principal && $usuario->principal === 0) { 
-                                        echo '';
+                                        echo 'disabled';
                                      } else if ($usuario_principal && $usuario->principal === 1) {
                                         echo 'checked'; 
                                      }
@@ -423,7 +423,7 @@ $link_vinculo_2 = "https://web.telegram.org/#/im?tgaddr=tg%3A%2F%2Fresolve%3Fdom
                                     <?php 
                                     $usuario_principal = Usuario::read(idempresa:$_SESSION['usuario']->id_empresa, principal:true)[0] ?? false;
                                     if($usuario_principal) { 
-                                        echo '';
+                                        echo 'disabled';
                                      }
                                      ?>
                                     name="principal" class="form-check-input" value="1">                                </div>
