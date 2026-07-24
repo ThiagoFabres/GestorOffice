@@ -287,27 +287,29 @@ $link_vinculo_2 = "https://web.telegram.org/#/im?tgaddr=tg%3A%2F%2Fresolve%3Fdom
                 <input type="checkbox" <?php if($usuario->processar == 1) {?> checked <?php } ?> onchange="" name="processar" class="form-check-input" value="1">
             </div>
         </div>
-        <?php if($empresa_usuario_obj->permissao_seguranca) {?>
         <div class="d-flex flex-column">
+        <?php if($empresa_usuario_obj->permissao_seguranca) {?>
+        
             <div style="margin-left:1.25em; margin-top:0;" class="d-flex flex-column">
                 <label for="seguranca" style="margin-bottom:0;">Posto de Serviço (Aplicativo)</label>
                 <input type="checkbox" <?php if($usuario->cargo == Cargo::SEGURANCA) {?> checked <?php } ?> onchange="" name="seguranca" class="form-check-input" value="1">
             </div>
-            <div style="margin-left:1.25em; margin-top:0;" class="d-flex flex-column">
-                                    <label for="principal" style="margin-bottom: 0;">Usuário Principal</label>
-                                    <input type="checkbox" 
-                                    <?php 
-                                    $usuario_principal = Usuario::read(idempresa:$_SESSION['usuario']->id_empresa, principal:true)[0] ?? false;
-                                    if($usuario_principal && $usuario->principal === 0) { 
-                                        echo 'disabled';
-                                     } else if ($usuario_principal && $usuario->principal === 1) {
-                                        echo 'checked'; 
-                                     }
-                                     ?>
-                                    name="principal" class="form-check-input" value="1">
-                                </div>
-        </div>
+        
         <?php } ?>
+            <div style="margin-left:1.25em; margin-top:0;" class="d-flex flex-column">
+                <label for="principal" style="margin-bottom: 0;">Usuário Principal</label>
+                <input type="checkbox" 
+                <?php 
+                $usuario_principal = Usuario::read(idempresa:$_SESSION['usuario']->id_empresa, principal:true)[0] ?? false;
+                if($usuario_principal && $usuario->principal === 0) { 
+                    echo 'disabled';
+                } else if ($usuario_principal && $usuario->principal === 1) {
+                    echo 'checked'; 
+                }
+                ?>
+                name="principal" class="form-check-input" value="1">
+            </div>
+        </div>
         <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 1em;">
             <?php if($empresa_usuario_obj->permissao_cartao) {?>
                 <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
