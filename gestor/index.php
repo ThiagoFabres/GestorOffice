@@ -211,7 +211,7 @@ $link_vinculo_2 = "https://web.telegram.org/#/im?tgaddr=tg%3A%2F%2Fresolve%3Fdom
                         
                                         <tr onclick="window.location.href='index.php?acao=editar&id=<?=$cadastro->id?>'" data-id="<?= htmlspecialchars($cadastro->id, ENT_QUOTES, 'UTF-8') ?>" style="cursor: pointer;">
                                             <td>
-                                                <?=htmlspecialchars($cadastro->nome, ENT_QUOTES, 'UTF-8')?>
+                                                <?=htmlspecialchars($cadastro->nome, ENT_QUOTES, 'UTF-8');?> <?= $cadastro->principal == 1 ? '<strong>(PRINCIPAL)</strong>' : ''  ?>
                                                 <p>E-mail: <?=htmlspecialchars($cadastro->email, ENT_QUOTES, 'UTF-8')?></p>
                                             </td>
 
@@ -293,6 +293,19 @@ $link_vinculo_2 = "https://web.telegram.org/#/im?tgaddr=tg%3A%2F%2Fresolve%3Fdom
                 <label for="seguranca" style="margin-bottom:0;">Posto de Serviço (Aplicativo)</label>
                 <input type="checkbox" <?php if($usuario->cargo == Cargo::SEGURANCA) {?> checked <?php } ?> onchange="" name="seguranca" class="form-check-input" value="1">
             </div>
+            <div style="margin-left:1.25em; margin-top:0;" class="d-flex flex-column">
+                                    <label for="principal" style="margin-bottom: 0;">Usuário Principal</label>
+                                    <input type="checkbox" 
+                                    <?php 
+                                    $usuario_principal = Usuario::read(idempresa:$_SESSION['usuario']->id_empresa, principal:true)[0] ?? false;
+                                    if($usuario_principal && $usuario->principal === 0) { 
+                                        echo '';
+                                     } else if ($usuario_principal && $usuario->principal === 1) {
+                                        echo 'checked'; 
+                                     }
+                                     ?>
+                                    name="principal" class="form-check-input" value="1">
+                                </div>
         </div>
         <?php } ?>
         <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 1em;">
@@ -403,6 +416,17 @@ $link_vinculo_2 = "https://web.telegram.org/#/im?tgaddr=tg%3A%2F%2Fresolve%3Fdom
                                     <label for="seguranca" style="margin-bottom: 0;">Posto de Serviço (Aplicativo)</label>
                                     <input type="checkbox" name="seguranca" class="form-check-input" value="1">
                                 </div>
+
+                                <div  class="d-flex flex-column">
+                                    <label for="principal" style="margin-bottom: 0;">Usuário Principal</label>
+                                    <input type="checkbox" 
+                                    <?php 
+                                    $usuario_principal = Usuario::read(idempresa:$_SESSION['usuario']->id_empresa, principal:true)[0] ?? false;
+                                    if($usuario_principal) { 
+                                        echo '';
+                                     }
+                                     ?>
+                                    name="principal" class="form-check-input" value="1">                                </div>
                             </div>
                             <?php } ?>
                         </div>
@@ -457,7 +481,7 @@ $link_vinculo_2 = "https://web.telegram.org/#/im?tgaddr=tg%3A%2F%2Fresolve%3Fdom
                         <div style="margin-bottom: 1em;" class="footer">
                         <div class="d-flex flex-row justify-content-between">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >Fechar</button>
-                            <button name="acao" value="inserir_cliente" class="btn btn-success btn-primary"  href="consulta_cliente.php">Salvar</button>
+                            <button name="acao" value="adicionar" class="btn btn-success btn-primary"  href="consulta_cliente.php">Salvar</button>
                         </div>
                         
                             

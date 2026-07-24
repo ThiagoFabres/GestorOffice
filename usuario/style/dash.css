@@ -1,28 +1,7 @@
 html {
     font-size: 100%;
 }
-.card table {
-    width: 100%;
-    table-layout: fixed;
-    border-collapse: collapse;
-    white-space: nowrap;
-}
 
-.card td {
-    font-size: 75%;
-}
-
-.card th {
-    font-size: 70%;
-}
-
-
-.card-body {
-    overflow-x: auto;
-    max-width: 100%;
-    /* allow the card-body to shrink when inside a flex container so overflow works */
-    min-height: 0;
-}
 .dashboard-group p {
     font-size: 30px;
     white-space: nowrap;
@@ -33,61 +12,6 @@ html {
     flex-direction: row;
 }
 
-.card table {
-    overflow: auto;
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: auto;
-    max-height: 100%;
-}
-
-.card th,
-.card td {
-    overflow: hidden;
-    text-align: center;
-    padding: 0.4em;
-    white-space: nowrap;  
-    text-overflow: ellipsis;
-    max-width: 120px;    
-    font-size: 90%;
-    vertical-align: middle;
-}
-
-.tr-vazio 
-
-.card-body {
-    overflow: auto;
-    
-    overflow-x: auto;
-    max-width: 100%;
-}
-
-.card {
-    /* Keep the card visually compact and let its inner area scroll instead of growing the layout */
-    overflow: auto;
-    scrollbar-color: #53535365 #fff;
-    scrollbar-width: thin;
-    position: relative;
-    max-width: 100%;
-    height: 360px; /* reasonable limit so multiple cards don't create large vertical gaps */
-    display: flex;
-    flex-direction: column;
-}
-
-
-.card-header-dash{
-    display: flex;
-    flex-direction: row;
-    padding: 2%;
-    border-top-left-radius: 0.3em;
-    border-top-right-radius: 0.3em;
-    width: 100%;
-    background-color: #f8f8f8;
-    border-inline: 1px solid #d2d2d2;
-    border-top: 1px solid #d2d2d2;
-    position: sticky;  
-    justify-content: space-between;
-}
 
 .view-dash {
     width: 100%;
