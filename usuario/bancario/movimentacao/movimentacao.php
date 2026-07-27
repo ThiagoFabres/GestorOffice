@@ -47,6 +47,10 @@ $get_filtro_conciliado = filter_input(INPUT_GET, 'filtro_conciliado') == 'on' ? 
 if(!$get_filtro_conciliado) {
     $get_filtro_conciliado = filter_input(INPUT_POST, 'filtro_conciliado') == 'on' ? true : false;
 }
+if(!$get_filtro_conciliado) {
+    $get_filtro_conciliado = filter_input(INPUT_GET, 'filtro_conciliado') == '1' ? true : false;
+}
+
 $get_filtro_descricao = filter_input(INPUT_GET, 'descricao');
 if($get_filtro_descricao === '') {
     $get_filtro_descricao = null;
@@ -98,8 +102,8 @@ if ($get_filtro_data_final != '')
     $filtros[] = 'filtro_data_final=' . $get_filtro_data_final;
     $filtros_get['filtro_data_final']  = $get_filtro_data_final;
 if ($get_filtro_conciliado)
-    $filtros[] = 'filtro_conciliado=' . $get_filtro_conciliado ? 'on' : '';
-    $filtros_get['filtro_conciliado']  = $get_filtro_conciliado ? 'on' : '';
+    $filtros[] = 'filtro_conciliado=' . $get_filtro_conciliado;
+    $filtros_get['filtro_conciliado']  = $get_filtro_conciliado;
 if($get_filtro_tipo != '')
     $filtros[] = 'filtro_tipo=' . $get_filtro_tipo;
     $filtros_get['filtro_tipo']  = $get_filtro_tipo;
