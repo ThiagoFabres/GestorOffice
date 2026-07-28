@@ -470,7 +470,7 @@
                                                 
                                             </tr>
                                             <tr style="background-color: <?= $cor_linha ?>;">
-                                                <td style="background-color: <?= $cor_linha ?>;"></td>
+                                                <td style="background-color: <?= $cor_linha ?>;">Info. Pagamento</td>
                                                 <td style="background-color: <?= $cor_linha ?>;"><input type="date" class="form-control" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
                                                         name="data_pag[<?= $parcela->parcela ?>]"
                                                         value="<?= isset($parcela->data_pag) ? $parcela->data_pag : '' ?>"
