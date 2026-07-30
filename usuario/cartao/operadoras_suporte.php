@@ -445,6 +445,26 @@ $operadoras_suporte = [
             'suporte_data' => true,
             'suporte_numero' => 'formatado',
         ]
+    ],
+    'azulzinha' => [
+        'csv' => [
+            'colunas' => [
+                'data' => 'Data da Venda',
+                'status' => 'Status',
+                'valor_b' => 'Valor Bruto da parcela',
+                'valor_l' => 'Valor Liquido Da parcela / Transação',
+                'tipo' => 'Produto',
+                'bandeira' => 'Bandeira',
+                'parcela' => 'Parcelas'
+            ],
+            'separator' => ';',
+            'suporte_parcela' => true,
+            'suporte_status' => true,
+            'linha_inicial' => null,
+            'suporte_data' => 'formatada',
+            'suporte_numero' => 'formatado',
+            'encoding' => 'ISO-8859-1',
+        ],''
     ]
 ]
 ?>
