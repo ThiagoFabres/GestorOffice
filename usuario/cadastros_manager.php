@@ -832,6 +832,10 @@ if (isset($view) && $view == 'cadastro') {
             $valor_parcela = str_replace('.', '', $valor_par[$i]);
             $valor_parcela = str_replace(',', '.', $valor_parcela);
             $valor_parcela = floatval($valor_parcela);
+
+            $valor_pago = str_replace('.', '', $valor_pag[$i]);
+            $valor_pago = str_replace(',', '.', $valor_pago);
+            $valor_pago = floatval($valor_pago);
             $tipo_pagamento[$i] == 'Tipo de Pagamento' ? $tipo_pagamento[$i] = null : $tipo_pagamento[$i];
             $data_pag_lista[$i] = isset($data_pag_lista[$i]) ? $data_pag_lista[$i] : null;
             
@@ -840,13 +844,13 @@ if (isset($view) && $view == 'cadastro') {
             
             if ($pagar) {
                 $parcelas[$i] = new Pag02(
-                    null,                           // id (PK da parcela)
+                    null,                           
                     $_SESSION['usuario']->id_empresa,
                     $id_rec,                     // id_pag01 (FK)
                     $valor_parcela,
                     $i,
                     $vencimento_data,
-                    $valor_pag[$i] ?? 0,
+                    $valor_pago,
                     $data_pag_lista[$i] ?? 0,
                     $obs_parcela,
                     $tipo_pagamento[$i] ?? null
@@ -856,13 +860,13 @@ if (isset($view) && $view == 'cadastro') {
             } 
             else {
                 $parcelas[$i] = new Rec02(
-                    null,                           // id (PK da parcela)
+                    null,                           
                     $_SESSION['usuario']->id_empresa,
                     $id_rec,                     // id_rec01 (FK)
                     $valor_parcela,
                     $i,
                     $vencimento_data,
-                    $valor_pag[$i] ?? 0,
+                    $valor_pago,
                     $data_pag_lista[$i] ?? 0,
                     $obs_parcela,
                     $tipo_pagamento[$i] ?? null
