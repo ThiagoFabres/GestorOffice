@@ -833,7 +833,7 @@ if (isset($view) && $view == 'cadastro') {
             $valor_parcela = str_replace(',', '.', $valor_parcela);
             $valor_parcela = floatval($valor_parcela);
             $tipo_pagamento[$i] == 'Tipo de Pagamento' ? $tipo_pagamento[$i] = null : $tipo_pagamento[$i];
-            $data_pag_lista[$i] = isset($data_pag_lista[$i]) ? $data_pag_lista[$i]->format('Y-m-d') : null;
+            $data_pag_lista[$i] = isset($data_pag_lista[$i]) ? $data_pag_lista[$i] : null;
             
             $vencimento_data = $vencimento[$i];
             $obs_parcela = $obs02[$i];
