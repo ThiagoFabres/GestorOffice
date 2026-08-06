@@ -37,6 +37,8 @@ class Ope01{
     public static function read(
         $id = null,
         $id_empresa = null,
+        $filtro_titulo = null,
+        $filtro_subtitulo = null,
         ) {
         $pdo = (new Database())->connect();
         $sql = 'SELECT * FROM ope01';
@@ -47,6 +49,12 @@ class Ope01{
         }
         if ($id_empresa !== null) {
             $conditions[] = 'id_empresa = :id_empresa';
+        }
+        if ($filtro_titulo !== null) {
+            $conditions[] = 'id_con01 = :filtro_titulo';
+        }
+        if ($filtro_subtitulo !== null) {
+            $conditions[] = 'id_con02 = :filtro_subtitulo';
         }
         if (count($conditions) > 0) {
             $sql .= ' WHERE ' . implode(' AND ', $conditions);
@@ -59,6 +67,12 @@ class Ope01{
         }
         if ($id_empresa !== null) {
             $stmt->bindValue(':id_empresa', $id_empresa);
+        }
+        if ($filtro_titulo !== null) {
+            $stmt->bindValue(':filtro_titulo', $filtro_titulo);
+        }
+        if ($filtro_subtitulo !== null) {
+            $stmt->bindValue(':filtro_subtitulo', $filtro_subtitulo);
         }
         $stmt->execute();
         $results = [];
