@@ -326,7 +326,7 @@ atualizarTotalParcelas();
 
 <?php if (isset($erro) && $erro == 'usado') { ?>
     <script>
-        alert('Não é possível editar ou excluir este subtitulo, pois ele está vinculada a um recebimento, pagamento ou a um parâmetro de fechamento de caixa.');
+        alert('Não é possível editar ou excluir este subtitulo, pois ele está vinculada a um recebimento, pagamento, operadora ou a um parâmetro de fechamento de caixa.');
         window.location.href = 'contas.php?con01id=<?= $con01 ?>';
     </script>
 <?php } else if(isset($erro) && $erro == 'usado_sub') {?>
