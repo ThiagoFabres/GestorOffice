@@ -14,6 +14,7 @@ require_once __DIR__ . '/../db/entities/centrocustos.php';
 require_once __DIR__ . '/../db/entities/banco01.php';
 require_once __DIR__ . '/../db/entities/banco02.php';
 require_once __DIR__ . '/../db/entities/fecha01.php';
+require_once __DIR__ . '/../db/entities/ope01.php';
 
 session_start();
 
@@ -460,7 +461,7 @@ if (isset($view) && $view == 'cadastro') {
             
             
             if(!Con02::read(null, null, $id_conta) ) {
-                if(Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa, id_titulo: $id_conta)) {
+                if(Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa, id_titulo: $id_conta || Ope01::read(id_empresa: $_SESSION['usuario']->id_empresa, filtro_titulo: $id_conta))) {
                     header('Location: contas.php?con01id='.$id_conta.'&erro=usado');
                     exit;
                 }
@@ -498,7 +499,7 @@ if (isset($view) && $view == 'cadastro') {
             } else if (isset($acao) && $acao == 'excluir') {
                 $con02 = Con02::read($id_conta02, idempresa:$_SESSION['usuario']->id_empresa)[0];
                 $con01 = Con01::read($con02->id_con01, idempresa:$_SESSION['usuario']->id_empresa)[0];
-                if(Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa, id_subtitulo: $con02->id)) {
+                if(Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa, id_subtitulo: $con02->id)  || Ope01::read(id_empresa: $_SESSION['usuario']->id_empresa, filtro_subtitulo: $con02->id)) {
                     header('Location: contas.php?con01id='.$id_conta.'&erro=usado');
                     exit;
                 }
