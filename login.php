@@ -8,7 +8,7 @@ require_once  __DIR__ . '/db/entities/cargo.php';
 session_start();
 
 
-if(!isset($_POST['acao'])) {
+if(!isset($_POST['acao']) && !isset($_GET['acao'])) {
 
 if (isset($_POST['email']) && isset($_POST['senha'])) {
     $email = $_POST['email'];
@@ -152,12 +152,12 @@ if (isset($_POST['email']) && isset($_POST['senha'])) {
     }
 
     echo isset($success) ? $success : $error;
-} else if(isset($_POST['acao']) && $_POST['acao'] == 'autenticacao_insta') {
+} else if(isset($_GET['acao']) && $_GET['acao'] == 'autenticacao_insta') {
         
-        $post_target = filter_input(INPUT_POST, 'target');
-        $post_url = filter_input(INPUT_POST, 'url_atual');
+        $get_target = filter_input(INPUT_GET, 'target');
+        $get_url = filter_input(INPUT_GET, 'url_atual');
 
-        $empresa_target = Empresa::read(id:$post_target)[0] ?? null;
+        $empresa_target = Empresa::read(id:$get_target)[0] ?? null;
 
         $empresa_session = Empresa::read(id:$_SESSION['usuario']->id_empresa)[0] ?? null;
         if($empresa_target === null || $empresa_session === null) {
@@ -182,12 +182,12 @@ if (isset($_POST['email']) && isset($_POST['senha'])) {
         
         
 
-        if (!$post_url || strpos($post_url, '/') !== 0) {
-            $post_url = '/usuario/index.php';
+        if (!$get_url || strpos($get_url, '/') !== 0) {
+            $get_url = '/usuario/index.php';
         }
         
 
-        header("Location: $post_url");
+        header("Location: $get_url");
         exit;
 
     }

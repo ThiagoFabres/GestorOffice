@@ -103,6 +103,9 @@ foreach($grupos as $key => $group) {
     foreach($group as $idx => $parcela) {
 
         $valor_l = $parcela['valor_l'];
+        if($parcela['valor_l'] === null || $parcela['valor_l'] == 'Não Informado') {
+            $valor_l = 0;
+        }
         $valor_l = str_replace('.', '', $valor_l);
         $valor_l = str_replace(',', '.',$valor_l);
         $valor_l = floatval($valor_l);
@@ -155,7 +158,7 @@ $prazo = Pra01::read(id_empresa:$_SESSION['usuario']->id_empresa, id_bandeira: $
         $operadora->id_con02,
         $documento,
         $desc,
-        $valor_l_total == 0 ? $valor_liq_go : $valor_l_total,
+        $valor_l_total == 0 ? 0 : $valor_l_total,
         $max_parcela,
         $data,
         $_SESSION['usuario']->id,
@@ -190,7 +193,7 @@ $prazo = Pra01::read(id_empresa:$_SESSION['usuario']->id_empresa, id_bandeira: $
 
     for ($num = 1; $num <= $max_parcela; $num++) {
         if($valor_l_total == 0) {
-            $valor_l_total = $valor_liq_go;
+            $valor_l_total = 0;
         }
         if ($num == $max_parcela) {
             $valor_parcela = $valor_l_total - $parcel_value * ($max_parcela - 1);
@@ -219,7 +222,6 @@ $prazo = Pra01::read(id_empresa:$_SESSION['usuario']->id_empresa, id_bandeira: $
             null
         );
         $rec02_lista[] = $rec02_entry;
-        
         
         Rec02::create($rec02_entry);
         $last_rec02 = $rec02_entry;
