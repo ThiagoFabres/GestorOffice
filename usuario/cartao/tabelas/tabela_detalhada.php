@@ -97,9 +97,9 @@
                                         <td>R$ <?= number_format($rec01->valor_b, 2, ',', '.') ?></td>
                                         <td><?= number_format($taxa, 2, ',', '.')?></td>
                                         <?php if ($exibir_diferencas) { ?>
-                                        <td><?= number_format($taxa_aplicada, 2, ',', '.') ?></td>
+                                        <td><?= $rec01->valor == 0 ? 'Cálculo Impossivel' : number_format($taxa_aplicada, 2, ',', '.') ?></td>
                                         <?php } ?>
-                                        <td>R$ <?= number_format($rec01->valor, 2, ',', '.') ?></td>
+                                        <td><?=$rec01->valor == 0 ? 'Não Informado' : 'R$ ' . number_format($rec01->valor, 2, ',', '.') ?></td>
                                         <td>R$ <?= number_format($rec01->valor_liq_go, 2, ',', '.') ?></td>
                                         <td>R$ <?= number_format($rec01->valor - $rec01->valor_liq_go, 2, ',', '.')?></td>
                                     </tr>
@@ -127,7 +127,7 @@
                                     <td></td>
                                     <?php } ?>
                                     <td></td>
-                                    <td style="text-align: center; font-size: 100%;"><?= number_format($total_valor_l, '2', ',', '.')?></td>
+                                    <td style="text-align: center; font-size: 100%;"><?=$total_valor_l == 0 ? 'N/Info': number_format($total_valor_l, '2', ',', '.')?></td>
                                     <td style="text-align: center; font-size: 100%;"><?= number_format($total_valor_l_go, '2', ',', '.')?></td>
                                     <td style="text-align: center; font-size: 100%;"><?= number_format($total_valor_d, '2', ',', '.')?></td>
                                     

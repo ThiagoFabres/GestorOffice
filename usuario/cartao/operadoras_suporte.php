@@ -465,6 +465,50 @@ $operadoras_suporte = [
             'suporte_numero' => 'formatado',
             'encoding' => 'ISO-8859-1',
         ],''
+    ],
+    'inter' => [
+        'csv' => [
+            'colunas' => [
+                'data' => 'Data e Hora',
+                'status' => 'Status',
+                'valor_b' => 'Valor',
+                'valor_l' => 'Valor Liquido',
+                'tipo' => 'Tipo',
+                'bandeira' => 'Bandeira',
+                'parcela' => 'Parcela'
+            ],
+            'suporte_valor_liquido' => true,
+            'suporte_parcela' => true,
+            'separator' => ';',
+            'linha_inicial' => null,
+            'suporte_data' => 'hora',
+            'suporte_numero' => 'formatado',
+            'encoding' => 'UTF-8',
+        ]
+    ],
+    'interpix' => [
+        'csv' => [
+            'colunas' => [
+                'data' => 'dataehora',
+                'status' => 'Status',
+                'valor_b' => 'Valor Transação',
+                'valor_l' => 'Valor Liquido',
+                'tipo' => 'Tipo',
+                'bandeira' => 'Bandeira',
+                'parcela' => 'Parcela'
+            ],
+            'suporte_valor_liquido' => true,
+            'suporte_parcela' => true,
+            'suporte_bandeira' => 'pix',
+            'suporte_tipo' => 'pix',
+
+
+            'separator' => ';',
+            'linha_inicial' => null,
+            'suporte_data' => 'hora',
+            'suporte_numero' => 'formatado',
+            'encoding' => 'UTF-8',
+        ]
     ]
 ]
 ?>
