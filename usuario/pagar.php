@@ -844,7 +844,7 @@ if ($filtros != []) {
         </div>
 
         <?php if($get_pdf || $get_excel) {?>
-        <div class=""style="">
+        <div class=""style=" display:none;">
             <?php require_once __DIR__ . '/../componentes/tabelas/pdf/tabela_pdf_pag.php'; ?>
         </div>
         <?php } ?>

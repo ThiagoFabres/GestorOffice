@@ -30,7 +30,7 @@
                                 id_empresa: $_SESSION['usuario']->id_empresa,
                                 filtro_data_inicial: $get_filtro_data_inicial,
                                 filtro_data_final: $get_filtro_data_final,
-                                filtro_documento: $get_filtro_nome,
+                                filtro_documento: $get_filtro_nome ?? null,
                                 filtro_opcao: $get_filtro_opcao,
                                 filtro_por: $get_filtro_por,
                                 filtro_pagamento: $get_filtro_pagamento,
