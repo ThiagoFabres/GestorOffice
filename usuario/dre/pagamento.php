@@ -15,6 +15,7 @@ session_start();
 
 $empresa_usuario_id = $_SESSION['usuario']->id_empresa;
 $empresa_usuario_obj = Empresa::read($empresa_usuario_id)[0];
+$nome_empresa = $empresa_usuario_obj->nom_fant ?? '';
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSION['usuario']->permissao_financeiro != 1 || $empresa_usuario_obj->permissao_financeiro != 1) {
     header('Location: /');
     exit;
@@ -299,7 +300,7 @@ if (!empty($totais_tipo_pagamento)) {
     function prepararGeracao(target) {
         let data_inicial = document.getElementById('data_inicial').value;
         let data_final = document.getElementById('data_final').value;
-        let nomeEmpresa = document.querySelector('#nome-empresa h1').innerHTML;
+        let nomeEmpresa = <?= json_encode($nome_empresa) ?>;
         let dataTexto = '';
         
         if (data_inicial !== '' && data_final !== '') {
