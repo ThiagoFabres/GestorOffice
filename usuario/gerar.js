@@ -158,9 +158,9 @@ for (let i = 0; i < body.length; i += linhasPorPagina) {
 
             if (data.section === 'body') {
 
-                const grupo = Math.floor(data.row.index / 2);
+                // const grupo = Math.floor(data.row.index / 2);
 
-                if (grupo % 2 === 1) {
+                if (data.row.index % 2 === 1) {
                     data.cell.styles.fillColor = [245,245,245];
                 }
 
