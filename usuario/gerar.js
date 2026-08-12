@@ -71,21 +71,39 @@ async function gerarpdf(nome, nomeEmpresa = '') {
     const head = [];
     const body = [];
 
+    function limitarDescricao(texto, maximo = 80) {
+        if (texto === null || texto === undefined) return '';
+
+        const valor = String(texto)
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        if (!valor) return '';
+        if (valor.length <= maximo) return valor;
+
+        const corte = valor.slice(0, maximo).trimEnd();
+        return `${valor.slice(0, maximo).trimEnd()}…`;
+    }
+
     tabela.querySelectorAll("thead tr").forEach(tr => {
 
         const row = [];
 
         tr.querySelectorAll("th").forEach((th, index, arr) => {
 
-            if (index < arr.length) { // remove últimas 4 colunas
+            if (index < arr.length) {
                 row.push(th.innerText.trim());
             }
 
         });
 
-        head.push(row);
+        if (row.some(valor => String(valor).trim() !== '')) {
+            head.push(row);
+        }
 
     });
+
+    const descricaoIndex = head[0]?.findIndex((titulo) => /descri[çc]ao/i.test(String(titulo || '')) ) ?? -1;
 
     tabela.querySelectorAll("tbody tr").forEach(tr => {
 
@@ -94,12 +112,20 @@ async function gerarpdf(nome, nomeEmpresa = '') {
         tr.querySelectorAll("td").forEach((td, index, arr) => {
 
             if (index < arr.length) {
-                row.push(td.textContent.replace('R$', '').trim());
+                let valor = td.textContent.replace('R$', '').replace(/\s+/g, ' ').trim();
+
+                if (descricaoIndex !== -1 && index === descricaoIndex) {
+                    valor = limitarDescricao(valor, 34);
+                }
+
+                row.push(valor);
             }
 
         });
 
-        body.push(row);
+        if (row.some(valor => String(valor).trim() !== '')) {
+            body.push(row);
+        }
 
     });
 
@@ -107,7 +133,9 @@ async function gerarpdf(nome, nomeEmpresa = '') {
        TABELA
     ------------------------- */
 
-    const linhasPorPagina = 22;
+    const alturaDisponivel = doc.internal.pageSize.getHeight() - y - 18;
+    const alturaLinha = 6.2;
+    const linhasPorPagina = Math.max(10, Math.floor(alturaDisponivel / alturaLinha));
 
 for (let i = 0; i < body.length; i += linhasPorPagina) {
 
@@ -122,23 +150,41 @@ for (let i = 0; i < body.length; i += linhasPorPagina) {
         body: chunk,
         startY: y + 2,
         theme: 'striped',
+        rowPageBreak: 'avoid',
+        tableWidth: '100%',
 
         styles: {
-            fontSize: 8,
-            cellPadding: 2,
-            halign: "center",
-            valign: "middle"
+            fontSize: 8.5,
+            cellPadding: 1,
+            overflow: 'linebreak',
+            halign: 'center',
+            valign: 'middle',
+            lineWidth: 0.1,
+            lineColor: [230, 230, 230],
+            cellHeight: 5
         },
 
         headStyles: {
             fillColor: [206,206,206],
             textColor: 0,
-            fontStyle: "bold"
+            fontStyle: 'bold',
+            cellPadding: 1
         },
 
         alternateRowStyles: {
             fillColor: [255,255,255]
         },
+
+        columnStyles: descricaoIndex !== -1 ? {
+            [descricaoIndex]: {
+                overflow: 'linebreak',
+                cellWidth: 'auto',
+                halign: 'left',
+                minCellHeight: 5,
+                noWrap: true,
+                fontSize: 8.5
+            }
+        } : {},
 
         margin: {
             left: 8,
@@ -157,13 +203,18 @@ for (let i = 0; i < body.length; i += linhasPorPagina) {
             }
 
             if (data.section === 'body') {
-
-                // const grupo = Math.floor(data.row.index / 2);
+                if (data.column.index === descricaoIndex) {
+                    const limite = 80;
+                    data.cell.text = limitarDescricao(data.cell.text, limite);
+                    data.cell.styles.overflow = 'linebreak';
+                    data.cell.styles.halign = 'left';
+                    data.cell.styles.noWrap = true;
+                    data.cell.styles.fontSize = 8.5;
+                }
 
                 if (data.row.index % 2 === 1) {
                     data.cell.styles.fillColor = [245,245,245];
                 }
-
             }
 
         }
