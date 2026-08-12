@@ -110,14 +110,6 @@
                                             <td><?= $rec01->documento; ?> </td>
                                             <td><?= $data_lanc; ?> </td>
                                             <td colspan="9" class="descricao-full" style="text-align:start;" id="td-descricao"><?= nl2br(htmlspecialchars($cadastro->razao_soc . ' - ' . $rec01->descricao, ENT_QUOTES, 'UTF-8')) ?></td>
-                                            
-                                        </tr>
-                                        <tr class="avoid-page-break">
-                                            
-                                            <td></td>
-                                            <td></td>
-                                            <td></td>
-                                            <td></td>
                                             <td>R$ <?= $valor_total ?></td>
                                             <td><?= $rec01->parcelas ?></td>
                                             <td><?= $rec02->parcela ?></td>

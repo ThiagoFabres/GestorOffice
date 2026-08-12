@@ -65,13 +65,6 @@
                                             <td><?= $data_lanc; ?> </td>
                                             <td><?= $cadastro->razao_soc; ?> </td>
                                             <td colspan="9" class="descricao-full" style="text-align:start;" id="td-descricao"><?= nl2br($rec01->descricao); ?></td>
-                                        </tr>
-
-                                        <tr class="avoid-page-break">
-                                            <td></td>
-                                            <td></td>
-                                            <td></td>
-                                            <td></td>
                                             <td><?=$centro_custos->nome?></td>
                                             <td><?= $rec01->parcelas ?></td>
                                             <td>R$ <?= number_format($rec01->valor_b, 2, ',', '.') ?></td>
