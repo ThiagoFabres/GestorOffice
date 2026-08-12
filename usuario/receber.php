@@ -842,8 +842,8 @@ if ($filtros != []) {
         </div>
 
         <div class="relatorios-botoes w-100" style="float: left;">
-            <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf || $get_excel) { echo "gerarpdf('receber', <?= json_encode($nome_empresa) ?>)";} else {?>window.location.href='<?=$caminho?><?= empty($filtros) ? '?' : '&' ?>pdf=1' <?php } ?>">Gerar PDF</button>
-            <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="<?php if($get_pdf || $get_excel) { echo "gerarexcel('receber', <?= json_encode($nome_empresa) ?>)";} else {?>window.location.href='<?=$caminho?><?= empty($filtros) ? '?' : '&' ?>excel=1' <?php } ?>">Gerar Excel</button>
+            <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf || $get_excel) { ?>gerarpdf('receber', <?= json_encode($nome_empresa) ?>);<?php } else { ?>window.location.href='<?= $caminho ?><?= empty($filtros) ? '?' : '&' ?>pdf=1';<?php } ?>">Gerar PDF</button>
+            <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="<?php if($get_pdf || $get_excel) { ?>gerarexcel('receber', <?= json_encode($nome_empresa) ?>);<?php } else { ?>window.location.href='<?= $caminho ?><?= empty($filtros) ? '?' : '&' ?>excel=1';<?php } ?>">Gerar Excel</button>
         </div>
 
         <?php if($get_pdf || $get_excel) {?>
@@ -996,14 +996,14 @@ if ($filtros != []) {
 document.addEventListener('DOMContentLoaded', function () {
 
     <?php if($get_pdf) { ?>
-        gerarpdf('receber', <?php echo json_encode($nome_empresa); ?>);
+        gerarpdf('receber', <?= json_encode($nome_empresa) ?>);
         setTimeout(() => {
             window.location.href = '<?=$caminho?>';
         }, 500);
     <?php } ?>
 
     <?php if($get_excel) { ?>
-        gerarexcel('receber', <?php echo json_encode($nome_empresa); ?>);
+        gerarexcel('receber', <?= json_encode($nome_empresa) ?>);
         setTimeout(() => {
             window.location.href = '<?=$caminho?>';
         }, 500);
