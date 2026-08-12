@@ -242,6 +242,7 @@ function parse_excel($numero_arquivo = null) {
         $cells[5] = str_replace(',', '.', $cells[5]);
     }
     
+    
        
         if(isset($operadora_sup['suporte_pix']) && $operadora_sup['suporte_pix'] == true) {
             
@@ -702,10 +703,14 @@ function parse_csv(string $caminhoCsv): array {
         $valor_b_str = $get_valor_coluna($operadora_sup['colunas']['valor_b']);
         // Limpar "R$" e espaços antes de converter
         $valor_b_str = trim(str_replace('R$', '', $valor_b_str ?? ''));
+
+        if($operadora_sup['suporte_numero'] == 'formatado(.)') {
+            $valorBruto = $valor_b_str;
+        } else {
         $valorBruto = !empty($valor_b_str) 
             ? floatval(str_replace(['.', ','], ['', '.'], $valor_b_str))
             : 0;
-
+        }
         $valor_l_str = isset($valor_liquido) ? $valor_liquido : $get_valor_coluna($operadora_sup['colunas']['valor_l']);
         
         

@@ -506,7 +506,7 @@ $operadoras_suporte = [
             'separator' => ';',
             'linha_inicial' => null,
             'suporte_data' => 'hora',
-            'suporte_numero' => 'formatado',
+            'suporte_numero' => 'formatado(.)',
             'encoding' => 'UTF-8',
         ]
     ]
