@@ -4,6 +4,7 @@ require_once __DIR__ . '/../../db/entities/empresas.php';
 session_start();
 $empresa_usuario_id = $_SESSION['usuario']->id_empresa;
 $empresa_usuario_obj = Empresa::read($empresa_usuario_id)[0];
+$nome_empresa = $empresa_usuario_obj->nom_fant ?? '';
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSION['usuario']->permissao_cartao != 1 || $empresa_usuario_obj->permissao_cartao != 1) {
     header('Location: /');
     exit;
@@ -531,8 +532,8 @@ if ($filtros != []) {
                 </div>
             </div>
         <div class="relatorios-botoes" style="float:left; width:100%">
-            <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf || $get_excel) { echo "gerarpdf('receber', document.querySelector('#nome-empresa h1').innerHTML)";} else {?>window.location.href='<?=$caminho?><?= empty($filtros) ? '?' : '&' ?>pdf=1' <?php } ?>">Gerar PDF</button>
-            <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="<?php if($get_pdf || $get_excel) { echo "gerarexcel('receber', document.querySelector('#nome-empresa h1').innerHTML)";} else {?>window.location.href='<?=$caminho?><?= empty($filtros) ? '?' : '&' ?>excel=1' <?php } ?>">Gerar Excel</button>
+            <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf || $get_excel) { echo "gerarpdf('receber', " . json_encode($nome_empresa) . ")";} else {?>window.location.href='<?=$caminho?><?= empty($filtros) ? '?' : '&' ?>pdf=1' <?php } ?>">Gerar PDF</button>
+            <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="<?php if($get_pdf || $get_excel) { echo "gerarexcel('receber', " . json_encode($nome_empresa) . ")";} else {?>window.location.href='<?=$caminho?><?= empty($filtros) ? '?' : '&' ?>excel=1' <?php } ?>">Gerar Excel</button>
         </div>
     </div>
     <div style="display: none;">
@@ -609,12 +610,12 @@ if ($filtros != []) {
     document.addEventListener('DOMContentLoaded', function () {
 
     <?php if($get_pdf) { ?>
-        gerarpdf('receber', document.querySelector('#nome-empresa h1').innerHTML);
+        gerarpdf('receber', <?= json_encode($nome_empresa) ?>);
             window.location.href = '<?=$caminho?>';
     <?php } ?>
 
     <?php if($get_excel) { ?>
-        gerarexcel('receber', document.querySelector('#nome-empresa h1').innerHTML);
+        gerarexcel('receber', <?= json_encode($nome_empresa) ?>);
             window.location.href = '<?=$caminho?>';
     <?php } ?>
 

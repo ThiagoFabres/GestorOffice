@@ -11,6 +11,7 @@ require_once __DIR__ . '/../../db/entities/centrocustos.php';
 session_start();
 $empresa_usuario_id = $_SESSION['usuario']->id_empresa;
 $empresa_usuario_obj = Empresa::read($empresa_usuario_id)[0];
+$nome_empresa = $empresa_usuario_obj->nom_fant ?? '';
 if (
     !isset($_SESSION['usuario']) ||
     $_SESSION['usuario']->cargo != 3 ||
@@ -536,8 +537,8 @@ function exportarExcel() {
     function prepararGeracao(target) {
     let titulo = null
     let subtitulo = null
-    let nomeEmpresa = document.querySelector('#nome-empresa h1').innerHTML
-
+    let nomeEmpresa = <?= json_encode($nome_empresa) ?>;
+                                        
     if(subtitulo == 'Selecione' || subtitulo == null || titulo == null) {
         subtitulo = '';
     }

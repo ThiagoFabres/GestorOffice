@@ -15,6 +15,7 @@ session_start();
 // Função para alinhar valores monetários
 $empresa_usuario_id = $_SESSION['usuario']->id_empresa;
 $empresa_usuario_obj = Empresa::read($empresa_usuario_id)[0];
+$nome_empresa = $empresa_usuario_obj->nom_fant ?? '';
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSION['usuario']->permissao_bancario != 1 || $empresa_usuario_obj->permissao_bancario != 1) {
     header('Location: /');
     exit;
@@ -387,7 +388,7 @@ if(!isset($get_titulo)) { ?>
     function prepararGeracao(target) {
     let titulo = document.getElementById('input-titulo').options[document.getElementById('input-titulo').selectedIndex].text;
     let subtitulo = document.getElementById('input-subtitulo').options[document.getElementById('input-subtitulo').selectedIndex].text;
-    let nomeEmpresa = document.querySelector('#nome-empresa h1').innerHTML
+    let nomeEmpresa = <?= json_encode($nome_empresa) ?>;
 
     if(subtitulo == 'Selecione' || subtitulo == null || titulo == null) {
         subtitulo = '';

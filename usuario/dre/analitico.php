@@ -17,6 +17,7 @@ require_once __DIR__ . '/../../db/buscar_documento_pag.php';
 session_start();
 $empresa_usuario_id = $_SESSION['usuario']->id_empresa;
 $empresa_usuario_obj = Empresa::read($empresa_usuario_id)[0];
+$nome_empresa = $empresa_usuario_obj->nom_fant ?? '';
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSION['usuario']->permissao_financeiro != 1 || $empresa_usuario_obj->permissao_financeiro != 1) {
     header('Location: /');
     exit;
@@ -29,6 +30,8 @@ function format_valor_alinhado($valor) {
     $formatado = str_pad($formatado, 12, ' ', STR_PAD_LEFT);
     return $formatado;
 }
+
+
 
 $get_data_final = filter_input(INPUT_GET, 'data_final', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
 $get_data_inicial = filter_input(INPUT_GET, 'data_inicial', FILTER_SANITIZE_SPECIAL_CHARS) ?: null;
@@ -169,7 +172,7 @@ if($todas_empresas) {
                                         </div>
                                                 
                                         </div>
-                                                 <div class="inputs-dre-btn">
+                                                <div class="inputs-dre-btn">
                                                    <div class="botoes-acao">
                                                     <button type="submit" class="btn-sm btn" style="background-color: #5856d6; color: white;">Filtrar</button>
                                                     <a href="analitico.php" class="btn btn-secondary btn-sm">Limpar</a>
@@ -515,7 +518,7 @@ $titulos = array_values($titulos_array);
     function prepararGeracao(target) {
     let titulo = document.getElementById('input-titulo').options[document.getElementById('input-titulo').selectedIndex].text;
     let subtitulo = document.getElementById('input-subtitulo').options[document.getElementById('input-subtitulo').selectedIndex].text;
-    let nomeEmpresa = document.querySelector('#nome-empresa h1').innerHTML
+    let nomeEmpresa = <?= json_encode($nome_empresa) ?>;
 
     if(subtitulo == 'Selecione' || subtitulo == null || titulo == null) {
         subtitulo = '';

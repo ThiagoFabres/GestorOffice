@@ -4,6 +4,7 @@ require_once __DIR__ . '/../../../db/entities/empresas.php';
 session_start();
 $empresa_usuario_id = $_SESSION['usuario']->id_empresa;
 $empresa_usuario_obj = Empresa::read($empresa_usuario_id)[0];
+$nome_empresa = $empresa_usuario_obj->nom_fant ?? '';
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSION['usuario']->permissao_bancario != 1 || $empresa_usuario_obj->permissao_bancario != 1) {
     header('Location: /');
     exit;
@@ -649,8 +650,8 @@ if ($get_filtro_conta != null) {
             <?php } ?>
         </div>
         <div class="relatorios-botoes" style="float:left; width:100%">
-            <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf) {echo "gerarpdf('movimentacao', document.querySelector('#nome-empresa h1').innerHTML)";} else {?>window.location.href='<?php if(empty($filtros)) {echo $caminho . '?'?>pdf=1<?php } else { echo $caminho . 'pdf=1' ?> <?php }} ?>'">Gerar PDF</button>           
-            <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="<?php if($get_excel) {echo "gerarexcel('movimentacao', document.querySelector('#nome-empresa h1').innerHTML)";} else {?>window.location.href='<?php if(empty($filtros)) {echo $caminho . '?'?>excel=1<?php } else { echo $caminho . 'excel=1' ?> <?php }} ?>'">Gerar Excel</button>           
+            <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf) {echo "gerarpdf('movimentacao', " . json_encode($nome_empresa) . ")";} else {?>window.location.href='<?php if(empty($filtros)) {echo $caminho . '?'?>pdf=1<?php } else { echo $caminho . 'pdf=1' ?> <?php }} ?>'">Gerar PDF</button>           
+            <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="<?php if($get_excel) {echo "gerarexcel('movimentacao', " . json_encode($nome_empresa) . ")";} else {?>window.location.href='<?php if(empty($filtros)) {echo $caminho . '?'?>excel=1<?php } else { echo $caminho . 'excel=1' ?> <?php }} ?>'">Gerar Excel</button>           
         </div>
 
 
@@ -1151,11 +1152,11 @@ if ($get_filtro_conta != null) {
 <?php } ?>
 <script>
 <?php if($get_pdf) {?>
-        gerarpdf('movimentacao', document.querySelector('#nome-empresa h1').innerHTML);
+        gerarpdf('movimentacao', <?= json_encode($nome_empresa) ?>);
         window.location.href='<?=$caminho?>'
     <?php } ?>  
     <?php if($get_excel) {?>
-        gerarexcel('movimentacao', document.querySelector('#nome-empresa h1').innerHTML);
+        gerarexcel('movimentacao', <?= json_encode($nome_empresa) ?>);
         window.location.href='<?=$caminho?>'
     <?php } ?>  
 
