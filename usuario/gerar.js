@@ -1,6 +1,7 @@
-async function gerarpdf(nome, nomeEmpresa = '') {
+async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
 
     const tabela = document.querySelector('#tabela-pdf');
+    const modoReducao = estilo === 'reduzido';
 
     if (!tabela) {
         alert("Tabela não encontrada!");
@@ -157,7 +158,7 @@ for (let i = 0; i < body.length; i += linhasPorPagina) {
             fontSize: 8.5,
             cellPadding: 1,
             overflow: 'linebreak',
-            halign: 'center',
+            halign: modoReducao ? 'left' : 'center',
             valign: 'middle',
             lineWidth: 0.1,
             lineColor: [230, 230, 230],
@@ -204,7 +205,7 @@ for (let i = 0; i < body.length; i += linhasPorPagina) {
 
             if (data.section === 'body') {
                 if (data.column.index === descricaoIndex) {
-                    const limite = 80;
+                    const limite = modoReducao ? 100 : 80;
                     data.cell.text = limitarDescricao(data.cell.text, limite);
                     data.cell.styles.overflow = 'linebreak';
                     data.cell.styles.halign = 'left';
