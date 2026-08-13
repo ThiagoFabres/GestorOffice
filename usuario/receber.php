@@ -843,8 +843,8 @@ if ($filtros != []) {
 
         <div class="relatorios-botoes w-100" style="float: left;">
             <div class="d-flex flex-column">
-                <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf || $get_excel) { ?>gerarpdf('receber', <?= json_encode($nome_empresa) ?>);<?php } else { ?>window.location.href='<?= $caminho ?><?= empty($filtros) ? '?' : '&' ?>pdf=1';<?php } ?>">Gerar PDF</button>
-                <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf || $get_excel) { ?>gerarpdf('receber', <?= json_encode($nome_empresa) ?>);<?php } else { ?>window.location.href='<?= $caminho ?><?= empty($filtros) ? '?' : '&' ?>pdf=reduzido';<?php } ?>">Gerar PDF Reduzido</button>
+                <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf || $get_excel) { ?>gerarpdf('receber', <?= json_encode($nome_empresa) ?>, 'completo');<?php } else { ?>window.location.href='<?= $caminho ?><?= empty($filtros) ? '?' : '&' ?>pdf=1';<?php } ?>">Gerar PDF Completo</button>
+                <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf || $get_excel) { ?>gerarpdf('receber', <?= json_encode($nome_empresa) ?>, 'reduzido');<?php } else { ?>window.location.href='<?= $caminho ?><?= empty($filtros) ? '?' : '&' ?>pdf=reduzido';<?php } ?>">Gerar PDF Reduzido</button>
             </div>
             <div class="d-flex flex-column">
                 <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="<?php if($get_pdf || $get_excel) { ?>gerarexcel('receber', <?= json_encode($nome_empresa) ?>);<?php } else { ?>window.location.href='<?= $caminho ?><?= empty($filtros) ? '?' : '&' ?>excel=1';<?php } ?>">Gerar Excel</button>
@@ -1005,7 +1005,7 @@ if ($filtros != []) {
 document.addEventListener('DOMContentLoaded', function () {
 
     <?php if($get_pdf) { ?>
-        gerarpdf('receber', <?= json_encode($nome_empresa) ?>);
+        gerarpdf('receber', <?= json_encode($nome_empresa) ?>, '<?= $get_pdf === 'reduzido' ? 'reduzido' : 'completo' ?>');
         setTimeout(() => {
             window.location.href = '<?=$caminho?>';
         }, 500);
