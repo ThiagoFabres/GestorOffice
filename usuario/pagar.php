@@ -66,8 +66,8 @@ $get_filtro_cadastro = filter_input(INPUT_GET, 'filtro_cadastro') ?? null;
 $get_filtro_titulo = filter_input(INPUT_GET, 'filtro_titulo') ?? null;
 $get_filtro_subtitulo = filter_input(INPUT_GET, 'filtro_subtitulo') ?? null;
 $get_filtro_custo = filter_input(INPUT_GET, 'filtro_custo') ?? null;
-$get_pdf = filter_input(INPUT_GET, 'pdf') == 1 ? true : false;
-$get_excel = filter_input(INPUT_GET, 'excel') == 1 ? true : false;
+$get_pdf = filter_input(INPUT_GET, 'pdf') ?? false;
+$get_excel = filter_input(INPUT_GET, 'excel') ?? false;
 
 if(!isset($ordenar_por) || $ordenar_por === null){
     if($get_filtro_por != null) {
@@ -575,8 +575,10 @@ if ($filtros != []) {
                                     }
                                     ;
 
-                                    $data_pag = new DateTime($pag02->data_pag);
-                                    $data_pag = $data_pag->format('d-m-Y');
+                                    $data_pag = null;
+                                    if (!empty($pag02->data_pag) && $pag02->valor_pag > 0) {
+                                        $data_pag = (new DateTime($pag02->data_pag))->format('d-m-Y');
+                                    }
 
                                     $data_venc = new DateTime($pag02->vencimento);
                                     $data_venc = $data_venc->format('d-m-Y');
@@ -839,13 +841,22 @@ if ($filtros != []) {
         </div>
 
         <div class="relatorios-botoes w-100" style="float: left;">
-            <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf || $get_excel) { ?>gerarpdf('pagar', <?= json_encode($nome_empresa) ?>);<?php } else { ?>window.location.href='<?= $caminho ?><?= empty($filtros) ? '?' : '&' ?>pdf=1';<?php } ?>">Gerar PDF</button>
-            <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="<?php if($get_pdf || $get_excel) { ?>gerarexcel('pagar', <?= json_encode($nome_empresa) ?>);<?php } else { ?>window.location.href='<?= $caminho ?><?= empty($filtros) ? '?' : '&' ?>excel=1';<?php } ?>">Gerar Excel</button>
+            <div class="d-flex flex-column">
+                <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf || $get_excel) { ?>gerarpdf('pagar', <?= json_encode($nome_empresa) ?>);<?php } else { ?>window.location.href='<?= $caminho ?><?= empty($filtros) ? '?' : '&' ?>pdf=1';<?php } ?>">Gerar PDF</button>
+                <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf || $get_excel) { ?>gerarpdf('pagar', <?= json_encode($nome_empresa) ?>);<?php } else { ?>window.location.href='<?= $caminho ?><?= empty($filtros) ? '?' : '&' ?>pdf=reduzido';<?php } ?>">Gerar PDF Reduzido</button>
+            </div>
+            <div class="d-flex flex-column">
+                <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="<?php if($get_pdf || $get_excel) { ?>gerarexcel('pagar', <?= json_encode($nome_empresa) ?>);<?php } else { ?>window.location.href='<?= $caminho ?><?= empty($filtros) ? '?' : '&' ?>excel=1';<?php } ?>">Gerar Excel</button>
+            </div>
         </div>
 
-        <?php if($get_pdf || $get_excel) {?>
+        <?php if(($get_pdf || $get_excel) && $get_pdf != 'reduzido') {?>
         <div class=""style=" display:none;">
             <?php require_once __DIR__ . '/../componentes/tabelas/pdf/tabela_pdf_pag.php'; ?>
+        </div>
+        <?php } else if($get_pdf == 'reduzido') { ?>
+        <div class=""style="display:none;">
+            <?php require_once __DIR__ . '/../componentes/tabelas/pdf/reduzido/tabela_pdf_pag.php'; ?>
         </div>
         <?php } ?>
 
@@ -991,7 +1002,7 @@ if ($filtros != []) {
 <script>
     document.addEventListener('DOMContentLoaded', function () {
 
-    <?php if($get_pdf) { ?>
+    <?php if($get_pdf || $get_pdf == 'reduzido') { ?>
         gerarpdf('pagar', <?= json_encode($nome_empresa) ?>);
         setTimeout(() => {
             window.location.href = '<?=$caminho?>';

@@ -63,8 +63,8 @@ $get_filtro_cadastro = filter_input(INPUT_GET, 'filtro_cadastro') ?? null;
 $get_filtro_titulo = filter_input(INPUT_GET, 'filtro_titulo') ?? null;
 $get_filtro_subtitulo = filter_input(INPUT_GET, 'filtro_subtitulo') ?? null;
 $get_filtro_custo = filter_input(INPUT_GET, 'filtro_custo') ?? null;
-$get_pdf = filter_input(INPUT_GET, 'pdf') == 1 ? true : false;
-$get_excel = filter_input(INPUT_GET, 'excel') == 1 ? true : false;
+$get_pdf = filter_input(INPUT_GET, 'pdf');
+$get_excel = filter_input(INPUT_GET, 'excel');
 
 if(!isset($ordenar_por) || $ordenar_por === null){
     if($get_filtro_por != null) {
@@ -842,14 +842,23 @@ if ($filtros != []) {
         </div>
 
         <div class="relatorios-botoes w-100" style="float: left;">
-            <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf || $get_excel) { ?>gerarpdf('receber', <?= json_encode($nome_empresa) ?>);<?php } else { ?>window.location.href='<?= $caminho ?><?= empty($filtros) ? '?' : '&' ?>pdf=1';<?php } ?>">Gerar PDF</button>
-            <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="<?php if($get_pdf || $get_excel) { ?>gerarexcel('receber', <?= json_encode($nome_empresa) ?>);<?php } else { ?>window.location.href='<?= $caminho ?><?= empty($filtros) ? '?' : '&' ?>excel=1';<?php } ?>">Gerar Excel</button>
+            <div class="d-flex flex-column">
+                <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf || $get_excel) { ?>gerarpdf('receber', <?= json_encode($nome_empresa) ?>);<?php } else { ?>window.location.href='<?= $caminho ?><?= empty($filtros) ? '?' : '&' ?>pdf=1';<?php } ?>">Gerar PDF</button>
+                <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf || $get_excel) { ?>gerarpdf('receber', <?= json_encode($nome_empresa) ?>);<?php } else { ?>window.location.href='<?= $caminho ?><?= empty($filtros) ? '?' : '&' ?>pdf=reduzido';<?php } ?>">Gerar PDF Reduzido</button>
+            </div>
+            <div class="d-flex flex-column">
+                <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="<?php if($get_pdf || $get_excel) { ?>gerarexcel('receber', <?= json_encode($nome_empresa) ?>);<?php } else { ?>window.location.href='<?= $caminho ?><?= empty($filtros) ? '?' : '&' ?>excel=1';<?php } ?>">Gerar Excel</button>
+            </div>
         </div>
 
-        <?php if($get_pdf || $get_excel) {?>
-        <div class=""style="display:none;">
-            <?php require_once __DIR__ . '/../componentes/tabelas/pdf/tabela_pdf_rec.php'; ?>
-        </div>
+        <?php if(($get_pdf || $get_excel) && $get_pdf != 'reduzido') {?>
+            <div class=""style="display:none;">
+                <?php require_once __DIR__ . '/../componentes/tabelas/pdf/tabela_pdf_rec.php'; ?>
+            </div>
+        <?php } else if($get_pdf === 'reduzido') { ?>
+            <div class=""style="display:none;">
+                <?php require_once __DIR__ . '/../componentes/tabelas/pdf/reduzido/tabela_pdf_rec.php'; ?>
+            </div>
         <?php } ?>
 
                 <!-- Context menu for table rows -->
