@@ -377,7 +377,7 @@ class Rec02 {
 }
 
 
-        if($filtro_por == 'pagamento') $conditions[] = 'r2.data_pag IS NOT NULL';
+        if($filtro_por == 'pagamento') $conditions[] = 'r2.data_pag IS NOT NULL AND r2.valor_pag > 0';
         if ($id_rec01 != null) $conditions[] = 'r2.id_rec01 = :id_rec01';
         if ($data != null) $conditions[] = 'MONTH(r2.vencimento) = MONTH(:data) AND YEAR(r2.vencimento) = YEAR(:data)';
         if ($parcela != null) $conditions[] = 'r2.parcela = :parcela';
@@ -426,11 +426,11 @@ switch($ordenar_por) {
         break;
 
     case 'data_pagamento':
-        $query .= ' ORDER BY r2.data_pag '. $direcao . ', r1.data_lanc desc';
+        $query .= ' ORDER BY r2.data_pag IS NULL ASC, r2.valor_pag = 0 ASC, r2.data_pag '. $direcao . ', r1.data_lanc desc';
         break;
 
     case 'valor_pagamento':
-        $query .= ' ORDER BY r2.valor_pag '. $direcao . ', r1.data_lanc desc';
+        $query .= ' ORDER BY r2.valor_pag = 0 ASC, r2.data_pag IS NULL ASC, r2.valor_pag '. $direcao . ', r1.data_lanc desc';
         break;
     case 'tipo_pagamento':
 
