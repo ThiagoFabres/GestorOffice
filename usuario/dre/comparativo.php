@@ -186,7 +186,8 @@ $titulos = [];
     integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-
+<script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/5.0.2/jspdf.plugin.autotable.min.js" integrity="sha512-JizZOUNesiGhMcp9fsA/9W31FOat6QysBM8hSj6ir8iIANIUJ2mhko7Lo1+j0ErftmJ8SebMZLm9iielKjeIEQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js "></script>
 <link href=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css " rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
@@ -399,6 +400,7 @@ $titulos = [];
                                                                 $diferenca = $receita_financeiro - $receita_bancario;
                                                                 $total_subtitulo += $receita_financeiro;
                                                                 $total_bancario += $receita_bancario;
+                                                                $total_diferenca_titulo += $diferenca;
 
                                                                 $saldo_financeiro += $receita_financeiro;
                                                                 $saldo_bancario += $receita_bancario;
@@ -545,9 +547,9 @@ function prepararGeracao(target) {
         dataTexto = 'Data Final: ' + data_final;
     }
     if(target == 'pdf') {
-        gerarpdf('sintetico', dataTexto, null, nomeEmpresa);
+        gerarpdf('comparativo', dataTexto, null, nomeEmpresa);
     } else if(target == 'excel') {
-        gerarexcel('sintetico', dataTexto, null, nomeEmpresa);
+        gerarexcel('comparativo', dataTexto, null, nomeEmpresa);
     }
 }
 

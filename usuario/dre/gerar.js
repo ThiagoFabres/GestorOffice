@@ -105,7 +105,6 @@ function _rewriteTextNodesInElement(root) {
 async function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=null) {
     console.log('Rendering')
     if (typeof jsPDF === 'undefined' && !(window.jspdf && window.jspdf.jsPDF)) {
-        alert('Biblioteca jsPDF não encontrada. Adicione jsPDF e jspdf-autotable ao seu HTML.');
         return;
     }
 
@@ -116,7 +115,6 @@ async function gerarpdf(nome='analitico', data=null, titulo=null, nomeEmpresa=nu
     const usableWidth = pageWidth - margin * 2;
 
     if (typeof pdf.autoTable !== 'function') {
-        alert('jspdf-autotable não detectado. Adicione o plugin jspdf-autotable ao seu HTML.');
         return;
     }
     let accordionItems = [];
@@ -355,6 +353,53 @@ if(nome == 'sintetico') {
 
         didParseCell: function (data) {
             if (data.column.index === 1) {
+                data.cell.styles.halign = 'right';
+            }
+            const totalLinhas = data.table.body.length;
+
+            if (data.row.index === totalLinhas - 1) {
+                data.cell.styles.fontStyle = 'bold';
+                data.cell.styles.fillColor = [220, 220, 220]; 
+                data.cell.styles.textColor = [30, 30, 30]
+                data.cell.styles.halign = 'right';
+            }
+
+            if (data.section === 'body') {
+                if (data.row.index % 2 === 0) {
+                    data.cell.styles.fillColor = [245, 245, 245]; 
+                }
+            }
+        },
+
+        theme: 'grid'
+    });
+} else if(nome == 'comparativo') {
+    console.log('comparativo')
+    pdf.autoTable({
+        startY: cursorY,
+        head: headers.length ? [headers] : [],
+        body: rows,
+        margin: { left: margin, right: margin },
+
+        styles: { fontSize: 9, cellPadding: 3 },
+
+        headStyles: { 
+            fillColor: [190, 190, 190], 
+            textColor: 20,
+            halign: 'center'
+        },
+        
+
+        columnStyles: {
+            0: { cellWidth: usableWidth * 0.25, halign: 'left' },
+            1: { cellWidth: usableWidth * 0.25, halign: 'right' },
+            2: { cellWidth: usableWidth * 0.25, halign: 'right' },
+            3: { cellWidth: usableWidth * 0.25, halign: 'right' }
+        },
+
+
+        didParseCell: function (data) {
+            if (data.column.index >= 1) {
                 data.cell.styles.halign = 'right';
             }
             const totalLinhas = data.table.body.length;
