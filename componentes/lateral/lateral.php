@@ -130,7 +130,7 @@ $logo_blob = null;
                 </div>
                 <?php } ?>
                 <?php if($empresa_usuario_obj->permissao_operacional && $usuario_obj->permissao_operacional){ ?>  
-            <div class="menu-item accordion <?php if( isset($lateral_operacional) && $lateral_operacional ){ 
+                <div class="menu-item accordion <?php if( isset($lateral_operacional) && $lateral_operacional ){ 
                     ?>menu-item-atual<?php } ?>">
                     <a class="nav-link text-white" data-bs-toggle="collapse" href="#operacionalMenu" role="button"
                         aria-expanded="false" aria-controls="operacionalMenu">
@@ -148,7 +148,7 @@ $logo_blob = null;
                         </ul>
                     </div>
                 </div>
-            <?php } ?>
+                <?php } ?>
 
                 <?php if($empresa_usuario_obj->permissao_financeiro && $usuario_obj->permissao_financeiro){ ?>
                 <div class="menu-item accordion <?php if( isset($lateral_recorrente) && $lateral_recorrente ){ 
@@ -183,6 +183,13 @@ $logo_blob = null;
             </div>
             
             
+            <?php } ?>
+            <?php if($empresa_usuario_obj->permissao_operacional && $usuario_obj->permissao_operacional){ ?>
+            <div class="menu-item <?php if($lateral_target == 'seguranca') {?>menu-item-atual<?php } ?>">
+                <a href="/usuario/seguranca/seguranca.php">
+                    <div style=" align-items:center;"><i class="bi bi-shield"></i></div> Segurança
+                </a>
+            </div>
             <?php } ?>
 
             
