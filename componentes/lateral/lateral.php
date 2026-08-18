@@ -184,7 +184,7 @@ $logo_blob = null;
             
             
             <?php } ?>
-            <?php if($empresa_usuario_obj->permissao_operacional && $usuario_obj->permissao_operacional){ ?>
+            <?php if($empresa_usuario_obj->permissao_seguranca && $usuario_obj->permissao_seguranca){ ?>
             <div class="menu-item <?php if($lateral_target == 'seguranca') {?>menu-item-atual<?php } ?>">
                 <a href="/usuario/seguranca/seguranca.php">
                     <div style=" align-items:center;"><i class="bi bi-shield"></i></div> Segurança
