@@ -13,12 +13,14 @@ session_start();
 
 
     
-if(!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3) {
+$empresa_usuario_obj = Empresa::read($_SESSION['usuario']->id_empresa)[0];
+$nomeEmpresa = $empresa_usuario_obj->nom_fant;
+
+if(!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSION['usuario']->permissao_seguranca != 1 || $empresa_usuario_obj->permissao_seguranca != 1) {
     header('Location: /');
     exit();
 }
-$empresa_usuario_obj = Empresa::read($_SESSION['usuario']->id_empresa)[0];
-$nomeEmpresa = $empresa_usuario_obj->nom_fant;
+
 $erro = filter_input(INPUT_GET, 'erro');
 $lateral_seguranca = true;
 $lateral_target = 'seguranca';
