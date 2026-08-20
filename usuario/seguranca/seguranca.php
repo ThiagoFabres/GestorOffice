@@ -26,8 +26,9 @@ $lateral_seguranca = true;
 $lateral_target = 'seguranca';
 $filtro_hora_inicio = filter_input(INPUT_GET, 'filtro_hora_inicio');
 $filtro_hora_final = filter_input(INPUT_GET, 'filtro_hora_final');
+$filtro_seguranca = filter_input(INPUT_GET, 'filtro_seguranca');
 
-$segurancas = Usuario::read(idempresa: $empresa_usuario_obj->id, cargo:4);
+$segurancas = Usuario::read(id:$filtro_seguranca, idempresa: $empresa_usuario_obj->id, cargo:4);
 
 $turnos = [];
 $alarmes = [];
@@ -66,10 +67,13 @@ foreach($segurancas as $i => $seguranca) {
     <link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
     <link rel="stylesheet" href="/../components/header/header.css"> 
     <link rel="stylesheet" href="/../components/lateral/lateral.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+    <link rel="stylesheet" href="../choices/choices.css"></link>
+
     <title>Gestor Office Control</title>
 </head>
 
-<body id="body" >
+<body id="body" data-nome-empresa="<?= htmlspecialchars($nomeEmpresa) ?>">
 
 
         <?php require_once __DIR__ . '/../../componentes/lateral/lateral.php'; ?>
@@ -85,19 +89,40 @@ foreach($segurancas as $i => $seguranca) {
                     <form method="get" action="seguranca.php">
                         <div class="d-flex flex-row justify-content-between align-items-center">
                             <div class="d-flex flex-row">
-                                <div class="d-flex flex-column">
+                                <div class="d-flex flex-column" style="height: 1em;">
                                     <label for="filtro_hora_inicio" class="form-label">Data Inicial</label>
                                     <input type="date" name="filtro_hora_inicio" class="form-control" value="<?= $filtro_hora_inicio ?? '' ?>">
                                 </div>
-                                <div class="d-flex flex-column">
+                                <div class="d-flex flex-column" style="height: 1em;">
                                     <label for="filtro_hora_final" class="form-label">Data Final</label>
                                     <input type="date" name="filtro_hora_final" class="form-control" value="<?= $filtro_hora_final ?? '' ?>">
                                 </div>
+                                <div class="d-flex flex-column">
+                                    <label for="filtro_hora_inicio" class="form-label">Segurança</label>
+                                    <select name="filtro_seguranca" class="form-control">
+                                        <option value="">Selecione</option>
+                                        <?php foreach (Usuario::read(idempresa: $empresa_usuario_obj->id, cargo:4) as $seguranca): ?>
+                                            <option value="<?= $seguranca->id ?>" <?= ($filtro_seguranca == $seguranca->id) ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars($seguranca->nome ?? 'Segurança #' . $seguranca->id) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="d-flex flex-row justify-content-end ms-3 gap-1">
-                                <button type="submit" class="btn btn-sm btn-primary mt-2">Filtrar</button>
-                                <button type="button" onclick="window.location.href='seguranca.php'" class="btn btn-sm btn-secondary mt-2">Limpar</button>
-                            </div>
+                            <div class="inputs-dre-btn">
+                                                   <div class="botoes-acao">
+                                                    <button type="submit" class="btn-sm btn" style="background-color: #5856d6; color: white;">Filtrar</button>
+                                                    <a href="analitico.php" class="btn btn-secondary btn-sm">Limpar</a>
+                                                     </div>   
+                                                    <div id="inputs-btn-analitico">
+                                                                <div class="botoes-gerar">
+                                                                    <button type="button" class="btn-sm btn" id="botao-gerar-pdf"
+                                                                        onclick="prepararGeracaoSeguranca('pdf')">Gerar PDF</button>
+                                                                    <button type="button" class="btn-sm btn" id="botao-gerar-excel"
+                                                                        onclick="prepararGeracaoSeguranca('excel')">Gerar Excel</button>
+                                                                </div>
+                                                    </div>
+                                                </div>
                             
                         </div>
                     </form>
@@ -120,7 +145,7 @@ foreach($segurancas as $i => $seguranca) {
                                 $qtdTurnos      = count($turnosSeg);
                             ?>
  
-                            <div class="accordion-item">
+                            <div class="accordion-item" data-seguranca-nome="<?= htmlspecialchars($seguranca->nome ?? 'Segurança #' . $seguranca->id) ?>">
                                 <h2 class="accordion-header" id="heading-<?= $segId ?>">
                                     <button class="accordion-button collapsed" type="button"
                                     style="color:black;"
@@ -163,7 +188,12 @@ foreach($segurancas as $i => $seguranca) {
                                                             : null;
                                                     ?>
  
-                                                    <div class="accordion-item">
+                                                    <div class="accordion-item"
+                                                         data-turno-inicio="<?= htmlspecialchars($inicioFmt) ?>"
+                                                         data-turno-fim="<?= htmlspecialchars($fimFmt !== 'Em Andamento' ? $fimFmt : 'Em andamento') ?>"
+                                                         data-alarmes="<?= count($listaAlarmes) ?>"
+                                                         data-panicos="<?= count($listaPanicos) ?>"
+                                                         data-rondas="<?= count($listaRondas) ?>">
                                                         <h2 class="accordion-header" id="heading-<?= $turnoId ?>">
                                                             <button class="accordion-button collapsed" type="button"
                                                             style="color:black;"
@@ -433,7 +463,12 @@ foreach($segurancas as $i => $seguranca) {
     </div>
 </body>
 
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script src="/choices/choices.js"></script>
+<script src="gerar.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

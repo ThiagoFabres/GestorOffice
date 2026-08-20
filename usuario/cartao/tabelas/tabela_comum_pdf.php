@@ -13,12 +13,12 @@
                                 <th>CENTRO</th>
                                 <th>DOCUMENTO</th>
                                 <th>DATA.LANC</th>
+                                <th>DATA.VENC</th>
                                 <th>DESCRIÇÃO</th>
                                 <th>VALOR</th>
                                 <th>PARC.GERAL</th>
                                 <th>PARC.ATUAL</th>
                                 <th>VALOR.PARC</th>
-                                <th>DATA.VENC</th>
                                 <th>DATA.PAG</th>
                                 <th>VALOR.PAG</th>
                                 <th>TIPO.PAG</th>
@@ -76,13 +76,13 @@
                                     ;
 
                                     $data_pag = new DateTime($rec02->data_pag);
-                                    $data_pag = $data_pag->format('d-m-Y');
+                                    $data_pag = $data_pag->format('d/m/Y');
 
                                     $data_venc = new DateTime($rec02->vencimento);
-                                    $data_venc = $data_venc->format('d-m-Y');
+                                    $data_venc = $data_venc->format('d/m/Y');
 
                                     $data_lanc = new DateTime($rec01->data_lanc);
-                                    $data_lanc = $data_lanc->format('d-m-Y');
+                                    $data_lanc = $data_lanc->format('d/m/Y');
 
                                     $cadastro = Cadastro::read($rec01->id_cadastro)[0];
                                     $valor_total = number_format($rec01->valor, 2, ',', '.');
@@ -110,12 +110,12 @@
                                             <td><?php echo substr($centro_custos, 0, 9)?></td>
                                             <td><?= $rec01->documento; ?> </td>
                                             <td><?= $data_lanc; ?> </td>
+                                            <td><?= $data_venc ?></td>
                                             <td colspan="9" class="descricao-full" style="text-align:start;" id="td-descricao"><?= nl2br(htmlspecialchars($cadastro->razao_soc . ' - ' . $rec01->descricao, ENT_QUOTES, 'UTF-8')) ?></td>
                                             <td>R$ <?= $valor_total ?></td>
                                             <td><?= $rec01->parcelas ?></td>
                                             <td><?= $rec02->parcela ?></td>
                                             <td>R$ <?= $valor_parcela ?></td>
-                                            <td><?= $data_venc ?></td>
                                             <td><?php if ($rec02->valor_pag == 0) {
                                                 echo 'Não foi pago';
                                             } else {

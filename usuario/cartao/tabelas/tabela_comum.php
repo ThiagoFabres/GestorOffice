@@ -23,6 +23,11 @@
                                         } ?>
                                 </th>
                                 <th><a
+                                        href="<?= $caminho ?>?ordenar=data_vencimento&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'data_vencimento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Vencimento</a><?php if ($ordenar_por == 'data_vencimento') {
+                                                         echo $seta;
+                                                     } ?>
+                                </th>
+                                <th><a
                                         href="<?= $caminho ?>?ordenar=nome&direcao=<?php echo ($ordenar_por === 'nome' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Nome</a><?php if ($ordenar_por == 'nome') {
                                                          echo $seta;
                                                      } ?>
@@ -40,11 +45,6 @@
                                         da Parcela</a><?php if ($ordenar_por == 'valor_parcela') {
                                             echo $seta;
                                         } ?></th>
-                                <th><a
-                                        href="<?= $caminho ?>?ordenar=data_vencimento&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'data_vencimento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Vencimento</a><?php if ($ordenar_por == 'data_vencimento') {
-                                                         echo $seta;
-                                                     } ?>
-                                </th>
                                 <th><a
                                         href="<?= $caminho ?>?ordenar=data_pagamento&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'data_pagamento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Data
                                         de Pagamento</a><?php if ($ordenar_por == 'data_pagamento') {
@@ -124,13 +124,13 @@
                                     ;
 
                                     $data_pag = new DateTime($rec02->data_pag);
-                                    $data_pag = $data_pag->format('d-m-Y');
+                                    $data_pag = $data_pag->format('d/m/Y');
 
                                     $data_venc = new DateTime($rec02->vencimento);
-                                    $data_venc = $data_venc->format('d-m-Y');
+                                    $data_venc = $data_venc->format('d/m/Y');
 
                                     $data_lanc = new DateTime($rec01->data_lanc);
-                                    $data_lanc = $data_lanc->format('d-m-Y');
+                                    $data_lanc = $data_lanc->format('d/m/Y');
 
                                     $cadastro = Cadastro::read($rec01->id_cadastro)[0];
                                     $valor_total = number_format($rec01->valor, 2, ',', '.');
@@ -166,13 +166,13 @@
                                         <td><?=$centro_custos?></td>
                                         <td><?= $rec01->documento; ?> </td>
                                         <td><?= $data_lanc; ?> </td>
+                                        <td><?= $data_venc ?></td>
                                         <td><?= $cadastro->razao_soc; ?> </td>
                                         <td><?= $rec01->descricao; ?></td>
                                         <td>R$ <?= $valor_total ?></td>
                                         <td><?= $rec01->parcelas ?></td>
                                         <td><?= $rec02->parcela ?></td>
                                         <td>R$ <?= $valor_parcela ?></td>
-                                        <td><?= $data_venc ?></td>
                                         <td><?php if ($rec02->valor_pag == 0) {
                                             echo 'Não foi pago';
                                         } else {
