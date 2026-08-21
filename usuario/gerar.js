@@ -1,10 +1,6 @@
-
 function formatarData(data){
-
     const [ano, mes, dia] = data.split('-');
-
     return `${dia}/${mes}/${ano}`;
-
 }
 
 async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
@@ -28,7 +24,7 @@ async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
     const pageWidth = doc.internal.pageSize.getWidth();
 
     /* -------------------------
-       CABEÇALHO
+       CABEÇALHO FIXO (PRIMEIRA PÁGINA)
     ------------------------- */
 
     const titulo =
@@ -154,94 +150,83 @@ async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
         };
     }
 
-    const alturaDisponivel = doc.internal.pageSize.getHeight() - y - 18;
-    const alturaLinha = 6.2;
-    const linhasPorPagina = Math.max(10, Math.floor(alturaDisponivel / alturaLinha));
+    // Renderiza a tabela inteira e deixa o AutoTable gerenciar a paginação
+    doc.autoTable({
+        head: head,
+        body: body,
+        startY: y + 2,
+        theme: 'striped',
+        rowPageBreak: 'avoid',
+        tableWidth: '100%',
+        showHead: 'everyPage', // Repete o cabeçalho da tabela em todas as páginas automaticamente
 
-    for (let i = 0; i < body.length; i += linhasPorPagina) {
+        styles: {
+            fontSize: modoReducao ? 12 : 8.5,
+            cellPadding: 1,
+            overflow: 'linebreak',
+            halign: modoReducao ? 'left' : 'center',
+            valign: 'middle',
+            lineWidth: 0.1,
+            lineColor: [230, 230, 230],
+            cellHeight: 5
+        },
 
-        const chunk = body.slice(i, i + linhasPorPagina);
+        headStyles: {
+            fillColor: [206, 206, 206],
+            textColor: 0,
+            fontStyle: 'bold',
+            cellPadding: 1
+        },
 
-        if (i !== 0) {
-            doc.addPage();
-        }
+        alternateRowStyles: {
+            fillColor: [255, 255, 255]
+        },
 
-        doc.autoTable({
-            head: head,
-            body: chunk,
-            startY: y + 2,
-            theme: 'striped',
-            rowPageBreak: 'avoid',
-            tableWidth: '100%',
+        columnStyles: columnStylesConfig,
 
-            styles: {
-                fontSize: modoReducao ? 12 : 8.5,
-                cellPadding: 1,
-                overflow: 'linebreak',
-                halign: modoReducao ? 'left' : 'center',
-                valign: 'middle',
-                lineWidth: 0.1,
-                lineColor: [230, 230, 230],
-                cellHeight: 5
-            },
+        margin: {
+            top: 15,
+            bottom: 15,
+            left: 8,
+            right: 8
+        },
 
-            headStyles: {
-                fillColor: [206, 206, 206],
-                textColor: 0,
-                fontStyle: 'bold',
-                cellPadding: 1
-            },
+        didParseCell: function (data) {
 
-            alternateRowStyles: {
-                fillColor: [255, 255, 255]
-            },
-
-            columnStyles: columnStylesConfig,
-
-            margin: {
-                left: 8,
-                right: 8
-            },
-
-            didParseCell: function (data) {
-
-                if (data.cell.raw?.classList?.contains('td-acoes')) {
-                    data.cell.text = '';
-                }
-
-                if (data.row.raw?.id === 'tr-totais') {
-                    data.cell.styles.fontStyle = 'bold';
-                    data.cell.styles.fillColor = [220, 220, 220];
-                }
-
-                // Garante o alinhamento à direita para a coluna de valor (cabeçalho e corpo)
-                if (valorIndex !== -1 && data.column.index === valorIndex) {
-                    data.cell.styles.halign = 'right';
-                }
-
-                if (data.section === 'body') {
-                    if (data.column.index === descricaoIndex) {
-                        const limite = modoReducao ? 100 : 80;
-                        data.cell.text = limitarDescricao(data.cell.text, limite);
-                        data.cell.styles.overflow = 'linebreak';
-                        data.cell.styles.halign = 'left';
-                        data.cell.styles.noWrap = true;
-                        data.cell.styles.fontSize = 8.5;
-                    }
-
-                    if (data.row.index % 2 === 1) {
-                        data.cell.styles.fillColor = [245, 245, 245];
-                    }
-                }
-
+            if (data.cell.raw?.classList?.contains('td-acoes')) {
+                data.cell.text = '';
             }
 
-        });
+            if (data.row.raw?.id === 'tr-totais') {
+                data.cell.styles.fontStyle = 'bold';
+                data.cell.styles.fillColor = [220, 220, 220];
+            }
 
-    }
+            // Garante o alinhamento à direita para a coluna de valor
+            if (valorIndex !== -1 && data.column.index === valorIndex) {
+                data.cell.styles.halign = 'right';
+            }
+
+            if (data.section === 'body') {
+                if (data.column.index === descricaoIndex) {
+                    const limite = modoReducao ? 100 : 80;
+                    data.cell.text = limitarDescricao(data.cell.text, limite);
+                    data.cell.styles.overflow = 'linebreak';
+                    data.cell.styles.halign = 'left';
+                    data.cell.styles.noWrap = true;
+                    data.cell.styles.fontSize = modoReducao ? 12 : 8.5; // Corrigido erro de maiúscula
+                }
+
+                if (data.row.index % 2 === 1) {
+                    data.cell.styles.fillColor = [245, 245, 245];
+                }
+            }
+
+        }
+    });
 
     /* -------------------------
-       PAGINAÇÃO
+       PAGINAÇÃO (NUMERAÇÃO)
     ------------------------- */
 
     const totalPages = doc.internal.getNumberOfPages();
