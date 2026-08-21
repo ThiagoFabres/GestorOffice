@@ -487,7 +487,11 @@ if ($filtros != []) {
                                                          echo $seta;
                                                      } ?>
                                 </th>
-                                <th><a>Descrição</a></th>
+                                <th><a
+                                        href="<?= $caminho ?>?ordenar=descricao&direcao=<?php echo ($ordenar_por === 'descricao' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Descrição</a><?php if ($ordenar_por == 'descricao') {
+                                                         echo $seta;
+                                                     } ?>
+                                </th>
                                 <th><a
                                         href="<?= $caminho ?>?ordenar=valor&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'valor' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Valor</a><?php if ($ordenar_por == 'valor') {
                                                          echo $seta;

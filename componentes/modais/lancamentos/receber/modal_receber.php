@@ -692,16 +692,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 const atual = this.value;
 
                 // checa com anterior
-                if (index > 0 && atual <= inputs[index - 1].value) {
-                    alert(`A data da parcela ${index + 1} não pode ser menor ou igual que a da parcela ${index}`);
-                    this.value = "";
-                    return;
-                }
+                // if (index > 0 && atual <= inputs[index - 1].value) {
+                //     alert(`A data da parcela ${index + 1} não pode ser menor ou igual que a da parcela ${index}`);
+                //     this.value = "";
+                //     return;
+                // }
                 // checa com próxima
-                if (index < inputs.length - 1 && atual >= inputs[index + 1].value) {
-                    alert(`A data da parcela ${index + 1} não pode ser maior ou igual que a da parcela ${index + 2}`);
-                    this.value = "";
-                }
+                // if (index < inputs.length - 1 && atual >= inputs[index + 1].value) {
+                //     alert(`A data da parcela ${index + 1} não pode ser maior ou igual que a da parcela ${index + 2}`);
+                //     this.value = "";
+                // }
             });
         });
     });
@@ -738,32 +738,32 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         function validarDatas() {
-            var dataLancInput = document.querySelector('input[name="data_lanc"]');
-            var dataLancVal = dataLancInput ? dataLancInput.value : null;
-            var dateErrorEl = ensureDateErrorEl();
-            dateErrorEl.textContent = '';
+            // var dataLancInput = document.querySelector('input[name="data_lanc"]');
+            // var dataLancVal = dataLancInput ? dataLancInput.value : null;
+            // var dateErrorEl = ensureDateErrorEl();
+            // dateErrorEl.textContent = '';
 
-            var valid = true;
-            var dataLanc = parseDateInput(dataLancVal);
+            // var valid = true;
+            // var dataLanc = parseDateInput(dataLancVal);
 
-            var vencimentos = Array.from(document.querySelectorAll("input[name^='vencimento[']"));
-            vencimentos.forEach(function (inp) {
-                inp.classList.remove('invalid-date');
-                if (!inp.value) return;
-                if (!dataLanc) return; // sem data de lançamento definida, ignora esta regra
-                var v = parseDateInput(inp.value);
-                if (!v) return;
-                if (v < dataLanc) {
-                    inp.classList.add('invalid-date');
-                    valid = false;
-                }
-            });
+            // var vencimentos = Array.from(document.querySelectorAll("input[name^='vencimento[']"));
+            // vencimentos.forEach(function (inp) {
+            //     inp.classList.remove('invalid-date');
+            //     if (!inp.value) return;
+            //     if (!dataLanc) return; // sem data de lançamento definida, ignora esta regra
+            //     var v = parseDateInput(inp.value);
+            //     if (!v) return;
+            //     if (v < dataLanc) {
+            //         inp.classList.add('invalid-date');
+            //         valid = false;
+            //     }
+            // });
 
-            if (!valid) {
-                dateErrorEl.textContent = 'Uma ou mais parcelas possuem data de vencimento anterior à data de lançamento.';
-            }
+            // if (!valid) {
+            //     dateErrorEl.textContent = 'Uma ou mais parcelas possuem data de vencimento anterior à data de lançamento.';
+            // }
 
-            return valid;
+            return true;
         }
 
         function atualizarTotalParcelas() {
