@@ -166,7 +166,7 @@ async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
             tableWidth: '100%',
 
             styles: {
-                fontSize: 8.5,
+                fontSize: modoReducao ? 10 : 8.5,
                 cellPadding: 1,
                 overflow: 'linebreak',
                 halign: modoReducao ? 'left' : 'center',
