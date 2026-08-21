@@ -406,13 +406,14 @@ switch($ordenar_por) {
         }
         $query .= ' ORDER BY r1.documento '. $direcao . ', r1.data_lanc desc';
         break;
-
     case 'data_lancamento':   
         $query .= ' ORDER BY r1.data_lanc '. $direcao . ', r1.data_lanc desc';
         break;
-
     case 'nome':
         $query .= ' ORDER BY c.razao_soc '. $direcao . ', r1.data_lanc desc';
+        break;
+    case 'descricao':
+        $query .= ' ORDER BY r1.descricao '. $direcao . ', r1.data_lanc desc';
         break;
     case 'valor':
         $query .= ' ORDER BY r1.valor '. $direcao . ', r1.data_lanc desc';
@@ -420,7 +421,6 @@ switch($ordenar_por) {
     case 'valor_parcela':
         $query .= ' ORDER BY r2.valor_par '. $direcao . ', r1.data_lanc desc';
         break;
-
     case 'data_vencimento':
         $query .= ' ORDER BY r2.vencimento '. $direcao . ', r1.data_lanc desc';
         break;

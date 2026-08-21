@@ -338,6 +338,9 @@ switch($ordenar_por) {
     case 'nome':
         $query .= ' ORDER BY c.razao_soc '. $direcao . ', p1.data_lanc desc';
         break;
+    case 'descricao':
+        $query .= ' ORDER BY p1.descricao '. $direcao . ', p1.data_lanc desc';
+        break;
     case 'valor':
         $query .= ' ORDER BY p1.valor '. $direcao . ', p1.data_lanc desc';
         break;
