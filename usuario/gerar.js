@@ -1,3 +1,12 @@
+
+function formatarData(data){
+
+    const [ano, mes, dia] = data.split('-');
+
+    return `${dia}/${mes}/${ano}`;
+
+}
+
 async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
 
     const tabela = document.querySelector('#tabela-pdf');
@@ -166,7 +175,7 @@ async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
             tableWidth: '100%',
 
             styles: {
-                fontSize: modoReducao ? 10 : 8.5,
+                fontSize: modoReducao ? 12 : 8.5,
                 cellPadding: 1,
                 overflow: 'linebreak',
                 halign: modoReducao ? 'left' : 'center',
