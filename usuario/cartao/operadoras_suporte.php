@@ -291,7 +291,7 @@ $operadoras_suporte = [
                 'estado' => 6
             ],
             'suporte_data' => 'formatada',
-            'suporte_numero' => 'formatado',
+            'suporte_numero' => null,
         ],
     ],
     'pagbank' => [
