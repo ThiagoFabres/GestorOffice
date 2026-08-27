@@ -439,7 +439,7 @@ function parse_excel($numero_arquivo = null) {
         
         // Recalcular $bandeira_preg após possíveis alterações em $cells[1]
         $bandeira_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $cells[1])));
-        
+        if($operadora_descricao_preg == 'mercadopago' && ($bandeira_preg == 'saldodisponivel' || $tipo_preg == 'avaliblemoney')) continue;
         if(!empty($bandeiras_obj)){
             foreach($bandeiras_obj as $obj) {
 
@@ -473,6 +473,7 @@ function parse_excel($numero_arquivo = null) {
         if(isset($cadastrado) && $cadastrado === true) {
             continue;
         }
+        
        
         $transactions['lancamentos'][$i] = [
             'data' =>  $data_formatada,
@@ -491,7 +492,7 @@ function parse_excel($numero_arquivo = null) {
         
         $bandeira_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $transactions['lancamentos'][$i]['bandeira'])));
         $tipo_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $transactions['lancamentos'][$i]['tipo'])));
-        if($operadora_descricao_preg == 'mercadopago' && $bandeira_preg == 'saldodisponivel') continue;
+        
         if($transactions['lancamentos'][$i]['bandeira_id'] == null )  {
             $transactions['lancamentos'][$i]['motivo'][] = 'bandeira';
         }
