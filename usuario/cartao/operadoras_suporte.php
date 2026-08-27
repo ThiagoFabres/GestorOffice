@@ -509,6 +509,30 @@ $operadoras_suporte = [
             'suporte_numero' => 'formatado(.)',
             'encoding' => 'UTF-8',
         ]
+    ],
+    'mercadopago' => [
+        'xlsx' => [
+            'excluded_columns' => [
+                'B', 'C', 'E', 'G',
+                'I', 'J', 'K', 'L', 'M', 'N', 'O', 
+                'P', 'R', 'S', 'T', 'U', 'V', 
+                'W', 'X', 'Y', 'Z'
+            ],
+            'start_row' => 2,
+            'start_end_columns' => [ 'start' => 'A', 'end' => 'AA'],
+            'organizador' => [
+                'data' => 0,
+                'bandeira' => 4,
+                'tipo' => 1,
+                'parcela' => 5,
+                'valor_b' => 2,
+                'valor_l' => 3,
+                'estado' => null
+            ],
+            'suporte_estado' => true,
+            'suporte_data' =>'formatada(Y-m-d)'
+        ],
+
     ]
 ]
 ?>
