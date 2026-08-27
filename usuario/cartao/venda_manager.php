@@ -491,6 +491,7 @@ function parse_excel($numero_arquivo = null) {
         
         $bandeira_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $transactions['lancamentos'][$i]['bandeira'])));
         $tipo_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $transactions['lancamentos'][$i]['tipo'])));
+        if($operadora_descricao_preg == 'mercadopago' && $bandeira_preg == 'saldodisponivel') continue;
         if($transactions['lancamentos'][$i]['bandeira_id'] == null )  {
             $transactions['lancamentos'][$i]['motivo'][] = 'bandeira';
         }
