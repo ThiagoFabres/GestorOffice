@@ -70,7 +70,8 @@ function parse_excel($numero_arquivo = null) {
         'cielo',
         'capim',
         'saudeservice',
-        'ton'
+        'ton',
+        'mercadopago'
     ];
     
     $tipo_arquivo = filter_input(INPUT_POST, 'tipo_arquivo');
@@ -343,6 +344,7 @@ function parse_excel($numero_arquivo = null) {
                 }
                 $data_formatada = $dateObj->format('Y-m-d');
             } else if (isset($operadora_sup['suporte_data']) && $operadora_sup['suporte_data'] == 'formatada(Y-m-d)') {
+                $cells[0] = substr($cells[0], 0, 10);
                 $dateObj = DateTime::createFromFormat('Y-m-d', $cells[0]);
                 if (!$dateObj) {
                     throw new Exception('Data inválida: ' . $cells[0]);
@@ -419,10 +421,10 @@ function parse_excel($numero_arquivo = null) {
             $cells[2] = 'pix';
             $cells[1] = 'pix';
         }
-        if(str_starts_with($tipo_preg, 'debit')) {
+        if(str_starts_with($tipo_preg, 'debit') || $tipo_preg == 'cartaodedebito') {
             $cells[2] = 'debito';
         } 
-        if(str_starts_with($tipo_preg, 'credit')) {
+        if(str_starts_with($tipo_preg, 'credit') || $tipo_preg == 'cartaodecredito') {
             $cells[2] = 'credito';
         }
         // if(str_starts_with($tipo_preg, 'voucher')) {
