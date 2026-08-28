@@ -20,7 +20,6 @@ async function gerarpdf(nome, nomeEmpresa = '') {
     /* -------------------------
        CABEÇALHO
     ------------------------- */
-
     const titulo =
         document.querySelector('.card .card-header h3')?.textContent ||
         `Relatório de Movimentação Bancária`;
@@ -40,165 +39,128 @@ async function gerarpdf(nome, nomeEmpresa = '') {
     ];
 
     filtros.forEach(f => {
-
         if (f.length === 3) {
-
             const di = document.querySelector(f[1])?.value;
             const df = document.querySelector(f[2])?.value;
-
             if (di && df) {
                 doc.text(`${f[0]}: ${formatarData(di)} até ${formatarData(df)}`, 10, y);
                 y += 5;
             }
-
         } else {
-
             const val = document.querySelector(f[1])?.value;
-
             if (val) {
                 doc.text(`${f[0]}: ${val}`, 10, y);
                 y += 5;
             }
-
         }
-
     });
 
     /* -------------------------
-       EXTRAIR TABELA
+       EXTRAIR TABELA (tbody + tfoot)
     ------------------------- */
-
     const head = [];
     const body = [];
 
     tabela.querySelectorAll("thead tr").forEach(tr => {
-
         const row = [];
-
-        tr.querySelectorAll("th").forEach((th, index, arr) => {
-
-            if (index < arr.length) { // remove últimas 4 colunas
-                row.push(th.innerText.trim());
-            }
-
+        tr.querySelectorAll("th").forEach((th) => {
+            row.push(th.innerText.trim());
         });
-
         head.push(row);
-
     });
 
-    tabela.querySelectorAll("tbody tr").forEach(tr => {
-
+    // Captura tanto tbody quanto tfoot
+    tabela.querySelectorAll("tbody tr, tfoot tr").forEach(tr => {
         const row = [];
-
-        tr.querySelectorAll("td").forEach((td, index, arr) => {
-
-            if (index < arr.length) {
-                row.push(td.textContent.replace('R$', '').trim());
-            }
-
-
+        tr.querySelectorAll("td").forEach((td) => {
+            row.push(td.textContent.replace('R$', '').trim());
         });
-
-        body.push(row);
-
-    });
-
-    /* -------------------------
-       TABELA
-    ------------------------- */
-
-    const linhasPorPagina = 22;
-
-for (let i = 0; i < body.length; i += linhasPorPagina) {
-
-    const chunk = body.slice(i, i + linhasPorPagina);
-
-    if (i !== 0) {
-        doc.addPage();
-    }
-
-    doc.autoTable({
-        head: head,
-        body: chunk,
-        startY: y + 2,
-        theme: 'striped',
-
-        styles: {
-            fontSize: 8,
-            cellPadding: 2,
-            halign: "center",
-            valign: "middle"
-        },
-
-        headStyles: {
-            fillColor: [206,206,206],
-            textColor: 0,
-            fontStyle: "bold"
-        },
-
-        alternateRowStyles: {
-            fillColor: [255,255,255]
-        },
-
-        margin: {
-            left: 8,
-            right: 8
-        },
-
-        didParseCell: function (data) {
-
-            if (data.cell.raw?.classList?.contains('td-acoes')) {
-                data.cell.text = '';
-            }
-
-            if (data.row.raw?.id === 'tr-totais') {
-                data.cell.styles.fontStyle = 'bold';
-                data.cell.styles.fillColor = [220,220,220];
-            }
-
-            if (data.section === 'body') {
-
-                const grupo = Math.floor(data.row.index / 2);
-
-                if (grupo % 2 === 1) {
-                    data.cell.styles.fillColor = [245,245,245];
-                }
-
-            }
-
+        
+        // Atribui ID na linha se for o tfoot para o didParseCell identificar
+        if (tr.parentElement.tagName.toLowerCase() === 'tfoot' || tr.id === 'tr-totais') {
+            row.isTotalRow = true;
         }
 
+        body.push(row);
     });
 
-}
     /* -------------------------
-       PAGINAÇÃO
+       DESENHAR TABELA
     ------------------------- */
+    const linhasPorPagina = 22;
 
+    for (let i = 0; i < body.length; i += linhasPorPagina) {
+        const chunk = body.slice(i, i + linhasPorPagina);
+
+        if (i !== 0) {
+            doc.addPage();
+        }
+
+        doc.autoTable({
+            head: head,
+            body: chunk,
+            startY: y + 2,
+            theme: 'striped',
+
+            styles: {
+                fontSize: 8,
+                cellPadding: 2,
+                halign: "center",
+                valign: "middle"
+            },
+
+            headStyles: {
+                fillColor: [206, 206, 206],
+                textColor: 0,
+                fontStyle: "bold"
+            },
+
+            alternateRowStyles: {
+                fillColor: [255, 255, 255]
+            },
+
+            margin: {
+                left: 8,
+                right: 8
+            },
+
+            didParseCell: function (data) {
+                if (data.cell.raw?.classList?.contains('td-acoes')) {
+                    data.cell.text = '';
+                }
+
+                // Estila a linha de totais no PDF
+                if (data.row.raw?.isTotalRow || data.row.raw?.id === 'tr-totais') {
+                    data.cell.styles.fontStyle = 'bold';
+                    data.cell.styles.fillColor = [220, 220, 220];
+                    data.cell.styles.textColor = [0, 0, 0];
+                } else if (data.section === 'body') {
+                    const grupo = Math.floor(data.row.index / 2);
+                    if (grupo % 2 === 1) {
+                        data.cell.styles.fillColor = [245, 245, 245];
+                    }
+                }
+            }
+        });
+    }
+
+    /* -------------------------
+       PAGINAÇÃO E SALVAMENTO
+    ------------------------- */
     const totalPages = doc.internal.getNumberOfPages();
-
     doc.setFontSize(9);
 
     for (let i = 1; i <= totalPages; i++) {
-
         doc.setPage(i);
-
         doc.text(
             `Página ${i} de ${totalPages}`,
             pageWidth - 10,
             10,
             { align: 'right' }
         );
-
     }
 
-    /* -------------------------
-       SALVAR
-    ------------------------- */
-
     doc.save(`relatorio_movimentacao.pdf`);
-
 }
 
 /* -------------------------
@@ -311,21 +273,20 @@ function gerarexcel(nome, nomeEmpresa = '') {
             }
         });
 
-        // Adiciona linha de totais se existir
-        var trTotais = tabelaClone.querySelector('#tr-totais');
-        if (trTotais) {
-            var totalRow = [];
-            var totalTds = trTotais.querySelectorAll('td');
-            totalTds.forEach(function(td) {
-                var valor = td.textContent.trim();
-                valor = formatarData(valor);
-                totalRow.push(valor);
-            });
-            if (totalRow.length > 0) {
-                dados.push([]);
-                dados.push(totalRow);
-            }
-        }
+var trTotais = tabelaClone.querySelector('#tr-totais') || tabelaClone.querySelector('tfoot tr');
+if (trTotais) {
+    var totalRow = [];
+    var totalTds = trTotais.querySelectorAll('td');
+    totalTds.forEach(function(td) {
+        var valor = td.textContent.trim();
+        valor = formatarData(valor);
+        totalRow.push(valor);
+    });
+    if (totalRow.length > 0) {
+        dados.push([]); 
+        dados.push(totalRow);
+    }
+}
 
         // Constrói o header com filtros
         var headerFiltros = [];
