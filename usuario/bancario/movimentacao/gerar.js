@@ -69,14 +69,12 @@ async function gerarpdf(nome, nomeEmpresa = '') {
         head.push(row);
     });
 
-    // Captura tanto tbody quanto tfoot
     tabela.querySelectorAll("tbody tr, tfoot tr").forEach(tr => {
         const row = [];
         tr.querySelectorAll("td").forEach((td) => {
             row.push(td.textContent.replace('R$', '').trim());
         });
         
-        // Atribui ID na linha se for o tfoot para o didParseCell identificar
         if (tr.parentElement.tagName.toLowerCase() === 'tfoot' || tr.id === 'tr-totais') {
             row.isTotalRow = true;
         }
@@ -109,6 +107,11 @@ async function gerarpdf(nome, nomeEmpresa = '') {
                 valign: "middle"
             },
 
+            // Alinha especificamente a coluna de Valor (índice 4) à direita
+            columnStyles: {
+                4: { halign: "right" }
+            },
+
             headStyles: {
                 fillColor: [206, 206, 206],
                 textColor: 0,
@@ -129,7 +132,7 @@ async function gerarpdf(nome, nomeEmpresa = '') {
                     data.cell.text = '';
                 }
 
-                // Estila a linha de totais no PDF
+                // Estilização especial para a linha de totais
                 if (data.row.raw?.isTotalRow || data.row.raw?.id === 'tr-totais') {
                     data.cell.styles.fontStyle = 'bold';
                     data.cell.styles.fillColor = [220, 220, 220];

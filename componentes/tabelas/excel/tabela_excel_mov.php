@@ -74,7 +74,7 @@
             <td></td>
             <td></td>
             <td></td>
-            <td>R$ <?=number_format($total_valor, 2, ',', '.')?></td>
+            <td style="text-align:right">R$ <?=number_format($total_valor, 2, ',', '.')?></td>
             <td colspan="4"></td>
         </tr>
     </tfoot>
