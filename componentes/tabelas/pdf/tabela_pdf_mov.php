@@ -5,7 +5,7 @@
             <th>Data</th>
             <th>Tipo</th>
             <th>Descrição</th>
-            <th>Valor</th>
+            <th style="text-align: right;">Valor</th>
             <th>Conta</th>
             <th>Título</th>
             <th>Subtítulo</th>
@@ -43,20 +43,23 @@
                 $data_lancamento = DateTime::createFromFormat('Y-m-d', $movimentacao->data)->format('d/m/Y');
                 $conta_nome = Ban01::read($movimentacao->id_ban01, $_SESSION['usuario']->id_empresa)[0]->nome;
         ?>
+            <!-- Linha 1: Dados Principais e Descrição Completa -->
             <tr>
                 <td onclick="window.location.href='<?=$link?>'"><?=$movimentacao->documento?></td>
                 <td onclick="window.location.href='<?=$link?>'"><?=$data_lancamento?></td>
                 <td onclick="window.location.href='<?=$link?>'"><?=$tipo?></td>
-                <td colspan="9" class="descricao-full" style="text-align:start;" id="td-descricao" onclick="window.location.href='<?=$link?>'">
+                <td colspan="6" class="descricao-full" style="text-align:start;" id="td-descricao" onclick="window.location.href='<?=$link?>'">
                     <?php echo $movimentacao->descricao_comp != '' ? substr(substr($movimentacao->descricao, 0, 60) . ' - ' . substr($movimentacao->descricao_comp, 0,60), 0, 100) : $movimentacao->descricao ?>
                 </td>
             </tr>
+            <!-- Linha 2: Valor, Conta, Título, Subtítulo e Código -->
             <tr>
                 <td></td>
                 <td></td>
                 <td></td>
                 <td></td>
-                <td onclick="window.location.href='<?=$link?>'">R$ <?=number_format($movimentacao->valor, 2, ',', '.')?></td>
+                <!-- Valor alinhado à direita -->
+                <td style="text-align: right;" onclick="window.location.href='<?=$link?>'">R$ <?=number_format($movimentacao->valor, 2, ',', '.')?></td>
                 <td onclick="window.location.href='<?=$link?>'"><?=$conta_nome?></td>
                 <td onclick="window.location.href='<?=$link?>'"><?= isset($con01) ? substr($con01->nome, 0, 15) : ''?></td>
                 <td onclick="window.location.href='<?=$link?>'"><?= isset($con02) ? substr($con02->nome, 0, 15) : ''?></td>
@@ -68,13 +71,13 @@
         ?>
     </tbody>
     <tfoot>
-        <!-- Linha de totalizador com id="tr-totais" -->
+        <!-- Linha de totalizador com alinhamento na coluna de Valor -->
         <tr id="tr-totais" style="font-weight: bold; background-color: #dcdcdc;">
             <td colspan="4" style="text-align: right;">TOTAL:</td>
             <td></td>
             <td></td>
             <td></td>
-            <td>R$ <?=number_format($total_valor, 2, ',', '.')?></td>
+            <td style="text-align: right;">R$ <?=number_format($total_valor, 2, ',', '.')?></td>
             <td colspan="4"></td>
         </tr>
     </tfoot>
