@@ -749,7 +749,6 @@ if (isset($view) && $view == 'cadastro') {
     } else if (isset($acao) && $acao == 'editar') {
 
         if ($pagar) {
-
             $rec01 = Pag01::read($id_rec, $_SESSION['usuario']->id_empresa, null)[0];
         } else {
             $rec01 = Rec01::read($id_rec, $_SESSION['usuario']->id_empresa, null)[0];
@@ -769,7 +768,7 @@ if (isset($view) && $view == 'cadastro') {
             $data_lanc,
             $_SESSION['usuario']->id,
             $custo,
-            $nf
+            nf:$nf
         );
 
 
