@@ -10,6 +10,7 @@
                             }
                             ?>
                             <tr class="tr-clientes-header">
+                                <th>ID</th>
                                 <th>DOCUMENTO</th>
                                 <th>DATA.LANC</th>
                                 <th>NOME</th>
@@ -62,6 +63,7 @@
                                     <div class="avoid-page-break">
                                         <tr class="avoid-page-break">
                                             <td><?= $rec01->documento; ?> </td>
+                                            <td><?= $rec01->nf == 0.00 ? '' : $rec01->nf ?? null; ?> </td>
                                             <td><?= $data_lanc; ?> </td>
                                             <td><?= $cadastro->razao_soc; ?> </td>
                                             <td colspan="9" class="descricao-full" style="text-align:start;" id="td-descricao"><?= nl2br($rec01->descricao); ?></td>

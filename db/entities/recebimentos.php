@@ -19,7 +19,8 @@ class Rec01 {
     public $valor_b;
     public $valor_liq_go;
     public $taxa_cadastrada;
-    public function __construct($id = null, $id_empresa = null, $id_cadastro = null, $id_con01 = null, $id_con02 = null, $documento = '', $descricao = '', $valor = 0.0, $parcelas = 1, $data_lanc = null, $id_usuario = null, $centro_custos = null, $id_convertido = null, $valor_b = null, $valor_liq_go = null, $taxa_cadastrada = null) {
+    public $nf;
+    public function __construct($id = null, $id_empresa = null, $id_cadastro = null, $id_con01 = null, $id_con02 = null, $documento = '', $descricao = '', $valor = 0.0, $parcelas = 1, $data_lanc = null, $id_usuario = null, $centro_custos = null, $id_convertido = null, $valor_b = null, $valor_liq_go = null, $taxa_cadastrada = null, $nf = null, ) {
         $this->id = $id;
         $this->id_empresa = $id_empresa;
         $this->id_cadastro = $id_cadastro;
@@ -36,19 +37,21 @@ class Rec01 {
         $this->valor_b = $valor_b;
         $this->valor_liq_go = $valor_liq_go;
         $this->taxa_cadastrada = $taxa_cadastrada;
+        $this->nf = $nf;
     }
 
     public static function create($rec01) {
         $pdo = (new Database())->connect();
 
-        $sql = 'INSERT INTO rec01 (centro_custos, id_empresa, id_cadastro, id_con01, id_con02, documento, descricao, valor, parcelas, data_lanc, id_usuario, id_convertido, valor_b, valor_liq_go, taxa_cadastrada) 
-                VALUES (:centro_custos, :id_empresa, :id_cadastro, :id_con01, :id_con02, :documento, :descricao, :valor, :parcelas, :data_lanc, :id_usuario, :id_convertido, :valor_b, :valor_liq_go, :taxa_cadastrada)';
+        $sql = 'INSERT INTO rec01 (centro_custos, id_empresa, id_cadastro, id_con01, id_con02, documento, nf, descricao, valor, parcelas, data_lanc, id_usuario, id_convertido, valor_b, valor_liq_go, taxa_cadastrada) 
+                VALUES (:centro_custos, :id_empresa, :id_cadastro, :id_con01, :id_con02, :documento, :nf, :descricao, :valor, :parcelas, :data_lanc, :id_usuario, :id_convertido, :valor_b, :valor_liq_go, :taxa_cadastrada)';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id_empresa', $rec01->id_empresa);
         $stmt->bindValue(':id_cadastro', $rec01->id_cadastro);
         $stmt->bindValue(':id_con01', $rec01->id_con01);
         $stmt->bindValue(':id_con02', $rec01->id_con02);
         $stmt->bindValue(':documento', $rec01->documento);
+        $stmt->bindValue(':nf', $rec01->nf);
         $stmt->bindValue(':descricao', $rec01->descricao);
         $stmt->bindValue(':valor', $rec01->valor);
         $stmt->bindValue(':parcelas', $rec01->parcelas);
@@ -79,6 +82,7 @@ class Rec01 {
         $filtro_data_inicial = null,
         $filtro_data_final = null,
         $filtro_custos = null,
+        $filtro_nf = null,
         ) {
 
         $pdo = (new Database())->connect();
@@ -105,6 +109,7 @@ class Rec01 {
         if ($filtro_data_inicial != null) $conditions[] = 'data_lanc >= :filtro_data_inicial';
         if ($filtro_data_final != null) $conditions[] = 'data_lanc <= :filtro_data_final';
         if ($filtro_custos != null) $conditions[] = 'centro_custos = :centro_custos';
+        if ($filtro_nf != null) $conditions[] = 'nf = :nf';
 
 
         if ($conditions) {
@@ -127,6 +132,7 @@ class Rec01 {
         if ($filtro_data_inicial != null) $stmt->bindValue(':filtro_data_inicial', $filtro_data_inicial);
         if ($filtro_data_final != null) $stmt->bindValue(':filtro_data_final', $filtro_data_final);
         if ($filtro_custos != null) $stmt->bindValue(':centro_custos', $filtro_custos);
+        if ($filtro_nf != null) $stmt->bindValue(':nf', $filtro_nf);
         // if ($read_paginas === null){
         //     echo $query;
         //     exit;
@@ -150,6 +156,7 @@ class Rec01 {
                 id_con01 = :id_con01, 
                 id_con02 = :id_con02, 
                 documento = :documento, 
+                nf = :nf,
                 descricao = :descricao, 
                 valor = :valor, 
                 parcelas = :parcelas, 
@@ -163,6 +170,7 @@ class Rec01 {
         $stmt->bindValue(':id_con01', $rec01->id_con01);
         $stmt->bindValue(':id_con02', $rec01->id_con02);
         $stmt->bindValue(':documento', $rec01->documento);
+        $stmt->bindValue(':nf', $rec01->nf);
         $stmt->bindValue(':descricao', $rec01->descricao);
         $stmt->bindValue(':valor', $rec01->valor);
         $stmt->bindValue(':parcelas', $rec01->parcelas);
@@ -264,7 +272,7 @@ class Rec02 {
         $filtro_descricao = null,
         $filtro_operacional = null,
         $read_total = null,
-        
+        $filtro_nf = null,
     ) {
         $pdo = (new Database())->connect();
 
@@ -312,26 +320,29 @@ class Rec02 {
                     break;
             }
         }
-        if($filtro_por != null) {
-            switch($filtro_por) {
-            case 'lancamento':
-                    $filtro_por_data = 'r1.data_lanc';
-                break;
-            case 'vencimento':
+        
+        if ($filtro_por != null) {
+            switch ($filtro_por) {
+                case 'vencimento':
                     $filtro_por_data = 'r2.vencimento';
-                break;
-            case 'pagamento':
+                    break;
+                case 'pagamento':
                     $filtro_por_data = 'r2.data_pag';
-                break;
+                    break;
+                case 'lancamento':
+                    $filtro_por_data = 'r1.data_lanc';
+                    break;
+                default:
+                    $filtro_por_data = 'r1.data_lanc';
+                    break;
             }
 
-            if($filtro_data_inicial != null) {
+            if ($filtro_data_inicial != null) {
                 $conditions[] = $filtro_por_data . ' >= :filtro_data_inicial';
             }
-            if($filtro_data_final != null) {
+            if ($filtro_data_final != null) {
                 $conditions[] = $filtro_por_data . ' <= :filtro_data_final';
             }
-            
         }
         if($filtro_operacional != null) {
             if($filtro_operacional == 1) {
@@ -365,6 +376,9 @@ class Rec02 {
     if($filtro_descricao != null) {
         $conditions[] = 'r1.descricao LIKE :filtro_descricao';
     }
+    if($filtro_nf != null) {
+        $conditions[] = 'r1.nf = :filtro_nf';
+    }
         
 
         if ($id != null) $conditions[] = 'r2.id = :id';
@@ -388,6 +402,7 @@ class Rec02 {
         if ($filtro_documento != null) $conditions[] = 'r1.documento LIKE :filtro_documento';
         if ($filtro_cadastro != null) $conditions[] = 'r1.id_cadastro LIKE :filtro_cadastro';
         if ($filtro_custos != null) $conditions[] = 'r1.centro_custos = :filtro_custos';
+        
 
 
 
@@ -462,6 +477,11 @@ switch($ordenar_por) {
         //     echo $query;
         //     exit;
         // }
+        
+        // if ($filtro_nf != null) {
+        //     echo $query;
+        //     exit;
+        // }
 
         $stmt = $pdo->prepare($query);
 
@@ -488,6 +508,7 @@ switch($ordenar_por) {
         if($filtro_con01 != null && $hasParam(':filtro_con01')) $stmt->bindValue(':filtro_con01', $filtro_con01);
         if($filtro_con02 != null && $hasParam(':filtro_con02')) $stmt->bindValue(':filtro_con02', $filtro_con02);
         if($filtro_custos != null && $hasParam(':filtro_custos')) $stmt->bindValue(':filtro_custos', $filtro_custos);
+        if($filtro_nf != null && $hasParam(':filtro_nf')) $stmt->bindValue(':filtro_nf', $filtro_nf);
         if($filtro_descricao != null && $hasParam(':filtro_descricao')) $stmt->bindValue(':filtro_descricao', '%' . $filtro_descricao . '%');
         if($filtro_operacional !== null && $id_empresa !== null && $hasParam(':filtro_operacional_empresa')) $stmt->bindValue(':filtro_operacional_empresa', $id_empresa);
         $stmt->execute();

@@ -11,6 +11,7 @@
                             ?>
                             <tr class="tr-clientes-header">
                                 <th>CENTRO</th>
+                                <th>ID</th>
                                 <th>DOCUMENTO</th>
                                 <th>DATA.LANC</th>
                                 <th>DATA.VENC</th>
@@ -109,6 +110,7 @@
 
                                             <td><?php echo substr($centro_custos, 0, 9)?></td>
                                             <td><?= $rec01->documento; ?> </td>
+                                            <td><?= $rec01->nf == 0.00 ? '' : $rec01->nf ?? null; ?> </td>
                                             <td><?= $data_lanc; ?> </td>
                                             <td><?= $data_venc ?></td>
                                             <td colspan="9" class="descricao-full" style="text-align:start;" id="td-descricao"><?= nl2br(htmlspecialchars($cadastro->razao_soc . ' - ' . $rec01->descricao, ENT_QUOTES, 'UTF-8')) ?></td>

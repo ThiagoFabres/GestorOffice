@@ -11,7 +11,13 @@
                             ?>
                             <tr class="tr-clientes-header">
                                 <th><a
-                                        href="<?= $caminho ?>?ordenar=documento&direcao=<?php echo ($ordenar_por === 'documento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Documento</a><?php if ($ordenar_por == 'documento') {
+                                        href="<?= $caminho ?>?ordenar=documento&direcao=<?php echo ($ordenar_por === 'documento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">ID</a><?php if ($ordenar_por == 'documento') {
+                                                         echo $seta;
+                                         
+                                         } ?>
+                                </th>
+                                <th><a
+                                        href="<?= $caminho ?>?ordenar=documento&direcao=<?php echo ($ordenar_por === 'documento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">DOCUMENTO</a><?php if ($ordenar_por == 'documento') {
                                                          echo $seta;
                                                      } ?>
                                 </th>
@@ -89,6 +95,7 @@
                                     <!-- style="<?php if ($ultima_parcela) { ?>border-bottom: 2px solid #5856d6;<?php } else if ($rec02->parcela == 1) { ?> border-top: 3px solid #5856d6; <?php } ?> border-inline: 2px solid #5856d6;" -->
                                     <tr class="tr-clientes <?= $cor_parcela ?> avoid-page-break context-menu-row">
                                         <td><?= $rec01->documento; ?> </td>
+                                        <td><?= $rec01->nf == 0.00 ? '' : $rec01->nf ?? null; ?> </td>
                                         <td><?= $data_lanc; ?> </td>
                                         <td><?= $cadastro->razao_soc; ?> </td>
                                         <td><?= $rec01->descricao; ?></td>
