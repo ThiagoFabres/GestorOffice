@@ -16,7 +16,8 @@ class Pag01 {
     public $id_usuario;
     public $centro_custos;
     public $id_convertido;
-    public function __construct($id = null, $id_empresa = null, $id_cadastro = null, $id_con01 = null, $id_con02 = null, $documento = '', $descricao = '', $valor = 0.0, $parcelas = 1, $data_lanc = null, $id_usuario = null, $centro_custos = null, $id_convertido = null) {
+    public $nf;
+    public function __construct($id = null, $id_empresa = null, $id_cadastro = null, $id_con01 = null, $id_con02 = null, $documento = '', $descricao = '', $valor = 0.0, $parcelas = 1, $data_lanc = null, $id_usuario = null, $centro_custos = null, $id_convertido = null, $nf = null,) {
         $this->id = $id;
         $this->id_empresa = $id_empresa;
         $this->id_cadastro = $id_cadastro;
@@ -30,19 +31,21 @@ class Pag01 {
         $this->id_usuario = $id_usuario;
         $this->centro_custos = $centro_custos;
         $this->id_convertido = $id_convertido;
+        $this->nf = $nf;
     }
 
     public static function create($pag01) {
         $pdo = (new Database())->connect();
 
-    $sql = 'INSERT INTO pag01 (centro_custos, id_empresa, id_cadastro, id_con01, id_con02, documento, descricao, valor, parcelas, data_lanc, id_usuario, id_convertido) 
-        VALUES (:centro_custos, :id_empresa, :id_cadastro, :id_con01, :id_con02, :documento, :descricao, :valor, :parcelas, :data_lanc, :id_usuario, :id_convertido)';
+    $sql = 'INSERT INTO pag01 (centro_custos, id_empresa, id_cadastro, id_con01, id_con02, documento, nf, descricao, valor, parcelas, data_lanc, id_usuario, id_convertido) 
+        VALUES (:centro_custos, :id_empresa, :id_cadastro, :id_con01, :id_con02, :documento, :nf, :descricao, :valor, :parcelas, :data_lanc, :id_usuario, :id_convertido)';
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id_empresa', $pag01->id_empresa);
         $stmt->bindValue(':id_cadastro', $pag01->id_cadastro);
         $stmt->bindValue(':id_con01', $pag01->id_con01);
         $stmt->bindValue(':id_con02', $pag01->id_con02);
         $stmt->bindValue(':documento', $pag01->documento);
+        $stmt->bindValue(':nf', $pag01->nf);
         $stmt->bindValue(':descricao', $pag01->descricao);
         $stmt->bindValue(':valor', $pag01->valor);
         $stmt->bindValue(':parcelas', $pag01->parcelas);
@@ -57,7 +60,7 @@ class Pag01 {
         return $stmt->execute();
     }
 
-    public static function read($id = null, $id_empresa = null, $id_cadastro = null, $documento = null, $con01 = null, $con02 = null): array {
+    public static function read($id = null, $id_empresa = null, $id_cadastro = null, $documento = null, $con01 = null, $con02 = null, $filtro_nf = null): array {
         $pdo = (new Database())->connect();
         $query = 'SELECT * FROM pag01';
         $conditions = [];
@@ -68,6 +71,7 @@ class Pag01 {
         if ($documento != null) $conditions[] = 'documento = :documento';
         if ($con01 != null) $conditions[] = 'id_con01 = :con01';
         if ($con02 != null) $conditions[] = 'id_con02 = :con02';
+        if ($filtro_nf != null) $conditions[] = 'nf = :filtro_nf';
 
         if ($conditions) {
             $query .= ' WHERE ' . implode(' AND ', $conditions);
@@ -81,6 +85,7 @@ class Pag01 {
         if ($documento != null) $stmt->bindValue(':documento', $documento);
         if ($con01 != null) $stmt->bindValue(':con01', $con01);
         if ($con02 != null) $stmt->bindValue(':con02', $con02);
+        if ($filtro_nf != null) $stmt->bindValue(':filtro_nf', $filtro_nf);
 
         $stmt->execute();
 
@@ -91,7 +96,7 @@ class Pag01 {
         $pdo = (new Database())->connect();
 
         $sql = 'UPDATE pag01 
-                SET centro_custos = :centro_custos, id_cadastro = :id_cadastro, id_con01 = :id_con01, id_con02 = :id_con02, documento = :documento, descricao = :descricao, valor = :valor, parcelas = :parcelas, data_lanc = :data_lanc, id_usuario = :id_usuario, id_convertido = :id_convertido
+                SET centro_custos = :centro_custos, id_cadastro = :id_cadastro, id_con01 = :id_con01, id_con02 = :id_con02, documento = :documento, nf = :nf, descricao = :descricao, valor = :valor, parcelas = :parcelas, data_lanc = :data_lanc, id_usuario = :id_usuario, id_convertido = :id_convertido
                 WHERE id = :id';
 
         $stmt = $pdo->prepare($sql);
@@ -111,6 +116,7 @@ class Pag01 {
         $stmt->bindValue(':id_usuario', $pag01->id_usuario);
         $stmt->bindValue(':centro_custos', $pag01->centro_custos);
         $stmt->bindValue(':id_convertido', $pag01->id_convertido);
+        $stmt->bindValue(':nf', $pag01->nf);
 
         
 
@@ -198,7 +204,8 @@ class Pag02 {
         $filtro_custos = null,
         $read_totais = null,
         $filtro_descricao = null,
-        $filtro_operacional = null
+        $filtro_operacional = null,
+        $filtro_nf = null,
     ) {
         $pdo = (new Database())->connect();
 
@@ -312,6 +319,7 @@ class Pag02 {
         if ($filtro_documento != null) $conditions[] = 'p1.documento LIKE :filtro_documento';
         if ($filtro_cadastro != null) $conditions[] = 'p1.id_cadastro LIKE :filtro_cadastro';
         if ($filtro_custos != null) $conditions[] = 'p1.centro_custos = :filtro_custos';
+        if ($filtro_nf != null) $conditions[] = 'p1.nf = :filtro_nf';
 
 
 
@@ -410,7 +418,8 @@ switch($ordenar_por) {
         if($filtro_pagamento != null && $hasParam(':filtro_pagamento')) $stmt->bindValue(':filtro_pagamento', $filtro_pagamento);
         if($filtro_con01 != null && $hasParam(':filtro_con01')) $stmt->bindValue(':filtro_con01', $filtro_con01);
         if($filtro_con02 != null && $hasParam(':filtro_con02')) $stmt->bindValue(':filtro_con02', $filtro_con02);
-        if($filtro_custos != null && $hasParam(':filtro_custos')) $stmt->bindValue(':filtro_custos', $filtro_custos);
+        if($filtro_con02 != null && $hasParam(':filtro_con02')) $stmt->bindValue(':filtro_con02', $filtro_con02);
+        if($filtro_nf != null && $hasParam(':filtro_nf')) $stmt->bindValue(':filtro_nf', $filtro_nf);
         if($filtro_descricao != null && $hasParam(':filtro_descricao')) $stmt->bindValue(':filtro_descricao', '%' . $filtro_descricao . '%');
         if($filtro_operacional !== null && $id_empresa !== null && $hasParam(':filtro_operacional_empresa')) $stmt->bindValue(':filtro_operacional_empresa', $id_empresa);
 

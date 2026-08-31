@@ -550,6 +550,11 @@ if (isset($view) && $view == 'cadastro') {
     $titulo = filter_input(INPUT_POST, 'titulo') != '' ? filter_input(INPUT_POST, 'titulo') : null;
     $subtitulo = filter_input(INPUT_POST, 'subtitulo') != '' ? filter_input(INPUT_POST, 'subtitulo') : null;
     $documento = filter_input(INPUT_POST, 'documento') != '' ? filter_input(INPUT_POST, 'documento') : null;
+    $nf = filter_input(INPUT_POST, 'nf') != '' ? filter_input(INPUT_POST, 'nf') : null;
+    $nf = str_replace('.', '', $nf);
+    $nf = str_replace(',', '.', $nf);
+    $nf = floatval($nf);
+    var_dump($nf);
     $descricao = filter_input(INPUT_POST, 'descricao');
     $custo = filter_input(INPUT_POST, 'custo') != '' ? filter_input(INPUT_POST, 'custo') : null;
     $valor = filter_input(INPUT_POST, 'valor') != '' ? filter_input(INPUT_POST, 'valor') : null;
@@ -654,7 +659,8 @@ if (isset($view) && $view == 'cadastro') {
             $data_lanc,
             $_SESSION['usuario']->id,
             $custo,
-            $id_ban
+            $id_ban,
+            nf: $nf,
         );
 
         if ($pagar) {
@@ -764,6 +770,7 @@ if (isset($view) && $view == 'cadastro') {
             $data_lanc,
             $_SESSION['usuario']->id,
             $custo,
+            $nf
         );
 
 

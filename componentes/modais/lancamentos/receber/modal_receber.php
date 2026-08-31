@@ -80,6 +80,11 @@
         $post_subtitulo = $recebimento->id_con02;
     }
 
+    $post_nf = filter_input(INPUT_POST, 'nf') ?? '';
+    if($post_nf == '' && isset($recebimento)) {
+        $post_nf = $recebimento->nf;
+    }
+
     $documento = filter_input(INPUT_POST, 'documento') ?? '';
     if($documento == '') {
 
@@ -136,6 +141,7 @@
             $parcelas_d,
             null,
             $_SESSION['usuario']->id,
+            nf: $post_nf
         );
 
         $parcelas = [];
@@ -219,8 +225,8 @@
                                         <?php } ?>
                                         <div class="row">
                                             <div class="input-group-edit-parcela"style="width: 100%; position:relative; display:flex; flex-direction:row; justify-content: space-between;">
-                                            <div class="modal-input-group">
-                                                <label for="documento">Documento:</label>
+                                            <div class="modal-input-group" style="width:7%">
+                                                <label for="documento">ID:</label>
                                                 <div class="input-documento-group" style="display: flex; flex-direction: row;">
                                                     <div class="input-documento" style="width:100%;">
                                                         <!--Nome: -->
@@ -233,7 +239,18 @@
                                                 </div>
                                             </div>
                                                 
-
+                                            <div class="modal-input-group">
+                                                <label for="nf">Documento:</label>
+                                                <div class="input-nf-group" style="display: flex; flex-direction: row;">
+                                                    <div class="input-nf" style="width: 100%;">
+                                                        <input type="text"  name="nf" <?php if($get_acao == 'visualizar'){ ?> disabled <?php } ?>
+                                                            class="form-control" placeholder="Documento" id="nf"
+                                                            value="<?= $post_nf == 0 ? '' : $post_nf ?? ''  ?>" 
+                                                            onkeypress="return /[0-9,]/.test(event.key)"
+                                                            required>
+                                                    </div>
+                                                </div>
+                                            </div>
                                                 
                                             <div class="modal-input-group">
                                                 <label for="centro">Centro de custos:</label>
@@ -427,6 +444,7 @@
                             <input type="hidden" id="parcelas_d"name="parcelas_d" value="<?= $parcelas_d ?>">
                             <input type="hidden" id="data_lanc2" name="data_lanc" value="<?= $data_lanc ?>">
                             <input type="hidden" id="custo2" name="custo" value="<?= $post_custo ?>">
+                            <input type="hidden" id="nf2" name="nf" value="<?= $post_nf ?>">
 
 
 
@@ -936,7 +954,8 @@ function syncHiddenInputs() {
         { origem: 'valor', destino: 'valor2' },
         { origem: 'parcelas', destino: 'parcelas_d' },
         { origem: 'data_lanc', destino: 'data_lanc2' },
-        { origem: 'custo', destino: 'custo2' }
+        { origem: 'custo', destino: 'custo2' },
+        { origem: 'nf', destino: 'nf2' }
     ];
 
 

@@ -1,4 +1,5 @@
-<table class="table table-striped avoid-page-break">
+<div class="tabela-lancamento dragscroll avoid-page-break">
+                    <table class="table table-striped avoid-page-break">
                         <thead>
                             <?php
                             if ($direcao == 'ASC') {
@@ -18,7 +19,7 @@
                                 </th>
                                 <th>
                                     <a href="<?= $caminho ?>?ordenar=documento&direcao=<?php echo ($ordenar_por === 'documento' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">
-                                        DOCUMENTO
+                                        Documento
                                     </a><?php if ($ordenar_por == 'documento') { echo $seta; } ?>
                                 </th>
                                 <th><a
@@ -37,7 +38,11 @@
                                                          echo $seta;
                                                      } ?>
                                 </th>
-                                <th><a>Descrição</a></th>
+                                <th><a
+                                        href="<?= $caminho ?>?ordenar=descricao&direcao=<?php echo ($ordenar_por === 'descricao' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Descrição</a><?php if ($ordenar_por == 'descricao') {
+                                                         echo $seta;
+                                                     } ?>
+                                </th>
                                 <th><a
                                         href="<?= $caminho ?>?ordenar=valor&pagina=<?=$numero_pagina?>&numero_exibido=<?=$numero_exibir?>&direcao=<?php echo ($ordenar_por === 'valor' && $direcao === 'ASC') ? 'DESC' : 'ASC'; ?>">Valor</a><?php if ($ordenar_por == 'valor') {
                                                          echo $seta;
@@ -71,6 +76,7 @@
                                 <?php if($_SESSION['usuario']->processar === 1) {?>
                                 <th>Quitar</th>
                                 <th>Estornar</th>
+                                <th>Editar</th>
                                 <?php } ?>
                                 <th>Visualizar</th>
                             </tr>
@@ -81,7 +87,7 @@
                                 id_empresa: $_SESSION['usuario']->id_empresa,
                                 filtro_data_inicial: $get_filtro_data_inicial,
                                 filtro_data_final: $get_filtro_data_final,
-                                filtro_documento: $get_filtro_nome,
+                                filtro_descricao: $get_filtro_descricao,
                                 filtro_opcao: $get_filtro_opcao,
                                 filtro_por: $get_filtro_por,
                                 filtro_pagamento: $get_filtro_pagamento,
@@ -93,7 +99,7 @@
                                 ordenar_por: $ordenar_por,
                                 direcao: $direcao,
                                 filtro_custos: $get_filtro_custo,
-                                read_vendas: true,
+                                filtro_nf: $get_filtro_nf
                             );
                             if (!empty($parcelas)) {
                         
@@ -147,7 +153,7 @@
                                     $centro_custos = CentroCustos::read($rec01->centro_custos, $_SESSION['usuario']->id_empresa)[0]->nome ?? '';
                                     }
 
-                                    $link = 'cadastro_vendas.php?view=receber&acao=visualizar&id=' . $rec02->id;
+                                    $link = 'receber.php?view=receber&acao=visualizar&id=' . $rec02->id;
 
                                     $ultima_parcela = null;
                                     if ($rec02->parcela == $rec01->parcelas)
@@ -168,13 +174,13 @@
                                         data-id-rec01-recebido="<?= in_array($rec02->id_rec01, $recebimentos_pagos) ? '1' : '0' ?>"
                                         onclick=""
                                          >
-                                        <td><?=$centro_custos?></td>
-                                        <td><?= $rec01->documento; ?> </td>
-                                        <td><?= $rec01->nf == 0.00 ? '' : $rec01->nf ?? null; ?> </td>
+                                        <td><?= substr($centro_custos, 0, 15)?></td>
+                                        <td><?= substr($rec01->documento, 0, 15); ?> </td>
+                                        <td><?= $rec01->nf == 0 ? '' : $rec01->nf ?? '' ?></td>
                                         <td><?= $data_lanc; ?> </td>
                                         <td><?= $data_venc ?></td>
-                                        <td><?= $cadastro->razao_soc; ?> </td>
-                                        <td><?= $rec01->descricao; ?></td>
+                                        <td><?= substr($cadastro->razao_soc,0, 15); ?> </td>
+                                        <td><?= substr($rec01->descricao, 0, 100); ?></td>
                                         <td>R$ <?= $valor_total ?></td>
                                         <td><?= $rec01->parcelas ?></td>
                                         <td><?= $rec02->parcela ?></td>
@@ -190,8 +196,8 @@
                                         } else {
                                             echo 'R$ ' . $valor_pago;
                                         } ?></td>
-                                        <td><?= $pagamento->nome ?? '' ?></td>
-                                        <td><?= $rec02->obs ?></td>
+                                        <td><?= $pagamento != null ? substr($pagamento->nome, 0, 15) : '' ?></td>
+                                        <td><?= substr($rec02->obs, 0, 50) ?></td>
                                         <?php if($_SESSION['usuario']->processar === 1) {?>
                                         <td class="td-acoes">
                                             <?php $valor_restante = number_format($rec02->valor_par - $rec02->valor_pag, 2, ',', '.') ?>
@@ -204,16 +210,23 @@
                                             ><i class="bi bi-cash-stack"></i></button>
                                         </td>
                                         <td class="td-acoes">
-                                            <button class="btn btn-primary" <?= ($rec02->valor_pag == 0) ? 'disabled' : '' ?>
-                                                onclick="window.location.href='../cadastros_manager.php?view=receber&target=parcela&acao=estornar&id=<?= $rec02->id ?>&caminho=<?= $caminho_get ?>&pagina=<?= $numero_pagina ?>&numero_exibido=<?= $numero_exibir ?>'">
-                                                <i class="bi bi-wallet2"></i>
-                                            </button>
+                                            <button class="btn btn-primary" <?php if ($rec02->valor_pag == 0) { ?> disabled <?php } ?>
+                                                onclick="window.location.href='cadastros_manager.php?view=receber&target=parcela&acao=estornar&id=<?= $rec02->id ?>&caminho=<?= $caminho_get ?>&pagina=<?php if (empty($filtros)) {?>
+                                                     <?='?pagina=' . $numero_pagina;?>
+                                                <?php } else { ?>
+                                                     <?='?pagina=' . $numero_pagina;?>
+                                                <?php } ?>&numero_exibido=<?= 'knumero_exibido=' . $numero_exibir ?>'"><i
+                                                    class="bi bi-wallet2"></i></button>
                                         </td>
-
+                                        <td class="td-acoes">
+                                            <button class="btn btn-primary" <?php if (in_array($rec02->id_rec01, $recebimentos_pagos) || isset($rec01->valor_b)) { ?> disabled <?php } ?>
+                                                onclick="window.location.href='receber.php?id=<?= $rec01->id ?>&acao=editar&pagina=<?= $numero_pagina ?>&numero_exibido=<?= $numero_exibir ?>'"><i
+                                                    class="bi bi-pen-fill"></i></button>
+                                        </td>
                                         <?php } ?>
                                         <td class="td-acoes">
                                             <button class="btn btn-primary"
-                                                onclick="window.location.href='cadastro_vendas.php?id=<?= $rec01->id ?>&acao=visualizar'"><i class="bi bi-eye"></i></button>
+                                                onclick="window.location.href='receber.php?id=<?= $rec01->id ?>&acao=visualizar&pagina=<?= $numero_pagina ?>&numero_exibido=<?= $numero_exibir ?>'"><i class="bi bi-eye"></i></button>
                                         </td>
                                         
                                     </tr>
@@ -248,6 +261,7 @@
                                     <td></td>
                                     <td></td>
                                     <td></td>
+                                    <td></td>
                                     
                                 </tr>
                                 <?php }  else { ?>
@@ -266,11 +280,9 @@
                                     <td></td>
                                     <td></td>
                                     <td></td>
-                                    <?php if($_SESSION['usuario']->processar === 1) {?>
                                     <td></td>
                                     <td></td>
                                     <td></td>
-                                    <?php } ?>
                                     <td></td>
                                     <td></td>
 
@@ -281,3 +293,4 @@
 
                 
                 </table>
+                </div>
