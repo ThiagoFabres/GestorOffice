@@ -554,7 +554,6 @@ if (isset($view) && $view == 'cadastro') {
     $nf = str_replace('.', '', $nf);
     $nf = str_replace(',', '.', $nf);
     $nf = floatval($nf);
-    var_dump($nf);
     $descricao = filter_input(INPUT_POST, 'descricao');
     $custo = filter_input(INPUT_POST, 'custo') != '' ? filter_input(INPUT_POST, 'custo') : null;
     $valor = filter_input(INPUT_POST, 'valor') != '' ? filter_input(INPUT_POST, 'valor') : null;
