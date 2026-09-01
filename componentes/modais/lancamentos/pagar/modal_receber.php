@@ -584,7 +584,7 @@
                 .then(res => res.json())
                 .then(data => {
                     msgDuplicado.innerHTML = data.duplicado
-                        ? '<a target="_blank" href="receber.php?filtro_nf=' + data.info.nf + '">Já existe um ou mais lançamentos com este número de documento.</a>'
+                        ? '<a target="_blank" href="pagar.php?filtro_nf=' + data.info.nf + '">Já existe um ou mais lançamentos com este número de documento.</a>'
                         : '';
                 })
                 .catch(err => console.error('Erro ao verificar documento:', err));
