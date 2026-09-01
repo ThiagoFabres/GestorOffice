@@ -583,8 +583,8 @@
             })
                 .then(res => res.json())
                 .then(data => {
-                    msgDuplicado.textContent = data.duplicado
-                        ? '<a target="_blank" href="receber.php?filtro_nf=' + data.documento + '">Já existe um lançamento com este número de documento.</a>'
+                    msgDuplicado.innerHTML = data.duplicado
+                        ? '<a target="_blank" href="receber.php?filtro_nf=' + data.info.nf + '">Já existe um ou mais lançamentos com este número de documento.</a>'
                         : '';
                 })
                 .catch(err => console.error('Erro ao verificar documento:', err));
