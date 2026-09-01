@@ -37,6 +37,7 @@
                                 ordenar_por: $ordenar_por,
                                 direcao: $direcao,
                                 filtro_custos: $get_filtro_custo,
+                                filtro_nf:$get_filtro_nf,
                                 
                             );
                             if (!empty($parcelas)) {
