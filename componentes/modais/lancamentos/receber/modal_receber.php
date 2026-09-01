@@ -248,6 +248,7 @@
                                                             value="<?= $post_nf == 0 ? '' : $post_nf ?? ''  ?>" 
                                                             onkeypress="return /[0-9,]/.test(event.key)"
                                                             required>
+                                                        <div id="msg-nf-duplicado" style="color:#d9534f; font-size:0.85rem; margin-top:0.25rem;"></div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -555,6 +556,41 @@
 <?php } ?>
 
     <script>
+
+
+(function () {
+    const nfInput = document.getElementById('nf');
+    const msgDuplicado = document.getElementById('msg-nf-duplicado');
+    if (!nfInput || !msgDuplicado) return;
+
+    let timeoutBusca;
+
+    nfInput.addEventListener('input', function () {
+        clearTimeout(timeoutBusca);
+        const valor = nfInput.value.trim();
+        msgDuplicado.textContent = '';
+        if (!valor) return;
+
+        timeoutBusca = setTimeout(function () {
+            const idAtual = document.querySelector('input[name="id"]')?.value || '';
+
+            fetch('/../db/verificar_nf_rec.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'nf=' + encodeURIComponent(valor) + '&id=' + encodeURIComponent(idAtual)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    msgDuplicado.innerHTML = data.duplicado
+                        ? '<a target="_blank" href="receber.php?filtro_nf=' + data.info.nf + '">Já existe um ou mais lançamentos com este número de documento.</a>'
+                        : '';
+                })
+                .catch(err => console.error('Erro ao verificar documento:', err));
+        }, 500); // debounce de 500ms
+    });
+})();
+
+
 (function () {
     
 
