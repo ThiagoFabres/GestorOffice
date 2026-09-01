@@ -134,6 +134,8 @@ if ($get_filtro_cadastro != '')
     $filtros[] = 'filtro_cadastro=' . $get_filtro_cadastro;
 if ($get_filtro_custo != '')
     $filtros[] = 'filtro_custo=' . $get_filtro_custo;
+if ($get_filtro_nf != '')
+    $filtros[] = 'filtro_nf=' . $get_filtro_nf;
 
 if ($filtros != []) {   
     $caminho = 'receber.php?' . implode('&', $filtros);
