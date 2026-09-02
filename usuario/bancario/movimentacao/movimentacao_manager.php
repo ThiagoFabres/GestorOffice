@@ -659,31 +659,32 @@ if($acao == 'processar') {
                 // $transactions['debug']['current']['valor'][] = $current['valor'];
             }
             if (strpos($line, '<CHECKNUM>') !== false) {
-                $doc = substr($line, strlen('<CHECKNUM>'));
-                    $doc = str_replace('</CHECKNUM>', '', $doc);
-                
+                $doc = trim(strip_tags($line));
                 $current['documento'] = $doc;
             }
+
             if (strpos($line, '<MEMO>') !== false) {
-                $desc = substr($line, strlen('<MEMO>'));
-                $desc = str_replace('<MEMO>', '', $desc);
-                $desc = str_replace('</MEMO>', '', $desc);
-  
-                // Garante que a descrição está em UTF-8
-                $current['descricao'] = $desc;
+                $memo = trim(strip_tags($line));
+                $current['_memo'] = $memo;
             }
-            if(strpos($line, '<NAME>') !== false) {
-                $name = substr($line, strlen('<NAME>'));
-                $name = str_replace('</NAME>', '', $name);
-             
-                // Garante que a descrição está em UTF-8
-                if(isset($current['descricao'])) {
-                    $current['descricao'] .= ' ' . $name;
+
+            if (strpos($line, '<NAME>') !== false) {
+                $name = trim(strip_tags($line));
+                $current['_name'] = $name;
+            }
+
+            if (strpos($line, '</STMTTRN>') !== false) {
+                $nome = $current['_name'] ?? '';
+                $memo = $current['_memo'] ?? '';
+
+                if ($nome !== '' && $memo !== '') {
+                    $current['descricao'] = $nome . ' - ' . $memo;
                 } else {
-                    $current['descricao'] = $name;
+                    $current['descricao'] = $nome . $memo; 
                 }
-            }
-            if ((strpos($line, '</STMTTRN>'))  !== false  ) {
+
+                unset($current['_name'], $current['_memo']);
+
                 $transactions['current'][] = $current;
                 $current = []; 
             }
