@@ -23,7 +23,7 @@ if(!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSION
 
 $erro = filter_input(INPUT_GET, 'erro');
 $lateral_seguranca = true;
-$lateral_target = 'seguranca';
+$lateral_target = 'ocorrencias';
 $filtro_hora_inicio = filter_input(INPUT_GET, 'filtro_hora_inicio');
 $filtro_hora_final = filter_input(INPUT_GET, 'filtro_hora_final');
 $filtro_seguranca = filter_input(INPUT_GET, 'filtro_seguranca');

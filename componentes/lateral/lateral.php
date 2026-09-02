@@ -185,11 +185,22 @@ $logo_blob = null;
             
             <?php } ?>
             <?php if($empresa_usuario_obj->permissao_seguranca && $usuario_obj->permissao_seguranca){ ?>
-            <div class="menu-item <?php if($lateral_target == 'seguranca') {?>menu-item-atual<?php } ?>">
-                <a href="/usuario/seguranca/seguranca.php">
-                    <div style=" align-items:center;"><i class="bi bi-shield"></i></div> Segurança
-                </a>
-            </div>
+            <div class="menu-item accordion <?php if( isset($lateral_seguranca) && $lateral_seguranca ){ 
+                    ?>menu-item-atual<?php } ?>">
+                    <a class="nav-link text-white" data-bs-toggle="collapse" href="#segurancaMenu" role="button"
+                        aria-expanded="false" aria-controls="segurancaMenu">
+                        <div style=" align-items:center;"><i class="bi bi-shield"></i></div>Segurança
+                    </a>
+                    <div class="<?php if( !isset($lateral_recorrente) || !$lateral_recorrente ){ ?>collapse<?php } ?>" id="segurancaMenu">
+                        <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
+                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'ocorrencias') { ?> menu-li-atual <?php } ?>"><a href="/usuario/seguranca/seguranca.php" class="link-light text-decoration-none">
+                                <i class="bi bi-calendar-week"></i>Ocorrencias</a></li>
+                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'procedimentos') { ?> menu-li-atual <?php } ?>"><a href="/usuario/seguranca/procedimentos.php" class="link-light text-decoration-none">
+                                <i class="bi bi-envelope-open"></i>Procedimentos</a></li>
+    
+                        </ul>
+                    </div>
+                </div>
             <?php } ?>
 
             
