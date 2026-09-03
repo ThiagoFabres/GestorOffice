@@ -60,7 +60,7 @@ $texto_empresa = Procedimento::read($_SESSION['usuario']->id_empresa)[0]->texto 
             <form action="procedimentos_manager.php" method="POST">
                 <textarea id="texto_procedimento" name="texto_procedimento" style="width: 100%; height: 200px; font-size: 16px; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
 <?= htmlspecialchars($texto_empresa) ?>
-                </textarea>
+</textarea>
                 <button type="submit" class="btn btn-primary mt-2 w-100">Salvar</button>
             </form>
         </div>
