@@ -116,7 +116,7 @@ $logo_blob = null;
                     ?>menu-item-atual<?php } ?>">
                     <a class="nav-link text-white" data-bs-toggle="collapse" href="#cartaoMenu" role="button"
                         aria-expanded="false" aria-controls="cartaoMenu">
-                        <div style=" align-items:center;"><i class="bi bi-credit-card"></i></div>Controle Cartão
+                        <div style=" align-items:center;"><i class="bi bi-credit-card"></i></div>Controle Operadora
                     </a>
                     <div class="<?php if( !isset($lateral_cartao) || !$lateral_cartao ){ ?>collapse<?php } ?>" id="cartaoMenu">
                         <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
