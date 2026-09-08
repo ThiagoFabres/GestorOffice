@@ -743,14 +743,10 @@ function parse_csv(string $caminhoCsv): array {
         if($data == null || $data == '') {
             continue;
         }
-        echo $data;
-        echo '<br>';
         $data = (DateTime::createFromFormat('d/m/Y', $data));
         $data = $data->format('Y-m-d');
         }
         // Valores numéricos
-        echo $data;
-        echo '<br>';
         
 
 
