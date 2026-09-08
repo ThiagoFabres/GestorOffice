@@ -97,6 +97,7 @@
                                     <td></td>
                                     <td></td>
                                     <td></td>
+                                    <td></td>
                                     <td style="text-align: center; font-size: 100%;">R$</td>
                                     <td style="text-align: center; font-size: 100%;"><?= number_format($total_valor_b, '2', ',', '.')?></td>
                                     <?php if($exibir_diferencas) { ?>

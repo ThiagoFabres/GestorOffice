@@ -148,7 +148,6 @@
                                     <td></td>
                                     <td></td>
                                     <td></td>
-                                    <td></td>
                                     <td style="text-align: end;">R$</td>
                                     <td style="text-align: center;"><?= number_format($total_valor_par, '2', ',', '.')?></td>
                                     <td></td>
