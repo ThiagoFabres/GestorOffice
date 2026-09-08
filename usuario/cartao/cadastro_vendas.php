@@ -1179,6 +1179,12 @@ document.addEventListener('DOMContentLoaded', function () {
         window.location.href = 'cadastro_vendas.php'
     </script>
     <?php } ?>
+    <?php if($erro == 'tamanho_arquivo'){?>
+    <script>
+        alert('Tamanho do arquivo excede o limite permitido, o tamanho máximo é 1,5MB')
+        window.location.href = 'cadastro_vendas.php'
+    </script>
+    <?php } ?>
 <?php } ?>
 
 

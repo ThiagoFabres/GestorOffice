@@ -915,7 +915,16 @@ function parse_csv(string $caminhoCsv): array {
 $acao = filter_input(INPUT_POST, 'acao');
 if($acao == 'processar') {
     $id_operadora = filter_input(INPUT_POST, 'operadora');
-    $file = $_FILES['vendas_excel'];
+    $file = $_FILES['vendas_excel'] ?? null;
+    $limite_tamanho_arquivo = 1.5 * 1024 * 1024;
+    if($file === null || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+        header('Location: cadastro_vendas.php?erro=arquivo');
+        exit;
+    }
+    if($file['size'] > $limite_tamanho_arquivo) {
+        header('Location: cadastro_vendas.php?erro=tamanho_arquivo');
+        exit;
+    }
     if(str_ends_with($file['name'], '.csv')) {
         $transactions = parse_csv($file['tmp_name']);
     }else {
