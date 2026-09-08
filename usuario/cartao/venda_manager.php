@@ -23,13 +23,11 @@ require_once __DIR__ . '/../../db/entities/recebimentos.php';
 
 function parse_excel($numero_arquivo = null) {
     $data_atual = (new DateTime())->format('Y-m-d');
-    if($numero_arquivo == 1) {
-        $numero_arquivo = 2;
-    }
     require __DIR__ . '/operadoras_suporte.php';
     require_once __DIR__ . '/../../vendor/autoload.php';
     
     $id_operadora = filter_input(INPUT_POST, 'operadora');
+    $operadora = Ope01::read($id_operadora, $_SESSION['usuario']->id_empresa )[0];
     if($id_operadora == null) {
         header('location: cadastro_vendas.php?erro=operadora');
         exit;
@@ -46,20 +44,20 @@ function parse_excel($numero_arquivo = null) {
         exit;
     }
     $arquivos_multi = [
-        'sicredi' => 2,
+        'sicredi' => 4,
         'getnet' => 2,
         'saudeservice' => 2,
         'capim' => 2
     ];
 
     // Verificar limite máximo de arquivos para o operador
-    $operadora_descricao_preg = $operadora_descricao_preg ?? null;
+    $operadora_descricao_preg = $operadora_descricao_preg ?? preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $operadora->descricao))) ?? null;
     if($operadora_descricao_preg != null) {
         $limite_arquivo = $arquivos_multi[$operadora_descricao_preg] ?? 2;
-        if($numero_arquivo > $limite_arquivo) {
-            header('Location: cadastro_vendas.php?erro=arquivo');
-            exit;
-        }
+        // if($numero_arquivo > $limite_arquivo) {
+        //     header('Location: cadastro_vendas.php?erro=arquivo');
+        //     exit;
+        // }
     }
     $operadoras_suportadas = [
         'stone',
@@ -75,14 +73,17 @@ function parse_excel($numero_arquivo = null) {
     ];
     
     $tipo_arquivo = filter_input(INPUT_POST, 'tipo_arquivo');
-    $operadora = Ope01::read($id_operadora, $_SESSION['usuario']->id_empresa )[0];
+    
     $operadora_descricao_preg = preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $operadora->descricao)));
+    $numero_arquivo_atual = $numero_arquivo ?? 1;
+    $chave_arquivo = $file_ext . ($numero_arquivo_atual === 1 ? '' : $numero_arquivo_atual);
+
     if($tipo_arquivo == 'padrao'){
         if(!in_array($operadora_descricao_preg, $operadoras_suportadas)) {
             header('Location:cadastro_vendas.php?erro=suporte');
             exit;
         }
-        $operadora_sup = $operadoras_suporte[$operadora_descricao_preg][$file_ext.$numero_arquivo];
+        $operadora_sup = $operadoras_suporte[$operadora_descricao_preg][$chave_arquivo] ?? null;
         
         
         if($operadora_sup == null) {
@@ -153,6 +154,10 @@ function parse_excel($numero_arquivo = null) {
     'lancamentos' => [],
     'invalido' => []
 ];
+
+    $limite_arquivo = $arquivos_multi[$operadora_descricao_preg] ?? 1;
+    $multi = isset($arquivos_multi[$operadora_descricao_preg])
+        && $numero_arquivo_atual < $limite_arquivo;
 
 
     foreach ($worksheet_lines as $i => $row) {
@@ -253,13 +258,6 @@ function parse_excel($numero_arquivo = null) {
         if(isset($operadora_sup['suporte_valor_taxa']) && $operadora_sup['suporte_valor_taxa'] == true) {
            $cells[4] = $cells[5] + $cells[4];   
         }
-        $multi = false;
-            foreach($arquivos_multi as $j => $num) {
-                if($operadora_descricao_preg == $j && $numero_arquivo <= $num) {
-                    $multi = true;
-                }
-            }
-
             
         
         if(($tipo_arquivo == 'personalizado' && isset($cells[6])) || ($tipo_arquivo == 'padrao' && !isset($cells[6])) ) {
@@ -272,32 +270,37 @@ function parse_excel($numero_arquivo = null) {
                     $spreadsheet->disconnectWorksheets();
                     unset($spreadsheet, $worksheet, $worksheet_lines);
                 }
+            $transactions_next = parse_excel($numero_arquivo_atual + 1);
+            error_log("Retorno do arquivo " . ($numero_arquivo_atual + 1) . ": " . count($transactions_next['lancamentos'] ?? []) . " lançamentos");
 
-            $transactions_next = parse_excel($numero_arquivo + 1);
-
-            if (!empty($transactions_next['invalido'])) {
-                $transactions['invalido'] =  $transactions_next['invalido'];
+                        if (!empty($transactions_next['invalido'])) {
+                $transactions['invalido'] = array_merge($transactions['invalido'] ?? [], $transactions_next['invalido']);
             }
-            
+
             if (!empty($transactions_next['lancamentos'])) {
-                $transactions['lancamentos'] = $transactions_next['lancamentos'];
-            }
-            if(empty($transactions['lancamentos'])) {
-                header('Location: cadastro_vendas.php?erro=cadastrado');
-                exit;
-            }
-            if(!empty($transactions['invalido'])) {
-                $_SESSION['vendas_invalidas'] = $transactions['invalido'];
-                header('Location: cadastro_vendas.php?vendas_invalidas=1');
-                exit;
-            } else {
-                $_SESSION['vendas']['transactions'] = $transactions['lancamentos'];
-                $_SESSION['vendas']['conta'] = $id_operadora;
-                header('Location: cadastro_vendas.php?vendas_enviadas=1');
-                exit;
+                $transactions['lancamentos'] = $transactions['lancamentos'] + $transactions_next['lancamentos'];
             }
 
-            
+            // Só decide/envia resultado quando já tem lançamentos válidos OU já é a última versão testada
+            if (!empty($transactions['lancamentos']) || $numero_arquivo_atual == $limite_arquivo) {
+                if (empty($transactions['lancamentos'])) {
+                    header('Location: cadastro_vendas.php?erro=cadastrado');
+                    exit;
+                }
+                if (!empty($transactions['invalido'])) {
+                    $_SESSION['vendas_invalidas'] = $transactions['invalido'];
+                    header('Location: cadastro_vendas.php?vendas_invalidas=1');
+                    exit;
+                } else {
+                    $_SESSION['vendas']['transactions'] = $transactions['lancamentos'];
+                    $_SESSION['vendas']['conta'] = $id_operadora;
+                    header('Location: cadastro_vendas.php?vendas_enviadas=1');
+                    exit;
+                }
+            }
+
+            // Ainda não é a última versão e não achou nada: devolve pro nível anterior continuar tentando
+            return $transactions;
         }
         else{
                 header('location: cadastro_vendas.php?erro=arquivo');
@@ -365,27 +368,33 @@ function parse_excel($numero_arquivo = null) {
             continue;
         }
         if (isset($multi) && $multi) {
-            $transactions_next = parse_excel($numero_arquivo + 1);
-            if (!empty($transactions_next['invalido'])) {
-                $transactions['invalido'] =  $transactions_next['invalido'];
+            $transactions_next = parse_excel($numero_arquivo_atual + 1);
+            error_log("Retorno do arquivo " . ($numero_arquivo_atual + 1) . ": " . count($transactions_next['lancamentos'] ?? []) . " lançamentos");
+                        if (!empty($transactions_next['invalido'])) {
+                $transactions['invalido'] = array_merge($transactions['invalido'] ?? [], $transactions_next['invalido']);
             }
             if (!empty($transactions_next['lancamentos'])) {
-                $transactions['lancamentos'] = $transactions_next['lancamentos'];
+                $transactions['lancamentos'] = $transactions['lancamentos'] + $transactions_next['lancamentos'];
             }
-            if(empty($transactions['lancamentos'])) {
-                header('Location: cadastro_vendas.php?erro=cadastrado');
-                exit;
+
+            if (!empty($transactions['lancamentos']) || $numero_arquivo_atual == $limite_arquivo) {
+                if (empty($transactions['lancamentos'])) {
+                    header('Location: cadastro_vendas.php?erro=cadastrado');
+                    exit;
+                }
+                if (!empty($transactions['invalido'])) {
+                    $_SESSION['vendas_invalidas'] = $transactions['invalido'];
+                    header('Location: cadastro_vendas.php?vendas_invalidas=1');
+                    exit;
+                } else {
+                    $_SESSION['vendas']['transactions'] = $transactions['lancamentos'];
+                    $_SESSION['vendas']['conta'] = $id_operadora;
+                    header('Location: cadastro_vendas.php?vendas_enviadas=1');
+                    exit;
+                }
             }
-            if(!empty($transactions['invalido'])) {
-                $_SESSION['vendas_invalidas'] = $transactions['invalido'];
-                header('Location: cadastro_vendas.php?vendas_invalidas=1');
-                exit;
-            } else {
-                $_SESSION['vendas']['transactions'] = $transactions['lancamentos'];
-                $_SESSION['vendas']['conta'] = $id_operadora;
-                header('Location: cadastro_vendas.php?vendas_enviadas=1');
-                exit;
-            }
+            return $transactions;
+           
         } else {
             header('location: cadastro_vendas.php?erro=arquivo');
             exit;
@@ -527,12 +536,23 @@ function parse_excel($numero_arquivo = null) {
         
     }
 
+    if (empty($transactions['lancamentos']) && $multi) {
+        $transactions_next = parse_excel($numero_arquivo_atual + 1);
+        error_log("Retorno do arquivo " . ($numero_arquivo_atual + 1) . ": " . count($transactions_next['lancamentos'] ?? []) . " lançamentos");
+
+        if (!empty($transactions_next['invalido'])) {
+            $transactions['invalido'] = array_merge($transactions['invalido'], $transactions_next['invalido']);
+        }
+        if (!empty($transactions_next['lancamentos'])) {
+            $transactions['lancamentos'] = $transactions_next['lancamentos'];
+        }
+    }
+
     $transactions['verify'][] = [
             'parcelas' => $parcelas,
             'bandeiras_parcelas' => $bandeiras_parcelas,
             'bandeiras_tipo' => $bandeiras_tipo
         ];
-        
     return $transactions;
 }
 function parse_csv(string $caminhoCsv): array {
@@ -700,9 +720,12 @@ function parse_csv(string $caminhoCsv): array {
             continue;
         }
 
-        if(isset($operadora_sup['suporte_valor_liquido'])) {
+        
+
+        if(isset($operadora_sup['suporte_valor_liquido']) && $operadora_sup['suporte_valor_liquido'] != 'bruto') {
             $valor_liquido = 0;
         }
+        
         
         $valor_b_str = $get_valor_coluna($operadora_sup['colunas']['valor_b']);
         // Limpar "R$" e espaços antes de converter
@@ -714,6 +737,9 @@ function parse_csv(string $caminhoCsv): array {
         $valorBruto = !empty($valor_b_str) 
             ? floatval(str_replace(['.', ','], ['', '.'], $valor_b_str))
             : 0;
+        }
+        if(isset($operadora_sup['suporte_valor_liquido']) && $operadora_sup['suporte_valor_liquido'] === 'bruto') {
+            $valor_liquido = $valorBruto;
         }
         $valor_l_str = isset($valor_liquido) ? $valor_liquido : $get_valor_coluna($operadora_sup['colunas']['valor_l']);
         
@@ -882,7 +908,7 @@ function parse_csv(string $caminhoCsv): array {
     // usleep(50000); 
     $i++;
     }
-
+    
     return $transactions;
 }
 

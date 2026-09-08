@@ -142,15 +142,15 @@ $operadoras_suporte = [
     'sicredi' => [
         'xlsx' =>[
             'excluded_columns' => [
-                'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'L', 'O', 'Q', 'R'
+                'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'P', 'Q', 'R'
             ],
             'start_row' => 6,
             'start_end_columns' => [ 'start' => 'A', 'end' => 'S'],
             'organizador' => [
                 'data' => 0,
                 'bandeira' => 3,
-                'tipo' => 1,
-                'parcela' => 2,
+                'tipo' => 2,
+                'parcela' => 1,
                 'valor_b' => 5,
                 'valor_l' => 6,
                 'estado' => 4
@@ -176,25 +176,44 @@ $operadoras_suporte = [
             'suporte_data' => 'hora',
             
         ],
-        'csv' => [
-            'colunas' => [
-                'data' =>'Data da venda',
-                'status' => 'Status',
-                'valor_b' => 'Valor bruto',
-                'valor_l' => 'Valor liquido',
-                'tipo' => 'Produto',
-                'bandeira' => 'Bandeira',
-                'parcela' => 'Parcelas'
+        'xlsx3' =>[
+            'excluded_columns' => [
+                'B', 'C', 'D', 'F', 'I', 'K', 'M',
             ],
-            'suporte_encoding' => false,
-            'linha_inicial' => null,
-            'suporte_status' => true,
-            'suporte_parcela' => true,
-            'suporte_data' => 'hora',
+            'start_row' => 20,
+            'start_end_columns' => [ 'start' => 'A', 'end' => 'N'],
+            'organizador' => [
+                'data' => 0,
+                'bandeira' => 3,
+                'tipo' => 1,
+                'parcela' => 2,
+                'valor_b' => 4,
+                'valor_l' => 5,
+                'estado' => 6
+            ],
+            'suporte_data' => 'formatada',
             
-            'separator' => ';',
-            'encoding' => 'ISO-8859-1',
-        ]
+        ],
+        'xlsx4' =>[
+            'excluded_columns' => [
+                'B', 'C', 'D', 'F', 'I', 'K', 'L'
+            ],
+            'start_row' => 8,
+            'start_end_columns' => [ 'start' => 'A', 'end' => 'N'],
+            'organizador' => [
+                'data' => 0, //A
+                'bandeira' => 3, // H
+                'tipo' => 1, // E
+                'parcela' => 2, //G
+                'valor_b' => 4,// J
+                'valor_l' => 5,
+                'estado' => 6
+            ],
+            'suporte_data' => 'formatada',
+            
+        ],
+        
+        
     ],
     'fazpay' => [
         'xlsx' => [
