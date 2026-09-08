@@ -708,7 +708,7 @@ function parse_csv(string $caminhoCsv): array {
         // Limpar "R$" e espaços antes de converter
         $valor_b_str = trim(str_replace('R$', '', $valor_b_str ?? ''));
 
-        if($operadora_sup['suporte_numero'] == 'formatado(.)') {
+        if(isset($operadora_sup['suporte_numero']) && $operadora_sup['suporte_numero'] == 'formatado(.)') {
             $valorBruto = $valor_b_str;
         } else {
         $valorBruto = !empty($valor_b_str) 
@@ -731,6 +731,7 @@ function parse_csv(string $caminhoCsv): array {
         
         // Data e hora → só data
         $data = $get_valor_coluna($operadora_sup['colunas']['data']) ?? null;
+        
         if($operadora_sup['suporte_data'] == 'hora'){
             
             $data = strtolower($data);
@@ -739,10 +740,17 @@ function parse_csv(string $caminhoCsv): array {
             $data = (DateTime::createFromFormat('d m Y', $data))->format('Y-m-d');
         }
         if($operadora_sup['suporte_data'] == 'formatada'){
-            $data = (DateTime::createFromFormat('d/m/Y', $data))->format('Y-m-d');
+        if($data == null || $data == '') {
+            continue;
+        }
+        echo $data;
+        echo '<br>';
+        $data = (DateTime::createFromFormat('d/m/Y', $data));
+        $data = $data->format('Y-m-d');
         }
         // Valores numéricos
-        
+        echo $data;
+        echo '<br>';
         
 
 
