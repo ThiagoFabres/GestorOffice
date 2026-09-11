@@ -66,9 +66,18 @@ $link_vinculo_2 = "https://web.telegram.org/#/im?tgaddr=tg%3A%2F%2Fresolve%3Fdom
         </div>
     <div id="itens-menu" style="height: 100%;">
 
-        <div class="menu-item">
+        <div class="menu-item menu-item-atual">
             <a href="/gestor/"> <div ><i class="bi bi-person"></i></div> Adicionar Usuario</a>
         </div>
+
+        <?php if($empresa_usuario_obj->permissao_seguranca === 1) { ?>
+            <div class="menu-item">
+                <a href="procedimentos/procedimentos.php"> <div ><i class="bi bi-envelope-open"></i></div> Procedimentos</a>
+            </div>
+            <div class="menu-item">
+                <a href="controle/controle.php"> <div ><i class="bi bi-clock"></i></div> Controle</a>
+            </div>
+        <?php } ?>
             <!-- quero que isso fique embaixo -->
         <div class="d-flex flex-column" style="margin-top: auto;">
             <div class="menu-item">
