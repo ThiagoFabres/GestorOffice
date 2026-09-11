@@ -146,6 +146,7 @@ async function gerarpdf(nome, nomeEmpresa = '') {
 
             if (data.section === 'body' && data.row.raw?.isTotalRow) {
                 data.cell.styles.fontStyle = 'bold';
+                data.cell.styles.fontSize = 10;
                 data.cell.styles.fillColor = [220, 220, 220];
                 data.cell.styles.textColor = [0, 0, 0];
             } else if (data.section === 'body' && data.row.index % 2 === 1) {
