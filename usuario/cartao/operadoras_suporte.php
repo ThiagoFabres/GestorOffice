@@ -160,7 +160,7 @@ $operadoras_suporte = [
         ],
         'xlsx2' =>[
             'excluded_columns' => [
-                'B', 'C', 'D', 'F', 'I', 'K', 'L'
+                'B', 'C', 'D', 'F', 'I', 'J', 'L'
             ],
             'start_row' => 8,
             'start_end_columns' => [ 'start' => 'A', 'end' => 'N'],
@@ -169,7 +169,7 @@ $operadoras_suporte = [
                 'bandeira' => 3, // H
                 'tipo' => 1, // E
                 'parcela' => 2, //G
-                'valor_b' => 4,// J
+                'valor_b' => 4,// K
                 'valor_l' => 5,
                 'estado' => 6
             ],
