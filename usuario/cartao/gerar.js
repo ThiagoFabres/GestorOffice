@@ -99,6 +99,7 @@ async function gerarpdf(nome, nomeEmpresa = '') {
 
         });
 
+        row.isTotalRow = tr.id === 'tr-totais';
         body.push(row);
 
     });
@@ -107,21 +108,13 @@ async function gerarpdf(nome, nomeEmpresa = '') {
        TABELA
     ------------------------- */
 
-    const linhasPorPagina = 22;
-
-for (let i = 0; i < body.length; i += linhasPorPagina) {
-
-    const chunk = body.slice(i, i + linhasPorPagina);
-
-    if (i !== 0) {
-        doc.addPage();
-    }
-
     doc.autoTable({
         head: head,
-        body: chunk,
+        body: body,
         startY: y + 2,
         theme: 'striped',
+        rowPageBreak: 'avoid',
+        showHead: 'everyPage',
 
         styles: {
             fontSize: 8,
@@ -151,26 +144,18 @@ for (let i = 0; i < body.length; i += linhasPorPagina) {
                 data.cell.text = '';
             }
 
-            if (data.row.cells[0].text === 'Totais') {
-        data.cell.styles.fontStyle = 'bold';
-        data.cell.styles.fillColor = [255, 255, 255];
-    }
-
-            if (data.section === 'body') {
-
-                // const grupo = Math.floor(data.row.index / 2);
-
-                if (data.row.index % 2 === 1) {
-                    data.cell.styles.fillColor = [245,245,245];
-                }
+            if (data.section === 'body' && data.row.raw?.isTotalRow) {
+                data.cell.styles.fontStyle = 'bold';
+                data.cell.styles.fillColor = [220, 220, 220];
+                data.cell.styles.textColor = [0, 0, 0];
+            } else if (data.section === 'body' && data.row.index % 2 === 1) {
+                data.cell.styles.fillColor = [245,245,245];
 
             }
 
         }
 
     });
-
-}
 
     /* -------------------------
        PAGINAÇÃO
