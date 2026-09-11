@@ -171,7 +171,7 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'adicionar') {
     $permissao_operacional = isset($_POST['permissao_operacional']) ? 1 : 0;
     $permissao_inicio = isset($_POST['permissao_inicio']) ? 1 : 0;
     $inicio_atividade = $_POST['ativ_inicio'] ?? null;
-    $tolerancia_atividade = $_POST['tolerancia'] ?? null;
+    $tolerancia_atividade = $_POST['tolerancia'] == '' ? null : $_POST['tolerancia'] ?? null;
     $celular1_atividade = $_POST['cel1'] ?? null;
     $celular2_atividade = $_POST['cel2'] ?? null;
     $parceiro = $_POST['parceiro'] ?? null;
