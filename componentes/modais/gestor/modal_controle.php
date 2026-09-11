@@ -21,11 +21,11 @@
                             </div>
                         </div>
                     </div>
-                    <div style="margin-bottom: 3em;" class="footer">
-
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">Fechar</button>
-                        <button name="acao" value="<?= $controleEdicao !== null ? 'editar' : 'adicionar' ?>" class="btn btn-success" style="background-color: #5856d6; border: #5856d6; border-top-right-radius: 0; border-bottom-right-radius: 0;">Salvar</button>
-                        
+                    <div class="d-flex justify-content-end gap-2">
+                        <div>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                            <button type="submit" name="acao" value="<?php if($controleEdicao) echo 'editar'; else echo 'adicionar'; ?>" class="btn btn-success" style="background-color: #5856d6; border-color: #5856d6;">Salvar</button>
+                        </div>
                     </div>
                 </form>
             </div>
