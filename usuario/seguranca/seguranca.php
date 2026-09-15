@@ -3,11 +3,12 @@
 require_once __DIR__ . '/../../db/entities/usuarios.php';
 require_once __DIR__ . '/../../db/entities/empresas.php';
 require_once __DIR__ . '/../../db/entities/cargo.php';
-require_once __DIR__ . '/../../db/entities/seguranca/alarme.php';
 require_once __DIR__ . '/../../db/entities/seguranca/panico.php';
 require_once __DIR__ . '/../../db/entities/seguranca/ponto.php';
 require_once __DIR__ . '/../../db/entities/seguranca/ronda.php';
 require_once __DIR__ . '/../../db/entities/seguranca/turno.php';
+require_once __DIR__ . '/../../db/entities/seguranca/ocorrencia.php';
+require_once __DIR__ . '/../../db/entities/controle.php';
 
 session_start();
 
@@ -31,21 +32,67 @@ $filtro_seguranca = filter_input(INPUT_GET, 'filtro_seguranca');
 $segurancas = Usuario::read(id:$filtro_seguranca, idempresa: $empresa_usuario_obj->id, cargo:4);
 
 $turnos = [];
-$alarmes = [];
 $panicos = [];
 $rondas = [];
 $pontos = [];
+$ocorrencias = [];
+$controles = Controle::read($empresa_usuario_obj->id);
+
+$pontoDentroDoPrazo = static function ($ponto, array $controles): bool {
+    $horaPonto = strtotime($ponto->hora ?? $ponto->created_at);
+    if ($horaPonto === false) {
+        return false;
+    }
+
+    $dataPonto = date('Y-m-d', $horaPonto);
+    foreach ($controles as $controle) {
+        $horaControle = substr((string) $controle->hora, 0, 8);
+        $inicio = strtotime($dataPonto . ' ' . $horaControle);
+        if ($inicio === false) {
+            continue;
+        }
+
+        $fim = $inicio + (max(0, (int) $controle->tolerancia) * 60);
+        if ($horaPonto >= $inicio && $horaPonto <= $fim) {
+            return true;
+        }
+    }
+
+    return false;
+};
 
 foreach($segurancas as $i => $seguranca) {
     $turnos[$seguranca->id] = Turno::read(id_usuario:$seguranca->id, filtro_hora_inicio: $filtro_hora_inicio, filtro_hora_final: $filtro_hora_final);
     
     foreach($turnos[$seguranca->id] as $turno) {
-        $alarmes[$seguranca->id][$turno->id] = Alarme::read(id_usuario:$seguranca->id, filtro_hora_inicio: $turno->started_at, filtro_hora_final: $turno->ended_at);
-        $panicos[$seguranca->id][$turno->id] = Panico::read(id_usuario:$seguranca->id, filtro_hora_inicio: $turno->started_at, filtro_hora_final: $turno->ended_at);
-        $rondas [$seguranca->id][$turno->id] = Ronda::read (id_usuario:$seguranca->id, filtro_hora_inicio: $turno->started_at, filtro_hora_final: $turno->ended_at);
-        foreach($rondas[$seguranca->id][$turno->id] as $ronda) {
-            $pontos[$seguranca->id][$turno->id][$ronda->id] = PontoControle::read(id_usuario:$seguranca->id, filtro_hora_inicio: $ronda->started_at, filtro_hora_final: $ronda->ended_at);
-        }
+        $inicioTurno = $turno->started_at;
+        $fimTurno = $turno->ended_at;
+
+        $panicos[$seguranca->id][$turno->id] = Panico::read(
+            id_usuario: $seguranca->id,
+            filtro_hora_inicio: $inicioTurno,
+            filtro_hora_final: $fimTurno
+        );
+        $pontos[$seguranca->id][$turno->id] = PontoControle::read(
+            id_usuario: $seguranca->id,
+            filtro_hora_inicio: $inicioTurno,
+            filtro_hora_final: $fimTurno
+        );
+        $ocorrencias[$seguranca->id][$turno->id] = Ocorrencia::read(id_turno: $turno->id)[0] ?? null;
+
+        $rondasDoUsuario = Ronda::read(id_usuario: $seguranca->id);
+        $rondas[$seguranca->id][$turno->id] = array_values(array_filter(
+            $rondasDoUsuario,
+            static function ($ronda) use ($inicioTurno, $fimTurno) {
+                $horaRonda = strtotime($ronda->hora ?? $ronda->created_at);
+                $inicio = strtotime($inicioTurno);
+                $fim = $fimTurno ? strtotime($fimTurno) : null;
+
+                return $horaRonda !== false
+                    && ($inicio === false || $horaRonda >= $inicio)
+                    && ($fim === null || $horaRonda <= $fim);
+            }
+        ));
     }
 
 }
@@ -170,9 +217,10 @@ foreach($segurancas as $i => $seguranca) {
                                                     <?php
                                                         $turnoId  = $segId . '-turno' . $turno->id;
  
-                                                        $listaAlarmes = $alarmes[$seguranca->id][$turno->id] ?? [];
+                                                        $listaPontos  = $pontos[$seguranca->id][$turno->id] ?? [];
                                                         $listaPanicos = $panicos[$seguranca->id][$turno->id] ?? [];
                                                         $listaRondas  = $rondas[$seguranca->id][$turno->id]  ?? [];
+                                                        $ocorrenciaTurno = $ocorrencias[$seguranca->id][$turno->id] ?? null;
  
                                                         $inicioFmt = !empty($turno->started_at)
                                                             ? date('d/m/Y H:i', strtotime($turno->started_at))
@@ -191,7 +239,7 @@ foreach($segurancas as $i => $seguranca) {
                                                     <div class="accordion-item"
                                                          data-turno-inicio="<?= htmlspecialchars($inicioFmt) ?>"
                                                          data-turno-fim="<?= htmlspecialchars($fimFmt !== 'Em Andamento' ? $fimFmt : 'Em andamento') ?>"
-                                                         data-alarmes="<?= count($listaAlarmes) ?>"
+                                                         data-pontos="<?= count($listaPontos) ?>"
                                                          data-panicos="<?= count($listaPanicos) ?>"
                                                          data-rondas="<?= count($listaRondas) ?>">
                                                         <h2 class="accordion-header" id="heading-<?= $turnoId ?>">
@@ -204,7 +252,7 @@ foreach($segurancas as $i => $seguranca) {
                                                                 <?= htmlspecialchars($inicioFmt) ?>
                                                                 <?= $fimFmt !== 'Em Andamento' ? ' até ' . htmlspecialchars($fimFmt) : ' - Em andamento' ?>
 
-                                                                <span class="badge bg-warning ms-2"><?= count($listaAlarmes) ?></span>
+                                                                <span class="badge bg-info ms-2"><?= count($listaPontos) ?></span>
                                                                 <span class="badge bg-danger ms-2"><?= count($listaPanicos) ?></span>
                                                                 <span class="badge bg-primary ms-2"><?= count($listaRondas) ?></span>
 
@@ -224,70 +272,54 @@ foreach($segurancas as $i => $seguranca) {
                                                                         <?= $fimFmt !== 'Em Andamento' ? 'Fim:' . htmlspecialchars($fimFmt) : ' Em andamento' ?>
                                                                     </div>
 
+                                                                    <?php if ($ocorrenciaTurno !== null): ?>
+                                                                        <div class="alert alert-primary mb-3" role="alert">
+                                                                            <strong>Ocorrência:</strong>
+                                                                            <?= htmlspecialchars($ocorrenciaTurno->texto ?? '') ?>
+                                                                        </div>
+                                                                    <?php endif; ?>
+
  
-                                                                    <!-- ── Alarmes ─────────────────────────────────── -->
+                                                                    <!-- ── Pontos ──────────────────────────────────── -->
                                                                     <div class="accordion-item">
-                                                                        <h2 class="accordion-header" id="heading-alarme-<?= $turnoId ?>">
+                                                                        <h2 class="accordion-header" id="heading-ponto-<?= $turnoId ?>">
                                                                             <button class="accordion-button collapsed" type="button"
                                                                             style="color:black;"
-                                                                                    data-bs-toggle="collapse" data-bs-target="#collapse-alarme-<?= $turnoId ?>"
-                                                                                    aria-expanded="false" aria-controls="collapse-alarme-<?= $turnoId ?>">
-                                                                                <i class="bi bi-bell-fill me-2 text-warning"></i>
-                                                                                Alarmes
-                                                                                <span class="badge bg-secondary ms-2"><?= count($listaAlarmes) ?></span>
+                                                                                    data-bs-toggle="collapse" data-bs-target="#collapse-ponto-<?= $turnoId ?>"
+                                                                                    aria-expanded="false" aria-controls="collapse-ponto-<?= $turnoId ?>">
+                                                                                <i class="bi bi-geo-alt-fill me-2 text-info"></i>
+                                                                                Pontos
+                                                                                <span class="badge bg-secondary ms-2"><?= count($listaPontos) ?></span>
                                                                             </button>
                                                                         </h2>
-                                                                        <div id="collapse-alarme-<?= $turnoId ?>" class="accordion-collapse collapse"
+                                                                        <div id="collapse-ponto-<?= $turnoId ?>" class="accordion-collapse collapse"
                                                                              data-bs-parent="#accordion-cat-<?= $turnoId ?>">
                                                                             <div class="accordion-body">
-                                                                                <?php if (empty($listaAlarmes)): ?>
-                                                                                    <p class="text-muted mb-0">Nenhum alarme registrado neste turno.</p>
+                                                                                <?php if (empty($listaPontos)): ?>
+                                                                                    <p class="text-muted mb-0">Nenhum ponto registrado neste turno.</p>
                                                                                 <?php else: ?>
                                                                                     <table class="table table-striped table-bordered">
                                                                                         <thead>
-                                                                                            <th>Status</th>
-                                                                                            <th>Código</th>
-                                                                                            <th>Código Digitado</th>
                                                                                             <th>Horário</th>
                                                                                         </thead>
                                                                                         <tbody>
-                                                                                            <?php foreach ($listaAlarmes as $alarme): 
-                                                                                                if($alarme->status === 'incorrect') {
-                                                                                                    $status_class = 'parcela_cor_amarela';
-                                                                                                    $status_formatado = 'Incorreto';
-                                                                                            } elseif($alarme->status === 'answered') {
-                                                                                                $status_class = 'parcela_cor_verde';
-                                                                                                $status_formatado = 'Respondido';
-                                                                                            } elseif($alarme->status === 'timeout') {
-                                                                                                $status_class = 'parcela_cor_vermelha';
-                                                                                                $status_formatado = 'Tempo Esgotado';
-                                                                                            } else {
-                                                                                                $status_class = '';
-                                                                                                $status_formatado = 'Status Desconhecido';
-                                                                                            }
-                                                                                            ?>
-                                                                                            <tr class="<?= $status_class ?>">
-                                                                                                <td class="<?= $status_class ?>">
-                                                                                                    <?= htmlspecialchars($status_formatado) ?>
-                                                                                                </td>
-                                                                                                <td class="<?= $status_class ?>">
-                                                                                                    <?= htmlspecialchars($alarme->codigo) ?>
-                                                                                                </td>
-                                                                                                <td class="<?= $status_class ?>">
-                                                                                                    <?= htmlspecialchars($alarme->codigo_digitado) ?>
-                                                                                                </td>
-                                                                                                <td class="<?= $status_class ?>">
-                                                                                                    <?php
-                                                                                                        if($alarme->status === 'incorrect') {
-                                                                                                            
-                                                                                                            echo htmlspecialchars(date('d/m/Y H:i', strtotime($alarme->answered_at)));
-                                                                                                        } else {
-                                                                                                            echo htmlspecialchars(date('d/m/Y H:i', strtotime($alarme->deadline_at)));
-                                                                                                        }
-                                                                                                    ?>
-                                                                                                </td>
-                                                                                            </tr>
-                                                                                        <?php endforeach; ?>
+                                                                                            <?php foreach ($listaPontos as $ponto): ?>
+                                                                                                <?php
+                                                                                                    $pontoNoPrazo = $pontoDentroDoPrazo($ponto, $controles);
+                                                                                                    $horaPonto = $ponto->hora ?? $ponto->created_at;
+                                                                                                ?>
+                                                                                                <tr>
+                                                                                                    <td class="<?= $pontoNoPrazo ? 'table-success' : 'table-danger' ?>">
+                                                                                                        <span class="d-flex justify-content-between align-items-center">
+                                                                                                            <span><?= !empty($horaPonto) && strtotime($horaPonto) !== false
+                                                                                                                ? htmlspecialchars(date('d/m/Y H:i', strtotime($horaPonto)))
+                                                                                                                : htmlspecialchars($horaPonto ?? '') ?></span>
+                                                                                                            <strong><?= $pontoNoPrazo ? 'Dentro do prazo' : 'Fora do prazo' ?></strong>
+                                                                                                        </span>
+                                                                                                    </td>
+                                                                                                </tr>
+                                                                                            <?php endforeach; ?>
+                                                                                        </tbody>
                                                                                     </table>
                                                                                 <?php endif; ?>
                                                                             </div>
@@ -369,69 +401,22 @@ foreach($segurancas as $i => $seguranca) {
                                                                                     <p class="text-muted mb-0">Nenhuma ronda registrada neste turno.</p>
  
                                                                                 <?php else: ?>
- 
-                                                                                    <div class="accordion" id="accordion-rondas-<?= $turnoId ?>">
-                                                                                        <?php foreach ($listaRondas as $ronda): ?>
-                                                                                            <?php
-                                                                                                $rondaId    = $turnoId . '-ronda' . $ronda->id;
-                                                                                                $pontosRonda = $pontos[$seguranca->id][$turno->id][$ronda->id] ?? [];
-                                                                                                $inicioRonda = !empty($ronda->started_at) /* ajustar campo */
-                                                                                                    ? date('d/m/y H:i', strtotime($ronda->started_at))
-                                                                                                    : '—';
-                                                                                                $finalRonda = !empty($ronda->ended_at) /* ajustar campo */
-                                                                                                    ? date('d/m/y H:i', strtotime($ronda->ended_at))
-                                                                                                    : null;
-                                                                                            ?>
-                                                                                            <div class="accordion-item">
-                                                                                                <h2 class="accordion-header" id="heading-<?= $rondaId ?>">
-                                                                                                    <button class="accordion-button collapsed" type="button"
-                                                                                                    style="color:black;"
-                                                                                                            data-bs-toggle="collapse" data-bs-target="#collapse-<?= $rondaId ?>"
-                                                                                                            aria-expanded="false" aria-controls="collapse-<?= $rondaId ?>">
-                                                                                                        <?= htmlspecialchars($inicioRonda) . ' até ' . htmlspecialchars($finalRonda) ?>
-                                                                                                        <span class="badge bg-primary ms-2"><?= count($pontosRonda) ?></span>
-                                                                                                    </button>
-                                                                                                </h2>
-                                                                                                <div id="collapse-<?= $rondaId ?>" class="accordion-collapse collapse"
-                                                                                                     data-bs-parent="#accordion-rondas-<?= $turnoId ?>">
-                                                                                                    <div class="accordion-body">
-                                                                                                        
- 
-                                                                                                        <?php if (empty($pontosRonda)): ?>
- 
-                                                                                                            <p class="text-muted mb-0">Nenhum ponto de controle registrado nesta ronda.</p>
- 
-                                                                                                        <?php else: ?>
- 
-                                                                                                           <table class="table table-striped table-bordered">
-                                                                                                                <thead>
-                                                                                                                    <th>Descrição</th>
-                                                                                                                    <th>Horário</th>
-                                                                                                                </thead>
-                                                                                                                <tbody>
-                                                                                                                <?php foreach ($pontosRonda as $ponto): ?>
-                                                                                                                    <tr>
-                                                                                                                        <td>
-                                                                                                                            <?= htmlspecialchars($ponto->descricao ?? 'Ponto de controle') /* ajustar campo */ ?>
-                                                                                                                        </td>
-                                                                                                                        <td>
-                                                                                                                                    <?= !empty($ponto->created_at) /* ajustar campo */
-                                                                                                                                        ? htmlspecialchars(date('d/m/Y H:i', strtotime($ponto->created_at)))
-                                                                                                                                        : '' ?>
-                                                                                                                                </td>
-                                                                                                                    </tr>
-                                                                                                                <?php endforeach; ?>
-                                                                                                                </tbody>
-                                                                                                            </table>
- 
-                                                                                                        <?php endif; ?>
- 
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        <?php endforeach; ?>
-                                                                                    </div>
- 
+                                                                                    <table class="table table-striped table-bordered">
+                                                                                        <thead>
+                                                                                            <th>Descrição</th>
+                                                                                            <th>Horário</th>
+                                                                                        </thead>
+                                                                                        <tbody>
+                                                                                            <?php foreach ($listaRondas as $ronda): ?>
+                                                                                                <tr>
+                                                                                                    <td><?= htmlspecialchars($ronda->descricao ?? 'Ronda') ?></td>
+                                                                                                    <td><?= !empty($ronda->hora)
+                                                                                                        ? htmlspecialchars(date('d/m/Y H:i', strtotime($ronda->hora)))
+                                                                                                        : htmlspecialchars($ronda->created_at ?? '') ?></td>
+                                                                                                </tr>
+                                                                                            <?php endforeach; ?>
+                                                                                        </tbody>
+                                                                                    </table>
                                                                                 <?php endif; ?>
  
                                                                             </div>

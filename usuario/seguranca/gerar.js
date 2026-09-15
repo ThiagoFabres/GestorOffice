@@ -9,22 +9,19 @@ function limparTexto(valor) {
     return (valor || '').replace(/\s+/g, ' ').trim();
 }
 
-function extrairAlarmes(turnoEl) {
+function extrairPontos(turnoEl) {
     const linhas = [];
-    const secaoAlarmes = [...turnoEl.querySelectorAll('.accordion-item, .card')].find(item => {
+    const secaoPontos = [...turnoEl.querySelectorAll('.accordion-item, .card')].find(item => {
         const txt = item.querySelector('.accordion-header, button, .card-header')?.textContent || '';
-        return txt.toLowerCase().includes('alarme');
-    }) || turnoEl;
+        return txt.toLowerCase().includes('ponto');
+    });
 
-    secaoAlarmes.querySelectorAll('table tbody tr').forEach((tr) => {
+    if (!secaoPontos) return linhas;
+
+    secaoPontos.querySelectorAll('table tbody tr').forEach((tr) => {
         const cells = [...tr.querySelectorAll('td')].map((td) => limparTexto(td.textContent));
         if (!cells.length) return;
-        linhas.push({
-            status: cells[0] || '',
-            codigo: cells[1] || '',
-            codigo_digitado: cells[2] || '',
-            horario: cells[3] || ''
-        });
+        linhas.push({ horario: cells[0] || '' });
     });
     return linhas;
 }
@@ -60,27 +57,9 @@ function extrairRondas(turnoEl) {
 
     if (!secaoRondas) return rondas;
 
-    // Busca apenas os sub-accordion de cada ronda (ex: "14/08/26 14:42 até 14/08/26 14:48")
-    const subRondas = secaoRondas.querySelectorAll('.accordion-item, .card');
-
-    subRondas.forEach((sub) => {
-        const headerBtn = sub.querySelector('.accordion-header button, button, .card-header');
-        const titulo = limparTexto(headerBtn?.textContent || 'Ronda');
-        const pontos = [];
-
-        sub.querySelectorAll('table tbody tr').forEach((tr) => {
-            const tds = [...tr.querySelectorAll('td')].map((td) => limparTexto(td.textContent));
-            if (tds.length >= 2) {
-                pontos.push({ descricao: tds[0], horario: tds[1] });
-            } else if (tds.length === 1 && tds[0]) {
-                pontos.push({ descricao: tds[0], horario: '' });
-            }
-        });
-
-        // Se encontrou título e pontos dentro deste bloco específico
-        if (titulo && (pontos.length > 0 || sub.id?.includes('ronda'))) {
-            rondas.push({ titulo, pontos });
-        }
+    secaoRondas.querySelectorAll('table tbody tr').forEach((tr) => {
+        const tds = [...tr.querySelectorAll('td')].map((td) => limparTexto(td.textContent));
+        if (tds.length) rondas.push({ descricao: tds[0] || 'Ronda', horario: tds[1] || '' });
     });
 
     return rondas;
@@ -104,11 +83,11 @@ function extrairEstruturaCompleta() {
             turnos.push({
                 titulo: turnoTitulo,
                 resumo: {
-                    alarmes: turnoEl.dataset.alarmes || 0,
+                    pontos: turnoEl.dataset.pontos || 0,
                     panicos: turnoEl.dataset.panicos || 0,
                     rondas: turnoEl.dataset.rondas || 0
                 },
-                alarmes: extrairAlarmes(turnoEl),
+                pontos: extrairPontos(turnoEl),
                 panicos: extrairPanicos(turnoEl),
                 rondas: extrairRondas(turnoEl)
             });
@@ -219,25 +198,22 @@ function gerarPdfSeguranca(titulo, subtitulo, empresa) {
             pdf.setFont('helvetica', 'bold');
             pdf.text(`TURNO: ${t.titulo}`, margem + 3, y + 4.5);
             pdf.setFont('helvetica', 'normal');
-            pdf.text(` Alarmes (${t.resumo.alarmes}) | Pânicos (${t.resumo.panicos}) | Rondas (${t.resumo.rondas})`, margem + 80, y + 4.5);
+            pdf.text(` Pontos (${t.resumo.pontos}) | Pânicos (${t.resumo.panicos}) | Rondas (${t.resumo.rondas})`, margem + 80, y + 4.5);
             y += 8;
 
-            // 1. Tabela de Alarmes (Cabeçalho Amarelo)
-            if (t.alarmes.length) {
+            // 1. Tabela de Pontos
+            if (t.pontos.length) {
                 autoTableFn.call(pdf, {
                     startY: y,
                     margin: { left: margem, right: margem },
-                    head: [['TIPO', 'Status', 'Código', 'Digitado', 'Horário']],
-                    body: t.alarmes.map(a => ['Alarme', a.status, a.codigo, a.codigo_digitado, a.horario]),
+                    head: [['TIPO', 'Horário']],
+                    body: t.pontos.map(p => ['Ponto', p.horario]),
                     theme: 'grid',
                     styles: { fontSize: 8, cellPadding: 1.5 },
-                    headStyles: { fillColor: [255, 193, 7], textColor: [0, 0, 0], fontStyle: 'bold' },
+                    headStyles: { fillColor: [13, 202, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
                     columnStyles: {
                         0: { cellWidth: 20, fontStyle: 'bold' },
-                        1: { cellWidth: 40 },
-                        2: { cellWidth: 30 },
-                        3: { cellWidth: 30 },
-                        4: { cellWidth: largura - 120 }
+                        1: { cellWidth: largura - 20 }
                     }
                 });
                 y = pdf.lastAutoTable.finalY + 3;
@@ -264,42 +240,22 @@ function gerarPdfSeguranca(titulo, subtitulo, empresa) {
                 y = pdf.lastAutoTable.finalY + 3;
             }
 
-            // 3. Rondas com Faixa Separadora Azul e Tabela de Pontos
+            // 3. Tabela de Rondas
             if (t.rondas.length) {
-                t.rondas.forEach(r => {
-                    if (y > pdf.internal.pageSize.getHeight() - 30) { pdf.addPage(); y = 15; }
-
-                    // Linha/Faixa Separadora da Ronda (Azul Claro)
-                    pdf.setFillColor(207, 226, 255);
-                    pdf.rect(margem, y, largura, 6, 'F');
-                    pdf.setFontSize(8.5);
-                    pdf.setFont('helvetica', 'bold');
-                    pdf.setTextColor(5, 44, 101);
-                    pdf.text(`RONDA: ${r.titulo}`, margem + 3, y + 4.2);
-                    pdf.setTextColor(0, 0, 0);
-                    y += 7;
-
-                    // Prepara os pontos da ronda
-                    const pontosBody = r.pontos.length 
-                        ? r.pontos.map(p => [p.descricao, p.horario])
-                        : [['Nenhum ponto registrado nesta ronda', '']];
-
-                    // Tabela de Pontos da Ronda (Cabeçalho Azul Escuro)
-                    autoTableFn.call(pdf, {
-                        startY: y,
-                        margin: { left: margem, right: margem },
-                        head: [['Descrição do Ponto / Local', 'Horário']],
-                        body: pontosBody,
-                        theme: 'grid',
-                        styles: { fontSize: 8, cellPadding: 1.5 },
-                        headStyles: { fillColor: [13, 110, 253], textColor: [255, 255, 255], fontStyle: 'bold' },
-                        columnStyles: {
-                            0: { cellWidth: largura - 50 },
-                            1: { cellWidth: 50 }
-                        }
-                    });
-                    y = pdf.lastAutoTable.finalY + 3;
+                autoTableFn.call(pdf, {
+                    startY: y,
+                    margin: { left: margem, right: margem },
+                    head: [['Descrição', 'Horário']],
+                    body: t.rondas.map(r => [r.descricao, r.horario]),
+                    theme: 'grid',
+                    styles: { fontSize: 8, cellPadding: 1.5 },
+                    headStyles: { fillColor: [13, 110, 253], textColor: [255, 255, 255], fontStyle: 'bold' },
+                    columnStyles: {
+                        0: { cellWidth: largura - 50 },
+                        1: { cellWidth: 50 }
+                    }
                 });
+                y = pdf.lastAutoTable.finalY + 3;
             }
 
             y += 3;
@@ -347,25 +303,13 @@ function gerarExcelSeguranca(titulo, subtitulo, empresa) {
         alignment: { vertical: 'center' }
     };
 
-    const estHeaderAlarme = {
-        fill: { fgColor: { rgb: 'FFC107' } },
-        font: { bold: true, color: { rgb: '000000' }, sz: 9, name: 'Arial' },
-        alignment: { vertical: 'center' }
-    };
-
     const estHeaderPanico = {
         fill: { fgColor: { rgb: 'DC3545' } },
         font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 9, name: 'Arial' },
         alignment: { vertical: 'center' }
     };
 
-    const estFaixaRonda = {
-        fill: { fgColor: { rgb: 'CFE2FF' } },
-        font: { bold: true, color: { rgb: '052C65' }, sz: 9, name: 'Arial' },
-        alignment: { vertical: 'center' }
-    };
-
-    const estHeaderPontosRonda = {
+    const estHeaderPonto = {
         fill: { fgColor: { rgb: '0D6EFD' } },
         font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 9, name: 'Arial' },
         alignment: { vertical: 'center' }
@@ -400,16 +344,16 @@ function gerarExcelSeguranca(titulo, subtitulo, empresa) {
                 dadosAoA.push(criarLinhaEstilizada([
                     '',
                     `TURNO: ${t.titulo}`,
-                    `Resumo: Alarmes (${t.resumo.alarmes}) | Pânicos (${t.resumo.panicos}) | Rondas (${t.resumo.rondas})`,
+                    `Resumo: Pontos (${t.resumo.pontos}) | Pânicos (${t.resumo.panicos}) | Rondas (${t.resumo.rondas})`,
                     '',
                     ''
                 ], estTurno));
 
-                // 1. Alarmes
-                if (t.alarmes.length) {
-                    dadosAoA.push(criarLinhaEstilizada(['', '', 'Status', 'Código', 'Digitado', 'Horário'], estHeaderAlarme, 1));
-                    t.alarmes.forEach((a) => {
-                        dadosAoA.push(criarLinhaEstilizada(['', '', a.status, a.codigo, a.codigo_digitado, a.horario], estDado, 1));
+                // 1. Pontos
+                if (t.pontos.length) {
+                    dadosAoA.push(criarLinhaEstilizada(['', '', 'Tipo', 'Horário', ''], estHeaderPonto, 1));
+                    t.pontos.forEach((p) => {
+                        dadosAoA.push(criarLinhaEstilizada(['', '', 'Ponto', p.horario, ''], estDado, 1));
                     });
                 }
 
@@ -423,17 +367,9 @@ function gerarExcelSeguranca(titulo, subtitulo, empresa) {
 
                 // 3. Rondas
                 if (t.rondas.length) {
+                    dadosAoA.push(criarLinhaEstilizada(['', '', 'Descrição', 'Horário', ''], estHeaderPonto, 1));
                     t.rondas.forEach((r) => {
-                        dadosAoA.push(criarLinhaEstilizada(['', '', `RONDA: ${r.titulo}`, '', ''], estFaixaRonda, 1));
-                        dadosAoA.push(criarLinhaEstilizada(['', '', 'Descrição do Ponto', 'Horário Ponto', ''], estHeaderPontosRonda, 1));
-
-                        if (r.pontos && r.pontos.length) {
-                            r.pontos.forEach((p) => {
-                                dadosAoA.push(criarLinhaEstilizada(['', '', p.descricao, p.horario, ''], estDado, 1));
-                            });
-                        } else {
-                            dadosAoA.push(criarLinhaEstilizada(['', '', 'Nenhum ponto registrado', '', ''], estDado, 1));
-                        }
+                        dadosAoA.push(criarLinhaEstilizada(['', '', r.descricao, r.horario, ''], estDado, 1));
                     });
                 }
 
