@@ -65,6 +65,22 @@ function extrairRondas(turnoEl) {
     return rondas;
 }
 
+// NOVA FUNÇÃO: Extrai o texto da ocorrência do turno
+function extrairOcorrencias(turnoEl) {
+    const ocorrencias = [];
+    // Busca divs de alerta que contenham ocorrências
+    const alertEl = turnoEl.querySelector('.alert');
+    if (alertEl) {
+        let texto = limparTexto(alertEl.textContent);
+        // Remove o prefixo "Ocorrência:" se presente
+        texto = texto.replace(/^Ocorrência:\s*/i, '');
+        if (texto) {
+            ocorrencias.push({ descricao: texto });
+        }
+    }
+    return ocorrencias;
+}
+
 function extrairEstruturaCompleta() {
     const dadosGerais = [];
 
@@ -80,16 +96,20 @@ function extrairEstruturaCompleta() {
             const fim = turnoEl.dataset.turnoFim;
             const turnoTitulo = `${inicio}${fim && fim !== 'Em andamento' ? ' até ' + fim : ' - em andamento'}`;
 
+            const ocorrencias = extrairOcorrencias(turnoEl);
+
             turnos.push({
                 titulo: turnoTitulo,
                 resumo: {
                     pontos: turnoEl.dataset.pontos || 0,
                     panicos: turnoEl.dataset.panicos || 0,
-                    rondas: turnoEl.dataset.rondas || 0
+                    rondas: turnoEl.dataset.rondas || 0,
+                    ocorrencias: ocorrencias.length
                 },
                 pontos: extrairPontos(turnoEl),
                 panicos: extrairPanicos(turnoEl),
-                rondas: extrairRondas(turnoEl)
+                rondas: extrairRondas(turnoEl),
+                ocorrencias: ocorrencias // Adicionado ao objeto do turno
             });
         });
 
@@ -198,11 +218,31 @@ function gerarPdfSeguranca(titulo, subtitulo, empresa) {
             pdf.setFont('helvetica', 'bold');
             pdf.text(`TURNO: ${t.titulo}`, margem + 3, y + 4.5);
             pdf.setFont('helvetica', 'normal');
-            pdf.text(` Pontos (${t.resumo.pontos}) | Pânicos (${t.resumo.panicos}) | Rondas (${t.resumo.rondas})`, margem + 80, y + 4.5);
+            pdf.text(` Pontos (${t.resumo.pontos}) | Pânicos (${t.resumo.panicos}) | Rondas (${t.resumo.rondas}) | Ocorrências (${t.resumo.ocorrencias})`, margem + 70, y + 4.5);
             y += 8;
 
-            // 1. Tabela de Pontos
+            // 1. Tabela de Ocorrências (Cabeçalho Roxo/Azul Escuro)
+            if (t.ocorrencias && t.ocorrencias.length) {
+                if (y > pdf.internal.pageSize.getHeight() - 25) { pdf.addPage(); y = 15; }
+                autoTableFn.call(pdf, {
+                    startY: y,
+                    margin: { left: margem, right: margem },
+                    head: [['TIPO', 'Descrição da Ocorrência']],
+                    body: t.ocorrencias.map(o => ['Ocorrência', o.descricao]),
+                    theme: 'grid',
+                    styles: { fontSize: 8, cellPadding: 1.5 },
+                    headStyles: { fillColor: [102, 16, 242], textColor: [255, 255, 255], fontStyle: 'bold' },
+                    columnStyles: {
+                        0: { cellWidth: 25, fontStyle: 'bold' },
+                        1: { cellWidth: largura - 25 }
+                    }
+                });
+                y = pdf.lastAutoTable.finalY + 3;
+            }
+
+            // 2. Tabela de Pontos
             if (t.pontos.length) {
+                if (y > pdf.internal.pageSize.getHeight() - 25) { pdf.addPage(); y = 15; }
                 autoTableFn.call(pdf, {
                     startY: y,
                     margin: { left: margem, right: margem },
@@ -219,7 +259,7 @@ function gerarPdfSeguranca(titulo, subtitulo, empresa) {
                 y = pdf.lastAutoTable.finalY + 3;
             }
 
-            // 2. Tabela de Pânicos (Cabeçalho Vermelho)
+            // 3. Tabela de Pânicos (Cabeçalho Vermelho)
             if (t.panicos.length) {
                 if (y > pdf.internal.pageSize.getHeight() - 25) { pdf.addPage(); y = 15; }
                 autoTableFn.call(pdf, {
@@ -240,8 +280,9 @@ function gerarPdfSeguranca(titulo, subtitulo, empresa) {
                 y = pdf.lastAutoTable.finalY + 3;
             }
 
-            // 3. Tabela de Rondas
+            // 4. Tabela de Rondas
             if (t.rondas.length) {
+                if (y > pdf.internal.pageSize.getHeight() - 25) { pdf.addPage(); y = 15; }
                 autoTableFn.call(pdf, {
                     startY: y,
                     margin: { left: margem, right: margem },
@@ -303,6 +344,12 @@ function gerarExcelSeguranca(titulo, subtitulo, empresa) {
         alignment: { vertical: 'center' }
     };
 
+    const estHeaderOcorrencia = {
+        fill: { fgColor: { rgb: '6610F2' } },
+        font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 9, name: 'Arial' },
+        alignment: { vertical: 'center' }
+    };
+
     const estHeaderPanico = {
         fill: { fgColor: { rgb: 'DC3545' } },
         font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 9, name: 'Arial' },
@@ -344,12 +391,20 @@ function gerarExcelSeguranca(titulo, subtitulo, empresa) {
                 dadosAoA.push(criarLinhaEstilizada([
                     '',
                     `TURNO: ${t.titulo}`,
-                    `Resumo: Pontos (${t.resumo.pontos}) | Pânicos (${t.resumo.panicos}) | Rondas (${t.resumo.rondas})`,
+                    `Resumo: Pontos (${t.resumo.pontos}) | Pânicos (${t.resumo.panicos}) | Rondas (${t.resumo.rondas}) | Ocorrências (${t.resumo.ocorrencias})`,
                     '',
                     ''
                 ], estTurno));
 
-                // 1. Pontos
+                // 1. Ocorrências
+                if (t.ocorrencias && t.ocorrencias.length) {
+                    dadosAoA.push(criarLinhaEstilizada(['', '', 'Tipo', 'Descrição da Ocorrência', ''], estHeaderOcorrencia, 1));
+                    t.ocorrencias.forEach((o) => {
+                        dadosAoA.push(criarLinhaEstilizada(['', '', 'Ocorrência', o.descricao, ''], estDado, 1));
+                    });
+                }
+
+                // 2. Pontos
                 if (t.pontos.length) {
                     dadosAoA.push(criarLinhaEstilizada(['', '', 'Tipo', 'Horário', ''], estHeaderPonto, 1));
                     t.pontos.forEach((p) => {
@@ -357,7 +412,7 @@ function gerarExcelSeguranca(titulo, subtitulo, empresa) {
                     });
                 }
 
-                // 2. Pânicos
+                // 3. Pânicos
                 if (t.panicos.length) {
                     dadosAoA.push(criarLinhaEstilizada(['', '', 'Evento / Descrição', 'Tempo', 'Localização', 'Link'], estHeaderPanico, 1));
                     t.panicos.forEach((p) => {
@@ -365,7 +420,7 @@ function gerarExcelSeguranca(titulo, subtitulo, empresa) {
                     });
                 }
 
-                // 3. Rondas
+                // 4. Rondas
                 if (t.rondas.length) {
                     dadosAoA.push(criarLinhaEstilizada(['', '', 'Descrição', 'Horário', ''], estHeaderPonto, 1));
                     t.rondas.forEach((r) => {
@@ -386,7 +441,7 @@ function gerarExcelSeguranca(titulo, subtitulo, empresa) {
         { wch: 22 },
         { wch: 35 },
         { wch: 35 },
-        { wch: 25 },
+        { wch: 35 },
         { wch: 25 },
         { wch: 30 }
     ];
