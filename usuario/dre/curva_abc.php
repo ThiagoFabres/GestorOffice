@@ -10,7 +10,7 @@ require_once __DIR__ . '/../../db/entities/centrocustos.php';
 session_start();
 $empresa_usuario_id = $_SESSION['usuario']->id_empresa;
 $empresa_usuario_obj = Empresa::read($empresa_usuario_id)[0];
-$nome_empresa = $empresa_usuario_obj->nom_fant ?? '';
+$nome_empresa = 'TODAS AS EMPRESAS';
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSION['usuario']->permissao_bancario != 1 || $empresa_usuario_obj->permissao_bancario != 1) {
     header('Location: /');
     exit;
@@ -44,7 +44,7 @@ foreach($empresa_lista as $i => $empresa) {
         id_empresa:          $empresa->id,
         filtro_data_inicial: $get_data_inicial,
         filtro_data_final:   $get_data_final,
-        filtro_por:'pagamento',
+        filtro_por:'lancamento',
         filtro_operacional:  $get_operacional,
         filtro_opcao: 'quitados',
         read_total: true
@@ -271,11 +271,21 @@ function prepararGeracao(target) {
     let data_inicial = document.getElementById('data_inicial').value;
     let data_final = document.getElementById('data_final').value;
 
-    let nomeEmpresa = <?= json_encode($nome_empresa) ?>;
+    function formatarData(data) {
+        if (!data) return '';
+        const partes = data.split('-');
+        return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : data;
+    }
+
+    let nomeEmpresa = 'TODAS AS EMPRESAS';
     let dataTexto = '';
 
     if (data_inicial && data_final) {
-        dataTexto = `Período: ${data_inicial} até ${data_final}`;
+        dataTexto = `Período: ${formatarData(data_inicial)} até ${formatarData(data_final)}`;
+    } else if (data_inicial) {
+        dataTexto = `Data Inicial: ${formatarData(data_inicial)}`;
+    } else if (data_final) {
+        dataTexto = `Data Final: ${formatarData(data_final)}`;
     }
 
     if (target === 'pdf') {
