@@ -151,7 +151,7 @@ async function gerarpdf(nome, nomeEmpresa = '') {
     doc.text('Resumo de saldos', 10, resumoY);
     doc.setFont(undefined, "normal");
     doc.text(`Saldo inicial da conta: R$ ${saldos.inicial}`, 10, resumoY + 6);
-    doc.text(`Saldo do filtro: R$ ${saldos.filtro}`, 10, resumoY + 12);
+    doc.text(`Saldo do periodo: R$ ${saldos.filtro}`, 10, resumoY + 12);
     doc.text(`Saldo total: R$ ${saldos.total}`, 10, resumoY + 18);
 
     /* -------------------------
@@ -389,7 +389,7 @@ if (trTotais) {
         dados.push([]);
         dados.push(['Resumo de saldos']);
         dados.push(['Saldo inicial da conta', saldos.inicial]);
-        dados.push(['Saldo do filtro', saldos.filtro]);
+        dados.push(['Saldo do periodo', saldos.filtro]);
         dados.push(['Saldo total', saldos.total]);
 
         // Combina header com dados
