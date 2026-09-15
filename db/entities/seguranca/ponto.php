@@ -1,34 +1,35 @@
 <?php 
 Class PontoControle {
     public $id;
+    public $id_empresa;
     public $id_usuario;
-    public $descricao;
     public $hora;
     public $created_at;
     public $updated_at;
 
     public function __construct(
         $id = null, 
+        $id_empresa = null,
         $id_usuario = null, 
-        $descricao = null, 
         $hora = null,
         $created_at = null,
         $updated_at = null
         ) {
             $this->id = $id;
+            $this->id_empresa = $id_empresa;
             $this->id_usuario = $id_usuario;
-            $this->descricao = $descricao;
             $this->hora = $hora;
             $this->created_at = $created_at;
             $this->updated_at = $updated_at;
         }
     
-    public static function read($id = null, $id_usuario = null, $filtro_hora_inicio = null, $filtro_hora_final = null) {
+    public static function read($id = null, $id_empresa = null, $id_usuario = null, $filtro_hora_inicio = null, $filtro_hora_final = null) {
         $pdo = (new Database())->connect();
         $query = 'SELECT * FROM pontos';
         $conditions = [];
 
         if($id != null) $conditions[] = 'id = :id';
+        if($id_empresa != null) $conditions[] = 'id_empresa = :id_empresa';
         if($filtro_hora_inicio != null) $conditions[] = 'hora >= :filtro_hora_inicio';
         if($filtro_hora_final != null) $conditions[] = 'hora <= :filtro_hora_final';
         if($id_usuario != null) $conditions[] = 'id_usuario = :id_usuario';
@@ -42,6 +43,7 @@ Class PontoControle {
         $stmt = $pdo->prepare($query);
 
         if($id != null) $stmt->bindValue(':id', $id);
+        if($id_empresa != null) $stmt->bindValue(':id_empresa', $id_empresa);
         if($id_usuario != null) $stmt->bindValue(':id_usuario', $id_usuario);
         if($filtro_hora_inicio != null) $stmt->bindValue(':filtro_hora_inicio', $filtro_hora_inicio);
         if($filtro_hora_final != null) $stmt->bindValue(':filtro_hora_final', $filtro_hora_final);
