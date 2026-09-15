@@ -16,6 +16,7 @@ async function gerarpdf(nome, nomeEmpresa = '') {
     });
 
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
 
     /* -------------------------
        CABEÇALHO
@@ -147,6 +148,22 @@ async function gerarpdf(nome, nomeEmpresa = '') {
         });
     }
 
+    const saldos = obterSaldos();
+    let resumoY = doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 10 : y + 10;
+
+    if (resumoY > pageHeight - 35) {
+        doc.addPage();
+        resumoY = 15;
+    }
+
+    doc.setFontSize(10);
+    doc.setFont(undefined, "bold");
+    doc.text('Resumo de saldos', 10, resumoY);
+    doc.setFont(undefined, "normal");
+    doc.text(`Saldo inicial da conta: R$ ${saldos.inicial}`, 10, resumoY + 6);
+    doc.text(`Saldo do filtro: R$ ${saldos.filtro}`, 10, resumoY + 12);
+    doc.text(`Saldo total: R$ ${saldos.total}`, 10, resumoY + 18);
+
     /* -------------------------
        PAGINAÇÃO E SALVAMENTO
     ------------------------- */
@@ -176,6 +193,42 @@ function formatarData(data){
 
     return `${dia}/${mes}/${ano}`;
 
+}
+
+function parseMoeda(valor) {
+    if (valor === null || valor === undefined) return 0;
+
+    const texto = String(valor).replace(/[^\d,-]/g, '').trim();
+    if (!texto) return 0;
+
+    const normalizado = texto.includes(',')
+        ? texto.replace(/\./g, '').replace(',', '.')
+        : texto;
+
+    return Number(normalizado) || 0;
+}
+
+function formatarMoeda(valor) {
+    return Number(valor).toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+function obterSaldos() {
+    const lerSaldo = (seletor) => {
+        const elemento = document.querySelector(seletor);
+        return elemento ? parseMoeda(elemento.textContent) : 0;
+    };
+
+    const inicial = lerSaldo('#saldo-inicial-pdf');
+    const filtro = lerSaldo('#saldo-filtro-pdf');
+
+    return {
+        inicial: formatarMoeda(inicial),
+        filtro: formatarMoeda(filtro),
+        total: formatarMoeda(inicial + filtro)
+    };
 }
 
 
@@ -312,15 +365,6 @@ if (trTotais) {
         var opcao = getRadioValue('opcao_filtro');
         var por = getRadioValue('filtro_por');
 
-        // Adiciona saldo inicial se disponível
-        var saldoInicialEl = document.querySelector('#saldo-inicial-pdf');
-        if (saldoInicialEl) {
-            var saldoInicial = saldoInicialEl.textContent.replace(/Saldo Inicial: R\$\s?/g, '').trim();
-            if (saldoInicial) {
-                headerFiltros.push(['Saldo Inicial', saldoInicial]);
-            }
-        }
-
         // Adiciona filtros não vazios
         if ((di && di.value) || (df && df.value)) {
             var dataInicialFmt = di && di.value ? formatarData(di.value) : '';
@@ -343,15 +387,15 @@ if (trTotais) {
         if (opcao) headerFiltros.push(['Opção', opcao]);
         if (por) headerFiltros.push(['Filtro por', por]);
 
-        // Adiciona saldo final se disponível
-        var saldoFinalEl = document.querySelector('#saldo-final-pdf strong');
-        if (saldoFinalEl) {
-            headerFiltros.push([]);
-            headerFiltros.push([saldoFinalEl.textContent.trim()]);
-        }
+        headerFiltros.push([]); // linha vazia
+        headerFiltros.push([]); // linha vazia
 
-        headerFiltros.push([]); // linha vazia
-        headerFiltros.push([]); // linha vazia
+        var saldos = obterSaldos();
+        dados.push([]);
+        dados.push(['Resumo de saldos']);
+        dados.push(['Saldo inicial da conta', saldos.inicial]);
+        dados.push(['Saldo do filtro', saldos.filtro]);
+        dados.push(['Saldo total', saldos.total]);
 
         // Combina header com dados
         var aoaFinal = headerFiltros.concat(dados);
