@@ -86,18 +86,9 @@ async function gerarpdf(nome, nomeEmpresa = '') {
     /* -------------------------
        DESENHAR TABELA
     ------------------------- */
-    const linhasPorPagina = 22;
-
-    for (let i = 0; i < body.length; i += linhasPorPagina) {
-        const chunk = body.slice(i, i + linhasPorPagina);
-
-        if (i !== 0) {
-            doc.addPage();
-        }
-
-        doc.autoTable({
+    doc.autoTable({
             head: head,
-            body: chunk,
+            body: body,
             startY: y + 2,
             theme: 'striped',
 
@@ -146,7 +137,6 @@ async function gerarpdf(nome, nomeEmpresa = '') {
                 }
             }
         });
-    }
 
     const saldos = obterSaldos();
     let resumoY = doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 10 : y + 10;
