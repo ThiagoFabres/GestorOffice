@@ -105,7 +105,9 @@ document.addEventListener('DOMContentLoaded', function () {
     modalConciliar.addEventListener('show.bs.modal', function (event) {
         const tabelaMov = document.getElementById('tabela-bancario');
         const formConciliar = document.getElementById('form-conciliar');
-        const button = event.relatedTarget;
+        const button = event.relatedTarget || document.getElementById('conciliar-id');
+
+        if (!button) return;
 
         // ── Limpa inputs dinâmicos anteriores ───────────────────────
         formConciliar.querySelectorAll('input[data-dinamico="true"]').forEach(el => el.remove());
