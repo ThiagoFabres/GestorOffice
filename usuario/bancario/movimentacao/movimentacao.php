@@ -177,21 +177,10 @@ $movimentacoes_pdf = Ban02::read(
 $movimentacoes_totais = $movimentacoes_pdf;
 
 $saldo = 0;
+foreach ($movimentacoes_pdf as $movimentacao_pdf) {
+    $saldo += (float) $movimentacao_pdf->valor;
+}
 $saldo_conta = 0;
-
-
-$saldo = Ban02::read(
-    id_empresa: $_SESSION['usuario']->id_empresa,
-    filtro_data_inicial: $get_filtro_data_inicial,
-    filtro_data_final: $get_filtro_data_final,
-    filtro_conciliado: $get_filtro_conciliado,
-    filtro_titulo: $get_filtro_titulo,
-    filtro_subtitulo: $get_filtro_subtitulo,
-    filtro_conta: $get_filtro_conta,
-    filtro_tipo: $get_filtro_tipo,
-    filtro_descricao: $get_filtro_descricao,
-    read_total: true
-);
 
 $saldo_geral = Ban02::read(
     id_empresa: $_SESSION['usuario']->id_empresa,
@@ -657,7 +646,11 @@ if ($get_filtro_conta != null) {
 
 
 
-        <div id="totais-lancamento-pdf" style="display:none;">
+    <div id="totais-lancamento-pdf"
+        data-saldo-inicial="<?= htmlspecialchars((string) $saldo_conta, ENT_QUOTES, 'UTF-8') ?>"
+        data-saldo-filtro="<?= htmlspecialchars((string) $saldo, ENT_QUOTES, 'UTF-8') ?>"
+        data-saldo-total="<?= htmlspecialchars((string) $saldo_total, ENT_QUOTES, 'UTF-8') ?>"
+        style="display:none;">
             <?php
             
             ?>
