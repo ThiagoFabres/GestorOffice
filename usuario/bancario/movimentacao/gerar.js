@@ -216,18 +216,23 @@ function formatarMoeda(valor) {
 }
 
 function obterSaldos() {
-    const lerSaldo = (seletor) => {
+    const resumo = document.querySelector('#totais-lancamento-pdf');
+    const lerSaldo = (atributo, seletor) => {
+        const valor = resumo?.dataset[atributo];
+        if (valor !== undefined) return Number(valor) || 0;
+
         const elemento = document.querySelector(seletor);
         return elemento ? parseMoeda(elemento.textContent) : 0;
     };
 
-    const inicial = lerSaldo('#saldo-inicial-pdf');
-    const filtro = lerSaldo('#saldo-filtro-pdf');
+    const inicial = lerSaldo('saldoInicial', '#saldo-inicial-pdf');
+    const filtro = lerSaldo('saldoFiltro', '#saldo-filtro-pdf');
+    const total = lerSaldo('saldoTotal', '#saldo-total-pdf');
 
     return {
         inicial: formatarMoeda(inicial),
         filtro: formatarMoeda(filtro),
-        total: formatarMoeda(inicial + filtro)
+        total: formatarMoeda(total || inicial + filtro)
     };
 }
 
