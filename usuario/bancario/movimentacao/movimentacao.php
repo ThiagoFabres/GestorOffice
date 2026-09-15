@@ -177,8 +177,7 @@ $movimentacoes_pdf = Ban02::read(
 $movimentacoes_totais = $movimentacoes_pdf;
 
 $saldo = 0;
-$saldo_inicial = 0;
-$saldo_final = 0;
+$saldo_conta = 0;
 
 
 $saldo = Ban02::read(
@@ -208,15 +207,17 @@ if ($get_filtro_conta != null) {
         id_empresa: $_SESSION['usuario']->id_empresa
     )[0];
 
-    $saldo_geral += $conta->valor;
+    $saldo_conta = (float) $conta->valor;
 } else {
 
     $contas = Ban01::read(id_empresa: $_SESSION['usuario']->id_empresa);
 
     foreach ($contas as $conta) {
-        $saldo_geral += $conta->valor;
+        $saldo_conta += (float) $conta->valor;
     }
 }
+
+    $saldo_total = $saldo_conta + (float) $saldo;
 ?>
 <!DOCTYPE html>
 <head>
@@ -599,7 +600,7 @@ if ($get_filtro_conta != null) {
                                 </div>
 
                                     <div id="total-parcela">Saldo Conta: R$
-                                        <?= number_format($saldo_geral, 2, ',', '.') ?> 
+                                        <?= number_format($saldo_conta + $saldo, 2, ',', '.') ?> 
                                     </div>
 
                                 <?php } ?>
@@ -661,10 +662,13 @@ if ($get_filtro_conta != null) {
             
             ?>
             <div class="total-parcela" id="saldo-inicial-pdf">
-                <?= number_format($saldo_inicial, 2, ',', '.') ?> 
+                <?= number_format($saldo_conta, 2, ',', '.') ?>
             </div>
-            <div class="total-parcela" id="saldo-final-pdf"> <strong>Saldo Final: R$
-                <?= number_format($saldo, 2, ',', '.') ?> </strong>
+            <div class="total-parcela" id="saldo-filtro-pdf">
+                <?= number_format($saldo, 2, ',', '.') ?>
+            </div>
+            <div class="total-parcela" id="saldo-total-pdf">
+                <?= number_format($saldo_total, 2, ',', '.') ?>
             </div>
         </div>
         <?php if($get_pdf) {?>
