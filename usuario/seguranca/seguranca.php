@@ -216,16 +216,16 @@ foreach($segurancas as $i => $seguranca) {
                                                         $ocorrenciaTurno = $ocorrencias[$seguranca->id][$turno->id] ?? null;
  
                                                         $inicioFmt = !empty($turno->started_at)
-                                                            ? date('d/m/Y H:i', strtotime($turno->started_at))
+                                                            ? (new DateTime($turno->started_at))->modify('-3 hours')->format('d/m/Y H:i')
                                                             : '—';
                                                         $fimFmt = !empty($turno->ended_at)
                                                             ? (new DateTime($turno->ended_at))->modify('-3 hours')->format('d/m/Y H:i')
                                                             : 'Em Andamento';
                                                         $inicioHora = !empty($turno->started_at)
-                                                            ? date('H:i', strtotime($turno->started_at))
+                                                            ? (new DateTime($turno->started_at))->modify('-3 hours')->format('H:i')
                                                             : '—';
                                                         $fimHora = !empty($turno->ended_at)
-                                                            ? date('H:i', strtotime($turno->ended_at))
+                                                            ? (new DateTime($turno->ended_at))->modify('-3 hours')->format('H:i')
                                                             : null;
                                                     ?>
  
