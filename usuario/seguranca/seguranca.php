@@ -304,9 +304,11 @@ foreach($segurancas as $i => $seguranca) {
                                                                                                 <tr>
                                                                                                     <td class="<?= $pontoNoPrazo ? 'table-success' : 'table-danger' ?>">
                                                                                                         <span class="d-flex justify-content-between align-items-center">
-                                                                                                            <span><?= !empty($horaPonto) && strtotime($horaPonto) !== false
-                                                                                                                ? htmlspecialchars(date('d/m/Y H:i', strtotime($horaPonto)))
-                                                                                                                : htmlspecialchars($horaPonto ?? '') ?></span>
+                                                                                                            <span>
+                                                                                                                <?= !empty($horaPonto) && strtotime($horaPonto) !== false
+                                                                                                                ? (new DateTime($horaPonto))->modify('-3 hours')->format('d/m/Y H:i')
+                                                                                                                : (new DateTime($horaPonto))->modify('-3 hours')->format('d/m/Y H:i') ?>
+                                                                                                            </span>
                                                                                                             <strong><?= $pontoNoPrazo ? 'Dentro do prazo' : 'Fora do prazo' ?></strong>
                                                                                                         </span>
                                                                                                     </td>
