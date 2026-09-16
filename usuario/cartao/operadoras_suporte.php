@@ -498,7 +498,6 @@ $operadoras_suporte = [
                 'bandeira' => 'Bandeira',
                 'parcela' => 'Parcela'
             ],
-            'suporte_valor_liquido' => 'bruto',
             'suporte_parcela' => true,
             'separator' => ';',
             'linha_inicial' => null,
