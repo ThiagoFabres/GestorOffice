@@ -347,7 +347,7 @@ foreach($segurancas as $i => $seguranca) {
                                                                                                     </span>
                                                                                                     <small class="text-muted ms-2">
                                                                                                         <?= !empty($panico->created_at)
-                                                                                                            ? htmlspecialchars(date('d/m/Y H:i', strtotime($panico->created_at)))
+                                                                                                            ? htmlspecialchars((new DateTime($panico->created_at))->modify('-3 hours')->format('d/m/Y H:i'))
                                                                                                             : '' ?>
                                                                                                     </small>
                                                                                                 </div>
