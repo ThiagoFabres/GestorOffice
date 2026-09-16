@@ -33,8 +33,8 @@ Class Ronda {
 
         if($id != null) $conditions[] = 'id = :id';
         if($id_usuario != null) $conditions[] = 'id_usuario = :id_usuario';
-        if($hora_inicio != null) $conditions[] = 'hora >= :hora_inicio';
-        if($hora_fim != null) $conditions[] = 'hora <= :hora_fim';
+        if($hora_inicio != null) $conditions[] = 'created_at >= :hora_inicio';
+        if($hora_fim != null) $conditions[] = 'created_at <= :hora_fim';
 
         if ($conditions) {
             $query .= ' WHERE ' . implode(' AND ', $conditions);
