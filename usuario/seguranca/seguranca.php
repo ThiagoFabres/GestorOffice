@@ -80,19 +80,12 @@ foreach($segurancas as $i => $seguranca) {
         );
         $ocorrencias[$seguranca->id][$turno->id] = Ocorrencia::read(id_turno: $turno->id)[0] ?? null;
 
-        $rondasDoUsuario = Ronda::read(id_usuario: $seguranca->id);
-        $rondas[$seguranca->id][$turno->id] = array_values(array_filter(
-            $rondasDoUsuario,
-            static function ($ronda) use ($inicioTurno, $fimTurno) {
-                $horaRonda = strtotime($ronda->hora ?? $ronda->created_at);
-                $inicio = strtotime($inicioTurno);
-                $fim = $fimTurno ? strtotime($fimTurno) : null;
-
-                return $horaRonda !== false
-                    && ($inicio === false || $horaRonda >= $inicio)
-                    && ($fim === null || $horaRonda <= $fim);
-            }
-        ));
+        $rondas[$seguranca->id][$turno->id] = Ronda::read(
+            id_usuario: $seguranca->id,
+            hora_inicio: $inicioTurno,
+            hora_fim: $fimTurno
+        );
+        
     }
 
 }
@@ -226,7 +219,7 @@ foreach($segurancas as $i => $seguranca) {
                                                             ? date('d/m/Y H:i', strtotime($turno->started_at))
                                                             : '—';
                                                         $fimFmt = !empty($turno->ended_at)
-                                                            ? date('d/m/Y H:i', strtotime($turno->ended_at))
+                                                            ? (new DateTime($turno->ended_at))->modify('-3 hours')->format('d/m/Y H:i')
                                                             : 'Em Andamento';
                                                         $inicioHora = !empty($turno->started_at)
                                                             ? date('H:i', strtotime($turno->started_at))

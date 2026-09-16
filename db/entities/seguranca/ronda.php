@@ -26,13 +26,15 @@ Class Ronda {
             $this->updated_at = $updated_at;
         }
     
-    public static function read($id = null, $id_usuario = null) {
+    public static function read($id = null, $id_usuario = null, $hora_inicio = null, $hora_fim = null) {
         $pdo = (new Database())->connect();
         $query = 'SELECT * FROM rondas';
         $conditions = [];
 
         if($id != null) $conditions[] = 'id = :id';
         if($id_usuario != null) $conditions[] = 'id_usuario = :id_usuario';
+        if($hora_inicio != null) $conditions[] = 'hora >= :hora_inicio';
+        if($hora_fim != null) $conditions[] = 'hora <= :hora_fim';
 
         if ($conditions) {
             $query .= ' WHERE ' . implode(' AND ', $conditions);
@@ -44,6 +46,8 @@ Class Ronda {
 
         if($id != null) $stmt->bindValue(':id', $id);
         if($id_usuario != null) $stmt->bindValue(':id_usuario', $id_usuario);
+        if($hora_inicio != null) $stmt->bindValue(':hora_inicio', $hora_inicio);
+        if($hora_fim != null) $stmt->bindValue(':hora_fim', $hora_fim);
         $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, self::class);
