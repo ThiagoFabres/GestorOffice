@@ -313,7 +313,13 @@ function parse_excel($numero_arquivo = null) {
         $palavras_negadas = [
             'cancelada',
             'negada',
-            'desfeita'
+            'desfeita',
+            'expirado',
+            'expirada',
+            'estornada',
+            'estornado',
+            'desfeita',
+            'desfeito'
         ];
 
         if($tipo_arquivo == 'padrao') {
@@ -727,8 +733,20 @@ function parse_csv(string $caminhoCsv): array {
             $status = 'aprovada';
         }
         
-        if($status == 'cancelada' || $status == 'negada') {
-            continue;
+        $palavras_negadas = [
+            'cancelada',
+            'negada',
+            'desfeita',
+            'expirado',
+            'expirada',
+            'estornada',
+            'estornado',
+            'desfeita',
+            'desfeito'
+        ];
+
+        if(in_array(strtolower($status), $palavras_negadas)) {
+             continue;
         }
 
         
