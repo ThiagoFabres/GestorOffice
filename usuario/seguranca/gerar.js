@@ -267,7 +267,7 @@ function gerarPdfSeguranca(titulo, subtitulo, empresa) {
                     body: t.controles.map(c => [c.esperado, c.respondido, c.status]),
                     theme: 'grid',
                     styles: { fontSize: 8, cellPadding: 1.5 },
-                    headStyles: { fillColor: [255, 193, 7], textColor: [0, 0, 0], fontStyle: 'bold' },
+                    headStyles: { fillColor: [13, 202, 240], textColor: [255, 255, 255], fontStyle: 'bold' },
                 });
                 y = pdf.lastAutoTable.finalY + 3;
             }
@@ -361,6 +361,12 @@ function gerarExcelSeguranca(titulo, subtitulo, empresa) {
         alignment: { vertical: 'center' }
     };
 
+    const estHeaderControle = {
+        fill: { fgColor: { rgb: '0DCAF0' } },
+        font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 9, name: 'Arial' },
+        alignment: { vertical: 'center' }
+    };
+
     const estHeaderPanico = {
         fill: { fgColor: { rgb: 'DC3545' } },
         font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 9, name: 'Arial' },
@@ -416,7 +422,7 @@ function gerarExcelSeguranca(titulo, subtitulo, empresa) {
                 }
 
                 if (t.controles.length) {
-                    dadosAoA.push(criarLinhaEstilizada(['', '', 'Horário esperado', 'Horário respondido', 'Status'], estHeaderPonto, 1));
+                    dadosAoA.push(criarLinhaEstilizada(['', '', 'Horário esperado', 'Horário respondido', 'Status'], estHeaderControle, 1));
                     t.controles.forEach((c) => {
                         dadosAoA.push(criarLinhaEstilizada(['', '', c.esperado, c.respondido, c.status], estDado, 1));
                     });
