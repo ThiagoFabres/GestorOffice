@@ -26,6 +26,26 @@ function extrairPontos(turnoEl) {
     return linhas;
 }
 
+function extrairControles(turnoEl) {
+    const controles = [];
+    const secaoControles = [...turnoEl.querySelectorAll('.accordion-item, .card')].find(item => {
+        const txt = item.querySelector('.accordion-header, button, .card-header')?.textContent || '';
+        return txt.toLowerCase().includes('controles');
+    });
+
+    if (!secaoControles) return controles;
+
+    secaoControles.querySelectorAll('table tbody tr').forEach((tr) => {
+        const cells = [...tr.querySelectorAll('td')].map((td) => limparTexto(td.textContent));
+        if (cells.length) controles.push({
+            esperado: cells[0] || '',
+            respondido: cells[1] || '',
+            status: cells[2] || ''
+        });
+    });
+    return controles;
+}
+
 function extrairPanicos(turnoEl) {
     const itens = [];
     const secaoPanicos = [...turnoEl.querySelectorAll('.accordion-item, .card')].find(item => {
@@ -103,10 +123,12 @@ function extrairEstruturaCompleta() {
                 resumo: {
                     pontos: turnoEl.dataset.pontos || 0,
                     panicos: turnoEl.dataset.panicos || 0,
+                    controles: turnoEl.dataset.controles || 0,
                     rondas: turnoEl.dataset.rondas || 0,
                     ocorrencias: ocorrencias.length
                 },
                 pontos: extrairPontos(turnoEl),
+                controles: extrairControles(turnoEl),
                 panicos: extrairPanicos(turnoEl),
                 rondas: extrairRondas(turnoEl),
                 ocorrencias: ocorrencias // Adicionado ao objeto do turno
@@ -213,13 +235,13 @@ function gerarPdfSeguranca(titulo, subtitulo, empresa) {
 
             // Faixa do Turno (Cinza)
             pdf.setFillColor(230, 235, 240);
-            pdf.rect(margem, y, largura, 6, 'F');
+            pdf.rect(margem, y, largura, 10, 'F');
             pdf.setFontSize(9);
             pdf.setFont('helvetica', 'bold');
             pdf.text(`TURNO: ${t.titulo}`, margem + 3, y + 4.5);
             pdf.setFont('helvetica', 'normal');
-            pdf.text(` Pontos (${t.resumo.pontos}) | Pânicos (${t.resumo.panicos}) | Rondas (${t.resumo.rondas}) | Ocorrências (${t.resumo.ocorrencias})`, margem + 70, y + 4.5);
-            y += 8;
+            pdf.text(`Pontos (${t.resumo.pontos}) | Controles (${t.resumo.controles}) | Pânicos (${t.resumo.panicos}) | Rondas (${t.resumo.rondas}) | Ocorrências (${t.resumo.ocorrencias})`, margem + 3, y + 8.5);
+            y += 12;
 
             // 1. Tabela de Ocorrências (Cabeçalho Roxo/Azul Escuro)
             if (t.ocorrencias && t.ocorrencias.length) {
@@ -227,60 +249,49 @@ function gerarPdfSeguranca(titulo, subtitulo, empresa) {
                 autoTableFn.call(pdf, {
                     startY: y,
                     margin: { left: margem, right: margem },
-                    head: [['TIPO', 'Descrição da Ocorrência']],
-                    body: t.ocorrencias.map(o => ['Ocorrência', o.descricao]),
+                    head: [['Descrição da Ocorrência']],
+                    body: t.ocorrencias.map(o => [o.descricao]),
                     theme: 'grid',
                     styles: { fontSize: 8, cellPadding: 1.5 },
                     headStyles: { fillColor: [102, 16, 242], textColor: [255, 255, 255], fontStyle: 'bold' },
-                    columnStyles: {
-                        0: { cellWidth: 25, fontStyle: 'bold' },
-                        1: { cellWidth: largura - 25 }
-                    }
                 });
                 y = pdf.lastAutoTable.finalY + 3;
             }
 
-            // 2. Tabela de Pontos
-            if (t.pontos.length) {
+            if (t.controles.length) {
                 if (y > pdf.internal.pageSize.getHeight() - 25) { pdf.addPage(); y = 15; }
                 autoTableFn.call(pdf, {
                     startY: y,
                     margin: { left: margem, right: margem },
-                    head: [['TIPO', 'Horário']],
-                    body: t.pontos.map(p => ['Ponto', p.horario]),
+                    head: [['Horário esperado', 'Horário respondido', 'Status']],
+                    body: t.controles.map(c => [c.esperado, c.respondido, c.status]),
                     theme: 'grid',
                     styles: { fontSize: 8, cellPadding: 1.5 },
-                    headStyles: { fillColor: [13, 202, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
-                    columnStyles: {
-                        0: { cellWidth: 20, fontStyle: 'bold' },
-                        1: { cellWidth: largura - 20 }
-                    }
+                    headStyles: { fillColor: [255, 193, 7], textColor: [0, 0, 0], fontStyle: 'bold' },
                 });
                 y = pdf.lastAutoTable.finalY + 3;
             }
 
-            // 3. Tabela de Pânicos (Cabeçalho Vermelho)
+            // 2. Tabela de Pânicos (Cabeçalho Vermelho)
             if (t.panicos.length) {
                 if (y > pdf.internal.pageSize.getHeight() - 25) { pdf.addPage(); y = 15; }
                 autoTableFn.call(pdf, {
                     startY: y,
                     margin: { left: margem, right: margem },
-                    head: [['TIPO', 'Evento / Descrição', 'Tempo', 'Localização']],
-                    body: t.panicos.map(p => ['Pânico', p.texto, p.tempo, p.local]),
+                    head: [['Tempo', 'Localização']],
+                    body: t.panicos.map(p => [p.tempo, p.local]),
                     theme: 'grid',
                     styles: { fontSize: 8, cellPadding: 1.5 },
                     headStyles: { fillColor: [220, 53, 69], textColor: [255, 255, 255], fontStyle: 'bold' },
                     columnStyles: {
-                        0: { cellWidth: 20, fontStyle: 'bold' },
-                        1: { cellWidth: 60 },
-                        2: { cellWidth: 35 },
-                        3: { cellWidth: largura - 115 }
+                        0: { cellWidth: 50 },
+                        1: { cellWidth: largura - 50 }
                     }
                 });
                 y = pdf.lastAutoTable.finalY + 3;
             }
 
-            // 4. Tabela de Rondas
+            // 3. Tabela de Rondas
             if (t.rondas.length) {
                 if (y > pdf.internal.pageSize.getHeight() - 25) { pdf.addPage(); y = 15; }
                 autoTableFn.call(pdf, {
@@ -391,32 +402,31 @@ function gerarExcelSeguranca(titulo, subtitulo, empresa) {
                 dadosAoA.push(criarLinhaEstilizada([
                     '',
                     `TURNO: ${t.titulo}`,
-                    `Resumo: Pontos (${t.resumo.pontos}) | Pânicos (${t.resumo.panicos}) | Rondas (${t.resumo.rondas}) | Ocorrências (${t.resumo.ocorrencias})`,
+                    `Resumo: Pontos (${t.resumo.pontos}) | Controles (${t.resumo.controles}) | Pânicos (${t.resumo.panicos}) | Rondas (${t.resumo.rondas}) | Ocorrências (${t.resumo.ocorrencias})`,
                     '',
                     ''
                 ], estTurno));
 
                 // 1. Ocorrências
                 if (t.ocorrencias && t.ocorrencias.length) {
-                    dadosAoA.push(criarLinhaEstilizada(['', '', 'Tipo', 'Descrição da Ocorrência', ''], estHeaderOcorrencia, 1));
+                    dadosAoA.push(criarLinhaEstilizada(['', '', 'Descrição da Ocorrência', ''], estHeaderOcorrencia, 1));
                     t.ocorrencias.forEach((o) => {
-                        dadosAoA.push(criarLinhaEstilizada(['', '', 'Ocorrência', o.descricao, ''], estDado, 1));
+                        dadosAoA.push(criarLinhaEstilizada(['', '', o.descricao, ''], estDado, 1));
                     });
                 }
 
-                // 2. Pontos
-                if (t.pontos.length) {
-                    dadosAoA.push(criarLinhaEstilizada(['', '', 'Tipo', 'Horário', ''], estHeaderPonto, 1));
-                    t.pontos.forEach((p) => {
-                        dadosAoA.push(criarLinhaEstilizada(['', '', 'Ponto', p.horario, ''], estDado, 1));
+                if (t.controles.length) {
+                    dadosAoA.push(criarLinhaEstilizada(['', '', 'Horário esperado', 'Horário respondido', 'Status'], estHeaderPonto, 1));
+                    t.controles.forEach((c) => {
+                        dadosAoA.push(criarLinhaEstilizada(['', '', c.esperado, c.respondido, c.status], estDado, 1));
                     });
                 }
 
                 // 3. Pânicos
                 if (t.panicos.length) {
-                    dadosAoA.push(criarLinhaEstilizada(['', '', 'Evento / Descrição', 'Tempo', 'Localização', 'Link'], estHeaderPanico, 1));
+                    dadosAoA.push(criarLinhaEstilizada(['', '', 'Tempo', 'Localização', 'Link'], estHeaderPanico, 1));
                     t.panicos.forEach((p) => {
-                        dadosAoA.push(criarLinhaEstilizada(['', '', p.texto, p.tempo, p.local, p.link], estDado, 1));
+                        dadosAoA.push(criarLinhaEstilizada(['', '', p.tempo, p.local, p.link], estDado, 1));
                     });
                 }
 

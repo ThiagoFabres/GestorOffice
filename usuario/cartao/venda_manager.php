@@ -726,7 +726,7 @@ function parse_csv(string $caminhoCsv): array {
             $parcela = $get_valor_coluna($operadora_sup['colunas']['parcela']);
         }
 
-        if(($parcela === null || $parcela == '')&& $operadora_sup['suporte_parcela'] === false) {
+        if(($parcela === null || $parcela == '') && $operadora_sup['suporte_parcela'] === false) {
             $parcela = 1;
         }
         if($status === null && $operadora_sup['suporte_status']  === false) {

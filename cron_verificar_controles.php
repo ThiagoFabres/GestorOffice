@@ -60,7 +60,8 @@ foreach ($registros as $registro) {
     }
 
     $limite = $esperada->modify('+' . max(0, (int) $registro['tolerancia']) . ' minutes');
-    if ($agora <= $limite) {
+    // O controle só fica pendente depois de ultrapassar o horário e a tolerância.
+    if ($agora->getTimestamp() <= $limite->getTimestamp()) {
         continue;
     }
 
