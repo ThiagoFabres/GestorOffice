@@ -36,7 +36,7 @@ class Controle02
                 (hora_esperada IS NOT NULL AND hora_esperada >= :hora_inicio_esperada)
                 OR (hora_esperada IS NULL AND hora_respondida >= :hora_inicio_respondida)
             )';
-            $horaInicio = substr((string) $hora_inicio, 11, 8);
+            $horaInicio = self::normalizarLimite((string) $hora_inicio);
             $parameters[':hora_inicio_esperada'] = $horaInicio;
             $parameters[':hora_inicio_respondida'] = $horaInicio;
         }
@@ -46,7 +46,7 @@ class Controle02
                 (hora_esperada IS NOT NULL AND hora_esperada <= :hora_fim_esperada)
                 OR (hora_esperada IS NULL AND hora_respondida <= :hora_fim_respondida)
             )';
-            $horaFim = substr((string) $hora_fim, 11, 8);
+            $horaFim = self::normalizarLimite((string) $hora_fim);
             $parameters[':hora_fim_esperada'] = $horaFim;
             $parameters[':hora_fim_respondida'] = $horaFim;
         }
@@ -56,5 +56,13 @@ class Controle02
         $stmt->execute($parameters);
 
         return $stmt->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, self::class);
+    }
+
+    private static function normalizarLimite(string $valor): string
+    {
+        $data = new DateTime($valor);
+        $data->modify('-3 hours');
+
+        return $data->format('H:i:s');
     }
 }
