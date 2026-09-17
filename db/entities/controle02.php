@@ -25,33 +25,32 @@ class Controle02
         $this->tolerancia = $tolerancia;
     }
 
+    /**
+     * $hora_inicio e $hora_fim devem vir no mesmo fuso em que turnos/pontos são
+     * gravados (UTC). São convertidos para o horário local (-3h) porque
+     * controle02 é gravado em America/Sao_Paulo.
+     */
     public static function read($id_usuario, $hora_inicio = null, $hora_fim = null)
     {
         $pdo = (new Database())->connect();
+
+        // Referência da linha: o horário esperado quando existir, senão o respondido.
+        // Assim os registros pendentes (hora_respondida = NULL) também entram na janela.
         $query = 'SELECT * FROM controle02 WHERE id_usuario = :id_usuario';
         $parameters = [':id_usuario' => $id_usuario];
 
         if ($hora_inicio !== null) {
-            $query .= ' AND (
-                (hora_esperada IS NOT NULL AND hora_esperada >= :hora_inicio_esperada)
-                OR (hora_esperada IS NULL AND hora_respondida >= :hora_inicio_respondida)
-            )';
-            $horaInicio = self::normalizarLimite((string) $hora_inicio);
-            $parameters[':hora_inicio_esperada'] = $horaInicio;
-            $parameters[':hora_inicio_respondida'] = $horaInicio;
+            $query .= ' AND COALESCE(hora_esperada, hora_respondida) >= :hora_inicio';
+            $parameters[':hora_inicio'] = self::normalizarLimite((string) $hora_inicio);
         }
 
         if ($hora_fim !== null) {
-            $query .= ' AND (
-                (hora_esperada IS NOT NULL AND hora_esperada <= :hora_fim_esperada)
-                OR (hora_esperada IS NULL AND hora_respondida <= :hora_fim_respondida)
-            )';
-            $horaFim = self::normalizarLimite((string) $hora_fim);
-            $parameters[':hora_fim_esperada'] = $horaFim;
-            $parameters[':hora_fim_respondida'] = $horaFim;
+            $query .= ' AND COALESCE(hora_esperada, hora_respondida) <= :hora_fim';
+            $parameters[':hora_fim'] = self::normalizarLimite((string) $hora_fim);
         }
 
-        $query .= ' ORDER BY COALESCE(hora_respondida, hora_esperada) ASC, id ASC';
+        $query .= ' ORDER BY COALESCE(hora_esperada, hora_respondida) ASC, id ASC';
+
         $stmt = $pdo->prepare($query);
         $stmt->execute($parameters);
 

@@ -94,11 +94,18 @@ foreach($segurancas as $i => $seguranca) {
             filtro_hora_final: $fimTurno
         );
         $ocorrencias[$seguranca->id][$turno->id] = Ocorrencia::read(id_turno: $turno->id)[0] ?? null;
-        $fimControle = $fimTurno ?? (new DateTime('now', new DateTimeZone('America/Sao_Paulo')))->format('Y-m-d H:i:s');
+
+        // Turnos e pontos são gravados em UTC; Controle02::read desconta 3h para
+        // comparar com controle02 (gravado em America/Sao_Paulo). Por isso o
+        // limite do turno em andamento precisa ser o "agora" em UTC — usar o
+        // horário local aqui fazia a janela terminar 3h no passado e escondia
+        // todos os registros de controle02, inclusive os não respondidos.
+        $fimJanelaTurno = $fimTurno ?? (new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d H:i:s');
+
         $controlesTurno[$seguranca->id][$turno->id] = Controle02::read(
             id_usuario: $seguranca->id,
             hora_inicio: $inicioTurno,
-            hora_fim: $fimControle,
+            hora_fim: $fimJanelaTurno,
         );
 
         $rondas[$seguranca->id][$turno->id] = Ronda::read(
@@ -249,9 +256,9 @@ foreach($segurancas as $i => $seguranca) {
                                                                 foreach ($controles as $controle) {
                                                                     $horaControle = substr((string) $controle->hora, 0, 8);
                                                                     $inicioControle = strtotime($dataPonto . ' ' . $horaControle);
-                                                                    $fimControle = $inicioControle + (max(0, (int) $controle->tolerancia) * 60);
+                                                                    $fimJanelaControle = $inicioControle + (max(0, (int) $controle->tolerancia) * 60);
 
-                                                                    if ($inicioControle !== false && $horaPonto >= $inicioControle && $horaPonto <= $fimControle) {
+                                                                    if ($inicioControle !== false && $horaPonto >= $inicioControle && $horaPonto <= $fimJanelaControle) {
                                                                         $controleRespondido = $controle;
                                                                         break;
                                                                     }
@@ -274,6 +281,12 @@ foreach($segurancas as $i => $seguranca) {
                                                             ];
                                                         }
 
+                                                        // Processa primeiro os controle02 respondidos: assim um pendente do
+                                                        // mesmo horário já encontra o respondido na lista e é descartado.
+                                                        usort($listaControles, static function ($a, $b): int {
+                                                            return ($a->hora_respondida === null ? 1 : 0) <=> ($b->hora_respondida === null ? 1 : 0);
+                                                        });
+
                                                         foreach ($listaControles as $controleTurno) {
                                                             $horaRespondida = $controleTurno->hora_respondida;
                                                             $horaEsperada = $controleTurno->hora_esperada;
@@ -288,12 +301,35 @@ foreach($segurancas as $i => $seguranca) {
                                                             $controlesVistos[$chaveControle] = true;
 
                                                             $jaRepresentadoPorPonto = false;
+
                                                             if ($horaRespondida !== null) {
+                                                                // Mesmo horário respondido já listado a partir dos pontos.
                                                                 foreach ($controlesUnificados as $controleUnificado) {
                                                                     if ($controleUnificado['hora_respondida'] !== null
                                                                         && $controleUnificado['hora_respondida'] === $horaRespondida) {
                                                                         $jaRepresentadoPorPonto = true;
                                                                         break;
+                                                                    }
+                                                                }
+                                                            } elseif ($horaEsperada !== null) {
+                                                                // Pendente: se já existe uma resposta dentro da janela
+                                                                // (horário esperado + tolerância), o pendente é resíduo
+                                                                // e não deve aparecer.
+                                                                $inicioJanela = strtotime((string) $horaEsperada);
+
+                                                                if ($inicioJanela !== false) {
+                                                                    $fimJanela = $inicioJanela + (max(0, (int) $controleTurno->tolerancia) * 60);
+
+                                                                    foreach ($controlesUnificados as $controleUnificado) {
+                                                                        if ($controleUnificado['hora_respondida'] === null) {
+                                                                            continue;
+                                                                        }
+
+                                                                        $respostaTs = strtotime((string) $controleUnificado['hora_respondida']);
+                                                                        if ($respostaTs !== false && $respostaTs >= $inicioJanela && $respostaTs <= $fimJanela) {
+                                                                            $jaRepresentadoPorPonto = true;
+                                                                            break;
+                                                                        }
                                                                     }
                                                                 }
                                                             }
@@ -312,9 +348,10 @@ foreach($segurancas as $i => $seguranca) {
                                                                 'hora_respondida' => $horaRespondida,
                                                                 'status' => $horaRespondida === null ? 'Não respondido' : 'Respondido',
                                                                 'classe' => $horaRespondida === null ? 'table-danger' : 'table-success',
+                                                                // Pendentes ordenam pelo horário esperado, e não no fim da lista.
                                                                 'ordem' => $horaRespondida !== null
-                                                                    ? strtotime((string) $horaRespondida)
-                                                                    : PHP_INT_MAX,
+                                                                    ? (strtotime((string) $horaRespondida) ?: PHP_INT_MAX)
+                                                                    : (strtotime((string) $horaEsperada) ?: PHP_INT_MAX),
                                                             ];
                                                         }
 

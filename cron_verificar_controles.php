@@ -7,10 +7,12 @@ date_default_timezone_set('America/Sao_Paulo');
 $env = parse_ini_file(__DIR__ . '/.env') ?: [];
 header('Content-Type: application/json; charset=utf-8');
 $pdo = (new Database())->connect();
+$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
 $agora = new DateTimeImmutable('now', new DateTimeZone('America/Sao_Paulo'));
 $dataHoje = $agora->format('Y-m-d');
-$horaAtual = $agora->format('H:i:s');
 $estadoPath = __DIR__ . '/cron_controles_estado.json';
+
 $lockHandle = fopen(__DIR__ . '/cron_controles.lock', 'c');
 if ($lockHandle === false || !flock($lockHandle, LOCK_EX | LOCK_NB)) {
     http_response_code(409);
@@ -21,6 +23,7 @@ if ($lockHandle === false || !flock($lockHandle, LOCK_EX | LOCK_NB)) {
 $estado = carregarEstado($estadoPath);
 $estadoAlterado = false;
 $alertas = 0;
+$ignorados = 0;
 $erros = [];
 
 $sql = <<<'SQL'
@@ -46,6 +49,23 @@ SQL;
 
 $registros = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
+// Preparadas uma única vez, fora do laço.
+$stmtExistente = $pdo->prepare(
+    'SELECT id, hora_respondida
+       FROM controle02
+      WHERE id_empresa = :id_empresa
+        AND id_usuario = :id_usuario
+        AND hora_esperada = :hora_esperada
+      LIMIT 1'
+);
+
+$stmtInsert = $pdo->prepare(
+    'INSERT INTO controle02
+        (id_empresa, id_usuario, hora_esperada, hora_respondida, tolerancia)
+     VALUES
+        (:id_empresa, :id_usuario, :hora_esperada, NULL, :tolerancia)'
+);
+
 foreach ($registros as $registro) {
     $horaEsperada = substr((string) $registro['hora_esperada'], 0, 8);
     $esperada = DateTimeImmutable::createFromFormat(
@@ -60,6 +80,7 @@ foreach ($registros as $registro) {
     }
 
     $limite = $esperada->modify('+' . max(0, (int) $registro['tolerancia']) . ' minutes');
+
     // O controle só fica pendente depois de ultrapassar o horário e a tolerância.
     if ($agora->getTimestamp() <= $limite->getTimestamp()) {
         continue;
@@ -75,18 +96,50 @@ foreach ($registros as $registro) {
         continue;
     }
 
-    $insert = $pdo->prepare(
-        'INSERT INTO controle02
-            (id_empresa, id_usuario, hora_esperada, hora_respondida, tolerancia)
-         VALUES
-            (:id_empresa, :id_usuario, :hora_esperada, NULL, :tolerancia)'
-    );
-    $insert->execute([
-        ':id_empresa' => $registro['id_empresa'],
-        ':id_usuario' => $registro['id_usuario'],
-        ':hora_esperada' => $esperada->format('Y-m-d H:i:s'),
-        ':tolerancia' => $registro['tolerancia'],
-    ]);
+    $esperadaSql = $esperada->format('Y-m-d H:i:s');
+
+    // Verificação no banco: já existe um controle02 desse usuário para esse
+    // horário no dia de hoje? Pode ter sido respondido pelo app (hora_respondida
+    // preenchida) ou já criado como pendente numa execução anterior em que o
+    // arquivo de estado se perdeu. Nos dois casos não se insere nem se realerta.
+    try {
+        $stmtExistente->execute([
+            ':id_empresa' => $registro['id_empresa'],
+            ':id_usuario' => $registro['id_usuario'],
+            ':hora_esperada' => $esperadaSql,
+        ]);
+        $existente = $stmtExistente->fetch(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $erros[] = "Falha ao consultar controle02 do usuário {$registro['id_usuario']}.";
+        continue;
+    }
+
+    if ($existente) {
+        $estado[$chave] = true;
+        $estadoAlterado = true;
+        $ignorados++;
+        continue;
+    }
+
+    try {
+        $stmtInsert->execute([
+            ':id_empresa' => $registro['id_empresa'],
+            ':id_usuario' => $registro['id_usuario'],
+            ':hora_esperada' => $esperadaSql,
+            ':tolerancia' => $registro['tolerancia'],
+        ]);
+    } catch (PDOException $e) {
+        // Violação de índice único (23000) = outra execução/app inseriu no meio do caminho.
+        if ($e->getCode() === '23000') {
+            $estado[$chave] = true;
+            $estadoAlterado = true;
+            $ignorados++;
+            continue;
+        }
+
+        $erros[] = "Falha ao inserir controle02 do usuário {$registro['id_usuario']}.";
+        continue;
+    }
 
     $mensagem = "🚨 <b>PONTO DE CONTROLE ATRASADO</b>\n"
         . 'Empresa: ' . htmlspecialchars((string) $registro['nome_empresa'], ENT_QUOTES, 'UTF-8') . "\n"
@@ -120,6 +173,7 @@ echo json_encode([
     'success' => true,
     'executado_em' => $agora->format(DateTimeInterface::ATOM),
     'alertas_criados' => $alertas,
+    'ignorados_ja_existentes' => $ignorados,
     'erros' => $erros,
 ], JSON_UNESCAPED_UNICODE);
 
