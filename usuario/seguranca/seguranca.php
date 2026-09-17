@@ -40,8 +40,21 @@ $ocorrencias = [];
 $controlesTurno = [];
 $controles = Controle::read($empresa_usuario_obj->id);
 
+$normalizarHorarioPonto = static function ($valor): ?string {
+    if (empty($valor) || strtotime((string) $valor) === false) {
+        return null;
+    }
+
+    return (new DateTime((string) $valor))->modify('-3 hours')->format('Y-m-d H:i:s');
+};
+
 $pontoDentroDoPrazo = static function ($ponto, array $controles): bool {
-    $horaPonto = strtotime($ponto->hora ?? $ponto->created_at);
+    $valorHora = $ponto->hora ?? $ponto->created_at;
+    if (empty($valorHora) || strtotime((string) $valorHora) === false) {
+        return false;
+    }
+
+    $horaPonto = (new DateTime((string) $valorHora))->modify('-3 hours')->getTimestamp();
     if ($horaPonto === false) {
         return false;
     }
@@ -228,7 +241,7 @@ foreach($segurancas as $i => $seguranca) {
                                                         $controlesUnificados = [];
 
                                                         foreach ($listaPontos as $ponto) {
-                                                            $horaRespondida = $ponto->hora ?? $ponto->created_at;
+                                                            $horaRespondida = $normalizarHorarioPonto($ponto->hora ?? $ponto->created_at);
                                                             $controleRespondido = null;
                                                             $horaPonto = strtotime((string) $horaRespondida);
 
