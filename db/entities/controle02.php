@@ -51,7 +51,7 @@ class Controle02
             $parameters[':hora_fim_respondida'] = $horaFim;
         }
 
-        $query .= ' ORDER BY hora_esperada ASC, id ASC';
+        $query .= ' ORDER BY COALESCE(hora_respondida, hora_esperada) ASC, id ASC';
         $stmt = $pdo->prepare($query);
         $stmt->execute($parameters);
 
@@ -61,8 +61,7 @@ class Controle02
     private static function normalizarLimite(string $valor): string
     {
         $data = new DateTime($valor);
-        $data->modify('-3 hours');
 
-        return $data->format('H:i:s');
+        return $data->format('Y-m-d H:i:s');
     }
 }

@@ -84,7 +84,7 @@ foreach ($registros as $registro) {
     $insert->execute([
         ':id_empresa' => $registro['id_empresa'],
         ':id_usuario' => $registro['id_usuario'],
-        ':hora_esperada' => $horaEsperada,
+        ':hora_esperada' => $esperada->format('Y-m-d H:i:s'),
         ':tolerancia' => $registro['tolerancia'],
     ]);
 
