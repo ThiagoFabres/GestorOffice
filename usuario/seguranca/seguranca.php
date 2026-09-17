@@ -376,7 +376,6 @@ foreach($segurancas as $i => $seguranca) {
                                                     <div class="accordion-item"
                                                          data-turno-inicio="<?= htmlspecialchars($inicioFmt) ?>"
                                                          data-turno-fim="<?= htmlspecialchars($fimFmt !== 'Em Andamento' ? $fimFmt : 'Em andamento') ?>"
-                                                         data-pontos="<?= count($listaPontos) ?>"
                                                          data-panicos="<?= count($listaPanicos) ?>"
                                                          data-controles="<?= count($controlesUnificados) ?>"
                                                          data-rondas="<?= count($listaRondas) ?>">
@@ -390,7 +389,7 @@ foreach($segurancas as $i => $seguranca) {
                                                                 <?= htmlspecialchars($inicioFmt) ?>
                                                                 <?= $fimFmt !== 'Em Andamento' ? ' até ' . htmlspecialchars($fimFmt) : ' - Em andamento' ?>
 
-                                                                <span class="badge bg-info ms-2"><?= count($listaPontos) ?></span>
+                                                                <span class="badge bg-info ms-2"><?= count($controlesUnificados) ?></span>
                                                                 <span class="badge bg-danger ms-2"><?= count($listaPanicos) ?></span>
                                                                 <span class="badge bg-primary ms-2"><?= count($listaRondas) ?></span>
 
