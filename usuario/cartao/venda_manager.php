@@ -204,6 +204,8 @@ function parse_excel($numero_arquivo = null) {
             ]; 
         }
 
+
+
         
 
         
@@ -216,6 +218,7 @@ function parse_excel($numero_arquivo = null) {
         if(isset($operadora_sup['suporte_estado']) && $operadora_sup['suporte_estado']) {
             $cells[6] = 'aprovada';
         }
+
 
     
         
@@ -421,6 +424,14 @@ function parse_excel($numero_arquivo = null) {
         
         $cells[4] = floatval($cells[4]);
         $cells[5] = floatval($cells[5]);
+
+        if(isset($operadora_sup['suporte_valor_liquido']) && $operadora_sup['suporte_valor_liquido'] === 'bruto') {
+            $valor_l_str = $cells[4];
+
+            if(isset($valor_l_str) && $valor_l_str == 0) {
+                $cells[4] = $cells[5];
+            }
+        }
 
         if( $cells[4] == 0 || ($cells[5] == 0 && $tipo_arquivo == 'padrao')) {
             continue;
@@ -731,6 +742,8 @@ function parse_csv(string $caminhoCsv): array {
         // Limpar "R$" e espaços antes de converter
         $valor_b_str = trim(str_replace('R$', '', $valor_b_str ?? ''));
 
+        
+
         if(isset($operadora_sup['suporte_numero']) && $operadora_sup['suporte_numero'] == 'formatado(.)') {
             $valorBruto = $valor_b_str;
         } else {
@@ -738,19 +751,33 @@ function parse_csv(string $caminhoCsv): array {
             ? floatval(str_replace(['.', ','], ['', '.'], $valor_b_str))
             : 0;
         }
-        if(isset($operadora_sup['suporte_valor_liquido']) && $operadora_sup['suporte_valor_liquido'] === 'bruto') {
-            $valor_liquido = $valorBruto;
+
+        if(isset($valor_liquido)) {
+            unset($valor_liquido);
         }
+        
+        if(isset($operadora_sup['suporte_valor_liquido']) && $operadora_sup['suporte_valor_liquido'] === 'bruto') {
+            $valor_l_str = $get_valor_coluna($operadora_sup['colunas']['valor_l']);
+            if(!isset($valor_l_str) || $valor_l_str == 0 || $valor_l_str == null || $valor_l_str == '') {
+                $valor_liquido = $valorBruto;
+            }
+        }
+
         $valor_l_str = isset($valor_liquido) ? $valor_liquido : $get_valor_coluna($operadora_sup['colunas']['valor_l']);
         
         
         // Limpar "R$" e espaços antes de converter
         $valor_l_str = trim(str_replace('R$', '', $valor_l_str ?? ''));
-        $valorLiquido = !empty($valor_l_str) 
-            ? floatval(str_replace(['.', ','], ['', '.'], $valor_l_str))
-            : 0;
 
-        if(($valorLiquido == 0 && $operadora_sup['suporte_valor_liquido'] === false) || $valorBruto == 0) {
+        if(!isset($valor_liquido)) {
+            $valorLiquido = !empty($valor_l_str) 
+                ? floatval(str_replace(['.', ','], ['', '.'], $valor_l_str))
+                : 0;
+        } else {
+            $valorLiquido = isset($valor_liquido) ? $valor_liquido : 0;
+        }
+
+        if(($valorLiquido == 0 && (!isset($operadora_sup['suporte_valor_liquido']) || $operadora_sup['suporte_valor_liquido'] === false)) || $valorBruto == 0) {
             continue;
         }
         
@@ -784,10 +811,10 @@ function parse_csv(string $caminhoCsv): array {
         $bandeira_valor = $get_valor_coluna($operadora_sup['colunas']['bandeira']) ?? '';
         $tipo_valor = $get_valor_coluna($operadora_sup['colunas']['tipo']) ?? '';
 
-        if($bandeira_valor == null && $operadora_sup['suporte_bandeira'] == 'pix') {
+        if($bandeira_valor == null && (isset($operadora_sup['suporte_bandeira']) && $operadora_sup['suporte_bandeira'] == 'pix')) {
             $bandeira_valor = 'pix';
         }
-        if($tipo_valor == null && $operadora_sup['suporte_tipo'] == 'pix') {
+        if($tipo_valor == null && (isset($operadora_sup['suporte_tipo']) && $operadora_sup['suporte_tipo'] == 'pix')) {
             $tipo_valor = 'pix';
         }
         

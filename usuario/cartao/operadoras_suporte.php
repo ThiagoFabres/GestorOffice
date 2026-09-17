@@ -115,6 +115,7 @@ $operadoras_suporte = [
                 'valor_l' => 6,
                 'estado' => 1
             ],
+            'suporte_valor_liquido' => 'bruto',
             'suporte_data' => false,
             
         ],
@@ -128,6 +129,7 @@ $operadoras_suporte = [
                 'bandeira' => 'bandeira',
                 'parcela' => 'número de parcelas'
             ],
+            'suporte_valor_liquido' => 'bruto',
             'suporte_encoding' => false,
             'linha_inicial' => null,
             'suporte_status' => true,
