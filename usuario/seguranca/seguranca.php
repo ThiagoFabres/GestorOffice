@@ -94,10 +94,11 @@ foreach($segurancas as $i => $seguranca) {
             filtro_hora_final: $fimTurno
         );
         $ocorrencias[$seguranca->id][$turno->id] = Ocorrencia::read(id_turno: $turno->id)[0] ?? null;
+        $fimControle = $fimTurno ?? (new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d H:i:s');
         $controlesTurno[$seguranca->id][$turno->id] = Controle02::read(
             id_usuario: $seguranca->id,
             hora_inicio: $inicioTurno,
-            hora_fim: $fimTurno
+            hora_fim: $fimControle,
         );
 
         $rondas[$seguranca->id][$turno->id] = Ronda::read(
@@ -235,10 +236,8 @@ foreach($segurancas as $i => $seguranca) {
                                                         $listaRondas  = $rondas[$seguranca->id][$turno->id]  ?? [];
                                                         $ocorrenciaTurno = $ocorrencias[$seguranca->id][$turno->id] ?? null;
                                                         $listaControles = $controlesTurno[$seguranca->id][$turno->id] ?? [];
-                                                        $dataTurno = !empty($inicioTurno) && strtotime($inicioTurno) !== false
-                                                            ? date('Y-m-d', strtotime($inicioTurno))
-                                                            : date('Y-m-d');
                                                         $controlesUnificados = [];
+                                                        $controlesVistos = [];
 
                                                         foreach ($listaPontos as $ponto) {
                                                             $horaRespondida = $normalizarHorarioPonto($ponto->hora ?? $ponto->created_at);
@@ -277,18 +276,44 @@ foreach($segurancas as $i => $seguranca) {
 
                                                         foreach ($listaControles as $controleTurno) {
                                                             $horaRespondida = $controleTurno->hora_respondida;
+                                                            $horaEsperada = $controleTurno->hora_esperada;
+                                                            $chaveControle = $horaRespondida !== null
+                                                                ? 'respondido:' . (new DateTime((string) $horaRespondida))->format('Y-m-d H:i:s')
+                                                                : 'pendente:' . (new DateTime((string) $horaEsperada))->format('Y-m-d H:i:s') . ':' . (int) $controleTurno->tolerancia;
+
+                                                            if (isset($controlesVistos[$chaveControle])) {
+                                                                continue;
+                                                            }
+
+                                                            $controlesVistos[$chaveControle] = true;
+
+                                                            $jaRepresentadoPorPonto = false;
+                                                            if ($horaRespondida !== null) {
+                                                                foreach ($controlesUnificados as $controleUnificado) {
+                                                                    if ($controleUnificado['hora_respondida'] !== null
+                                                                        && $controleUnificado['hora_respondida'] === $horaRespondida) {
+                                                                        $jaRepresentadoPorPonto = true;
+                                                                        break;
+                                                                    }
+                                                                }
+                                                            }
+
+                                                            if ($jaRepresentadoPorPonto) {
+                                                                continue;
+                                                            }
+
                                                             $controlesUnificados[] = [
-                                                                'hora_esperada' => $controleTurno->hora_esperada,
-                                                                'hora_limite' => date(
-                                                                    'H:i:s',
-                                                                    strtotime(substr((string) $controleTurno->hora_esperada, 0, 8))
-                                                                        + ((int) $controleTurno->tolerancia * 60)
-                                                                ),
+                                                                'hora_esperada' => $horaEsperada,
+                                                                'hora_limite' => $horaEsperada !== null
+                                                                    ? (new DateTime((string) $horaEsperada))
+                                                                        ->modify('+' . (int) $controleTurno->tolerancia . ' minutes')
+                                                                        ->format('Y-m-d H:i:s')
+                                                                    : null,
                                                                 'hora_respondida' => $horaRespondida,
                                                                 'status' => $horaRespondida === null ? 'Não respondido' : 'Respondido',
                                                                 'classe' => $horaRespondida === null ? 'table-danger' : 'table-success',
                                                                 'ordem' => $horaRespondida !== null
-                                                                    ? strtotime($dataTurno . ' ' . substr((string) $horaRespondida, 0, 8))
+                                                                    ? strtotime((string) $horaRespondida)
                                                                     : PHP_INT_MAX,
                                                             ];
                                                         }
@@ -386,12 +411,12 @@ foreach($segurancas as $i => $seguranca) {
                                                                                                     <td><?= $controle['hora_esperada'] === null
                                                                                                         ? '—'
                                                                                                         : htmlspecialchars(
-                                                                                                            substr((string) $controle['hora_esperada'], 0, 8)
-                                                                                                                . ' - ' . $controle['hora_limite']
+                                                                                                            (new DateTime((string) $controle['hora_esperada']))->format('H:i:s')
+                                                                                                                . ' - ' . (new DateTime((string) $controle['hora_limite']))->format('H:i:s')
                                                                                                         ) ?></td>
                                                                                                     <td><?= $controle['hora_respondida'] === null
                                                                                                         ? '—'
-                                                                                                        : htmlspecialchars(substr((string) $controle['hora_respondida'], -8)) ?></td>
+                                                                                                        : htmlspecialchars((new DateTime((string) $controle['hora_respondida']))->format('H:i:s')) ?></td>
                                                                                                     <td><?= htmlspecialchars($controle['status']) ?></td>
                                                                                                 </tr>
                                                                                             <?php endforeach; ?>
