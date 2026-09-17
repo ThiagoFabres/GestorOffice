@@ -240,7 +240,7 @@ function gerarPdfSeguranca(titulo, subtitulo, empresa) {
             pdf.setFont('helvetica', 'bold');
             pdf.text(`TURNO: ${t.titulo}`, margem + 3, y + 4.5);
             pdf.setFont('helvetica', 'normal');
-            pdf.text(`Pontos (${t.resumo.pontos}) | Controles (${t.resumo.controles}) | Pânicos (${t.resumo.panicos}) | Rondas (${t.resumo.rondas}) | Ocorrências (${t.resumo.ocorrencias})`, margem + 3, y + 8.5);
+            pdf.text(`Controles (${t.resumo.controles}) | Pânicos (${t.resumo.panicos}) | Rondas (${t.resumo.rondas}) | Ocorrências (${t.resumo.ocorrencias})`, margem + 3, y + 8.5);
             y += 12;
 
             // 1. Tabela de Ocorrências (Cabeçalho Roxo/Azul Escuro)
@@ -408,7 +408,7 @@ function gerarExcelSeguranca(titulo, subtitulo, empresa) {
                 dadosAoA.push(criarLinhaEstilizada([
                     '',
                     `TURNO: ${t.titulo}`,
-                    `Resumo: Pontos (${t.resumo.pontos}) | Controles (${t.resumo.controles}) | Pânicos (${t.resumo.panicos}) | Rondas (${t.resumo.rondas}) | Ocorrências (${t.resumo.ocorrencias})`,
+                    `Resumo: Controles (${t.resumo.controles}) | Pânicos (${t.resumo.panicos}) | Rondas (${t.resumo.rondas}) | Ocorrências (${t.resumo.ocorrencias})`,
                     '',
                     ''
                 ], estTurno));
