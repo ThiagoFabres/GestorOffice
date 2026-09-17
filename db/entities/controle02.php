@@ -61,6 +61,7 @@ class Controle02
     private static function normalizarLimite(string $valor): string
     {
         $data = new DateTime($valor);
+        $data->modify('-3 hours');
 
         return $data->format('Y-m-d H:i:s');
     }

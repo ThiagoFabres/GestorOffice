@@ -94,7 +94,7 @@ foreach($segurancas as $i => $seguranca) {
             filtro_hora_final: $fimTurno
         );
         $ocorrencias[$seguranca->id][$turno->id] = Ocorrencia::read(id_turno: $turno->id)[0] ?? null;
-        $fimControle = $fimTurno ?? (new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d H:i:s');
+        $fimControle = $fimTurno ?? (new DateTime('now', new DateTimeZone('America/Sao_Paulo')))->format('Y-m-d H:i:s');
         $controlesTurno[$seguranca->id][$turno->id] = Controle02::read(
             id_usuario: $seguranca->id,
             hora_inicio: $inicioTurno,
