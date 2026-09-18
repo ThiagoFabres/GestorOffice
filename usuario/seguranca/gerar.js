@@ -249,7 +249,7 @@ function gerarPdfSeguranca(titulo, subtitulo, empresa) {
                 autoTableFn.call(pdf, {
                     startY: y,
                     margin: { left: margem, right: margem },
-                    head: [['Descrição da Ocorrência']],
+                    head: [['Ocorrências no turno']],
                     body: t.ocorrencias.map(o => [o.descricao]),
                     theme: 'grid',
                     styles: { fontSize: 8, cellPadding: 1.5 },
@@ -263,7 +263,7 @@ function gerarPdfSeguranca(titulo, subtitulo, empresa) {
                 autoTableFn.call(pdf, {
                     startY: y,
                     margin: { left: margem, right: margem },
-                    head: [['Horário esperado', 'Horário respondido', 'Status']],
+                    head: [['Controle', 'Horário respondido', 'Status']],
                     body: t.controles.map(c => [c.esperado, c.respondido, c.status]),
                     theme: 'grid',
                     styles: { fontSize: 8, cellPadding: 1.5 },
@@ -278,7 +278,7 @@ function gerarPdfSeguranca(titulo, subtitulo, empresa) {
                 autoTableFn.call(pdf, {
                     startY: y,
                     margin: { left: margem, right: margem },
-                    head: [['Tempo', 'Localização']],
+                    head: [['Pânico', 'Localização']],
                     body: t.panicos.map(p => [p.tempo, p.local]),
                     theme: 'grid',
                     styles: { fontSize: 8, cellPadding: 1.5 },
@@ -297,7 +297,7 @@ function gerarPdfSeguranca(titulo, subtitulo, empresa) {
                 autoTableFn.call(pdf, {
                     startY: y,
                     margin: { left: margem, right: margem },
-                    head: [['Descrição', 'Horário']],
+                    head: [['Ronda / Ocorrência', 'Horário']],
                     body: t.rondas.map(r => [r.descricao, r.horario]),
                     theme: 'grid',
                     styles: { fontSize: 8, cellPadding: 1.5 },
