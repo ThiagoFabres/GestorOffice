@@ -141,8 +141,8 @@ foreach ($registros as $registro) {
         continue;
     }
 
-    $mensagem = "🚨Empresa: " . htmlspecialchars((string) $registro['nome_empresa'], ENT_QUOTES, 'UTF-8') . "\n"
-        . '<b>Ponto de Controle NÃO Executado</b>'. "\n"
+    $mensagem = "Empresa: " . htmlspecialchars((string) $registro['nome_empresa'], ENT_QUOTES, 'UTF-8') . "\n"
+        . '🚨<b>Ponto de Controle NÃO Executado</b>'. "\n"
         . 'Usuário: ' . htmlspecialchars((string) $registro['nome_usuario'], ENT_QUOTES, 'UTF-8') . "\n"
         . 'Esperado: ' . $esperada->format('d/m/Y H:i:s') . "\n"
         . 'Limite: ' . $limite->format('d/m/Y H:i:s');
