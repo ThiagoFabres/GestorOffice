@@ -86,7 +86,7 @@ if ($get_acao === 'editar') {
                 <a href="/gestor/procedimentos/procedimentos.php"> <div ><i class="bi bi-envelope-open"></i></div> Procedimentos</a>
             </div>
             <div class="menu-item menu-item-atual">
-                <a href="controle/controle.php"> <div ><i class="bi bi-clock"></i></div> Controle</a>
+                <a href="controle.php"> <div ><i class="bi bi-clock"></i></div> Controle</a>
             </div>
         <?php } ?>
             <!-- quero que isso fique embaixo -->
