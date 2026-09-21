@@ -423,7 +423,7 @@ foreach($segurancas as $i => $seguranca) {
                                                                                     data-bs-toggle="collapse" data-bs-target="#collapse-controle-<?= $turnoId ?>"
                                                                                     aria-expanded="false" aria-controls="collapse-controle-<?= $turnoId ?>">
                                                                                 <i class="bi bi-clock me-2 text-info"></i>
-                                                                                Controles
+                                                                                Controle
                                                                                 <span class="badge bg-secondary ms-2"><?= count($controlesUnificados) ?></span>
                                                                             </button>
                                                                         </h2>
@@ -472,7 +472,7 @@ foreach($segurancas as $i => $seguranca) {
                                                                                     data-bs-toggle="collapse" data-bs-target="#collapse-panico-<?= $turnoId ?>"
                                                                                     aria-expanded="false" aria-controls="collapse-panico-<?= $turnoId ?>">
                                                                                 <i class="bi bi-exclamation-triangle-fill me-2 text-danger"></i>
-                                                                                Pânicos
+                                                                                Pânico
                                                                                 <span class="badge bg-secondary ms-2"><?= count($listaPanicos) ?></span>
                                                                             </button>
                                                                         </h2>
@@ -526,7 +526,7 @@ foreach($segurancas as $i => $seguranca) {
                                                                                     data-bs-toggle="collapse" data-bs-target="#collapse-ronda-<?= $turnoId ?>"
                                                                                     aria-expanded="false" aria-controls="collapse-ronda-<?= $turnoId ?>">
                                                                                 <i class="bi bi-shield-check me-2 text-primary"></i>
-                                                                                Rondas
+                                                                                Ronda
                                                                                 <span class="badge bg-secondary ms-2"><?= count($listaRondas) ?></span>
                                                                             </button>
                                                                         </h2>
