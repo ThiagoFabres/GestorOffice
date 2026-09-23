@@ -769,7 +769,7 @@ function parse_csv(string $caminhoCsv): array {
 
     $i = 0;
     foreach ($linhas as $linha_str) {
-        // if (trim($linha_str) === '') continue;
+        if (trim($linha_str) === '') continue;
         
         $linha = str_getcsv($linha_str, $operadora_sup['separator']);
         // Função auxiliar para obter valor da linha pela coluna
