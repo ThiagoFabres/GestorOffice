@@ -1,3 +1,4 @@
+<?php $erro = $erro ?? null ?>
 
 <div class="modal fade" id="modal_cadastro_vendas" tabindex="-1" role="dialog" aria-labelledby="modalCadastroCidadeLabel">
             <div class="modal-dialog modal-xl modal-dialog-centered">
@@ -85,63 +86,99 @@
                     </div>
                 <?php endif; ?>
 
-                    <?php if (!empty($_SESSION['vendas']['transactions']) && empty($_SESSION['vendas_invlidas'])): ?>
+                    <?php if ((!empty($_SESSION['vendas']['transactions']) || !empty($_SESSION['vendas']['cancelados'])) && empty($_SESSION['vendas_invlidas'])): ?>
                         <form method="post" action="receber_manager.php">
-                    <input type="hidden" name="acao" value="adicionar"></input>
-                    <input type="hidden" name="operadora" value="<?=$_SESSION['vendas']['conta']?>"></input>
-                    <div class="mb-3 mt-3" style="max-height:30rem; overflow: auto;">
-                        <h6>Pré-visualização do arquivo Excel:</h6>
-                        
-                        <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead style="position:sticky;">
-                                    <tr style="position:sticky;">
-                                        <th>Parcela</th>
-                                        <th>Data</th>
-                                        <th>Valor Bruto</th>
-                                        <th>Valor Liquido</th>
-                                        <th>Bandeira</th>
-                                        <th>Tipo</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
+    <div class="gap-3">
+        <?php if(!empty($_SESSION['vendas']['transactions']) && empty($_SESSION['vendas_invlidas'])) { ?>
+            <input type="hidden" name="acao" value="adicionar"></input>
+            <input type="hidden" name="operadora" value="<?=$_SESSION['vendas']['conta']?>"></input>
+            
+            <div class="mb-4">
+                <h6>Pré-visualização do arquivo Excel:</h6>
+                <!-- Adicionado max-height e overflow-y: auto aqui -->
+                <div class="table-responsive" style="max-height: 20rem; overflow-y: auto;">
+                    <table class="table table-bordered mb-0">
+                        <thead class="sticky-top bg-white">
+                            <tr>
+                                <th>Parcela</th>
+                                <th>Data</th>
+                                <th>Valor Bruto</th>
+                                <th>Valor Liquido</th>
+                                <th>Bandeira</th>
+                                <th>Tipo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php 
+                            $i = 0;
+                            foreach ($_SESSION['vendas']['transactions'] as $linha){ ?>
+                                <input type="hidden" name="aprovada[bandeira_id][<?=$i?>]" value="<?=$linha['bandeira_id']?>">
+                                <tr>
+                                    <td><input class="form-control" readonly name="aprovada[parcela][<?=$i?>]" value="<?php echo htmlspecialchars($linha['parcela'] == '' ? 1 : $linha['parcela']) ?>"></td>
+                                    <td><input class="form-control" readonly name="aprovada[data][<?=$i?>]" value="<?= (new DateTime(htmlspecialchars($linha['data'] ?? '')))->format(('d/m/Y')) ?>"></td>
+                                    <td><input class="form-control" readonly name="aprovada[valor_b][<?=$i?>]" value="<?= number_format(htmlspecialchars($linha['valor_b'] ?? ''), 2, ',', '.') ?>"></td>
+                                    <td><input class="form-control" readonly name="aprovada[valor_l][<?=$i?>]" value="<?= $linha['valor_l'] == 0 ? 'Não Informado' : number_format(htmlspecialchars($linha['valor_l']), 2, ',', '.') ?>"></td>
+                                    <td><input class="form-control" readonly name="aprovada[bandeira][<?=$i?>]" value="<?= htmlspecialchars(ucfirst(strtolower($linha['bandeira'])) ?? '') ?>"></td>
+                                    <td><input class="form-control" readonly name="aprovada[tipo][<?=$i?>]" value="<?= htmlspecialchars(ucfirst(strtolower($linha['tipo'])))?>"></td>
+                                </tr>
+                            <?php
+                            $i++;
+                            } 
+                            ?>
+                            <input type="hidden" name="total_linhas" value="<?=$i?>">
+                        </tbody>
+                    </table>
+                </div>
+            </div>          
+        <?php } ?>
 
-                                    <?php 
-                                    $i = 0;
-                                    foreach ($_SESSION['vendas']['transactions'] as $linha){ 
+        <?php if(!empty($_SESSION['vendas']['cancelados']) && empty($_SESSION['vendas_invlidas'])) { ?>
+            
+            <div class="mb-4">
+                <h6>Arquivos Cancelados Pela Operadora:</h6>
+                <!-- Adicionado max-height e overflow-y: auto aqui -->
+                <div class="table-responsive" style="max-height: 20rem; overflow-y: auto;">
+                    <table class="table table-bordered mb-0">
+                        <thead class="sticky-top bg-white">
+                            <tr>
+                                <th>Data</th>
+                                <th>Bandeira</th>
+                                <th>Tipo</th>
+                                <th>Status</th>
+                                <th>Valor</th>
+                                <th>Comprovante</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php 
+                            $i = 0;
+                            foreach ($_SESSION['vendas']['cancelados'] as $linha){ ?>         
+                                <tr>
+                                    <td><input class="form-control" readonly name="cancelada[data][<?=$i?>]" value="<?= (new DateTime(htmlspecialchars($linha['data'] ?? '')))->format('d/m/Y')?>"></td>
+                                    <td><input class="form-control" readonly name="cancelada[bandeira][<?=$i?>]" value="<?= ucfirst(htmlspecialchars($linha['bandeira'] ?? '')) ?>"></td>
+                                    <td><input class="form-control" readonly name="cancelada[tipo][<?=$i?>]" value="<?= ucfirst(htmlspecialchars($linha['tipo'] ?? '')) ?>"></td>
+                                    <td><input class="form-control" readonly name="cancelada[estado][<?=$i?>]" value="<?= ucfirst(htmlspecialchars($linha['status'] ?? '')) ?>"></td>
+                                    <td><input class="form-control" readonly name="cancelada[valor][<?=$i?>]" value="<?= number_format(htmlspecialchars($linha['valor'] ?? ''), 2, ',', '.') ?>"></td>
+                                    <td><input class="form-control" readonly name="cancelada[comprovante][<?=$i?>]" value="<?= htmlspecialchars(ucfirst(strtolower($linha['comprovante'])) ?? '') ?>"></td>
+                                </tr>
+                            <?php
+                            $i++;
+                            } 
+                            ?>
+                            <input type="hidden" name="total_linhas_canceladas" value="<?=$i?>">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        <?php } ?>
+    </div>
 
-                                        ?>
-                                    
-                                            <input type="hidden" name="bandeira_id[<?=$i?>]" value="<?=$linha['bandeira_id']?>">
-                                            
-                                        <tr>
-                                            <td><input class="form-control" readonly name="parcela[<?=$i?>]" value="<?php echo htmlspecialchars($linha['parcela'] == '' ? 1 : $linha['parcela']) ?>"></input></td>
-                                            <td><input class="form-control" readonly name="data[<?=$i?>]" value="<?= (new DateTime(htmlspecialchars($linha['data'] ?? '')))->format(('d/m/Y')) ?>"></input></td>
-                                            <td><input class="form-control" readonly name="valor_b[<?=$i?>]" value="<?= number_format(htmlspecialchars($linha['valor_b'] ?? ''), 2, ',', '.') ?>"></input></td>
-                                            <td><input class="form-control" readonly name="valor_l[<?=$i?>]" value="<?= $linha['valor_l'] == 0 ? 'Não Informado' : number_format(htmlspecialchars($linha['valor_l']), 2, ',', '.') ?>"></input></td>
-                                            <td><input class="form-control" readonly name="bandeira[<?=$i?>]" value="<?= htmlspecialchars(ucfirst(strtolower($linha['bandeira'])) ?? '') ?>"></input></td>
-                                            <td><input class="form-control" readonly name="tipo[<?=$i?>]" value="<?= htmlspecialchars(ucfirst(strtolower($linha['tipo'])))?>"></input></td>
-                                        </tr>
-                                    
-                                    <?php
-                                    $i++;
-                                    } 
-                                 ?>
-                                 <input type="hidden" name="total_linhas" value="<?=$i?>"></input>
-
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    
-
-                    <!-- Botões -->
-                    <div class="d-flex justify-content-end gap-2">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                        <button type="submit" class="btn btn-success" style="background-color: #5856d6; border-color: #5856d6;">Salvar</button>
-                    </div>
+    <div class="d-flex justify-content-end gap-2 mt-3">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        <button type="submit" class="btn btn-success" style="background-color: #5856d6; border-color: #5856d6;">Salvar</button>
+    </div>
+</form>
                     <?php endif; ?>
-                    </form>
                 </div>
             </div>
         </div>

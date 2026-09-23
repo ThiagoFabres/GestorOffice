@@ -79,12 +79,14 @@ $get_filtro_cadastro = filter_input(INPUT_GET, 'filtro_cadastro') ?? null;
 $get_filtro_titulo = filter_input(INPUT_GET, 'filtro_titulo') ?? null;
 $get_filtro_subtitulo = filter_input(INPUT_GET, 'filtro_subtitulo') ?? null;
 $get_filtro_custo = filter_input(INPUT_GET, 'filtro_custo') ?? null;
+$get_filtro_status = filter_input(INPUT_GET, 'filtro_status') ?? null;
 
 $exibir_detalhes = filter_input(INPUT_GET, 'filtro_detalhes') == 'on' ? true : false;
 $exibir_diferencas = filter_input(INPUT_GET, 'filtro_diferencas') == 'on' ? true : false;
 
 $get_pdf = filter_input(INPUT_GET, 'pdf') == 1 ? true : false;
 $get_excel = filter_input(INPUT_GET, 'excel') == 1 ? true : false;
+$get_pdf_canceladas = filter_input(INPUT_GET, 'pdf_canceladas') == 1 ? true : false;
 
 if($exibir_diferencas === true) {
     $exibir_detalhes = true;
@@ -146,6 +148,8 @@ if ($get_filtro_cadastro != '')
     $filtros[] = 'filtro_cadastro=' . $get_filtro_cadastro;
 if ($get_filtro_custo != '')
     $filtros[] = 'filtro_custo=' . $get_filtro_custo;
+if($get_filtro_status)
+    $filtros[] = 'filtro_status=' . $get_filtro_status;
 if ($exibir_detalhes)
     $filtros[] = 'filtro_detalhes=on';
 if($exibir_diferencas)
@@ -273,17 +277,8 @@ if ($filtros != []) {
                                                     </div>
 
                                                     <div style="display:flex; flex-direction: column; width:100%;" >
-                                                        <label for="centro-custos-filtro">Centro de custos:</label>
-                                                        <select class="form-control" name="filtro_custo" id="custo-filtro">
-                                                            <option value="">Selecione</option>
-                                                            <?php
-                                                            $centro_custos = CentroCustos::read(null, $_SESSION['usuario']->id_empresa);
-                                                            foreach ($centro_custos as $custo) { ?>
-                                                                <option value="<?= $custo->id ?>" <?= $get_filtro_custo == $custo->id ? 'selected' : ''?>>
-                                                                    <?= htmlspecialchars($custo->nome, ENT_QUOTES, 'UTF-8') ?>
-                                                                </option>
-                                                            <?php } ?>
-                                                        </select>
+                                                        <label for="centro-custos-filtro">Status (Canceladas)</label>
+                                                        <input style="height:2.85em" placeholder="Status" class="form-control" value="<?= $get_filtro_status ?>" type="text" name="filtro_status">
                                                     </div>                           
                                                 </div>
 
@@ -534,19 +529,25 @@ if ($filtros != []) {
         <div class="relatorios-botoes" style="float:left; width:100%">
             <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf || $get_excel) { echo "gerarpdf('receber', " . json_encode($nome_empresa) . ")";} else {?>window.location.href='<?=$caminho?><?= empty($filtros) ? '?' : '&' ?>pdf=1' <?php } ?>">Gerar PDF</button>
             <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="<?php if($get_pdf || $get_excel) { echo "gerarexcel('receber', " . json_encode($nome_empresa) . ")";} else {?>window.location.href='<?=$caminho?><?= empty($filtros) ? '?' : '&' ?>excel=1' <?php } ?>">Gerar Excel</button>
+            <button class="btn btn-primary btn-sm" id="botao-gerar-pdf-canceladas" onclick="<?php if($get_pdf || $get_excel) { echo "gerarpdf('canceladas', " . json_encode($nome_empresa) . ")";} else {?>window.location.href='<?=$caminho?><?= empty($filtros) ? '?' : '&' ?>pdf_canceladas=1' <?php } ?>">Gerar PDF Canceladas</button>
         </div>
     </div>
-    <div style="display: none;">
-    <?php 
-    if($get_pdf || $get_excel) {
-        if($exibir_detalhes){
-            require_once __DIR__ . '/tabelas/tabela_detalhada_pdf.php';
-        } else if($exibir_detalhes === false) {
-            require_once __DIR__ . '/tabelas/tabela_comum_pdf.php';
+    <div style="display:none;">
+        <?php 
+        if($get_pdf || $get_excel) {
+            if($exibir_detalhes){
+                require_once __DIR__ . '/tabelas/tabela_detalhada_pdf.php';
+            } else if($exibir_detalhes === false) {
+                require_once __DIR__ . '/tabelas/tabela_comum_pdf.php';
+            }
         }
-    }
-    ?>
-</div>
+
+        if($get_pdf_canceladas) {
+            require_once __DIR__ . '/../../db/entities/cancelada.php';
+            require_once __DIR__ . '/tabelas/tabela_canceladas.php';
+        }
+        ?>
+    </div>
 </div>
            
 
@@ -617,6 +618,11 @@ if ($filtros != []) {
     <?php if($get_excel) { ?>
         gerarexcel('receber', <?= json_encode($nome_empresa) ?>);
             window.location.href = '<?=$caminho?>';
+    <?php } ?>
+
+    <?php if ($get_pdf_canceladas) { ?>
+        gerarPdfCancelada(<?= json_encode($nome_empresa) ?>);
+            window.location.href = '<?=$caminho?>'
     <?php } ?>
 
 });

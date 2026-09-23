@@ -221,8 +221,6 @@ function gerarexcel(nome, nomeEmpresa = '') {
             alert("Tabela não encontrada!");
             return;
         }
-
-        // Função auxiliar para formatar datas de yyyy-mm-dd para dd/mm/yyyy
         function formatarData(dataStr) {
             if (!dataStr || dataStr.trim() === '') return '';
             
@@ -235,7 +233,6 @@ function gerarexcel(nome, nomeEmpresa = '') {
             return dataStr;
         }
 
-        // Função para extrair valor do select
         function getSelectValue(selector) {
             var el = document.querySelector(selector);
             if (!el) return '';
@@ -243,7 +240,6 @@ function gerarexcel(nome, nomeEmpresa = '') {
                    el.options[el.selectedIndex].text.trim() : '';
         }
 
-        // Função para extrair valor do radio button
         function getRadioValue(name) {
             var checked = document.querySelector('input[name="' + name + '"]:checked');
             if (!checked) return '';
@@ -252,10 +248,8 @@ function gerarexcel(nome, nomeEmpresa = '') {
             return lbl ? lbl.textContent.trim() : checked.value;
         }
 
-        // Clona a tabela para não alterar o DOM original
         var tabelaClone = tabela.cloneNode(true);
 
-        // Remove símbolos de moeda
         tabelaClone.querySelectorAll('td, th').forEach(function(el) {
             if (el.textContent.includes('R$')) {
                 el.textContent = el.textContent.replace(/R\$\s?/g, '').trim();
@@ -388,4 +382,190 @@ function gerarexcel(nome, nomeEmpresa = '') {
         console.error('Erro ao gerar Excel:', error);
         alert('Erro ao gerar arquivo Excel. Verifique o console para mais detalhes.');
     }
+}
+
+function gerarPdfCancelada(nome_empresa = '') {
+    
+    const tabela = document.querySelector('#tabela-pdf-canceladas');
+
+    if (!tabela) {
+        alert("Tabela não encontrada!");
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+
+    const doc = new jsPDF({
+        orientation: "landscape",
+        unit: "mm",
+        format: "a4"
+    });
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    /* -------------------------
+       CABEÇALHO
+    ------------------------- */
+
+    const titulo = 'Vendas Canceladas'
+
+    doc.setFontSize(16);
+    doc.setFont(undefined, "bold");
+    doc.text(`${nome_empresa} - ${titulo}`, 10, 10);
+
+    doc.setFontSize(10);
+    doc.setFont(undefined, "normal");
+
+    let y = 16;
+
+    const filtros = [
+        ['Período', '#filtro_data_inicial', '#filtro_data_final'],
+        ['Documento', '#filtro_nome']
+    ];
+
+    filtros.forEach(f => {
+
+        if (f.length === 3) {
+
+            const di = document.querySelector(f[1])?.value;
+            const df = document.querySelector(f[2])?.value;
+
+            if (di && df) {
+                doc.text(`${f[0]}: ${formatarData(di)} até ${formatarData(df)}`, 10, y);
+                y += 5;
+            }
+
+        } else {
+
+            const val = document.querySelector(f[1])?.value;
+
+            if (val) {
+                doc.text(`${f[0]}: ${val}`, 10, y);
+                y += 5;
+            }
+
+        }
+
+    });
+
+    /* -------------------------
+       EXTRAIR TABELA
+    ------------------------- */
+
+    const head = [];
+    const body = [];
+
+    tabela.querySelectorAll("thead tr").forEach(tr => {
+
+        const row = [];
+
+        tr.querySelectorAll("th").forEach((th, index, arr) => {
+
+            if (index < arr.length) { // remove últimas 4 colunas
+                row.push(th.innerText.trim());
+            }
+
+        });
+
+        head.push(row);
+
+    });
+
+    tabela.querySelectorAll("tbody tr").forEach(tr => {
+
+        const row = [];
+
+        tr.querySelectorAll("td").forEach((td, index, arr) => {
+
+            if (index < arr.length) {
+                row.push(td.textContent.replace('R$', '').trim());
+            }
+
+        });
+
+        row.isTotalRow = tr.id === 'tr-totais';
+        body.push(row);
+
+    });
+
+    /* -------------------------
+       TABELA
+    ------------------------- */
+
+    doc.autoTable({
+        head: head,
+        body: body,
+        startY: y + 2,
+        theme: 'striped',
+        rowPageBreak: 'avoid',
+        showHead: 'everyPage',
+
+        styles: {
+            fontSize: 8,
+            cellPadding: 2,
+            halign: "center",
+            valign: "middle"
+        },
+
+        headStyles: {
+            fillColor: [206,206,206],
+            textColor: 0,
+            fontStyle: "bold"
+        },
+
+        alternateRowStyles: {
+            fillColor: [255,255,255]
+        },
+
+        margin: {
+            left: 8,
+            right: 8
+        },
+
+        didParseCell: function (data) {
+
+            if (data.cell.raw?.classList?.contains('td-acoes')) {
+                data.cell.text = '';
+            }
+
+            if (data.section === 'body' && data.row.raw?.isTotalRow) {
+                data.cell.styles.fontStyle = 'bold';
+                data.cell.styles.fontSize = 10;
+                data.cell.styles.fillColor = [220, 220, 220];
+                data.cell.styles.textColor = [0, 0, 0];
+            } else if (data.section === 'body' && data.row.index % 2 === 1) {
+                data.cell.styles.fillColor = [245,245,245];
+
+            }
+
+        }
+
+    });
+
+    /* -------------------------
+       PAGINAÇÃO
+    ------------------------- */
+
+    const totalPages = doc.internal.getNumberOfPages();
+
+    doc.setFontSize(9);
+
+    for (let i = 1; i <= totalPages; i++) {
+
+        doc.setPage(i);
+
+        doc.text(
+            `Página ${i} de ${totalPages}`,
+            pageWidth - 10,
+            10,
+            { align: 'right' }
+        );
+
+    }
+
+    /* -------------------------
+       SALVAR
+    ------------------------- */
+
+    doc.save(`relatorio_canceladas.pdf`);
 }

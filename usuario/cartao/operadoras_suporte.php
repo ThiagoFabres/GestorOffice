@@ -5,6 +5,7 @@ $operadoras_suporte = [
             'excluded_columns' => [
                 'F', 'J', 'K', 'L', 'M', 'N', 'O'
             ],
+            'coluna_comprovante' => 'F',
             'start_row' => 2,
             'start_end_columns' => ['start' => 'C', 'end' => 'P'],
             'organizador' => [
@@ -129,6 +130,7 @@ $operadoras_suporte = [
                 'bandeira' => 'bandeira',
                 'parcela' => 'número de parcelas'
             ],
+            'coluna_comprovante' => 'NSU/CV',
             'suporte_valor_liquido' => 'bruto',
             'suporte_encoding' => false,
             'linha_inicial' => null,
@@ -166,6 +168,8 @@ $operadoras_suporte = [
             ],
             'start_row' => 8,
             'start_end_columns' => [ 'start' => 'A', 'end' => 'N'],
+            'coluna_comprovante' => 'P',
+            'suporte_coluna_transacao' => 'J',
             'organizador' => [
                 'data' => 0, //A
                 'bandeira' => 3, // H
