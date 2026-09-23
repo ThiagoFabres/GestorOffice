@@ -16,6 +16,7 @@ require_once __DIR__ . '/../../db/entities/ope01.php';
 require_once __DIR__ . '/../../db/entities/band01.php';
 require_once __DIR__ . '/../../db/entities/pra01.php';
 require_once __DIR__ . '/../../db/entities/recebimentos.php';
+require_once __DIR__ . '/../../db/entities/cancelada.php';
 
 //processar o arquivo de vendas (Excel)
 //transformar vendas em recebimentos
@@ -92,11 +93,23 @@ function parse_excel($numero_arquivo = null) {
         }
     }
     $importadas = Rec03::read(id_empresa: $_SESSION['usuario']->id_empresa, operadora_id:$operadora->id);
+    $importadas_canceladas = Cancelada::read(id_empresa: $_SESSION['usuario']->id_empresa);
+
 
     $importadas_set = [];
+    $importadas_canceladas_set = [];
     foreach($importadas as $imp) {
         $importadas_set[$imp->data_lanc][$imp->bandeira_id][$imp->prazo_id] = true;
     }
+    foreach($importadas_canceladas as $impc) {
+        $dataChave = (new DateTime($impc->data))->format('Y-m-d');
+        $comprovanteChave = trim((string) $impc->comprovante);
+        if ($comprovanteChave === '') {
+            continue;
+        }
+        $importadas_canceladas_set[$dataChave][$comprovanteChave] = true;
+    }
+
     $bandeiras = Band01::read(null, $_SESSION['usuario']->id_empresa, $id_operadora);
     $parcelas = [];
     $bandeiras_parcelas = [];
@@ -274,15 +287,19 @@ function parse_excel($numero_arquivo = null) {
                     unset($spreadsheet, $worksheet, $worksheet_lines);
                 }
             $transactions_next = parse_excel($numero_arquivo_atual + 1);
-            error_log("Retorno do arquivo " . ($numero_arquivo_atual + 1) . ": " . count($transactions_next['lancamentos'] ?? []) . " lançamentos");
 
-                        if (!empty($transactions_next['invalido'])) {
+            if (!empty($transactions_next['invalido'])) {
                 $transactions['invalido'] = array_merge($transactions['invalido'] ?? [], $transactions_next['invalido']);
+            }
+
+            if (!empty($transactions_next['cancelados'])) {
+                $transactions['cancelados'] = array_merge($transactions['cancelados'] ?? [], $transactions_next['cancelados']);
             }
 
             if (!empty($transactions_next['lancamentos'])) {
                 $transactions['lancamentos'] = $transactions['lancamentos'] + $transactions_next['lancamentos'];
             }
+            
 
             // Só decide/envia resultado quando já tem lançamentos válidos OU já é a última versão testada
             if (!empty($transactions['lancamentos']) || $numero_arquivo_atual == $limite_arquivo) {
@@ -312,6 +329,7 @@ function parse_excel($numero_arquivo = null) {
         }    
         $palavras_negadas = [
             'cancelada',
+            'recusada',
             'negada',
             'desfeita',
             'expirado',
@@ -319,14 +337,11 @@ function parse_excel($numero_arquivo = null) {
             'estornada',
             'estornado',
             'desfeita',
-            'desfeito'
+            'desfeito',
+            'a confirmar',
+            'falha na transacao',
+            'falha'
         ];
-
-        if($tipo_arquivo == 'padrao') {
-            if(in_array(strtolower($cells[6]), $palavras_negadas)) {
-                continue;
-            }
-        }
         
         if (isset($operadora_sup['suporte_parcela']) && $operadora_sup['suporte_parcela'] == 'formatada(0/0)') {
             if (strpos($cells[3], '/') !== false) {
@@ -378,12 +393,14 @@ function parse_excel($numero_arquivo = null) {
         }
         if (isset($multi) && $multi) {
             $transactions_next = parse_excel($numero_arquivo_atual + 1);
-            error_log("Retorno do arquivo " . ($numero_arquivo_atual + 1) . ": " . count($transactions_next['lancamentos'] ?? []) . " lançamentos");
                         if (!empty($transactions_next['invalido'])) {
                 $transactions['invalido'] = array_merge($transactions['invalido'] ?? [], $transactions_next['invalido']);
             }
             if (!empty($transactions_next['lancamentos'])) {
                 $transactions['lancamentos'] = $transactions['lancamentos'] + $transactions_next['lancamentos'];
+            }
+            if (!empty($transactions_next['cancelados'])) {
+                $transactions['cancelados'] = array_merge($transactions['cancelados'] ?? [], $transactions_next['cancelados']);
             }
 
             if (!empty($transactions['lancamentos']) || $numero_arquivo_atual == $limite_arquivo) {
@@ -439,8 +456,10 @@ function parse_excel($numero_arquivo = null) {
             }
         }
 
+        $valor_invalido = false;
+
         if( $cells[4] == 0 || ($cells[5] == 0 && $tipo_arquivo == 'padrao')) {
-            continue;
+            $valor_invalido = true;
         }
    
         if(str_starts_with(strtolower($cells[2]), 'pix') || str_starts_with(strtolower($cells[1]), 'pix')) {
@@ -498,6 +517,41 @@ function parse_excel($numero_arquivo = null) {
         }
         if(isset($cadastrado) && $cadastrado === true) {
             continue;
+        }
+
+        $valor_cancelado = null;
+        if($tipo_arquivo == 'padrao') {
+            if (in_array(strtolower($cells[6]), $palavras_negadas) || $valor_invalido) {
+                if(isset($operadora_sup['coluna_comprovante'])) {
+
+                    $cell_cancelada = $row->getWorksheet()->getCell( $operadora_sup['coluna_comprovante'] . $row->getRowIndex());
+                    $cell_comprovante = trim((string) $cell_cancelada->getCalculatedValue());
+
+                    if($cell_comprovante !== '' && isset($importadas_canceladas_set[$data_formatada][$cell_comprovante])) {
+                        continue;
+                    }
+
+                    if(isset($operadora_sup['suporte_coluna_transacao'])) {
+                        $cell_valor_cancelado = $row->getWorksheet()->getCell( $operadora_sup['suporte_coluna_transacao'] . $row->getRowIndex()); 
+                        $valor_cancelado = $cell_valor_cancelado->getCalculatedValue();
+                    }
+                    if($valor_cancelado != null && $valor_cancelado !== 0) {
+                        if($cells[4] == 0) {
+                            $cells[4] = $valor_cancelado;
+                        } 
+                    }
+                    
+                    $transactions['cancelados'][$i]= [
+                        'data' => $data_formatada,
+                        'bandeira' => $cells[1],
+                        'tipo' => $cells[2],
+                        'status' => $cells[6],
+                        'valor' => floatval($cells[4]) !== 0 ? $cells[4] : $cells[5],
+                        'comprovante' => $cell_comprovante
+                    ];
+                } 
+                continue;
+            }
         }
         
        
@@ -562,6 +616,9 @@ function parse_excel($numero_arquivo = null) {
         }
         if (!empty($transactions_next['lancamentos'])) {
             $transactions['lancamentos'] = $transactions_next['lancamentos'];
+        }
+        if (!empty($transactions_next['cancelados'])) {
+            $transactions['cancelados'] = array_merge($transactions['cancelados'] ?? [], $transactions_next['cancelados']);
         }
     }
 
@@ -666,6 +723,22 @@ function parse_csv(string $caminhoCsv): array {
     
     // Buscar lançamentos já importados para verificar duplicatas
     $importadas = Rec03::read(id_empresa: $_SESSION['usuario']->id_empresa, operadora_id:$operadora->id);
+    $importadas_canceladas = Cancelada::read(id_empresa: $_SESSION['usuario']->id_empresa);
+
+
+    $importadas_set = [];
+    $importadas_canceladas_set = [];
+    foreach($importadas as $imp) {
+        $importadas_set[$imp->data_lanc][$imp->bandeira_id][$imp->prazo_id] = true;
+    }
+    foreach($importadas_canceladas as $impc) {
+        $dataChave = (new DateTime($impc->data))->format('Y-m-d');
+        $comprovanteChave = trim((string) $impc->comprovante);
+        if ($comprovanteChave === '') {
+            continue;
+        }
+        $importadas_canceladas_set[$dataChave][$comprovanteChave] = true;
+    }
 
     $importadas_set = [];
     foreach($importadas as $imp) {
@@ -696,10 +769,9 @@ function parse_csv(string $caminhoCsv): array {
 
     $i = 0;
     foreach ($linhas as $linha_str) {
-        if (trim($linha_str) === '') continue;
+        // if (trim($linha_str) === '') continue;
         
         $linha = str_getcsv($linha_str, $operadora_sup['separator']);
-        
         // Função auxiliar para obter valor da linha pela coluna
         $get_valor_coluna = function($nome_coluna) use ($linha) {
             $mapa_normalizado = $GLOBALS['mapa_normalizado'];
@@ -712,6 +784,7 @@ function parse_csv(string $caminhoCsv): array {
                 if(isset($mapa[$chave_original])) {
                     $indice = $mapa[$chave_original];
                     if(isset($linha[$indice])) {
+                        
                         return $linha[$indice];
                     }
                 }
@@ -729,25 +802,10 @@ function parse_csv(string $caminhoCsv): array {
         if(($parcela === null || $parcela == '') && $operadora_sup['suporte_parcela'] === false) {
             $parcela = 1;
         }
-        if($status === null && $operadora_sup['suporte_status']  === false) {
+        if($status === null && isset($operadora_sup['suporte_status']) && $operadora_sup['suporte_status']  === false) {
             $status = 'aprovada';
         }
         
-        $palavras_negadas = [
-            'cancelada',
-            'negada',
-            'desfeita',
-            'expirado',
-            'expirada',
-            'estornada',
-            'estornado',
-            'desfeita',
-            'desfeito'
-        ];
-
-        if(in_array(strtolower($status), $palavras_negadas)) {
-             continue;
-        }
 
         
 
@@ -795,9 +853,8 @@ function parse_csv(string $caminhoCsv): array {
             $valorLiquido = isset($valor_liquido) ? $valor_liquido : 0;
         }
 
-        if(($valorLiquido == 0 && (!isset($operadora_sup['suporte_valor_liquido']) || $operadora_sup['suporte_valor_liquido'] === false)) || $valorBruto == 0) {
-            continue;
-        }
+      
+
         
         
         // Data e hora → só data
@@ -905,6 +962,49 @@ function parse_csv(string $caminhoCsv): array {
             $i++;
             continue;
         }
+
+                $valor_invalido = false;
+
+        if(($valorLiquido == 0 && (!isset($operadora_sup['suporte_valor_liquido']) || $operadora_sup['suporte_valor_liquido'] === false)) || $valorBruto == 0) {
+            $valor_invalido = true;
+        }
+
+        $palavras_negadas = [
+            'cancelada',
+            'recusada',
+            'negada',
+            'desfeita',
+            'expirado',
+            'expirada',
+            'estornada',
+            'estornado',
+            'desfeita',
+            'desfeito',
+            'a confirmar',
+            'falha na transacao',
+            'falha'
+        ];
+
+if (in_array($status, $palavras_negadas) || $valor_invalido) {
+    
+    if(isset($operadora_sup['coluna_comprovante'])) {
+        $cell_comprovante = $get_valor_coluna($operadora_sup['coluna_comprovante']);
+
+        if($cell_comprovante !== '' && isset($importadas_canceladas_set[$data][$cell_comprovante])) {
+            continue;
+        }
+
+        $transactions['cancelados'][$i] = [
+            'data'        => $data,
+            'bandeira'    => $bandeira,
+            'tipo'        => $tipo,
+            'status'      => $status,
+            'valor'       => floatval($valorBruto) !== 0.0 ? $valorBruto : $valorLiquido,
+            'comprovante' => $cell_comprovante
+        ];
+    }
+    continue;
+}
         
         $transactions['lancamentos'][$i] = [
             'data'          => $data,
@@ -953,7 +1053,6 @@ function parse_csv(string $caminhoCsv): array {
     // usleep(50000); 
     $i++;
     }
-    
     return $transactions;
 }
 
@@ -962,21 +1061,24 @@ if($acao == 'processar') {
     $id_operadora = filter_input(INPUT_POST, 'operadora');
     $file = $_FILES['vendas_excel'] ?? null;
     $limite_tamanho_arquivo = 1.5 * 1024 * 1024;
+
     if($file === null || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
         header('Location: cadastro_vendas.php?erro=arquivo');
         exit;
     }
+
     if($file['size'] > $limite_tamanho_arquivo) {
         header('Location: cadastro_vendas.php?erro=tamanho_arquivo');
         exit;
     }
+
     if(str_ends_with($file['name'], '.csv')) {
         $transactions = parse_csv($file['tmp_name']);
-    }else {
+    } else {
         $transactions = parse_excel();
     }
-    
-    if(empty($transactions['lancamentos'])) {
+
+    if(empty($transactions['lancamentos']) && empty($transactions['cancelados'])) {
         header('Location: cadastro_vendas.php?erro=cadastrado');
         exit;
     }
@@ -985,6 +1087,7 @@ if($acao == 'processar') {
         header('Location: cadastro_vendas.php?vendas_invalidas=1');
     } else {
         $_SESSION['vendas']['transactions'] = $transactions['lancamentos'];
+        $_SESSION['vendas']['cancelados'] = $transactions['cancelados'];
         $_SESSION['vendas']['conta'] = $id_operadora;
         header('Location: cadastro_vendas.php?vendas_enviadas=1');
     }

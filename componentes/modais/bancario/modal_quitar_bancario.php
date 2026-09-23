@@ -1,7 +1,13 @@
 <?php
+$acao = $acao ?? null;
+$filtros_get = $filtros_get ?? [];
+$novo_documento = $documento ?? null;
+$caminho = $$quitar_id = filter_input(INPUT_GET, 'id');
+$ban02 = Ban02::read($quitar_id, $_SESSION['usuario']->id_empresa)[0] ?? null;
+if($ban02 != null) {
 if($acao == 'quitar_bancario') {
-$quitar_id = filter_input(INPUT_GET, 'id');
-$ban02 = Ban02::read($quitar_id, $_SESSION['usuario']->id_empresa)[0];
+
+
 $data_quitar_inicial = filter_input(INPUT_GET, 'data_quitar_inicial') ?? ($ban02->data) ?? null;
 $data_quitar_final = filter_input(INPUT_GET, 'data_quitar_final') ?? ($ban02->data) ?? null;
 $quitados = filter_input(INPUT_GET, 'quitados') == 'on' ? null  : 'abertos';
@@ -32,6 +38,8 @@ if($data_quitar_inicial != null || $data_quitar_final != null) {
     }
 }
 }
+
+
 ?>
 <div class="modal fade" id="modal_quitar_bancario" tabindex="-1" role="dialog" aria-labelledby="modalCadastroCidadeLabel">
             <div class="modal-dialog modal-xl modal-dialog-centered">
@@ -178,3 +186,4 @@ if($data_quitar_inicial != null || $data_quitar_final != null) {
         </div>
     </div>
 </div>
+<?php } ?>

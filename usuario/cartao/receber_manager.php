@@ -19,38 +19,68 @@ require_once __DIR__ . '/../../db/entities/pra01.php';
 require_once __DIR__ . '/../../db/entities/recebimentos.php';
 require_once __DIR__ . '/../../db/buscar_documento_rec.php';
 
-$parcela_lista = $_POST['parcela'];
-$data_lista = $_POST['data'];
-$valor_b_lista = $_POST['valor_b'];
-$valor_l_lista = $_POST['valor_l'];
-
-$bandeira_lista = $_POST['bandeira'];
-$id_bandeira_lista = $_POST['bandeira_id'];
-$tipo_lista = $_POST['tipo'];
-$transactions = [];
+$aprovada_parcela_lista = $_POST['aprovada']['parcela'] ?? [];
+$aprovada_data_lista = $_POST['aprovada']['data'] ?? [];
+$aprovada_valor_b_lista = $_POST['aprovada']['valor_b'] ?? [];
+$aprovada_valor_l_lista = $_POST['aprovada']['valor_l'] ?? [];
+$aprovada_bandeira_lista = $_POST['aprovada']['bandeira'] ?? [];
+$aprovada_id_bandeira_lista = $_POST['aprovada']['bandeira_id'] ?? [];
+$aprovada_tipo_lista = $_POST['aprovada']['tipo'] ?? [];
+$transactions['aprovadas'] = [];
 $i = 0;
-$tamanho = count($parcela_lista);
+$aprovada_tamanho = count($aprovada_parcela_lista) ?? 0;
 
+$cancelada_data_lista = $_POST['cancelada']['data'] ?? [];
+$cancelada_bandeira_lista= $_POST['cancelada']['bandeira'] ?? [];
+$cancelada_tipo_lista= $_POST['cancelada']['tipo'] ?? [];
+$cancelada_estado_lista= $_POST['cancelada']['estado'] ?? [];
+$cancelada_valor_lista= $_POST['cancelada']['valor'] ?? [];
+$cancelada_comprovante_lista= $_POST['cancelada']['comprovante'] ?? [];
+$transactions['canceladas'] = [];
+$j = 0;
+$cancelada_tamanho = count($cancelada_data_lista) ?? 0;
 
-while($tamanho != 0 ) {
-    $transactions[$i] = [
-        'data' => $data_lista[$i],
-        'bandeira' => $tipo_lista[$i] == 'Pix' ? 'Pix' : $bandeira_lista[$i],
-        'tipo' => $tipo_lista[$i],
-        'parcela' => $parcela_lista[$i],
-        'valor_b' => $valor_b_lista[$i],
-        'valor_l' => $valor_l_lista[$i],
-        'id_bandeira' => $id_bandeira_lista[$i],
-    ];
-$tamanho--;
-$i++;
+$canceladas = $_POST['cancelada'] ?? [];
+$transactions['canceladas'] = [];
+
+if (!empty($canceladas['data']) && is_array($canceladas['data'])) {
+    foreach ($canceladas['data'] as $j => $data) {
+        $transactions['canceladas'][] = [
+            'data'        => $data,
+            'bandeira'    => $canceladas['bandeira'][$j] ?? '',
+            'tipo'        => $canceladas['tipo'][$j] ?? '',
+            'estado'      => $canceladas['estado'][$j] ?? '',
+            'valor'       => $canceladas['valor'][$j] ?? 0,
+            'comprovante' => $canceladas['comprovante'][$j] ?? null,
+        ];
+    }
+}
+
+$aprovadas = $_POST['aprovada'] ?? [];
+$transactions['aprovadas'] = [];
+
+if (!empty($aprovadas['parcela']) && is_array($aprovadas['parcela'])) {
+    foreach ($aprovadas['parcela'] as $i => $parcela) {
+        $tipo = $aprovadas['tipo'][$i] ?? '';
+        $bandeira = $aprovadas['bandeira'][$i] ?? '';
+
+        $transactions['aprovadas'][] = [
+            'data'        => $aprovadas['data'][$i] ?? null,
+            'bandeira'    => ($tipo === 'Pix') ? 'Pix' : $bandeira,
+            'tipo'        => $tipo,
+            'parcela'     => $parcela,
+            'valor_b'     => $aprovadas['valor_b'][$i] ?? 0,
+            'valor_l'     => $aprovadas['valor_l'][$i] ?? 0,
+            'id_bandeira' => $aprovadas['bandeira_id'][$i] ?? null,
+        ];
+    }
 }
 $operadora_id = $_POST['operadora'] ?? null; // se existir
 $operadora = Ope01::read($operadora_id)[0];
 
 
 $grupos = [];
-foreach ($transactions as $t) {
+foreach ($transactions['aprovadas'] as $t) {
     $data       = $t['data'];
     $bandeira   = $t['bandeira'];
     $tipo       = $t['tipo'];
@@ -241,8 +271,55 @@ $prazo = Pra01::read(id_empresa:$_SESSION['usuario']->id_empresa, id_bandeira: $
 foreach($rec03_lista as $rec03) {
     Rec03::create($rec03);
 }
-header('Location: cadastro_vendas.php');
+
+require_once __DIR__ . '/../../db/entities/cancelada.php';
+
+$grupos = [];
+$canceladas_para_processar = [];
+
+foreach($transactions['canceladas'] as $t) {
+    $data        = $t['data'];
+    $bandeira    = $t['bandeira'];
+    $tipo        = $t['tipo'];
+    $estado      = $t['estado'];
+    $valor       = $t['valor'];
+    $comprovante = $t['comprovante'];
+
+    // Tratamento e formatação do valor
+    if ($valor === null || $valor == 'Não Informado') {
+        $valor = 0;
+    }
+    $valor = str_replace('.', '', $valor);
+    $valor = str_replace(',', '.', $valor);
+    $valor = floatval($valor);
+
+    // Formata a data para o padrão do Banco de Dados (Y-m-d) se ela vier em d/m/Y
+    if (strpos($data, '/') !== false) {
+        $data = (DateTime::createFromFormat('d/m/Y', $data))->format('Y-m-d');
+    }
+
+    // Cria a nova instância do objeto Cancelada
+    $nova_cancelada = new Cancelada(
+        null,                               // id (auto-increment)
+        $_SESSION['usuario']->id_empresa,   // id_empresa
+        $data,                              // data
+        $bandeira,                          // bandeira
+        $tipo,                              // tipo
+        $estado,                            // estado
+        $valor,                             // valor
+        $comprovante                        // comprovante
+    );
+
+    // Salva no banco de dados
+    Cancelada::create($nova_cancelada);
+    
+    $canceladas_para_processar[] = $nova_cancelada;
+}
+
+// Redireciona para a página com mensagem de sucesso
+header('Location: /usuario/cartao/cadastro_vendas.php?sucesso=1');
 exit;
+?>
 
 
 
