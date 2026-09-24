@@ -47,6 +47,7 @@ if($target == 'vendas') {
     );
 
     $canceladas_lista = Cancelada::read(
+        id_empresa: $filtro_empresa,
         filtro_data_inicial:$filtro_data_inicial,
         filtro_data_final:$filtro_data_final,
         filtro_custos: $operadora->id_custos,
