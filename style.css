@@ -66,6 +66,11 @@ label{
         text-align: start;
     }
 
+.card-header-menu {
+    width: 20%;
+    background-color: #cfcfcf;
+}
+
 #custom-context-menu {
     display: none;
     position:absolute; 
@@ -355,6 +360,16 @@ input[type="checkbox"]:checked {
 }
 #botao-gerar-pdf:hover {
     background-color: rgba(190, 0, 0);
+}
+
+#botao-gerar-pdf-canceladas {
+    background-color: rgb(255, 255, 0);
+    color: black;
+    box-shadow: none;
+    border-radius: none;
+}
+#botao-gerar-pdf-canceladas:hover {
+    background-color: rgba(240, 240, 0);
 }
 
 #botao-gerar-excel {

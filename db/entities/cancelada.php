@@ -9,8 +9,12 @@ class Cancelada {
     public $estado;
     public $valor;
     public $comprovante;
+    public $id_custos;
+    public $id_cadastro;
+    public $id_con01;
+    public $id_con02;
 
-    public function __construct($id = null, $id_empresa = null, $data = null, $bandeira = null, $tipo = null, $estado = null, $valor = null, $comprovante = null) {
+    public function __construct($id = null, $id_empresa = null, $data = null, $bandeira = null, $tipo = null, $estado = null, $valor = null, $comprovante = null, $id_custos = null, $id_cadastro = null, $id_con01 = null, $id_con02 = null) {
         $this->id = $id;
         $this->id_empresa = $id_empresa ?? $_SESSION['usuario']->id_empresa;
         $this->data = $data;
@@ -19,12 +23,16 @@ class Cancelada {
         $this->estado = $estado;
         $this->valor = $valor;
         $this->comprovante = $comprovante;
+        $this->id_custos = $id_custos;
+        $this->id_cadastro = $id_cadastro;
+        $this->id_con01 = $id_con01;
+        $this->id_con02 = $id_con02;
     }
 
     public static function create($cancelada) {
         $pdo = (new Database())->connect();
-        $sql = 'INSERT INTO canceladas (id_empresa, data, bandeira, tipo, estado, valor, comprovante) 
-                VALUES (:id_empresa, :data, :bandeira, :tipo, :estado, :valor, :comprovante)';
+        $sql = 'INSERT INTO canceladas (id_empresa, data, bandeira, tipo, estado, valor, comprovante, id_custos, id_cadastro, id_con01, id_con02) 
+                VALUES (:id_empresa, :data, :bandeira, :tipo, :estado, :valor, :comprovante, :id_custos, :id_cadastro, :id_con01, :id_con02)';
         
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id_empresa', $cancelada->id_empresa);
@@ -34,6 +42,10 @@ class Cancelada {
         $stmt->bindValue(':estado', $cancelada->estado);
         $stmt->bindValue(':valor', $cancelada->valor);
         $stmt->bindValue(':comprovante', $cancelada->comprovante);
+        $stmt->bindValue(':id_custos', $cancelada->id_custos);
+        $stmt->bindValue(':id_cadastro', $cancelada->id_cadastro);
+        $stmt->bindValue(':id_con01', $cancelada->id_con01);
+        $stmt->bindValue(':id_con02', $cancelada->id_con02);
 
         return $stmt->execute();
     }
@@ -48,6 +60,10 @@ class Cancelada {
         $comprovante = null,
         $filtro_data_inicial = null,
         $filtro_data_final = null,
+        $filtro_custos = null,
+        $filtro_cadastro = null,
+        $filtro_con01 = null,
+        $filtro_con02 = null,
         ) {
 
 
@@ -64,6 +80,10 @@ class Cancelada {
         if ($tipo != null) $conditions[] = 'tipo = :tipo';
         if ($estado != null) $conditions[] = 'estado = :estado';
         if ($comprovante != null) $conditions[] = 'comprovante = :comprovante';
+        if ($filtro_custos != null) $conditions[] = 'id_custos = :filtro_custos';
+        if ($filtro_cadastro != null) $conditions[] = 'id_cadastro = :filtro_cadastro';
+        if ($filtro_con01 != null) $conditions[] = 'id_con01 = :filtro_con01';
+        if ($filtro_con02 != null) $conditions[] = 'id_con02 = :filtro_con02';
 
         if ($conditions) {
             $query .= ' WHERE ' . implode(' AND ', $conditions);
@@ -80,6 +100,10 @@ class Cancelada {
         if ($tipo != null) $stmt->bindValue(':tipo', $tipo);
         if ($estado != null) $stmt->bindValue(':estado', $estado);
         if ($comprovante != null) $stmt->bindValue(':comprovante', $comprovante);
+        if ($filtro_custos != null) $stmt->bindValue(':filtro_custos', $filtro_custos);
+        if ($filtro_cadastro != null) $stmt->bindValue(':filtro_cadastro', $filtro_cadastro);
+        if ($filtro_con01 != null) $stmt->bindValue(':filtro_con01', $filtro_con01);
+        if ($filtro_con02 != null) $stmt->bindValue(':filtro_con02', $filtro_con02);
 
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, self::class);
@@ -94,7 +118,11 @@ class Cancelada {
                 tipo = :tipo,
                 estado = :estado,
                 valor = :valor,
-                comprovante = :comprovante
+                comprovante = :comprovante,
+                id_custos = :id_custos,
+                id_cadastro = :id_cadastro,
+                id_con01 = :id_con01,
+                id_con02 = :id_con02,
                 WHERE id = :id';
                 
         $stmt = $pdo->prepare($sql);
@@ -106,7 +134,10 @@ class Cancelada {
         $stmt->bindValue(':valor', $cancelada->valor);
         $stmt->bindValue(':comprovante', $cancelada->comprovante);
         $stmt->bindValue(':id', $cancelada->id);
-
+        $stmt->bindValue(':id_custos', $cancelada->id_custos);
+        $stmt->bindValue(':id_cadastro', $cancelada->id_cadastro);
+        $stmt->bindValue(':id_con01', $cancelada->id_con01);
+        $stmt->bindValue(':id_con02', $cancelada->id_con02);
         return $stmt->execute();
     }
 
