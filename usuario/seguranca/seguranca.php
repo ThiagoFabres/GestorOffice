@@ -166,7 +166,7 @@ foreach($segurancas as $i => $seguranca) {
                                     <input type="date" name="filtro_hora_final" class="form-control" value="<?= $filtro_hora_final ?? '' ?>">
                                 </div>
                                 <div class="d-flex flex-column">
-                                    <label for="filtro_hora_inicio" class="form-label">Segurança</label>
+                                    <label for="filtro_hora_inicio" class="form-label">Colaborador</label>
                                     <select name="filtro_seguranca" class="form-control">
                                         <option value="">Selecione</option>
                                         <?php foreach (Usuario::read(idempresa: $empresa_usuario_obj->id, cargo:4) as $seguranca): ?>

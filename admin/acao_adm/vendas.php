@@ -31,6 +31,7 @@ require_once __DIR__ . '/../../db/entities/recebimentos.php';
 require_once __DIR__ . '/../../db/entities/cadastro.php';
 require_once __DIR__ . '/../../db/entities/contas.php';
 require_once __DIR__ . '/../../db/entities/centrocustos.php';
+require_once __DIR__ . '/../../db/entities/cancelada.php';
 
 $erro = filter_input(INPUT_GET, 'erro');
 $filtro_empresa = filter_input(INPUT_GET, 'empresa');
@@ -227,7 +228,15 @@ $filtro_vendas = filter_input(INPUT_GET, 'filtro_vendas') == 'on' ? 1 : 0
                                 read_vendas: true,
                                 filtro_data_final: $filtro_data_final ?? null
                                 );
-                            if(empty($lancamentos) && $filtro_cadastro == null) {
+                            $lancamentos_cancelados = Cancelada::read(
+                                filtro_custos: $filtro_custo ?? null, 
+                                filtro_cadastro: $cadastro->id_cadastro ?? null, 
+                                filtro_con01: $filtro_titulo ?? null,
+                                filtro_con02: $filtro_subtitulo ?? null, 
+                                filtro_data_inicial: $filtro_data_inicial ?? null, 
+                                filtro_data_final: $filtro_data_final ?? null
+                            );
+                            if(empty($lancamentos) && empty($lancamentos_cancelados) && $filtro_cadastro == null) {
                                continue;
                             }
                             if($filtro_cadastro != null && $filtro_cadastro != $cadastro->id_cadastro) continue;
@@ -241,54 +250,111 @@ $filtro_vendas = filter_input(INPUT_GET, 'filtro_vendas') == 'on' ? 1 : 0
                                 </h2>
                                 <div id="collapse<?=$cadastro->id_cadastro?>" class="accordion-collapse collapse" aria-labelledby="heading<?=$cadastro->id_cadastro?>"  data-bs-parent="#accordionExample" style="position: sticky;">
                                     <div class="accordion-body " style="position: sticky; max-height: 50vh; overflow: scroll;">
-                                    <?php
-                                    
-                                    if(count($lancamentos) == 0) {?>
-                                        <p>Não há lançamentos para esta cadastro.</p>
-                                    <?php echo '</div></div></div>'; continue;
-                                    } else { ?>
-                                    <table class="table table-bordered table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th>Centro de Custo</th>
-                                                <th>Título</th>
-                                                <th>Subtítulo</th>
-                                                <th>Valor</th>
-                                                <th>Data</th>
-                                            </tr>
-                                        </thead>
-                                        <?php
-                                        foreach($lancamentos as $lancamento) {
-                                            $titulo = Con01::read(id: $lancamento->id_con01)[0] ?? null;
-                                            $subtitulo = Con02::read(id: $lancamento->id_con02)[0] ?? null;
-                                            $custo = CentroCustos::read(id: $lancamento->centro_custos)[0] ?? null;
-                                            ?>
-                                            <tr>
-                                                <td><?= $custo ? $custo->nome : '-' ?></td>
-                                                <td><?= $titulo ? $titulo->nome : '-' ?></td>
-                                                <td><?= $subtitulo ? $subtitulo->nome : '-' ?></td>
-                                                <td>R$ <?= number_format($lancamento->valor, 2, ',', '.') ?></td>
-                                                <td><?= date('d/m/Y', strtotime($lancamento->data_lanc)) ?></td>
-                                            </tr>
-                                        <?php } ?>
-                                    </table>
-                                    <?php }?>
+                                        <div>
+                                            <?php
+                                            if(empty($lancamentos) && empty($lancamentos_cancelados)) { ?>
+                                                <p>Não há Lançamentos para este Cliente / Fornecedor.</p>
+                                            <?php continue; } ?>
+                                            
+                                            <?php if(count($lancamentos) == 0) {?>
+                                                <p>Não há Lançamentos Aprovados para este Cliente / Fornecedor.</p>
+                                            <?php
+                                            } else { ?>
+                                            <h4>Vendas Aprovadas</h4>
+                                            <table class="table table-bordered table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Centro de Custo</th>
+                                                        <th>Título</th>
+                                                        <th>Subtítulo</th>
+                                                        <th>Valor</th>
+                                                        <th>Data</th>
+                                                    </tr>
+                                                </thead>
+                                                <?php
+                                                foreach($lancamentos as $lancamento) {
+                                                    $titulo = Con01::read(id: $lancamento->id_con01)[0] ?? null;
+                                                    $subtitulo = Con02::read(id: $lancamento->id_con02)[0] ?? null;
+                                                    $custo = CentroCustos::read(id: $lancamento->centro_custos)[0] ?? null;
+                                                    ?>
+                                                    <tr>
+                                                        <td><?= $custo ? $custo->nome : '-' ?></td>
+                                                        <td><?= $titulo ? $titulo->nome : '-' ?></td>
+                                                        <td><?= $subtitulo ? $subtitulo->nome : '-' ?></td>
+                                                        <td>R$ <?= number_format($lancamento->valor, 2, ',', '.') ?></td>
+                                                        <td><?= date('d/m/Y', strtotime($lancamento->data_lanc)) ?></td>
+                                                    </tr>
+                                                <?php } ?>
+                                            </table>
+                                            <?php }?>
+                                            <!-- <hr> -->
+                                            <?php if(!empty($cadastros && (!empty($lancamentos) && empty($lancamentos_cancelados)))) { ?>
+                                            <form method="post" action="acao_manager.php">
+                                                <input name="target" type="hidden" value="vendas">
+                                                <input name="data_inicial" type="hidden" value="<?= $filtro_data_inicial ?>">
+                                                <input name="data_final" type="hidden" value="<?= $filtro_data_final ?>">
+                                                <input name="empresa" type="hidden" value="<?= $filtro_empresa ?>">
+                                                <input name="cadastro" type="hidden" value="<?= $cadastro->id_cadastro ?>">
+                                                <input name="titulo" type="hidden" value="<?= $filtro_titulo ?>">
+                                                <input name="subtitulo" type="hidden" value="<?= $filtro_subtitulo ?>">
+                                                <input name="custos" type="hidden" value="<?= $filtro_custo ?>">
+                                                <input name="vendas" type="hidden" value="<?= $filtro_vendas ? 1 : 0?>">
+                                                <button class="btn btn-danger m-3 mt-0 w-100">Excluir</button>
+                                            </form>
+                                            <?php } ?>
+                                        </div>
+                                        <div>
+                                            <?php
+                                            
+                                            if(count($lancamentos_cancelados) == 0) {?>
+                                                <p>Não há Lançamentos Cancelados para este Cliente / Fornecedor.</p>
+                                            <?php
+                                            } else { ?>
+                                            <hr>
+                                            <h4>Vendas Canceladas</h4>
+                                            <table class="table table-bordered table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Centro de Custo</th>
+                                                        <th>Título</th>
+                                                        <th>Subtítulo</th>
+                                                        <th>Valor</th>
+                                                        <th>Data</th>
+                                                    </tr>
+                                                </thead>
+                                                <?php
+                                                foreach($lancamentos_cancelados as $cancelado) {
+                                                    $titulo = Con01::read(id: $cancelado->id_con01)[0] ?? null;
+                                                    $subtitulo = Con02::read(id: $cancelado->id_con02)[0] ?? null;
+                                                    $custo = CentroCustos::read(id: $cancelado->id_custos)[0] ?? null;
+                                                    ?>
+                                                    <tr>
+                                                        <td><?= $custo ? $custo->nome : '-' ?></td>
+                                                        <td><?= $titulo ? $titulo->nome : '-' ?></td>
+                                                        <td><?= $subtitulo ? $subtitulo->nome : '-' ?></td>
+                                                        <td>R$ <?= number_format($cancelado->valor, 2, ',', '.') ?></td>
+                                                        <td><?= date('d/m/Y', strtotime($cancelado->data)) ?></td>
+                                                    </tr>
+                                                <?php } ?>
+                                            </table>
+                                            <?php }?>
+                                            <!-- <hr> -->
+                                            <?php if(!empty($cadastros) && !(empty($lancamentos_cancelados))) { ?>
+                                            <form method="post" action="acao_manager.php">
+                                                <input name="target" type="hidden" value="vendas">
+                                                <input name="data_inicial" type="hidden" value="<?= $filtro_data_inicial ?>">
+                                                <input name="data_final" type="hidden" value="<?= $filtro_data_final ?>">
+                                                <input name="empresa" type="hidden" value="<?= $filtro_empresa ?>">
+                                                <input name="cadastro" type="hidden" value="<?= $cadastro->id_cadastro ?>">
+                                                <input name="titulo" type="hidden" value="<?= $filtro_titulo ?>">
+                                                <input name="subtitulo" type="hidden" value="<?= $filtro_subtitulo ?>">
+                                                <input name="custos" type="hidden" value="<?= $filtro_custo ?>">
+                                                <input name="vendas" type="hidden" value="<?= $filtro_vendas ? 1 : 0?>">
+                                                <button class="btn btn-danger m-3 mt-0 w-100">Excluir</button>
+                                            </form>
+                                            <?php } ?>
+                                        </div>
                                     </div>
-                                    <!-- <hr> -->
-                                     <?php if(!empty($cadastros)) { ?>
-                                     <form method="post" action="acao_manager.php">
-                                        <input name="target" type="hidden" value="vendas">
-                                        <input name="data_inicial" type="hidden" value="<?= $filtro_data_inicial ?>">
-                                        <input name="data_final" type="hidden" value="<?= $filtro_data_final ?>">
-                                        <input name="empresa" type="hidden" value="<?= $filtro_empresa ?>">
-                                        <input name="cadastro" type="hidden" value="<?= $cadastro->id_cadastro ?>">
-                                        <input name="titulo" type="hidden" value="<?= $filtro_titulo ?>">
-                                        <input name="subtitulo" type="hidden" value="<?= $filtro_subtitulo ?>">
-                                        <input name="custos" type="hidden" value="<?= $filtro_custo ?>">
-                                        <input name="vendas" type="hidden" value="<?= $filtro_vendas ? 1 : 0?>">
-                                        <button class="btn btn-danger m-3 mt-0 w-100">Excluir</button>
-                                     </form>
-                                    <?php } ?>
                                 </div>
                             </div>
                         <?php }

@@ -4,6 +4,7 @@ session_start();
 require_once __DIR__ . '/../../db/entities/empresas.php';
 require_once __DIR__ . '/../../db/entities/banco02.php';
 require_once __DIR__ . '/../../db/entities/recebimentos.php';
+require_once __DIR__ . '/../../db/entities/cancelada.php';
 if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 1) {
     header('Location: /');
     exit;
@@ -39,12 +40,20 @@ if($target == 'vendas') {
         read_vendas:true,
     );
 
-        $rec03_lista = Rec03::read(
-            id_empresa:$filtro_empresa,
-            data_inicial:$filtro_data_inicial,
-            data_final:$filtro_data_final,
-        );
-    
+    $rec03_lista = Rec03::read(
+        id_empresa:$filtro_empresa,
+        data_inicial:$filtro_data_inicial,
+        data_final:$filtro_data_final,
+    );
+
+    $canceladas_lista = Cancelada::read(
+        filtro_data_inicial:$filtro_data_inicial,
+        filtro_data_final:$filtro_data_final,
+        filtro_custos: $operadora->id_custos,
+        filtro_cadastro: $operadora->id_cliente,
+        filtro_con01: $operadora->id_con01,
+        filtro_con02: $operadora->id_con02
+    );
 
     foreach($rec01_lista as $rec) {
         Rec02::deletebyrec01($rec->id);
@@ -55,8 +64,12 @@ if($target == 'vendas') {
         Rec03::delete($rec->id);
     }
 
+    foreach($canceladas_lista as $cancelada) {
+        Cancelada::delete($cancelada->id);
+    }
 
-    header('Location: vendas.php?sucesso=1&empresa=' . $filtro_empresa . '&cadastro=' . $filtro_cadastro . '&data_inicial=' . $filtro_data_inicial . '&data_final=' . $filtro_data_final . '&custos=' . $custos . 'filtro_titulo=' . $filtro_titulo . 'filtro_subtitulo=' . $filtro_subtitulo);
+
+    header('Location: vendas.php?sucesso=1&empresa=' . $filtro_empresa . '&cadastro=' . $filtro_cadastro . '&data_inicial=' . $filtro_data_inicial . '&data_final=' . $filtro_data_final . '&custos=' . $filtro_custos . 'filtro_titulo=' . $filtro_titulo . 'filtro_subtitulo=' . $filtro_subtitulo);
     exit;
 } 
 
