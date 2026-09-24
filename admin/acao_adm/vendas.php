@@ -221,6 +221,7 @@ $filtro_vendas = filter_input(INPUT_GET, 'filtro_vendas') == 'on' ? 1 : 0
                         foreach ($cadastros as $cadastro) {
                             $lancamentos = Rec01::read(
                                 filtro_custos: $filtro_custo ?? null, 
+                                id_empresa: $filtro_empresa,
                                 id_cadastro: $cadastro->id_cadastro ?? null, 
                                 con01: $filtro_titulo ?? null,
                                 con02: $filtro_subtitulo ?? null, 
@@ -229,6 +230,7 @@ $filtro_vendas = filter_input(INPUT_GET, 'filtro_vendas') == 'on' ? 1 : 0
                                 filtro_data_final: $filtro_data_final ?? null
                                 );
                             $lancamentos_cancelados = Cancelada::read(
+                                id_empresa: $filtro_empresa,
                                 filtro_custos: $filtro_custo ?? null, 
                                 filtro_cadastro: $cadastro->id_cadastro ?? null, 
                                 filtro_con01: $filtro_titulo ?? null,
