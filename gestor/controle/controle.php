@@ -36,7 +36,7 @@ $get_acao = filter_input(INPUT_GET, 'acao');
 $controleEdicao = null;
 if ($get_acao === 'editar') {
     $controleId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-    foreach (Controle::read($id_empresa) as $controle) {
+    foreach (Controle::read(id_empresa:$id_empresa) as $controle) {
         if ((int) $controle->id === (int) $controleId) {
             $controleEdicao = $controle;
             break;
@@ -163,14 +163,16 @@ if ($get_acao === 'editar') {
                     <tr>
                         <th>Horario</th>
                         <th>Tolerância</th>
+                        <th>Tipo</th>
                         <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
-                <?php foreach (Controle::read($id_empresa) as $controle) { ?>
+                <?php foreach (Controle::read(id_empresa:$id_empresa) as $controle) { ?>
                     <tr>
                         <td><?= htmlspecialchars($controle->hora, ENT_QUOTES, 'UTF-8') ?></td>
                         <td><?= (int) $controle->tolerancia ?> minutos</td>
+                        <td><?= ucfirst($controle->tipo) ?></td>
                         <td>
                             <a class="btn btn-primary btn-sm" href="controle.php?acao=editar&id=<?= (int) $controle->id ?>">Editar</a>
                             <form method="post" action="controle_manager.php" style="display:inline;" onsubmit="return confirm('Deseja excluir este controle?');">
@@ -178,6 +180,7 @@ if ($get_acao === 'editar') {
                                 <button type="submit" name="acao" value="deletar" class="btn btn-danger btn-sm">Excluir</button>
                             </form>
                         </td>
+                       
                     </tr>
                 <?php } ?>
                 </tbody>
@@ -242,43 +245,11 @@ document.addEventListener('DOMContentLoaded', function() {
 // } else {
 //   document.querySelector('button[name="acao"]').disabled = true;
 // }
-const consultar = document.querySelector('input[name="consultar"]');
+// const consultar = document.querySelector('input[name="consultar"]');
 
-const processar = document.querySelector('input[name="processar"]');
+// const processar = document.querySelector('input[name="processar"]');
 
-const seguranca = document.querySelector('input[name="seguranca"]');
-document.addEventListener('change', function() {
-    console.log('Segurança ativada');
-    if(seguranca.checked) {
-        processar.checked = false;
-        consultar.checked = false;
-        processar.disabled = true;
-        consultar.disabled = true;
-    } else {
-        consultar.checked = true;
-        processar.disabled = false;
-        consultar.disabled = false;
-    }
-});
-console.log(seguranca.checked);
-if(seguranca.checked) {
-    
-    processar.checked = false;
-    consultar.checked = false;
-    processar.disabled = true;
-    consultar.disabled = true;
-} else {
-    processar.disabled = false;
-    consultar.disabled = false;
-}
-
-if (!consultar.checked) {
-            processar.checked = false;
-        }
-
-        if (processar.checked) {
-            consultar.checked = true;
-        }
+// const seguranca = document.querySelector('input[name="seguranca"]');
 
 <?php if (isset($get_acao) && $get_acao == 'adicionar') { ?>
         window.addEventListener('DOMContentLoaded', function () {

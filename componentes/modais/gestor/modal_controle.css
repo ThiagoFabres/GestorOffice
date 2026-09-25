@@ -1,0 +1,38 @@
+/* Container dos Radios */
+.custom-radio-group {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 40px !important;
+    width: 100% !important;
+    margin: 15px 0 !important;
+}
+
+/* Item individual com Label acima do Radio */
+.custom-radio-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+}
+
+.custom-radio-item label {
+    display: block !important;
+    margin-bottom: 6px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    position: static !important;
+}
+
+.custom-radio-item input[type="radio"] {
+    position: static !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 18px !important;
+    height: 18px !important;
+    cursor: pointer !important;
+    float: none !important;
+}

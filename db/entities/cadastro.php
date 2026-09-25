@@ -65,11 +65,18 @@ class Cadastro {
        return $stmt->execute(); 
     }
 
-            public static function read(
-            $id = null, 
-            $email = null, 
-            $id_empresa = null,
-             $nome = null, $filtro_data_inicial = null, $filtro_data_final = null,$filto_estado = null, $filtro_cidade = null, $filtro_bairro = null, $filtro_categoria = null): array {
+    public static function read(
+        $id = null, 
+        $email = null, 
+        $id_empresa = null,
+        $nome = null, 
+        $filtro_data_inicial = null, 
+        $filtro_data_final = null,
+        $filto_estado = null, 
+        $filtro_cidade = null, 
+        $filtro_bairro = null, 
+        $filtro_categoria = null): array {
+            
     $pdo = (new Database())->connect();
     $query = 'SELECT * FROM cadastro';
     $conditions = [];
