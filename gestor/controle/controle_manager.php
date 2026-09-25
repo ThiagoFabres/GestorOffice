@@ -26,7 +26,7 @@ $tipo = filter_input(INPUT_POST, 'opcao_filtro');
 
 if ($acao === 'deletar') {
 	$controle = null;
-	foreach (Controle::read($empresaId) as $item) {
+	foreach (Controle::read(id_empresa:$empresaId) as $item) {
 		if ((int) $item->id === (int) $id) {
 			$controle = $item;
 			break;
