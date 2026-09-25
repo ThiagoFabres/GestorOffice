@@ -22,6 +22,7 @@ if ($empresa === null || $empresa->permissao_seguranca != 1) {
 
 $acao = filter_input(INPUT_POST, 'acao') ?? filter_input(INPUT_GET, 'acao');
 $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT) ?? filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+$tipo = filter_input(INPUT_POST, 'opcao_filtro');
 
 if ($acao === 'deletar') {
 	$controle = null;
@@ -65,9 +66,10 @@ if ($acao === 'adicionar' || $acao === 'editar') {
 
 		$controle->hora = $hora;
 		$controle->tolerancia = $tolerancia;
+		$controle->tipo = $tipo;
 		Controle::update($controle);
 	} else {
-		Controle::create(new Controle(null, $empresaId, $hora, $tolerancia));
+		Controle::create(new Controle(null, $empresaId, $hora, $tolerancia, $tipo));
 	}
 }
 

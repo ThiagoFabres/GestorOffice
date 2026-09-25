@@ -36,7 +36,8 @@ SELECT
     e.celular2_atividade,
     c.id AS id_controle,
     c.hora AS hora_esperada,
-    c.tolerancia
+    c.tolerancia,
+    c.tipo
 FROM turnos t
 INNER JOIN usuario u ON u.id = t.id_usuario
 INNER JOIN empresas e ON e.id = u.id_empresa
@@ -141,11 +142,7 @@ foreach ($registros as $registro) {
         continue;
     }
 
-    $mensagem = "Empresa: " . htmlspecialchars((string) $registro['nome_empresa'], ENT_QUOTES, 'UTF-8') . "\n"
-        . '🚨<b>Ponto de Controle NÃO Executado</b>'. "\n"
-        . 'Usuário: ' . htmlspecialchars((string) $registro['nome_usuario'], ENT_QUOTES, 'UTF-8') . "\n"
-        . 'Esperado: ' . $esperada->format('d/m/Y H:i:s') . "\n"
-        . 'Limite: ' . $limite->format('d/m/Y H:i:s');
+    $mensagem = montarMensagem($registro, $esperada, $limite);
 
     foreach ([(string) $registro['celular1_atividade'], (string) $registro['celular2_atividade']] as $chatId) {
         if ($chatId === '') {
@@ -202,6 +199,40 @@ function salvarEstado(string $path, array $estado): void
     }
 
     file_put_contents($path, json_encode($estado, JSON_UNESCAPED_UNICODE), LOCK_EX);
+}
+
+/**
+ * Monta o texto do alerta de acordo com o tipo do ponto de controle
+ * (controle, inicio ou termino).
+ */
+function montarMensagem(array $registro, DateTimeImmutable $esperada, DateTimeImmutable $limite): string
+{
+    $tipo = strtolower(trim((string) ($registro['tipo'] ?? '')));
+
+    switch ($tipo) {
+        case 'inicio':
+            $emoji = '🟢';
+            $titulo = 'Início de Turno NÃO Registrado';
+            $rotuloHora = 'Início esperado';
+            break;
+        case 'termino':
+            $emoji = '🔴';
+            $titulo = 'Término de Turno NÃO Registrado';
+            $rotuloHora = 'Término esperado';
+            break;
+        case 'controle':
+        default:
+            $emoji = '🚨';
+            $titulo = 'Ponto de Controle NÃO Executado';
+            $rotuloHora = 'Esperado';
+            break;
+    }
+
+    return "Empresa: " . htmlspecialchars((string) $registro['nome_empresa'], ENT_QUOTES, 'UTF-8') . "\n"
+        . $emoji . '<b>' . $titulo . '</b>' . "\n"
+        . 'Usuário: ' . htmlspecialchars((string) $registro['nome_usuario'], ENT_QUOTES, 'UTF-8') . "\n"
+        . $rotuloHora . ': ' . $esperada->format('d/m/Y H:i:s') . "\n"
+        . 'Limite: ' . $limite->format('d/m/Y H:i:s');
 }
 
 function enviarTelegram(string $token, string $chatId, string $mensagem): bool
