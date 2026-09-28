@@ -5,6 +5,7 @@ class Controle02
     public $id;
     public $id_empresa;
     public $id_usuario;
+    public $tipo;
     public $hora_esperada;
     public $hora_respondida;
     public $tolerancia;
@@ -13,6 +14,7 @@ class Controle02
         $id = null,
         $id_empresa = null,
         $id_usuario = null,
+        $tipo = null,
         $hora_esperada = null,
         $hora_respondida = null,
         $tolerancia = null
@@ -20,33 +22,58 @@ class Controle02
         $this->id = $id;
         $this->id_empresa = $id_empresa;
         $this->id_usuario = $id_usuario;
+        $this->tipo = $tipo;
         $this->hora_esperada = $hora_esperada;
         $this->hora_respondida = $hora_respondida;
         $this->tolerancia = $tolerancia;
     }
 
-    /**
-     * $hora_inicio e $hora_fim devem vir no mesmo fuso em que turnos/pontos são
-     * gravados (UTC). São convertidos para o horário local (-3h) porque
-     * controle02 é gravado em America/Sao_Paulo.
-     */
-    public static function read($id_usuario, $hora_inicio = null, $hora_fim = null)
-    {
+    public static function read(
+        $id = null,
+        $id_empresa = null,
+        $id_usuario = null,
+        $tipo = null,
+        $hora_inicio = null,
+        $hora_fim = null
+    ) {
         $pdo = (new Database())->connect();
 
-        // Referência da linha: o horário esperado quando existir, senão o respondido.
-        // Assim os registros pendentes (hora_respondida = NULL) também entram na janela.
-        $query = 'SELECT * FROM controle02 WHERE id_usuario = :id_usuario';
-        $parameters = [':id_usuario' => $id_usuario];
+        $query = 'SELECT * FROM controle02';
+        $conditions = [];
+        $parameters = [];
+
+        if ($id !== null) {
+            $conditions[] = 'id = :id';
+            $parameters[':id'] = $id;
+        }
+
+        if ($id_empresa !== null) {
+            $conditions[] = 'id_empresa = :id_empresa';
+            $parameters[':id_empresa'] = $id_empresa;
+        }
+
+        if ($id_usuario !== null) {
+            $conditions[] = 'id_usuario = :id_usuario';
+            $parameters[':id_usuario'] = $id_usuario;
+        }
+
+        if ($tipo !== null) {
+            $conditions[] = 'tipo = :tipo';
+            $parameters[':tipo'] = $tipo;
+        }
 
         if ($hora_inicio !== null) {
-            $query .= ' AND COALESCE(hora_esperada, hora_respondida) >= :hora_inicio';
+            $conditions[] = 'COALESCE(hora_esperada, hora_respondida) >= :hora_inicio';
             $parameters[':hora_inicio'] = self::normalizarLimite((string) $hora_inicio);
         }
 
         if ($hora_fim !== null) {
-            $query .= ' AND COALESCE(hora_esperada, hora_respondida) <= :hora_fim';
+            $conditions[] = 'COALESCE(hora_esperada, hora_respondida) <= :hora_fim';
             $parameters[':hora_fim'] = self::normalizarLimite((string) $hora_fim);
+        }
+
+        if (!empty($conditions)) {
+            $query .= ' WHERE ' . implode(' AND ', $conditions);
         }
 
         $query .= ' ORDER BY COALESCE(hora_esperada, hora_respondida) ASC, id ASC';
