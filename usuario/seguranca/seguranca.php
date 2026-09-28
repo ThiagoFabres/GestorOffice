@@ -147,7 +147,7 @@ foreach ($segurancas as $i => $seguranca) {
     /*
      * Se o controle já corresponde a um turno existente, ele continua
      * aparecendo dentro do accordion desse turno e não é duplicado na
-     * lista de pendentes.
+     * lista de atrasados.
      */
     foreach ($turnos[$seguranca->id] as $turnoExistente) {
         foreach (
@@ -237,6 +237,47 @@ foreach ($segurancas as $i => $seguranca) {
         );
     }
 }
+
+/*
+ * Monta a lista única de turnos atrasados (início ou fim) de todos os
+ * seguranças, exibida no accordion "Atrasados".
+ */
+$atrasados = [];
+
+foreach ($segurancas as $seguranca) {
+    $nomeSeguranca = $seguranca->nome ?? 'Segurança #' . $seguranca->id;
+
+    foreach ($controlesPendentes[$seguranca->id] ?? [] as $controlePendente) {
+        $tipo = strtolower(trim((string) $controlePendente->tipo));
+        $esperadaTs = strtotime((string) $controlePendente->hora_esperada);
+
+        if ($esperadaTs === false) {
+            continue;
+        }
+
+        $tolerancia = max(0, (int) $controlePendente->tolerancia);
+
+        $atrasados[] = [
+            'seguranca' => $nomeSeguranca,
+            'titulo'    => $tipo === 'inicio'
+                ? 'Turno não iniciado'
+                : 'Turno não finalizado',
+            'icone'     => $tipo === 'inicio'
+                ? 'bi-play-circle-fill'
+                : 'bi-stop-circle-fill',
+            'esperada'  => date('d/m/Y H:i:s', $esperadaTs),
+            'limite'    => date('H:i:s', $esperadaTs + ($tolerancia * 60)),
+            'ordem'     => $esperadaTs,
+        ];
+    }
+}
+
+usort(
+    $atrasados,
+    static fn(array $a, array $b): int => $a['ordem'] <=> $b['ordem']
+);
+
+$qtdAtrasados = count($atrasados);
 ?>
 
 <!DOCTYPE html>
@@ -371,6 +412,69 @@ foreach ($segurancas as $i => $seguranca) {
                     </div>
                 <?php else: ?>
 
+                    <!-- Atrasados -->
+                    <div class="accordion mb-3" id="accordion-atrasados">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading-atrasados">
+                                <button class="accordion-button collapsed"
+                                    type="button"
+                                    style="color:black;"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#collapse-atrasados"
+                                    aria-expanded="false"
+                                    aria-controls="collapse-atrasados">
+
+                                    <i class="bi bi-exclamation-octagon-fill me-2 text-danger"></i>
+                                    Atrasados
+
+                                    <span class="badge <?= $qtdAtrasados > 0 ? 'bg-danger' : 'bg-secondary' ?> ms-2">
+                                        <?= $qtdAtrasados ?>
+                                    </span>
+                                </button>
+                            </h2>
+
+                            <div id="collapse-atrasados"
+                                class="accordion-collapse collapse"
+                                data-bs-parent="#accordion-atrasados">
+
+                                <div class="accordion-body">
+                                    <?php if (empty($atrasados)): ?>
+
+                                        <p class="text-muted mb-0">
+                                            Nenhum turno atrasado.
+                                        </p>
+
+                                    <?php else: ?>
+
+                                        <?php foreach ($atrasados as $atrasado): ?>
+                                            <div class="alert alert-danger d-flex align-items-center justify-content-between mb-2 py-3 px-3">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="bi <?= $atrasado['icone'] ?> me-2"></i>
+
+                                                    <strong>
+                                                        <?= htmlspecialchars($atrasado['seguranca']) ?>
+                                                        — <?= htmlspecialchars($atrasado['titulo']) ?>
+                                                    </strong>
+                                                </div>
+
+                                                <div class="small">
+                                                    <strong>Esperado:</strong>
+                                                    <?= htmlspecialchars($atrasado['esperada']) ?>
+
+                                                    <span class="mx-1">|</span>
+
+                                                    <strong>Limite:</strong>
+                                                    <?= htmlspecialchars($atrasado['limite']) ?>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="accordion" id="accordion-segurancas">
 
                         <?php foreach ($segurancas as $seguranca): ?>
@@ -379,10 +483,6 @@ foreach ($segurancas as $i => $seguranca) {
                             $segId = 'seg' . $seguranca->id;
                             $turnosSeg = $turnos[$seguranca->id] ?? [];
                             $qtdTurnos = count($turnosSeg);
-                            $pendentesSeguranca = array_values(
-                                $controlesPendentes[$seguranca->id] ?? []
-                            );
-                            $qtdPendentes = count($pendentesSeguranca);
                             ?>
 
                             <div class="accordion-item"
@@ -411,13 +511,6 @@ foreach ($segurancas as $i => $seguranca) {
                                             <?= $qtdTurnos ?>
                                             turno<?= $qtdTurnos == 1 ? '' : 's' ?>
                                         </span>
-
-                                        <?php if ($qtdPendentes > 0): ?>
-                                            <span class="badge bg-danger ms-2">
-                                                <?= $qtdPendentes ?>
-                                                pendente<?= $qtdPendentes == 1 ? '' : 's' ?>
-                                            </span>
-                                        <?php endif; ?>
                                     </button>
                                 </h2>
 
@@ -426,74 +519,6 @@ foreach ($segurancas as $i => $seguranca) {
                                     data-bs-parent="#accordion-segurancas">
 
                                     <div class="accordion-body">
-
-                                        <?php foreach ($pendentesSeguranca as $controlePendente): ?>
-
-                                            <?php
-                                            $tipoPendente = strtolower(
-                                                trim((string) $controlePendente->tipo)
-                                            );
-
-                                            $tituloPendente =
-                                                $tipoPendente === 'inicio'
-                                                    ? 'Turno não iniciado'
-                                                    : 'Turno não finalizado';
-
-                                            $iconePendente =
-                                                $tipoPendente === 'inicio'
-                                                    ? 'bi-play-circle-fill'
-                                                    : 'bi-stop-circle-fill';
-
-                                            $horaEsperadaPendente = '—';
-                                            $horaLimitePendente = '—';
-
-                                            if (!empty($controlePendente->hora_esperada)) {
-                                                try {
-                                                    $horaEsperadaObj = new DateTime(
-                                                        (string) $controlePendente->hora_esperada
-                                                    );
-
-                                                    $horaEsperadaPendente =
-                                                        $horaEsperadaObj->format('d/m/Y H:i:s');
-
-                                                    $horaLimitePendente =
-                                                        (clone $horaEsperadaObj)
-                                                            ->modify(
-                                                                '+' .
-                                                                max(
-                                                                    0,
-                                                                    (int) $controlePendente->tolerancia
-                                                                ) .
-                                                                ' minutes'
-                                                            )
-                                                            ->format('H:i:s');
-                                                } catch (Throwable $e) {
-                                                    // Mantém os valores como "—" se a data for inválida.
-                                                }
-                                            }
-                                            ?>
-
-                                            <div class="alert alert-danger d-flex align-items-center justify-content-between mb-2 py-3 px-3">
-                                                <div class="d-flex align-items-center">
-                                                    <i class="bi <?= $iconePendente ?> me-2"></i>
-
-                                                    <strong>
-                                                        <?= htmlspecialchars($tituloPendente) ?>
-                                                    </strong>
-                                                </div>
-
-                                                <div class="small">
-                                                    <strong>Esperado:</strong>
-                                                    <?= htmlspecialchars($horaEsperadaPendente) ?>
-
-                                                    <span class="mx-1">|</span>
-
-                                                    <strong>Limite:</strong>
-                                                    <?= htmlspecialchars($horaLimitePendente) ?>
-                                                </div>
-                                            </div>
-
-                                        <?php endforeach; ?>
 
                                         <?php if (empty($turnosSeg)): ?>
 
@@ -1274,12 +1299,14 @@ document.addEventListener('DOMContentLoaded', function() {
 const consultar = document.querySelector('input[name="consultar"]');
 const processar = document.querySelector('input[name="processar"]');
 
-if (!consultar.checked) {
-    processar.checked = false;
-}
+if (consultar && processar) {
+    if (!consultar.checked) {
+        processar.checked = false;
+    }
 
-if (processar.checked) {
-    consultar.checked = true;
+    if (processar.checked) {
+        consultar.checked = true;
+    }
 }
 
 <?php if (isset($get_acao) && $get_acao == 'adicionar') { ?>
