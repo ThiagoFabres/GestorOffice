@@ -13,12 +13,15 @@ require_once __DIR__ . '/../../db/entities/controle02.php';
 
 session_start();
 
-
-    
 $empresa_usuario_obj = Empresa::read($_SESSION['usuario']->id_empresa)[0];
 $nomeEmpresa = $empresa_usuario_obj->nom_fant;
 
-if(!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSION['usuario']->permissao_seguranca != 1 || $empresa_usuario_obj->permissao_seguranca != 1) {
+if (
+    !isset($_SESSION['usuario']) ||
+    $_SESSION['usuario']->cargo != 3 ||
+    $_SESSION['usuario']->permissao_seguranca != 1 ||
+    $empresa_usuario_obj->permissao_seguranca != 1
+) {
     header('Location: /');
     exit();
 }
@@ -26,11 +29,16 @@ if(!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 3 || $_SESSION
 $erro = filter_input(INPUT_GET, 'erro');
 $lateral_seguranca = true;
 $lateral_target = 'ocorrencias';
+
 $filtro_hora_inicio = filter_input(INPUT_GET, 'filtro_hora_inicio');
 $filtro_hora_final = filter_input(INPUT_GET, 'filtro_hora_final');
 $filtro_seguranca = filter_input(INPUT_GET, 'filtro_seguranca');
 
-$segurancas = Usuario::read(id:$filtro_seguranca, idempresa: $empresa_usuario_obj->id, cargo:4);
+$segurancas = Usuario::read(
+    id: $filtro_seguranca,
+    idempresa: $empresa_usuario_obj->id,
+    cargo: 4
+);
 
 $turnos = [];
 $panicos = [];
@@ -38,6 +46,8 @@ $rondas = [];
 $pontos = [];
 $ocorrencias = [];
 $controlesTurno = [];
+$controlesPendentes = [];
+
 $controles = Controle::read($empresa_usuario_obj->id);
 
 $normalizarHorarioPonto = static function ($valor): ?string {
@@ -45,29 +55,38 @@ $normalizarHorarioPonto = static function ($valor): ?string {
         return null;
     }
 
-    return (new DateTime((string) $valor))->modify('-3 hours')->format('Y-m-d H:i:s');
+    return (new DateTime((string) $valor))
+        ->modify('-3 hours')
+        ->format('Y-m-d H:i:s');
 };
 
 $pontoDentroDoPrazo = static function ($ponto, array $controles): bool {
     $valorHora = $ponto->hora ?? $ponto->created_at;
+
     if (empty($valorHora) || strtotime((string) $valorHora) === false) {
         return false;
     }
 
-    $horaPonto = (new DateTime((string) $valorHora))->modify('-3 hours')->getTimestamp();
+    $horaPonto = (new DateTime((string) $valorHora))
+        ->modify('-3 hours')
+        ->getTimestamp();
+
     if ($horaPonto === false) {
         return false;
     }
 
     $dataPonto = date('Y-m-d', $horaPonto);
+
     foreach ($controles as $controle) {
         $horaControle = substr((string) $controle->hora, 0, 8);
         $inicio = strtotime($dataPonto . ' ' . $horaControle);
+
         if ($inicio === false) {
             continue;
         }
 
         $fim = $inicio + (max(0, (int) $controle->tolerancia) * 60);
+
         if ($horaPonto >= $inicio && $horaPonto <= $fim) {
             return true;
         }
@@ -76,10 +95,107 @@ $pontoDentroDoPrazo = static function ($ponto, array $controles): bool {
     return false;
 };
 
-foreach($segurancas as $i => $seguranca) {
-    $turnos[$seguranca->id] = Turno::read(id_usuario:$seguranca->id, filtro_hora_inicio: $filtro_hora_inicio, filtro_hora_final: $filtro_hora_final);
-    
-    foreach($turnos[$seguranca->id] as $turno) {
+foreach ($segurancas as $i => $seguranca) {
+    $controlesPendentes[$seguranca->id] = Controle02::read(
+        id_empresa: $empresa_usuario_obj->id,
+        id_usuario: $seguranca->id
+    );
+
+    $turnos[$seguranca->id] = Turno::read(
+        id_usuario: $seguranca->id,
+        filtro_hora_inicio: $filtro_hora_inicio,
+        filtro_hora_final: $filtro_hora_final
+    );
+
+    /*
+     * Mantém somente controles "inicio"/"término" que ainda não foram
+     * respondidos e cuja tolerância já terminou.
+     */
+    $agoraLocal = new DateTime(
+        'now',
+        new DateTimeZone('America/Sao_Paulo')
+    );
+
+    $controlesPendentes[$seguranca->id] = array_filter(
+        $controlesPendentes[$seguranca->id],
+        static function ($controle) use ($agoraLocal) {
+            if (
+                !in_array(
+                    strtolower(trim((string) $controle->tipo)),
+                    ['inicio', 'término'],
+                    true
+                ) ||
+                $controle->hora_respondida !== null ||
+                empty($controle->hora_esperada)
+            ) {
+                return false;
+            }
+
+            try {
+                $limite = new DateTime((string) $controle->hora_esperada);
+                $limite->modify(
+                    '+' . max(0, (int) $controle->tolerancia) . ' minutes'
+                );
+
+                return $limite <= $agoraLocal;
+            } catch (Throwable $e) {
+                return false;
+            }
+        }
+    );
+
+    /*
+     * Se o controle já corresponde a um turno existente, ele continua
+     * aparecendo dentro do accordion desse turno e não é duplicado na
+     * lista de pendentes.
+     */
+    foreach ($turnos[$seguranca->id] as $turnoExistente) {
+        foreach (
+            $controlesPendentes[$seguranca->id]
+            as $indiceControle => $controlePendente
+        ) {
+            if (empty($controlePendente->hora_esperada)) {
+                continue;
+            }
+
+            $esperadoTs = strtotime(
+                (string) $controlePendente->hora_esperada
+            );
+
+            if ($esperadoTs === false) {
+                continue;
+            }
+
+            $tipoPendente = strtolower(
+                trim((string) $controlePendente->tipo)
+            );
+
+            $horaTurno = $tipoPendente === 'inicio'
+                ? ($turnoExistente->started_at ?? null)
+                : ($turnoExistente->ended_at ?? null);
+
+            if (empty($horaTurno)) {
+                continue;
+            }
+
+            $horaTurnoTs = strtotime(
+                (new DateTime((string) $horaTurno))
+                    ->modify('-3 hours')
+                    ->format('Y-m-d H:i:s')
+            );
+
+            if (
+                $horaTurnoTs !== false &&
+                abs($horaTurnoTs - $esperadoTs) <= (15 * 60)
+            ) {
+                unset(
+                    $controlesPendentes[$seguranca->id][$indiceControle]
+                );
+            }
+        }
+    }
+
+    foreach ($turnos[$seguranca->id] as $turno) {
         $inicioTurno = $turno->started_at;
         $fimTurno = $turno->ended_at;
 
@@ -88,24 +204,30 @@ foreach($segurancas as $i => $seguranca) {
             filtro_hora_inicio: $inicioTurno,
             filtro_hora_final: $fimTurno
         );
+
         $pontos[$seguranca->id][$turno->id] = PontoControle::read(
             id_usuario: $seguranca->id,
             filtro_hora_inicio: $inicioTurno,
             filtro_hora_final: $fimTurno
         );
-        $ocorrencias[$seguranca->id][$turno->id] = Ocorrencia::read(id_turno: $turno->id)[0] ?? null;
 
-        // Turnos e pontos são gravados em UTC; Controle02::read desconta 3h para
-        // comparar com controle02 (gravado em America/Sao_Paulo). Por isso o
-        // limite do turno em andamento precisa ser o "agora" em UTC — usar o
-        // horário local aqui fazia a janela terminar 3h no passado e escondia
-        // todos os registros de controle02, inclusive os não respondidos.
-        $fimJanelaTurno = $fimTurno ?? (new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d H:i:s');
+        $ocorrencias[$seguranca->id][$turno->id] =
+            Ocorrencia::read(id_turno: $turno->id)[0] ?? null;
+
+        /*
+         * Turnos e pontos são gravados em UTC; Controle02::read desconta 3h
+         * para comparar com controle02 (gravado em America/Sao_Paulo).
+         * Por isso o limite do turno em andamento precisa ser o "agora"
+         * em UTC.
+         */
+        $fimJanelaTurno = $fimTurno ??
+            (new DateTime('now', new DateTimeZone('UTC')))
+                ->format('Y-m-d H:i:s');
 
         $controlesTurno[$seguranca->id][$turno->id] = Controle02::read(
             id_usuario: $seguranca->id,
             hora_inicio: $inicioTurno,
-            hora_fim: $fimJanelaTurno,
+            hora_fim: $fimJanelaTurno
         );
 
         $rondas[$seguranca->id][$turno->id] = Ronda::read(
@@ -113,45 +235,52 @@ foreach($segurancas as $i => $seguranca) {
             hora_inicio: $inicioTurno,
             hora_fim: $fimTurno
         );
-        
     }
-
 }
-
 ?>
+
 <!DOCTYPE html>
 <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.3/html2pdf.bundle.min.js"
+        integrity="sha512-yu5WG6ewBNKx8svICzUA01vozhmiQCVfzjzW40eCHJdsDRaOifh9hPlWBDex5b32gWCzawTp1F3FJz60ps6TnQ=="
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer">
+    </script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.3/html2pdf.bundle.min.js" integrity="sha512-yu5WG6ewBNKx8svICzUA01vozhmiQCVfzjzW40eCHJdsDRaOifh9hPlWBDex5b32gWCzawTp1F3FJz60ps6TnQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
-        integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link rel="stylesheet"
+        href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+        integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+        crossorigin="anonymous">
 
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-            <script src=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js "></script>
-    <link href=" https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css " rel="stylesheet">
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
     <link rel="stylesheet" href="/style.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
-    <link rel="stylesheet" href="/../components/header/header.css"> 
+    <link rel="stylesheet" href="/../components/header/header.css">
     <link rel="stylesheet" href="/../components/lateral/lateral.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
-    <link rel="stylesheet" href="../choices/choices.css"></link>
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+    <link rel="stylesheet" href="../choices/choices.css">
 
     <title>Gestor Office Control</title>
 </head>
 
 <body id="body" data-nome-empresa="<?= htmlspecialchars($nomeEmpresa) ?>">
 
+<?php require_once __DIR__ . '/../../componentes/lateral/lateral.php'; ?>
+<?php require_once __DIR__ . '/../../componentes/header/header.php'; ?>
 
-        <?php require_once __DIR__ . '/../../componentes/lateral/lateral.php'; ?>
-        <?php require_once __DIR__ . '/../../componentes/header/header.php'; ?>
-
-                
-    <div class="main" id="container">
-        <div class="col-md-12" style="padding: 0;">
+<div class="main" id="container">
+    <div class="col-md-12" style="padding: 0;">
         <div class="card">
- 
             <div class="card-header-div">
                 <div class="card-header-borda">
                     <form method="get" action="seguranca.php">
@@ -159,280 +288,667 @@ foreach($segurancas as $i => $seguranca) {
                             <div class="d-flex flex-row">
                                 <div class="d-flex flex-column" style="height: 1em;">
                                     <label for="filtro_hora_inicio" class="form-label">Data Inicial</label>
-                                    <input type="date" name="filtro_hora_inicio" class="form-control" value="<?= $filtro_hora_inicio ?? '' ?>">
+                                    <input type="date"
+                                        name="filtro_hora_inicio"
+                                        class="form-control"
+                                        value="<?= $filtro_hora_inicio ?? '' ?>">
                                 </div>
+
                                 <div class="d-flex flex-column" style="height: 1em;">
                                     <label for="filtro_hora_final" class="form-label">Data Final</label>
-                                    <input type="date" name="filtro_hora_final" class="form-control" value="<?= $filtro_hora_final ?? '' ?>">
+                                    <input type="date"
+                                        name="filtro_hora_final"
+                                        class="form-control"
+                                        value="<?= $filtro_hora_final ?? '' ?>">
                                 </div>
+
                                 <div class="d-flex flex-column">
-                                    <label for="filtro_hora_inicio" class="form-label">Colaborador</label>
+                                    <label for="filtro_seguranca" class="form-label">Colaborador</label>
+
                                     <select name="filtro_seguranca" class="form-control">
                                         <option value="">Selecione</option>
-                                        <?php foreach (Usuario::read(idempresa: $empresa_usuario_obj->id, cargo:4) as $seguranca): ?>
-                                            <option value="<?= $seguranca->id ?>" <?= ($filtro_seguranca == $seguranca->id) ? 'selected' : '' ?>>
-                                                <?= htmlspecialchars($seguranca->nome ?? 'Segurança #' . $seguranca->id) ?>
+
+                                        <?php foreach (
+                                            Usuario::read(
+                                                idempresa: $empresa_usuario_obj->id,
+                                                cargo: 4
+                                            ) as $seguranca
+                                        ): ?>
+                                            <option
+                                                value="<?= $seguranca->id ?>"
+                                                <?= ($filtro_seguranca == $seguranca->id) ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars(
+                                                    $seguranca->nome ??
+                                                    'Segurança #' . $seguranca->id
+                                                ) ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
                             </div>
+
                             <div class="inputs-dre-btn">
-                                                   <div class="botoes-acao">
-                                                    <button type="submit" class="btn-sm btn" style="background-color: #5856d6; color: white;">Filtrar</button>
-                                                    <a href="analitico.php" class="btn btn-secondary btn-sm">Limpar</a>
-                                                     </div>   
-                                                    <div id="inputs-btn-analitico">
-                                                                <div class="botoes-gerar">
-                                                                    <button type="button" class="btn-sm btn" id="botao-gerar-pdf"
-                                                                        onclick="prepararGeracaoSeguranca('pdf')">Gerar PDF</button>
-                                                                    <button type="button" class="btn-sm btn" id="botao-gerar-excel"
-                                                                        onclick="prepararGeracaoSeguranca('excel')">Gerar Excel</button>
-                                                                </div>
-                                                    </div>
-                                                </div>
-                            
+                                <div class="botoes-acao">
+                                    <button type="submit"
+                                        class="btn-sm btn"
+                                        style="background-color: #5856d6; color: white;">
+                                        Filtrar
+                                    </button>
+
+                                    <a href="analitico.php"
+                                        class="btn btn-secondary btn-sm">
+                                        Limpar
+                                    </a>
+                                </div>
+
+                                <div id="inputs-btn-analitico">
+                                    <div class="botoes-gerar">
+                                        <button type="button"
+                                            class="btn-sm btn"
+                                            id="botao-gerar-pdf"
+                                            onclick="prepararGeracaoSeguranca('pdf')">
+                                            Gerar PDF
+                                        </button>
+
+                                        <button type="button"
+                                            class="btn-sm btn"
+                                            id="botao-gerar-excel"
+                                            onclick="prepararGeracaoSeguranca('excel')">
+                                            Gerar Excel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </form>
                 </div>
             </div>
- 
+
             <div class="card-body">
- 
                 <?php if (empty($segurancas)): ?>
- 
-                    <div class="alert alert-info mb-0">Nenhum segurança cadastrado para esta empresa.</div>
- 
+                    <div class="alert alert-info mb-0">
+                        Nenhum segurança cadastrado para esta empresa.
+                    </div>
                 <?php else: ?>
- 
+
                     <div class="accordion" id="accordion-segurancas">
+
                         <?php foreach ($segurancas as $seguranca): ?>
+
                             <?php
-                                $segId          = 'seg' . $seguranca->id;
-                                $turnosSeg      = $turnos[$seguranca->id] ?? [];
-                                $qtdTurnos      = count($turnosSeg);
+                            $segId = 'seg' . $seguranca->id;
+                            $turnosSeg = $turnos[$seguranca->id] ?? [];
+                            $qtdTurnos = count($turnosSeg);
+                            $pendentesSeguranca = array_values(
+                                $controlesPendentes[$seguranca->id] ?? []
+                            );
+                            $qtdPendentes = count($pendentesSeguranca);
                             ?>
- 
-                            <div class="accordion-item" data-seguranca-nome="<?= htmlspecialchars($seguranca->nome ?? 'Segurança #' . $seguranca->id) ?>">
-                                <h2 class="accordion-header" id="heading-<?= $segId ?>">
-                                    <button class="accordion-button collapsed" type="button"
-                                    style="color:black;"
-                                            data-bs-toggle="collapse" data-bs-target="#collapse-<?= $segId ?>"
-                                            aria-expanded="false" aria-controls="collapse-<?= $segId ?>">
-                                        <?= htmlspecialchars($seguranca->nome ?? 'Segurança #' . $seguranca->id) ?>
-                                        <span class="badge bg-secondary ms-2"><?= $qtdTurnos ?> turno<?= $qtdTurnos == 1 ? '' : 's' ?></span>
+
+                            <div class="accordion-item"
+                                data-seguranca-nome="<?= htmlspecialchars(
+                                    $seguranca->nome ??
+                                    'Segurança #' . $seguranca->id
+                                ) ?>">
+
+                                <h2 class="accordion-header"
+                                    id="heading-<?= $segId ?>">
+
+                                    <button class="accordion-button collapsed"
+                                        type="button"
+                                        style="color:black;"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#collapse-<?= $segId ?>"
+                                        aria-expanded="false"
+                                        aria-controls="collapse-<?= $segId ?>">
+
+                                        <?= htmlspecialchars(
+                                            $seguranca->nome ??
+                                            'Segurança #' . $seguranca->id
+                                        ) ?>
+
+                                        <span class="badge bg-secondary ms-2">
+                                            <?= $qtdTurnos ?>
+                                            turno<?= $qtdTurnos == 1 ? '' : 's' ?>
+                                        </span>
+
+                                        <?php if ($qtdPendentes > 0): ?>
+                                            <span class="badge bg-danger ms-2">
+                                                <?= $qtdPendentes ?>
+                                                pendente<?= $qtdPendentes == 1 ? '' : 's' ?>
+                                            </span>
+                                        <?php endif; ?>
                                     </button>
                                 </h2>
-                                <div id="collapse-<?= $segId ?>" class="accordion-collapse collapse"
-                                     data-bs-parent="#accordion-segurancas">
+
+                                <div id="collapse-<?= $segId ?>"
+                                    class="accordion-collapse collapse"
+                                    data-bs-parent="#accordion-segurancas">
+
                                     <div class="accordion-body">
- 
+
+                                        <?php foreach ($pendentesSeguranca as $controlePendente): ?>
+
+                                            <?php
+                                            $tipoPendente = strtolower(
+                                                trim((string) $controlePendente->tipo)
+                                            );
+
+                                            $tituloPendente =
+                                                $tipoPendente === 'inicio'
+                                                    ? 'Turno não iniciado'
+                                                    : 'Turno não finalizado';
+
+                                            $iconePendente =
+                                                $tipoPendente === 'inicio'
+                                                    ? 'bi-play-circle-fill'
+                                                    : 'bi-stop-circle-fill';
+
+                                            $horaEsperadaPendente = '—';
+                                            $horaLimitePendente = '—';
+
+                                            if (!empty($controlePendente->hora_esperada)) {
+                                                try {
+                                                    $horaEsperadaObj = new DateTime(
+                                                        (string) $controlePendente->hora_esperada
+                                                    );
+
+                                                    $horaEsperadaPendente =
+                                                        $horaEsperadaObj->format('d/m/Y H:i:s');
+
+                                                    $horaLimitePendente =
+                                                        (clone $horaEsperadaObj)
+                                                            ->modify(
+                                                                '+' .
+                                                                max(
+                                                                    0,
+                                                                    (int) $controlePendente->tolerancia
+                                                                ) .
+                                                                ' minutes'
+                                                            )
+                                                            ->format('H:i:s');
+                                                } catch (Throwable $e) {
+                                                    // Mantém os valores como "—" se a data for inválida.
+                                                }
+                                            }
+                                            ?>
+
+                                            <div class="alert alert-danger d-flex align-items-center justify-content-between mb-2 py-3 px-3">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="bi <?= $iconePendente ?> me-2"></i>
+
+                                                    <strong>
+                                                        <?= htmlspecialchars($tituloPendente) ?>
+                                                    </strong>
+                                                </div>
+
+                                                <div class="small">
+                                                    <strong>Esperado:</strong>
+                                                    <?= htmlspecialchars($horaEsperadaPendente) ?>
+
+                                                    <span class="mx-1">|</span>
+
+                                                    <strong>Limite:</strong>
+                                                    <?= htmlspecialchars($horaLimitePendente) ?>
+                                                </div>
+                                            </div>
+
+                                        <?php endforeach; ?>
+
                                         <?php if (empty($turnosSeg)): ?>
- 
-                                            <p class="text-muted mb-0">Nenhum turno registrado para este segurança.</p>
- 
+
+                                            <p class="text-muted mb-0">
+                                                Nenhum turno registrado para este segurança.
+                                            </p>
+
                                         <?php else: ?>
- 
-                                            <div class="accordion" id="accordion-turnos-<?= $segId ?>">
+
+                                            <div class="accordion"
+                                                id="accordion-turnos-<?= $segId ?>">
+
                                                 <?php foreach ($turnosSeg as $turno): ?>
+
                                                     <?php
-                                                        $turnoId  = $segId . '-turno' . $turno->id;
- 
-                                                        $listaPontos  = $pontos[$seguranca->id][$turno->id] ?? [];
-                                                        $listaPanicos = $panicos[$seguranca->id][$turno->id] ?? [];
-                                                        $listaRondas  = $rondas[$seguranca->id][$turno->id]  ?? [];
-                                                        $ocorrenciaTurno = $ocorrencias[$seguranca->id][$turno->id] ?? null;
-                                                        $listaControles = $controlesTurno[$seguranca->id][$turno->id] ?? [];
-                                                        $controlesUnificados = [];
-                                                        $controlesVistos = [];
+                                                    $turnoId = $segId . '-turno' . $turno->id;
 
-                                                        foreach ($listaPontos as $ponto) {
-                                                            $horaRespondida = $normalizarHorarioPonto($ponto->hora ?? $ponto->created_at);
-                                                            $controleRespondido = null;
-                                                            $horaPonto = strtotime((string) $horaRespondida);
+                                                    $listaPontos =
+                                                        $pontos[$seguranca->id][$turno->id] ?? [];
 
-                                                            if ($horaPonto !== false) {
-                                                                $dataPonto = date('Y-m-d', $horaPonto);
-                                                                foreach ($controles as $controle) {
-                                                                    $horaControle = substr((string) $controle->hora, 0, 8);
-                                                                    $inicioControle = strtotime($dataPonto . ' ' . $horaControle);
-                                                                    $fimJanelaControle = $inicioControle + (max(0, (int) $controle->tolerancia) * 60);
+                                                    $listaPanicos =
+                                                        $panicos[$seguranca->id][$turno->id] ?? [];
 
-                                                                    if ($inicioControle !== false && $horaPonto >= $inicioControle && $horaPonto <= $fimJanelaControle) {
-                                                                        $controleRespondido = $controle;
-                                                                        break;
-                                                                    }
+                                                    $listaRondas =
+                                                        $rondas[$seguranca->id][$turno->id] ?? [];
+
+                                                    $ocorrenciaTurno =
+                                                        $ocorrencias[$seguranca->id][$turno->id] ?? null;
+
+                                                    $listaControles =
+                                                        $controlesTurno[$seguranca->id][$turno->id] ?? [];
+
+                                                    $controlesUnificados = [];
+                                                    $controlesVistos = [];
+
+                                                    foreach ($listaPontos as $ponto) {
+                                                        $horaRespondida =
+                                                            $normalizarHorarioPonto(
+                                                                $ponto->hora ??
+                                                                $ponto->created_at
+                                                            );
+
+                                                        $controleRespondido = null;
+                                                        $horaPonto =
+                                                            strtotime((string) $horaRespondida);
+
+                                                        if ($horaPonto !== false) {
+                                                            $dataPonto =
+                                                                date('Y-m-d', $horaPonto);
+
+                                                            foreach ($controles as $controle) {
+                                                                $horaControle =
+                                                                    substr(
+                                                                        (string) $controle->hora,
+                                                                        0,
+                                                                        8
+                                                                    );
+
+                                                                $inicioControle =
+                                                                    strtotime(
+                                                                        $dataPonto .
+                                                                        ' ' .
+                                                                        $horaControle
+                                                                    );
+
+                                                                $fimJanelaControle =
+                                                                    $inicioControle +
+                                                                    (
+                                                                        max(
+                                                                            0,
+                                                                            (int) $controle->tolerancia
+                                                                        ) * 60
+                                                                    );
+
+                                                                if (
+                                                                    $inicioControle !== false &&
+                                                                    $horaPonto >= $inicioControle &&
+                                                                    $horaPonto <= $fimJanelaControle
+                                                                ) {
+                                                                    $controleRespondido =
+                                                                        $controle;
+                                                                    break;
                                                                 }
                                                             }
-
-                                                            $controlesUnificados[] = [
-                                                                'hora_esperada' => $controleRespondido?->hora,
-                                                                'hora_limite' => $controleRespondido
-                                                                    ? date(
-                                                                        'H:i:s',
-                                                                        strtotime(substr((string) $controleRespondido->hora, 0, 8))
-                                                                            + ((int) $controleRespondido->tolerancia * 60)
-                                                                    )
-                                                                    : null,
-                                                                'hora_respondida' => $horaRespondida,
-                                                                'status' => $pontoDentroDoPrazo($ponto, $controles) ? 'Dentro do prazo' : 'Fora do prazo',
-                                                                'classe' => $pontoDentroDoPrazo($ponto, $controles) ? 'table-success' : 'table-danger',
-                                                                'ordem' => strtotime((string) $horaRespondida) ?: PHP_INT_MAX,
-                                                            ];
                                                         }
 
-                                                        // Processa primeiro os controle02 respondidos: assim um pendente do
-                                                        // mesmo horário já encontra o respondido na lista e é descartado.
-                                                        usort($listaControles, static function ($a, $b): int {
-                                                            return ($a->hora_respondida === null ? 1 : 0) <=> ($b->hora_respondida === null ? 1 : 0);
-                                                        });
+                                                        $controlesUnificados[] = [
+                                                            'hora_esperada' =>
+                                                                $controleRespondido?->hora,
 
-                                                        foreach ($listaControles as $controleTurno) {
-                                                            $horaRespondida = $controleTurno->hora_respondida;
-                                                            $horaEsperada = $controleTurno->hora_esperada;
-                                                            $chaveControle = $horaRespondida !== null
-                                                                ? 'respondido:' . (new DateTime((string) $horaRespondida))->format('Y-m-d H:i:s')
-                                                                : 'pendente:' . (new DateTime((string) $horaEsperada))->format('Y-m-d H:i:s') . ':' . (int) $controleTurno->tolerancia;
+                                                            'hora_limite' =>
+                                                                $controleRespondido
+                                                                    ? date(
+                                                                        'H:i:s',
+                                                                        strtotime(
+                                                                            substr(
+                                                                                (string) $controleRespondido->hora,
+                                                                                0,
+                                                                                8
+                                                                            )
+                                                                        ) +
+                                                                        (
+                                                                            (int)
+                                                                            $controleRespondido->tolerancia
+                                                                            * 60
+                                                                        )
+                                                                    )
+                                                                    : null,
 
-                                                            if (isset($controlesVistos[$chaveControle])) {
-                                                                continue;
+                                                            'hora_respondida' =>
+                                                                $horaRespondida,
+
+                                                            'status' =>
+                                                                $pontoDentroDoPrazo(
+                                                                    $ponto,
+                                                                    $controles
+                                                                )
+                                                                    ? 'Dentro do prazo'
+                                                                    : 'Fora do prazo',
+
+                                                            'classe' =>
+                                                                $pontoDentroDoPrazo(
+                                                                    $ponto,
+                                                                    $controles
+                                                                )
+                                                                    ? 'table-success'
+                                                                    : 'table-danger',
+
+                                                            'ordem' =>
+                                                                strtotime(
+                                                                    (string) $horaRespondida
+                                                                ) ?: PHP_INT_MAX,
+                                                        ];
+                                                    }
+
+                                                    /*
+                                                     * Processa primeiro os controle02 respondidos:
+                                                     * assim um pendente do mesmo horário já encontra
+                                                     * o respondido na lista e é descartado.
+                                                     */
+                                                    usort(
+                                                        $listaControles,
+                                                        static function ($a, $b): int {
+                                                            return
+                                                                ($a->hora_respondida === null ? 1 : 0)
+                                                                <=>
+                                                                ($b->hora_respondida === null ? 1 : 0);
+                                                        }
+                                                    );
+
+                                                    foreach ($listaControles as $controleTurno) {
+                                                        $horaRespondida =
+                                                            $controleTurno->hora_respondida;
+
+                                                        $horaEsperada =
+                                                            $controleTurno->hora_esperada;
+
+                                                        $chaveControle =
+                                                            $horaRespondida !== null
+                                                                ? 'respondido:' .
+                                                                    (
+                                                                        new DateTime(
+                                                                            (string) $horaRespondida
+                                                                        )
+                                                                    )->format('Y-m-d H:i:s')
+                                                                : 'pendente:' .
+                                                                    (
+                                                                        new DateTime(
+                                                                            (string) $horaEsperada
+                                                                        )
+                                                                    )->format('Y-m-d H:i:s') .
+                                                                    ':' .
+                                                                    (int) $controleTurno->tolerancia;
+
+                                                        if (isset($controlesVistos[$chaveControle])) {
+                                                            continue;
+                                                        }
+
+                                                        $controlesVistos[$chaveControle] = true;
+                                                        $jaRepresentadoPorPonto = false;
+
+                                                        if ($horaRespondida !== null) {
+                                                            foreach (
+                                                                $controlesUnificados
+                                                                as $controleUnificado
+                                                            ) {
+                                                                if (
+                                                                    $controleUnificado['hora_respondida'] !== null &&
+                                                                    $controleUnificado['hora_respondida'] ===
+                                                                        $horaRespondida
+                                                                ) {
+                                                                    $jaRepresentadoPorPonto = true;
+                                                                    break;
+                                                                }
                                                             }
+                                                        } elseif ($horaEsperada !== null) {
+                                                            $inicioJanela =
+                                                                strtotime(
+                                                                    (string) $horaEsperada
+                                                                );
 
-                                                            $controlesVistos[$chaveControle] = true;
+                                                            if ($inicioJanela !== false) {
+                                                                $fimJanela =
+                                                                    $inicioJanela +
+                                                                    (
+                                                                        max(
+                                                                            0,
+                                                                            (int) $controleTurno->tolerancia
+                                                                        ) * 60
+                                                                    );
 
-                                                            $jaRepresentadoPorPonto = false;
+                                                                foreach (
+                                                                    $controlesUnificados
+                                                                    as $controleUnificado
+                                                                ) {
+                                                                    if (
+                                                                        $controleUnificado['hora_respondida'] ===
+                                                                        null
+                                                                    ) {
+                                                                        continue;
+                                                                    }
 
-                                                            if ($horaRespondida !== null) {
-                                                                // Mesmo horário respondido já listado a partir dos pontos.
-                                                                foreach ($controlesUnificados as $controleUnificado) {
-                                                                    if ($controleUnificado['hora_respondida'] !== null
-                                                                        && $controleUnificado['hora_respondida'] === $horaRespondida) {
+                                                                    $respostaTs =
+                                                                        strtotime(
+                                                                            (string)
+                                                                            $controleUnificado[
+                                                                                'hora_respondida'
+                                                                            ]
+                                                                        );
+
+                                                                    if (
+                                                                        $respostaTs !== false &&
+                                                                        $respostaTs >= $inicioJanela &&
+                                                                        $respostaTs <= $fimJanela
+                                                                    ) {
                                                                         $jaRepresentadoPorPonto = true;
                                                                         break;
                                                                     }
                                                                 }
-                                                            } elseif ($horaEsperada !== null) {
-                                                                // Pendente: se já existe uma resposta dentro da janela
-                                                                // (horário esperado + tolerância), o pendente é resíduo
-                                                                // e não deve aparecer.
-                                                                $inicioJanela = strtotime((string) $horaEsperada);
-
-                                                                if ($inicioJanela !== false) {
-                                                                    $fimJanela = $inicioJanela + (max(0, (int) $controleTurno->tolerancia) * 60);
-
-                                                                    foreach ($controlesUnificados as $controleUnificado) {
-                                                                        if ($controleUnificado['hora_respondida'] === null) {
-                                                                            continue;
-                                                                        }
-
-                                                                        $respostaTs = strtotime((string) $controleUnificado['hora_respondida']);
-                                                                        if ($respostaTs !== false && $respostaTs >= $inicioJanela && $respostaTs <= $fimJanela) {
-                                                                            $jaRepresentadoPorPonto = true;
-                                                                            break;
-                                                                        }
-                                                                    }
-                                                                }
                                                             }
-
-                                                            if ($jaRepresentadoPorPonto) {
-                                                                continue;
-                                                            }
-
-                                                            $controlesUnificados[] = [
-                                                                'hora_esperada' => $horaEsperada,
-                                                                'hora_limite' => $horaEsperada !== null
-                                                                    ? (new DateTime((string) $horaEsperada))
-                                                                        ->modify('+' . (int) $controleTurno->tolerancia . ' minutes')
-                                                                        ->format('Y-m-d H:i:s')
-                                                                    : null,
-                                                                'hora_respondida' => $horaRespondida,
-                                                                'status' => $horaRespondida === null ? 'Não respondido' : 'Respondido',
-                                                                'classe' => $horaRespondida === null ? 'table-danger' : 'table-success',
-                                                                // Pendentes ordenam pelo horário esperado, e não no fim da lista.
-                                                                'ordem' => $horaRespondida !== null
-                                                                    ? (strtotime((string) $horaRespondida) ?: PHP_INT_MAX)
-                                                                    : (strtotime((string) $horaEsperada) ?: PHP_INT_MAX),
-                                                            ];
                                                         }
 
-                                                        usort($controlesUnificados, static function (array $a, array $b): int {
+                                                        if ($jaRepresentadoPorPonto) {
+                                                            continue;
+                                                        }
+
+                                                        $controlesUnificados[] = [
+                                                            'hora_esperada' =>
+                                                                $horaEsperada,
+
+                                                            'hora_limite' =>
+                                                                $horaEsperada !== null
+                                                                    ? (
+                                                                        new DateTime(
+                                                                            (string) $horaEsperada
+                                                                        )
+                                                                    )
+                                                                        ->modify(
+                                                                            '+' .
+                                                                            (int) $controleTurno->tolerancia .
+                                                                            ' minutes'
+                                                                        )
+                                                                        ->format('Y-m-d H:i:s')
+                                                                    : null,
+
+                                                            'hora_respondida' =>
+                                                                $horaRespondida,
+
+                                                            'status' =>
+                                                                $horaRespondida === null
+                                                                    ? 'Não respondido'
+                                                                    : 'Respondido',
+
+                                                            'classe' =>
+                                                                $horaRespondida === null
+                                                                    ? 'table-danger'
+                                                                    : 'table-success',
+
+                                                            'ordem' =>
+                                                                $horaRespondida !== null
+                                                                    ? (
+                                                                        strtotime(
+                                                                            (string) $horaRespondida
+                                                                        ) ?: PHP_INT_MAX
+                                                                    )
+                                                                    : (
+                                                                        strtotime(
+                                                                            (string) $horaEsperada
+                                                                        ) ?: PHP_INT_MAX
+                                                                    ),
+                                                        ];
+                                                    }
+
+                                                    usort(
+                                                        $controlesUnificados,
+                                                        static function (
+                                                            array $a,
+                                                            array $b
+                                                        ): int {
                                                             return $a['ordem'] <=> $b['ordem'];
-                                                        });
- 
-                                                        $inicioFmt = !empty($turno->started_at)
-                                                            ? (new DateTime($turno->started_at))->modify('-3 hours')->format('d/m/Y H:i')
-                                                            : '—';
-                                                        $fimFmt = !empty($turno->ended_at)
-                                                            ? (new DateTime($turno->ended_at))->modify('-3 hours')->format('d/m/Y H:i')
-                                                            : 'Em Andamento';
-                                                        $inicioHora = !empty($turno->started_at)
-                                                            ? (new DateTime($turno->started_at))->modify('-3 hours')->format('H:i')
-                                                            : '—';
-                                                        $fimHora = !empty($turno->ended_at)
-                                                            ? (new DateTime($turno->ended_at))->modify('-3 hours')->format('H:i')
-                                                            : null;
+                                                        }
+                                                    );
+
+                                                    $inicioFmt = !empty($turno->started_at)
+                                                        ? (
+                                                            new DateTime(
+                                                                $turno->started_at
+                                                            )
+                                                        )
+                                                            ->modify('-3 hours')
+                                                            ->format('d/m/Y H:i')
+                                                        : '—';
+
+                                                    $fimFmt = !empty($turno->ended_at)
+                                                        ? (
+                                                            new DateTime(
+                                                                $turno->ended_at
+                                                            )
+                                                        )
+                                                            ->modify('-3 hours')
+                                                            ->format('d/m/Y H:i')
+                                                        : 'Em Andamento';
+
+                                                    $inicioHora = !empty($turno->started_at)
+                                                        ? (
+                                                            new DateTime(
+                                                                $turno->started_at
+                                                            )
+                                                        )
+                                                            ->modify('-3 hours')
+                                                            ->format('H:i')
+                                                        : '—';
+
+                                                    $fimHora = !empty($turno->ended_at)
+                                                        ? (
+                                                            new DateTime(
+                                                                $turno->ended_at
+                                                            )
+                                                        )
+                                                            ->modify('-3 hours')
+                                                            ->format('H:i')
+                                                        : null;
                                                     ?>
- 
+
                                                     <div class="accordion-item"
-                                                         data-turno-inicio="<?= htmlspecialchars($inicioFmt) ?>"
-                                                         data-turno-fim="<?= htmlspecialchars($fimFmt !== 'Em Andamento' ? $fimFmt : 'Em andamento') ?>"
-                                                         data-panicos="<?= count($listaPanicos) ?>"
-                                                         data-controles="<?= count($controlesUnificados) ?>"
-                                                         data-rondas="<?= count($listaRondas) ?>">
-                                                        <h2 class="accordion-header" id="heading-<?= $turnoId ?>">
-                                                            <button class="accordion-button collapsed" type="button"
-                                                            style="color:black;"
-                                                                    data-bs-toggle="collapse" data-bs-target="#collapse-<?= $turnoId ?>"
-                                                                    aria-expanded="false" aria-controls="collapse-<?= $turnoId ?>">
-                                                                
+                                                        data-turno-inicio="<?= htmlspecialchars($inicioFmt) ?>"
+                                                        data-turno-fim="<?= htmlspecialchars(
+                                                            $fimFmt !== 'Em Andamento'
+                                                                ? $fimFmt
+                                                                : 'Em andamento'
+                                                        ) ?>"
+                                                        data-panicos="<?= count($listaPanicos) ?>"
+                                                        data-controles="<?= count($controlesUnificados) ?>"
+                                                        data-rondas="<?= count($listaRondas) ?>">
+
+                                                        <h2 class="accordion-header"
+                                                            id="heading-<?= $turnoId ?>">
+
+                                                            <button class="accordion-button collapsed"
+                                                                type="button"
+                                                                style="color:black;"
+                                                                data-bs-toggle="collapse"
+                                                                data-bs-target="#collapse-<?= $turnoId ?>"
+                                                                aria-expanded="false"
+                                                                aria-controls="collapse-<?= $turnoId ?>">
+
                                                                 <i class="bi bi-clock-history me-2"></i>
+
                                                                 <?= htmlspecialchars($inicioFmt) ?>
-                                                                <?= $fimFmt !== 'Em Andamento' ? ' até ' . htmlspecialchars($fimFmt) : ' - Em andamento' ?>
 
-                                                                <span class="badge bg-info ms-2"><?= count($controlesUnificados) ?></span>
-                                                                <span class="badge bg-danger ms-2"><?= count($listaPanicos) ?></span>
-                                                                <span class="badge bg-primary ms-2"><?= count($listaRondas) ?></span>
+                                                                <?= $fimFmt !== 'Em Andamento'
+                                                                    ? ' até ' . htmlspecialchars($fimFmt)
+                                                                    : ' - Em andamento' ?>
 
+                                                                <span class="badge bg-info ms-2">
+                                                                    <?= count($controlesUnificados) ?>
+                                                                </span>
+
+                                                                <span class="badge bg-danger ms-2">
+                                                                    <?= count($listaPanicos) ?>
+                                                                </span>
+
+                                                                <span class="badge bg-primary ms-2">
+                                                                    <?= count($listaRondas) ?>
+                                                                </span>
                                                             </button>
                                                         </h2>
-                                                        <div id="collapse-<?= $turnoId ?>" class="accordion-collapse collapse"
-                                                             data-bs-parent="#accordion-turnos-<?= $segId ?>">
+
+                                                        <div id="collapse-<?= $turnoId ?>"
+                                                            class="accordion-collapse collapse"
+                                                            data-bs-parent="#accordion-turnos-<?= $segId ?>">
+
                                                             <div class="accordion-body">
- 
-                                                                <div class="accordion" id="accordion-cat-<?= $turnoId ?>">
+                                                                <div class="accordion"
+                                                                    id="accordion-cat-<?= $turnoId ?>">
 
-                                                                    <!-- Mostrar Data e hora de inicio e fim-->
-
-                                                                    <div class="badge bg-secondary w-100 mb-3 text-start" style="font-size: 1.5em;">
-                                                                        Inicio:<?= htmlspecialchars($inicioFmt) ?>
+                                                                    <div class="badge bg-secondary w-100 mb-3 text-start"
+                                                                        style="font-size: 1.5em;">
+                                                                        Inicio:
+                                                                        <?= htmlspecialchars($inicioFmt) ?>
                                                                         <br>
-                                                                        <?= $fimFmt !== 'Em Andamento' ? 'Fim:' . htmlspecialchars($fimFmt) : ' Em andamento' ?>
+
+                                                                        <?= $fimFmt !== 'Em Andamento'
+                                                                            ? 'Fim:' . htmlspecialchars($fimFmt)
+                                                                            : ' Em andamento' ?>
                                                                     </div>
 
                                                                     <?php if ($ocorrenciaTurno !== null): ?>
-                                                                        <div class="alert alert-primary mb-3" role="alert">
+                                                                        <div class="alert alert-primary mb-3"
+                                                                            role="alert">
+
                                                                             <strong>Ocorrência:</strong>
-                                                                            <?= htmlspecialchars($ocorrenciaTurno->texto ?? '') ?>
+
+                                                                            <?= htmlspecialchars(
+                                                                                $ocorrenciaTurno->texto ?? ''
+                                                                            ) ?>
                                                                         </div>
                                                                     <?php endif; ?>
 
                                                                     <div class="accordion-item">
-                                                                        <h2 class="accordion-header" id="heading-controle-<?= $turnoId ?>">
-                                                                            <button class="accordion-button collapsed" type="button"
-                                                                                    style="color:black;"
-                                                                                    data-bs-toggle="collapse" data-bs-target="#collapse-controle-<?= $turnoId ?>"
-                                                                                    aria-expanded="false" aria-controls="collapse-controle-<?= $turnoId ?>">
+                                                                        <h2 class="accordion-header"
+                                                                            id="heading-controle-<?= $turnoId ?>">
+
+                                                                            <button class="accordion-button collapsed"
+                                                                                type="button"
+                                                                                style="color:black;"
+                                                                                data-bs-toggle="collapse"
+                                                                                data-bs-target="#collapse-controle-<?= $turnoId ?>"
+                                                                                aria-expanded="false"
+                                                                                aria-controls="collapse-controle-<?= $turnoId ?>">
+
                                                                                 <i class="bi bi-clock me-2 text-info"></i>
+
                                                                                 Controle
-                                                                                <span class="badge bg-secondary ms-2"><?= count($controlesUnificados) ?></span>
+
+                                                                                <span class="badge bg-secondary ms-2">
+                                                                                    <?= count($controlesUnificados) ?>
+                                                                                </span>
                                                                             </button>
                                                                         </h2>
-                                                                        <div id="collapse-controle-<?= $turnoId ?>" class="accordion-collapse collapse"
-                                                                             data-bs-parent="#accordion-cat-<?= $turnoId ?>">
+
+                                                                        <div id="collapse-controle-<?= $turnoId ?>"
+                                                                            class="accordion-collapse collapse"
+                                                                            data-bs-parent="#accordion-cat-<?= $turnoId ?>">
+
                                                                             <div class="accordion-body">
+
                                                                                 <?php if (empty($controlesUnificados)): ?>
-                                                                                    <p class="text-muted mb-0">Nenhum controle registrado neste turno.</p>
+
+                                                                                    <p class="text-muted mb-0">
+                                                                                        Nenhum controle registrado neste turno.
+                                                                                    </p>
+
                                                                                 <?php else: ?>
+
                                                                                     <table class="table table-striped table-bordered">
                                                                                         <thead>
                                                                                             <tr>
@@ -441,149 +957,283 @@ foreach($segurancas as $i => $seguranca) {
                                                                                                 <th>Status</th>
                                                                                             </tr>
                                                                                         </thead>
+
                                                                                         <tbody>
-                                                                                            <?php foreach ($controlesUnificados as $controle): ?>
+                                                                                            <?php foreach (
+                                                                                                $controlesUnificados
+                                                                                                as $controle
+                                                                                            ): ?>
+
                                                                                                 <tr class="<?= $controle['classe'] ?>">
-                                                                                                    <td><?= $controle['hora_esperada'] === null
-                                                                                                        ? '—'
-                                                                                                        : htmlspecialchars(
-                                                                                                            (new DateTime((string) $controle['hora_esperada']))->format('H:i:s')
-                                                                                                                . ' - ' . (new DateTime((string) $controle['hora_limite']))->format('H:i:s')
-                                                                                                        ) ?></td>
-                                                                                                    <td><?= $controle['hora_respondida'] === null
-                                                                                                        ? '—'
-                                                                                                        : htmlspecialchars((new DateTime((string) $controle['hora_respondida']))->format('H:i:s')) ?></td>
-                                                                                                    <td><?= htmlspecialchars($controle['status']) ?></td>
+                                                                                                    <td>
+                                                                                                        <?= $controle['hora_esperada'] === null
+                                                                                                            ? '—'
+                                                                                                            : htmlspecialchars(
+                                                                                                                (
+                                                                                                                    new DateTime(
+                                                                                                                        (string) $controle['hora_esperada']
+                                                                                                                    )
+                                                                                                                )->format('H:i:s') .
+                                                                                                                ' - ' .
+                                                                                                                (
+                                                                                                                    new DateTime(
+                                                                                                                        (string) $controle['hora_limite']
+                                                                                                                    )
+                                                                                                                )->format('H:i:s')
+                                                                                                            ) ?>
+                                                                                                    </td>
+
+                                                                                                    <td>
+                                                                                                        <?= $controle['hora_respondida'] === null
+                                                                                                            ? '—'
+                                                                                                            : htmlspecialchars(
+                                                                                                                (
+                                                                                                                    new DateTime(
+                                                                                                                        (string) $controle['hora_respondida']
+                                                                                                                    )
+                                                                                                                )->format('H:i:s')
+                                                                                                            ) ?>
+                                                                                                    </td>
+
+                                                                                                    <td>
+                                                                                                        <?= htmlspecialchars(
+                                                                                                            $controle['status']
+                                                                                                        ) ?>
+                                                                                                    </td>
                                                                                                 </tr>
+
                                                                                             <?php endforeach; ?>
                                                                                         </tbody>
                                                                                     </table>
+
                                                                                 <?php endif; ?>
+
                                                                             </div>
                                                                         </div>
                                                                     </div>
 
- 
-                                                                    <!-- ── Pânicos ─────────────────────────────────── -->
+                                                                    <!-- Pânicos -->
                                                                     <div class="accordion-item">
-                                                                        <h2 class="accordion-header" id="heading-panico-<?= $turnoId ?>">
-                                                                            <button class="accordion-button collapsed" type="button"
-                                                                            style="color:black;"
-                                                                                    data-bs-toggle="collapse" data-bs-target="#collapse-panico-<?= $turnoId ?>"
-                                                                                    aria-expanded="false" aria-controls="collapse-panico-<?= $turnoId ?>">
+                                                                        <h2 class="accordion-header"
+                                                                            id="heading-panico-<?= $turnoId ?>">
+
+                                                                            <button class="accordion-button collapsed"
+                                                                                type="button"
+                                                                                style="color:black;"
+                                                                                data-bs-toggle="collapse"
+                                                                                data-bs-target="#collapse-panico-<?= $turnoId ?>"
+                                                                                aria-expanded="false"
+                                                                                aria-controls="collapse-panico-<?= $turnoId ?>">
+
                                                                                 <i class="bi bi-exclamation-triangle-fill me-2 text-danger"></i>
+
                                                                                 Pânico
-                                                                                <span class="badge bg-secondary ms-2"><?= count($listaPanicos) ?></span>
+
+                                                                                <span class="badge bg-secondary ms-2">
+                                                                                    <?= count($listaPanicos) ?>
+                                                                                </span>
                                                                             </button>
                                                                         </h2>
-                                                                        <div id="collapse-panico-<?= $turnoId ?>" class="accordion-collapse collapse"
-                                                                             data-bs-parent="#accordion-cat-<?= $turnoId ?>">
+
+                                                                        <div id="collapse-panico-<?= $turnoId ?>"
+                                                                            class="accordion-collapse collapse"
+                                                                            data-bs-parent="#accordion-cat-<?= $turnoId ?>">
+
                                                                             <div class="accordion-body">
+
                                                                                 <?php if (empty($listaPanicos)): ?>
-                                                                                    <p class="text-muted mb-0">Nenhum acionamento de pânico neste turno.</p>
+
+                                                                                    <p class="text-muted mb-0">
+                                                                                        Nenhum acionamento de pânico neste turno.
+                                                                                    </p>
+
                                                                                 <?php else: ?>
+
                                                                                     <ul class="list-group">
-                                                                                        <?php foreach ($listaPanicos as $panico): ?>
+
+                                                                                        <?php foreach (
+                                                                                            $listaPanicos
+                                                                                            as $panico
+                                                                                        ): ?>
+
                                                                                             <li class="list-group-item">
+
                                                                                                 <div class="d-flex justify-content-between align-items-start">
                                                                                                     <span>
                                                                                                         <i class="bi bi-geo-alt-fill text-danger"></i>
                                                                                                         Acionamento de pânico
                                                                                                     </span>
+
                                                                                                     <small class="text-muted ms-2">
                                                                                                         <?= !empty($panico->created_at)
-                                                                                                            ? htmlspecialchars((new DateTime($panico->created_at))->modify('-3 hours')->format('d/m/Y H:i'))
+                                                                                                            ? htmlspecialchars(
+                                                                                                                (
+                                                                                                                    new DateTime(
+                                                                                                                        $panico->created_at
+                                                                                                                    )
+                                                                                                                )
+                                                                                                                    ->modify('-3 hours')
+                                                                                                                    ->format('d/m/Y H:i')
+                                                                                                            )
                                                                                                             : '' ?>
                                                                                                     </small>
                                                                                                 </div>
-                                                                                                <?php if (!empty($panico->localizacao) && $panico->localizacao !== 'Localização não informada'): 
 
-                                                                                                    [$latitude, $longitude] = explode(',' , $panico->localizacao)
-                                                                                                    ?>
+                                                                                                <?php
+                                                                                                if (
+                                                                                                    !empty($panico->localizacao) &&
+                                                                                                    $panico->localizacao !==
+                                                                                                        'Localização não informada'
+                                                                                                ):
+                                                                                                    [$latitude, $longitude] =
+                                                                                                        explode(
+                                                                                                            ',',
+                                                                                                            $panico->localizacao
+                                                                                                        );
+                                                                                                ?>
 
-                                                                                                    
                                                                                                     <a class="small"
-                                                                                                       href="https://maps.google.com/?q=<?= urlencode($latitude . ',' . $longitude) ?>"
-                                                                                                       target="_blank" rel="noopener">
+                                                                                                        href="https://maps.google.com/?q=<?= urlencode(
+                                                                                                            $latitude . ',' . $longitude
+                                                                                                        ) ?>"
+                                                                                                        target="_blank"
+                                                                                                        rel="noopener">
                                                                                                         Ver localização no mapa
                                                                                                     </a>
+
                                                                                                 <?php else: ?>
-                                                                                                    <p class="small text-muted mb-0">Localização não informada.</p>
+
+                                                                                                    <p class="small text-muted mb-0">
+                                                                                                        Localização não informada.
+                                                                                                    </p>
+
                                                                                                 <?php endif; ?>
+
                                                                                             </li>
+
                                                                                         <?php endforeach; ?>
+
                                                                                     </ul>
+
                                                                                 <?php endif; ?>
+
                                                                             </div>
                                                                         </div>
                                                                     </div>
- 
-                                                                    <!-- ── Rondas ──────────────────────────────────── -->
+
+                                                                    <!-- Rondas -->
                                                                     <div class="accordion-item">
-                                                                        <h2 class="accordion-header" id="heading-ronda-<?= $turnoId ?>">
-                                                                            <button class="accordion-button collapsed" type="button"
-                                                                            style="color:black;"
-                                                                                    data-bs-toggle="collapse" data-bs-target="#collapse-ronda-<?= $turnoId ?>"
-                                                                                    aria-expanded="false" aria-controls="collapse-ronda-<?= $turnoId ?>">
+                                                                        <h2 class="accordion-header"
+                                                                            id="heading-ronda-<?= $turnoId ?>">
+
+                                                                            <button class="accordion-button collapsed"
+                                                                                type="button"
+                                                                                style="color:black;"
+                                                                                data-bs-toggle="collapse"
+                                                                                data-bs-target="#collapse-ronda-<?= $turnoId ?>"
+                                                                                aria-expanded="false"
+                                                                                aria-controls="collapse-ronda-<?= $turnoId ?>">
+
                                                                                 <i class="bi bi-shield-check me-2 text-primary"></i>
+
                                                                                 Ronda
-                                                                                <span class="badge bg-secondary ms-2"><?= count($listaRondas) ?></span>
+
+                                                                                <span class="badge bg-secondary ms-2">
+                                                                                    <?= count($listaRondas) ?>
+                                                                                </span>
                                                                             </button>
                                                                         </h2>
-                                                                        <div id="collapse-ronda-<?= $turnoId ?>" class="accordion-collapse collapse"
-                                                                             data-bs-parent="#accordion-cat-<?= $turnoId ?>">
+
+                                                                        <div id="collapse-ronda-<?= $turnoId ?>"
+                                                                            class="accordion-collapse collapse"
+                                                                            data-bs-parent="#accordion-cat-<?= $turnoId ?>">
+
                                                                             <div class="accordion-body">
- 
+
                                                                                 <?php if (empty($listaRondas)): ?>
- 
-                                                                                    <p class="text-muted mb-0">Nenhuma ronda registrada neste turno.</p>
- 
+
+                                                                                    <p class="text-muted mb-0">
+                                                                                        Nenhuma ronda registrada neste turno.
+                                                                                    </p>
+
                                                                                 <?php else: ?>
+
                                                                                     <table class="table table-striped table-bordered">
                                                                                         <thead>
-                                                                                            <th>Descrição</th>
-                                                                                            <th>Horário</th>
+                                                                                            <tr>
+                                                                                                <th>Descrição</th>
+                                                                                                <th>Horário</th>
+                                                                                            </tr>
                                                                                         </thead>
+
                                                                                         <tbody>
-                                                                                            <?php foreach ($listaRondas as $ronda): ?>
+
+                                                                                            <?php foreach (
+                                                                                                $listaRondas
+                                                                                                as $ronda
+                                                                                            ): ?>
+
                                                                                                 <tr>
-                                                                                                    <td><?= htmlspecialchars($ronda->descricao ?? 'Ronda') ?></td>
-                                                                                                    <td><?= !empty($ronda->hora)
-                                                                                                        ? htmlspecialchars(date('d/m/Y H:i', strtotime($ronda->hora)))
-                                                                                                        : htmlspecialchars($ronda->created_at ?? '') ?></td>
+                                                                                                    <td>
+                                                                                                        <?= htmlspecialchars(
+                                                                                                            $ronda->descricao ??
+                                                                                                            'Ronda'
+                                                                                                        ) ?>
+                                                                                                    </td>
+
+                                                                                                    <td>
+                                                                                                        <?= !empty($ronda->hora)
+                                                                                                            ? htmlspecialchars(
+                                                                                                                date(
+                                                                                                                    'd/m/Y H:i',
+                                                                                                                    strtotime(
+                                                                                                                        $ronda->hora
+                                                                                                                    )
+                                                                                                                )
+                                                                                                            )
+                                                                                                            : htmlspecialchars(
+                                                                                                                $ronda->created_at ?? ''
+                                                                                                            ) ?>
+                                                                                                    </td>
                                                                                                 </tr>
+
                                                                                             <?php endforeach; ?>
+
                                                                                         </tbody>
                                                                                     </table>
+
                                                                                 <?php endif; ?>
- 
+
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                    <!-- ── /Rondas ─────────────────────────────────── -->
- 
-                                                                </div><!-- /accordion-cat -->
- 
+
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
+
                                                 <?php endforeach; ?>
+
                                             </div>
- 
+
                                         <?php endif; ?>
- 
+
                                     </div>
                                 </div>
                             </div>
+
                         <?php endforeach; ?>
+
                     </div>
- 
+
                 <?php endif; ?>
- 
-            </div><!-- /.card-body -->
-        </div><!-- /.card -->
+
+            </div>
+        </div>
     </div>
-    </div>
+</div>
+
 </body>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -597,71 +1247,61 @@ foreach($segurancas as $i => $seguranca) {
 document.addEventListener('DOMContentLoaded', function() {
     var userBtn = document.getElementById('userBtn');
     var userMenu = document.getElementById('userMenu');
+
     if (userBtn && userMenu) {
         userBtn.onclick = function(e) {
             e.stopPropagation();
+
             if (userMenu.style.display === 'block') {
                 userMenu.style.display = 'none';
             } else {
                 userMenu.style.display = 'block';
             }
         };
+
         document.addEventListener('click', function(e) {
             if (userMenu.style.display === 'block') {
                 userMenu.style.display = 'none';
             }
         });
+
         userMenu.onclick = function(e) {
             e.stopPropagation();
         };
     }
 });
 
-
-
-//     function checar() {
-//         var nome = document.querySelector('.input-nome input').value;
-//         var email = document.querySelector('.input-email input').value;
-//         let consultar = document.querySelector('input[name="consultar"]');
-//         let processar = document.querySelector('input[name="processar"]');
-        
-
-
-
-// if (nome !== '' && email !== '' && (consultar.checked || processar.checked)) {
-//   document.querySelector('button[name="acao"]').disabled = false;
-// } else {
-//   document.querySelector('button[name="acao"]').disabled = true;
-// }
 const consultar = document.querySelector('input[name="consultar"]');
-
 const processar = document.querySelector('input[name="processar"]');
 
 if (!consultar.checked) {
-            processar.checked = false;
-        }
+    processar.checked = false;
+}
 
-        if (processar.checked) {
-            consultar.checked = true;
-        }
+if (processar.checked) {
+    consultar.checked = true;
+}
 
-    // }
 <?php if (isset($get_acao) && $get_acao == 'adicionar') { ?>
-        window.addEventListener('DOMContentLoaded', function () {
-            var modalEl = document.getElementById('modal_usuario');
-            var Modal = new bootstrap.Modal(modalEl);
-            Modal.show();
-            modalEl.addEventListener('hidden.bs.modal', function () {
-                window.location.href = 'index.php';
-            });
-        });
-<?php } if(isset($erro) && $erro == 'usado') { ?>
-                alert('Não é possível adicionar esse usuario, pois já existe um usuario ou gestor com esse e-mail');
-                window.location.href = 'index.php';
+window.addEventListener('DOMContentLoaded', function() {
+    var modalEl = document.getElementById('modal_usuario');
+    var Modal = new bootstrap.Modal(modalEl);
+
+    Modal.show();
+
+    modalEl.addEventListener('hidden.bs.modal', function() {
+        window.location.href = 'index.php';
+    });
+});
+<?php }
+
+if (isset($erro) && $erro == 'usado') { ?>
+alert(
+    'Não é possível adicionar esse usuario, pois já existe um usuario ou gestor com esse e-mail'
+);
+
+window.location.href = 'index.php';
 <?php } ?>
-
 </script>
-
-
 
 </html>
