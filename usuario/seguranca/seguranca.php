@@ -239,14 +239,14 @@ foreach ($segurancas as $i => $seguranca) {
 }
 
 /*
- * Monta a lista única de turnos atrasados (início ou fim) de todos os
- * seguranças, exibida no accordion "Atrasados".
+ * Monta a lista única de turnos atrasados (início ou fim), exibida no
+ * accordion "Atrasados". O controle é da empresa, então o mesmo atraso
+ * (tipo + horário esperado + tolerância) aparece uma única vez, mesmo
+ * que vários seguranças o tenham pendente.
  */
 $atrasados = [];
 
 foreach ($segurancas as $seguranca) {
-    $nomeSeguranca = $seguranca->nome ?? 'Segurança #' . $seguranca->id;
-
     foreach ($controlesPendentes[$seguranca->id] ?? [] as $controlePendente) {
         $tipo = strtolower(trim((string) $controlePendente->tipo));
         $esperadaTs = strtotime((string) $controlePendente->hora_esperada);
@@ -256,21 +256,27 @@ foreach ($segurancas as $seguranca) {
         }
 
         $tolerancia = max(0, (int) $controlePendente->tolerancia);
+        $chave = $tipo . '|' . $esperadaTs . '|' . $tolerancia;
 
-        $atrasados[] = [
-            'seguranca' => $nomeSeguranca,
-            'titulo'    => $tipo === 'inicio'
+        if (isset($atrasados[$chave])) {
+            continue;
+        }
+
+        $atrasados[$chave] = [
+            'titulo'   => $tipo === 'inicio'
                 ? 'Turno não iniciado'
                 : 'Turno não finalizado',
-            'icone'     => $tipo === 'inicio'
+            'icone'    => $tipo === 'inicio'
                 ? 'bi-play-circle-fill'
                 : 'bi-stop-circle-fill',
-            'esperada'  => date('d/m/Y H:i:s', $esperadaTs),
-            'limite'    => date('H:i:s', $esperadaTs + ($tolerancia * 60)),
-            'ordem'     => $esperadaTs,
+            'esperada' => date('d/m/Y H:i:s', $esperadaTs),
+            'limite'   => date('H:i:s', $esperadaTs + ($tolerancia * 60)),
+            'ordem'    => $esperadaTs,
         ];
     }
 }
+
+$atrasados = array_values($atrasados);
 
 usort(
     $atrasados,
@@ -452,8 +458,7 @@ $qtdAtrasados = count($atrasados);
                                                     <i class="bi <?= $atrasado['icone'] ?> me-2"></i>
 
                                                     <strong>
-                                                        <?= htmlspecialchars($atrasado['seguranca']) ?>
-                                                        — <?= htmlspecialchars($atrasado['titulo']) ?>
+                                                        <?= htmlspecialchars($atrasado['titulo']) ?>
                                                     </strong>
                                                 </div>
 
