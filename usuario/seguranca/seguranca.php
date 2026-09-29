@@ -95,6 +95,17 @@ $pontoDentroDoPrazo = static function ($ponto, array $controles): bool {
     return false;
 };
 
+/*
+ * O banco grava o tipo como "inicio" / "termino" (sem acento). Normaliza
+ * para aceitar também "término" e variações de caixa/espaço.
+ */
+$normalizarTipo = static function ($tipo): string {
+    return strtr(
+        mb_strtolower(trim((string) $tipo), 'UTF-8'),
+        ['é' => 'e', 'ê' => 'e']
+    );
+};
+
 foreach ($segurancas as $i => $seguranca) {
     $controlesPendentes[$seguranca->id] = Controle02::read(
         id_empresa: $empresa_usuario_obj->id,
@@ -118,11 +129,11 @@ foreach ($segurancas as $i => $seguranca) {
 
     $controlesPendentes[$seguranca->id] = array_filter(
         $controlesPendentes[$seguranca->id],
-        static function ($controle) use ($agoraLocal) {
+        static function ($controle) use ($agoraLocal, $normalizarTipo) {
             if (
                 !in_array(
-                    strtolower(trim((string) $controle->tipo)),
-                    ['inicio', 'término'],
+                    $normalizarTipo($controle->tipo),
+                    ['inicio', 'termino'],
                     true
                 ) ||
                 $controle->hora_respondida !== null ||
@@ -166,9 +177,7 @@ foreach ($segurancas as $i => $seguranca) {
                 continue;
             }
 
-            $tipoPendente = strtolower(
-                trim((string) $controlePendente->tipo)
-            );
+            $tipoPendente = $normalizarTipo($controlePendente->tipo);
 
             $horaTurno = $tipoPendente === 'inicio'
                 ? ($turnoExistente->started_at ?? null)
@@ -248,7 +257,7 @@ $atrasados = [];
 
 foreach ($segurancas as $seguranca) {
     foreach ($controlesPendentes[$seguranca->id] ?? [] as $controlePendente) {
-        $tipo = strtolower(trim((string) $controlePendente->tipo));
+        $tipo = $normalizarTipo($controlePendente->tipo);
         $esperadaTs = strtotime((string) $controlePendente->hora_esperada);
 
         if ($esperadaTs === false) {
