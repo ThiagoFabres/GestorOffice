@@ -38,6 +38,8 @@ Class Controle {
             $query .= ' WHERE ' . implode(' AND ', $conditions);
         }
 
+        $query .= ' ORDER BY hora ASC';
+
         $stmt = $pdo->prepare($query);
 
         if ($id != null) $stmt->bindValue(':id', $id);
