@@ -34,7 +34,8 @@ class Controle02
         $id_usuario = null,
         $tipo = null,
         $hora_inicio = null,
-        $hora_fim = null
+        $hora_fim = null,
+        $read_painel = null,
     ) {
         $pdo = (new Database())->connect();
 
@@ -63,12 +64,21 @@ class Controle02
         }
 
         if ($hora_inicio !== null) {
-            $conditions[] = 'COALESCE(hora_esperada, hora_respondida) >= :hora_inicio';
+            if($read_painel == null) {
+                $conditions[] = 'COALESCE(hora_esperada, hora_respondida) >= :hora_inicio';
+            } else if($read_painel) {
+                $conditions[] = 'hora_esperada >= :hora_inicio';
+            }
+            
             $parameters[':hora_inicio'] = self::normalizarLimite((string) $hora_inicio);
         }
 
         if ($hora_fim !== null) {
-            $conditions[] = 'COALESCE(hora_esperada, hora_respondida) <= :hora_fim';
+            if($read_painel == null) {
+                $conditions[] = 'COALESCE(hora_esperada, hora_respondida) <= :hora_fim';
+            } else if($read_painel) {
+                $conditions[] = 'hora_esperada >= :hora_fim';
+            }
             $parameters[':hora_fim'] = self::normalizarLimite((string) $hora_fim);
         }
 

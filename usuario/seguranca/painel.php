@@ -159,7 +159,8 @@ try {
             $idColaborador > 0 ? $idColaborador : null,
             $tipo !== '' ? $tipo : null,
             $dataIni . ' 00:00:00',
-            $dataFim . ' 23:59:59'
+            $dataFim . ' 23:59:59',
+            read_painel: true,
         );
 
         foreach ($itens as $c) {
@@ -375,7 +376,7 @@ $baseQuery = [
                         ?>
                             <tr class="parcela_cor_vermelha">
                                 <td class="parcela_cor_vermelha"><?= $esperada->format('d/m/Y') ?></td>
-                                <td class="parcela_cor_vermelha"><?= $esperada->modify('-3 hours')->format('H:i') ?></td>
+                                <td class="parcela_cor_vermelha"><?= $esperada->modify('+3 hours')->format('H:i') ?></td>
                                 <td class="parcela_cor_vermelha"><?= h($r['empresa']) ?></td>
                                 <td class="parcela_cor_vermelha"><?= h(rotuloTipo((string) $r['tipo'])) ?></td>
                             </tr>
