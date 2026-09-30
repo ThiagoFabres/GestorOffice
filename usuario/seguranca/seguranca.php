@@ -440,7 +440,7 @@ $qtdAtrasados = count($atrasados);
                                     aria-controls="collapse-atrasados">
 
                                     <i class="bi bi-exclamation-octagon-fill me-2 text-danger"></i>
-                                    Atrasados
+                                    Não Executados
 
                                     <span class="badge <?= $qtdAtrasados > 0 ? 'bg-danger' : 'bg-secondary' ?> ms-2">
                                         <?= $qtdAtrasados ?>
