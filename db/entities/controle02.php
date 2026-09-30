@@ -77,7 +77,7 @@ class Controle02
             if($read_painel == null) {
                 $conditions[] = 'COALESCE(hora_esperada, hora_respondida) <= :hora_fim';
             } else if($read_painel) {
-                $conditions[] = 'hora_esperada >= :hora_fim';
+                $conditions[] = 'hora_esperada <= :hora_fim';
             }
             $parameters[':hora_fim'] = self::normalizarLimite((string) $hora_fim);
         }
