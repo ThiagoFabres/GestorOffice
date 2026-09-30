@@ -52,7 +52,7 @@ if ($acao === 'adicionar' || $acao === 'editar') {
 
 	if ($acao === 'editar') {
 		$controle = null;
-		foreach (Controle::read($empresaId) as $item) {
+		foreach (Controle::read(id_empresa:$empresaId) as $item) {
 			if ((int) $item->id === (int) $id) {
 				$controle = $item;
 				break;
@@ -72,6 +72,6 @@ if ($acao === 'adicionar' || $acao === 'editar') {
 		Controle::create(new Controle(null, $empresaId, $hora, $tolerancia, $tipo));
 	}
 }
-
+ 
 header('Location: controle.php');
 exit;

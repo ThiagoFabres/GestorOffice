@@ -1,7 +1,10 @@
 <?php
 // Identifica se o objeto em edição é um Turno02 (atividade) ou Controle
 $isAtividade = false;
-
+$controleEdicaoTipo = null;
+if(isset($controleEdicao)) {
+    $controleEdicaoTipo = $controleEdicao->tipo;
+}
 if ($controleEdicao !== null) {
     // Se possuir a propriedade hora_inicio ou hora_final preenchida, é uma Atividade/Turno
     $isAtividade = isset($controleEdicao->hora_inicio) || isset($controleEdicao->hora_final);
@@ -40,15 +43,15 @@ if ($controleEdicao !== null) {
                     <div class="custom-radio-group my-3">
                         <div class="custom-radio-item">
                             <label for="opcao_controle">Controle</label>
-                            <input type="radio" id="opcao_controle" name="opcao_filtro" value="controle" <?= !$isAtividade ? 'checked' : '' ?>>
+                            <input type="radio" id="opcao_controle" name="opcao_filtro" value="controle" <?= $controleEdicaoTipo == 'controle' ? 'checked' : '' ?>>
                         </div>
                         <div class="custom-radio-item">
                             <label for="opcao_atividade">Início</label>
-                            <input type="radio" id="opcao_atividade" name="opcao_filtro" value="inicio" <?= $isAtividade ? 'checked' : '' ?>>
+                            <input type="radio" id="opcao_atividade" name="opcao_filtro" value="inicio" <?= $controleEdicaoTipo == 'inicio' ? 'checked' : '' ?>>
                         </div>
                         <div class="custom-radio-item">
                             <label for="opcao_atividade">Término</label>
-                            <input type="radio" id="opcao_atividade" name="opcao_filtro" value="termino" <?= $isAtividade ? 'checked' : '' ?>>
+                            <input type="radio" id="opcao_atividade" name="opcao_filtro" value="termino" <?= $controleEdicaoTipo == 'termino' ? 'checked' : '' ?>>
                         </div>
                     </div>
 
