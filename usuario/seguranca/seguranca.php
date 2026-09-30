@@ -46,7 +46,6 @@ $rondas = [];
 $pontos = [];
 $ocorrencias = [];
 $controlesTurno = [];
-$controlesPendentes = [];
 
 $controles = Controle::read($empresa_usuario_obj->id);
 
@@ -107,102 +106,11 @@ $normalizarTipo = static function ($tipo): string {
 };
 
 foreach ($segurancas as $i => $seguranca) {
-    $controlesPendentes[$seguranca->id] = Controle02::read(
-        id_empresa: $empresa_usuario_obj->id,
-        id_usuario: $seguranca->id
-    );
-
     $turnos[$seguranca->id] = Turno::read(
         id_usuario: $seguranca->id,
         filtro_hora_inicio: $filtro_hora_inicio,
         filtro_hora_final: $filtro_hora_final
     );
-
-    /*
-     * Mantém somente controles "inicio"/"término" que ainda não foram
-     * respondidos e cuja tolerância já terminou.
-     */
-    $agoraLocal = new DateTime(
-        'now',
-        new DateTimeZone('America/Sao_Paulo')
-    );
-
-    $controlesPendentes[$seguranca->id] = array_filter(
-        $controlesPendentes[$seguranca->id],
-        static function ($controle) use ($agoraLocal, $normalizarTipo) {
-            if (
-                !in_array(
-                    $normalizarTipo($controle->tipo),
-                    ['inicio', 'termino'],
-                    true
-                ) ||
-                $controle->hora_respondida !== null ||
-                empty($controle->hora_esperada)
-            ) {
-                return false;
-            }
-
-            try {
-                $limite = new DateTime((string) $controle->hora_esperada);
-                $limite->modify(
-                    '+' . max(0, (int) $controle->tolerancia) . ' minutes'
-                );
-
-                return $limite <= $agoraLocal;
-            } catch (Throwable $e) {
-                return false;
-            }
-        }
-    );
-
-    /*
-     * Se o controle já corresponde a um turno existente, ele continua
-     * aparecendo dentro do accordion desse turno e não é duplicado na
-     * lista de atrasados.
-     */
-    foreach ($turnos[$seguranca->id] as $turnoExistente) {
-        foreach (
-            $controlesPendentes[$seguranca->id]
-            as $indiceControle => $controlePendente
-        ) {
-            if (empty($controlePendente->hora_esperada)) {
-                continue;
-            }
-
-            $esperadoTs = strtotime(
-                (string) $controlePendente->hora_esperada
-            );
-
-            if ($esperadoTs === false) {
-                continue;
-            }
-
-            $tipoPendente = $normalizarTipo($controlePendente->tipo);
-
-            $horaTurno = $tipoPendente === 'inicio'
-                ? ($turnoExistente->started_at ?? null)
-                : ($turnoExistente->ended_at ?? null);
-
-            if (empty($horaTurno)) {
-                continue;
-            }
-
-            $horaTurnoTs = strtotime(
-                (new DateTime((string) $horaTurno))
-                    ->modify('-3 hours')
-                    ->format('Y-m-d H:i:s')
-            );
-
-            if (
-                $horaTurnoTs !== false &&
-                abs($horaTurnoTs - $esperadoTs) <= (15 * 60)
-            ) {
-                unset(
-                    $controlesPendentes[$seguranca->id][$indiceControle]
-                );
-            }
-        }
-    }
 
     foreach ($turnos[$seguranca->id] as $turno) {
         $inicioTurno = $turno->started_at;
@@ -248,41 +156,119 @@ foreach ($segurancas as $i => $seguranca) {
 }
 
 /*
+ * "Não Executados": início/término são cobrados por EMPRESA. O cron grava o
+ * controle02 no nome de um usuário de referência (o vigia do último turno ou,
+ * se a empresa nunca teve turno, o usuário ativo mais recente), que pode não
+ * ser um dos seguranças listados. Por isso a leitura é feita pela empresa,
+ * e não segurança por segurança.
+ *
+ * Mantém somente controles "inicio"/"término" que ainda não foram
+ * respondidos e cuja tolerância já terminou (hora_esperada é horário local).
+ */
+$fusoLocal = new DateTimeZone('America/Sao_Paulo');
+$agoraLocal = new DateTime('now', $fusoLocal);
+
+$controlesPendentes = array_filter(
+    Controle02::read(id_empresa: $empresa_usuario_obj->id),
+    static function ($controle) use ($agoraLocal, $fusoLocal, $normalizarTipo) {
+        if (
+            !in_array(
+                $normalizarTipo($controle->tipo),
+                ['inicio', 'termino'],
+                true
+            ) ||
+            $controle->hora_respondida !== null ||
+            empty($controle->hora_esperada)
+        ) {
+            return false;
+        }
+
+        try {
+            $limite = new DateTime((string) $controle->hora_esperada, $fusoLocal);
+            $limite->modify(
+                '+' . max(0, (int) $controle->tolerancia) . ' minutes'
+            );
+
+            return $limite <= $agoraLocal;
+        } catch (Throwable $e) {
+            return false;
+        }
+    }
+);
+
+/*
+ * Se o controle já corresponde a um turno existente de qualquer segurança da
+ * empresa, ele continua aparecendo dentro do accordion desse turno e não é
+ * duplicado na lista de não executados.
+ */
+foreach ($turnos as $turnosDoSeguranca) {
+    foreach ($turnosDoSeguranca as $turnoExistente) {
+        foreach ($controlesPendentes as $indiceControle => $controlePendente) {
+            $esperadoTs = strtotime((string) $controlePendente->hora_esperada);
+
+            if ($esperadoTs === false) {
+                continue;
+            }
+
+            $tipoPendente = $normalizarTipo($controlePendente->tipo);
+
+            $horaTurno = $tipoPendente === 'inicio'
+                ? ($turnoExistente->started_at ?? null)
+                : ($turnoExistente->ended_at ?? null);
+
+            if (empty($horaTurno)) {
+                continue;
+            }
+
+            $horaTurnoTs = strtotime(
+                (new DateTime((string) $horaTurno))
+                    ->modify('-3 hours')
+                    ->format('Y-m-d H:i:s')
+            );
+
+            if (
+                $horaTurnoTs !== false &&
+                abs($horaTurnoTs - $esperadoTs) <= (15 * 60)
+            ) {
+                unset($controlesPendentes[$indiceControle]);
+            }
+        }
+    }
+}
+
+/*
  * Monta a lista única de turnos atrasados (início ou fim), exibida no
- * accordion "Atrasados". O controle é da empresa, então o mesmo atraso
- * (tipo + horário esperado + tolerância) aparece uma única vez, mesmo
- * que vários seguranças o tenham pendente.
+ * accordion "Não Executados". O mesmo atraso (tipo + horário esperado +
+ * tolerância) aparece uma única vez.
  */
 $atrasados = [];
 
-foreach ($segurancas as $seguranca) {
-    foreach ($controlesPendentes[$seguranca->id] ?? [] as $controlePendente) {
-        $tipo = $normalizarTipo($controlePendente->tipo);
-        $esperadaTs = strtotime((string) $controlePendente->hora_esperada);
+foreach ($controlesPendentes as $controlePendente) {
+    $tipo = $normalizarTipo($controlePendente->tipo);
+    $esperadaTs = strtotime((string) $controlePendente->hora_esperada);
 
-        if ($esperadaTs === false) {
-            continue;
-        }
-
-        $tolerancia = max(0, (int) $controlePendente->tolerancia);
-        $chave = $tipo . '|' . $esperadaTs . '|' . $tolerancia;
-
-        if (isset($atrasados[$chave])) {
-            continue;
-        }
-
-        $atrasados[$chave] = [
-            'titulo'   => $tipo === 'inicio'
-                ? 'Turno não iniciado'
-                : 'Turno não finalizado',
-            'icone'    => $tipo === 'inicio'
-                ? 'bi-play-circle-fill'
-                : 'bi-stop-circle-fill',
-            'esperada' => date('d/m/Y H:i:s', $esperadaTs),
-            'limite'   => date('H:i:s', $esperadaTs + ($tolerancia * 60)),
-            'ordem'    => $esperadaTs,
-        ];
+    if ($esperadaTs === false) {
+        continue;
     }
+
+    $tolerancia = max(0, (int) $controlePendente->tolerancia);
+    $chave = $tipo . '|' . $esperadaTs . '|' . $tolerancia;
+
+    if (isset($atrasados[$chave])) {
+        continue;
+    }
+
+    $atrasados[$chave] = [
+        'titulo'   => $tipo === 'inicio'
+            ? 'Turno não iniciado'
+            : 'Turno não finalizado',
+        'icone'    => $tipo === 'inicio'
+            ? 'bi-play-circle-fill'
+            : 'bi-stop-circle-fill',
+        'esperada' => date('d/m/Y H:i:s', $esperadaTs),
+        'limite'   => date('H:i:s', $esperadaTs + ($tolerancia * 60)),
+        'ordem'    => $esperadaTs,
+    ];
 }
 
 $atrasados = array_values($atrasados);
@@ -294,7 +280,6 @@ usort(
 
 $qtdAtrasados = count($atrasados);
 ?>
-
 <!DOCTYPE html>
 <head>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.3/html2pdf.bundle.min.js"
