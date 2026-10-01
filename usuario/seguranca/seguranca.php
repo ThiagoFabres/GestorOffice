@@ -169,9 +169,48 @@ $fusoLocal = new DateTimeZone('America/Sao_Paulo');
 $agoraLocal = new DateTime('now', $fusoLocal);
 
 
+/*
+ * Filtro de data dos Controle02 atrasados.
+ *
+ * O filtro da tela trabalha com datas locais:
+ * Data Inicial -> 00:00:00
+ * Data Final   -> 23:59:59
+ */
+$inicioControleFiltro = !empty($filtro_hora_inicio)
+    ? $filtro_hora_inicio . ' 00:00:00'
+    : null;
+
+$fimControleFiltro = !empty($filtro_hora_final)
+    ? $filtro_hora_final . ' 23:59:59'
+    : null;
+
+/*
+ * Busca os Controle02 da empresa respeitando o período informado.
+ * Não utiliza $inicioTurno/$fimTurno, pois essas variáveis pertencem
+ * ao processamento individual dos turnos.
+ */
+$controlesPendentes = Controle02::read(
+    id_empresa: $empresa_usuario_obj->id,
+    hora_inicio: $inicioControleFiltro,
+    hora_fim: $fimControleFiltro
+);
+
+/*
+ * Mantém somente:
+ * - início ou término;
+ * - ainda não respondido;
+ * - tolerância já encerrada;
+ * - dentro do período selecionado.
+ */
 $controlesPendentes = array_filter(
-    Controle02::read(id_empresa: $empresa_usuario_obj->id, hora_inicio:$inicioTurno ?? null, hora_fim:$fimTurno ?? null),
-    static function ($controle) use ($agoraLocal, $fusoLocal, $normalizarTipo) {
+    $controlesPendentes,
+    static function ($controle) use (
+        $agoraLocal,
+        $fusoLocal,
+        $normalizarTipo,
+        $filtro_hora_inicio,
+        $filtro_hora_final
+    ) {
         if (
             !in_array(
                 $normalizarTipo($controle->tipo),
@@ -185,14 +224,48 @@ $controlesPendentes = array_filter(
         }
 
         try {
-            $limite = new DateTime((string) $controle->hora_esperada, $fusoLocal);
+            $esperada = new DateTime(
+                (string) $controle->hora_esperada,
+                $fusoLocal
+            );
+
+            /*
+             * Garante o filtro mesmo que Controle02::read()
+             * não aplique corretamente o intervalo recebido.
+             */
+            if (!empty($filtro_hora_inicio)) {
+                $inicioFiltro = new DateTime(
+                    $filtro_hora_inicio . ' 00:00:00',
+                    $fusoLocal
+                );
+
+                if ($esperada < $inicioFiltro) {
+                    return false;
+                }
+            }
+
+            if (!empty($filtro_hora_final)) {
+                $fimFiltro = new DateTime(
+                    $filtro_hora_final . ' 23:59:59',
+                    $fusoLocal
+                );
+
+                if ($esperada > $fimFiltro) {
+                    return false;
+                }
+            }
+
+            /*
+             * Só considera atrasado depois do fim da tolerância.
+             */
+            $limite = clone $esperada;
+
             $limite->modify(
                 '+' . max(0, (int) $controle->tolerancia) . ' minutes'
             );
-            
-
 
             return $limite <= $agoraLocal;
+
         } catch (Throwable $e) {
             return false;
         }
