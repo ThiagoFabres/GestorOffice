@@ -168,8 +168,9 @@ foreach ($segurancas as $i => $seguranca) {
 $fusoLocal = new DateTimeZone('America/Sao_Paulo');
 $agoraLocal = new DateTime('now', $fusoLocal);
 
+
 $controlesPendentes = array_filter(
-    Controle02::read(id_empresa: $empresa_usuario_obj->id),
+    Controle02::read(id_empresa: $empresa_usuario_obj->id, hora_inicio:$inicioTurno ?? null, hora_fim:$fimTurno ?? null),
     static function ($controle) use ($agoraLocal, $fusoLocal, $normalizarTipo) {
         if (
             !in_array(
@@ -188,6 +189,8 @@ $controlesPendentes = array_filter(
             $limite->modify(
                 '+' . max(0, (int) $controle->tolerancia) . ' minutes'
             );
+            
+
 
             return $limite <= $agoraLocal;
         } catch (Throwable $e) {
@@ -553,103 +556,137 @@ $qtdAtrasados = count($atrasados);
                                                     $controlesUnificados = [];
                                                     $controlesVistos = [];
 
+                                                    $controle02Usados = [];
+ 
                                                     foreach ($listaPontos as $ponto) {
-                                                        $horaRespondida =
-                                                            $normalizarHorarioPonto(
-                                                                $ponto->hora ??
-                                                                $ponto->created_at
-                                                            );
-
-                                                        $controleRespondido = null;
-                                                        $horaPonto =
-                                                            strtotime((string) $horaRespondida);
-
+                                                        $horaRespondida = $normalizarHorarioPonto(
+                                                            $ponto->hora ?? $ponto->created_at
+                                                        );
+                                                    
+                                                        $horaPonto = strtotime((string) $horaRespondida);
+                                                    
+                                                        // 1) controle02 do mesmo evento
+                                                        $controle02Correspondente = null;
+                                                        $menorDiferenca = 61;
+                                                    
                                                         if ($horaPonto !== false) {
-                                                            $dataPonto =
-                                                                date('Y-m-d', $horaPonto);
-
-                                                            foreach ($controles as $controle) {
-                                                                $horaControle =
-                                                                    substr(
-                                                                        (string) $controle->hora,
-                                                                        0,
-                                                                        8
-                                                                    );
-
-                                                                $inicioControle =
-                                                                    strtotime(
-                                                                        $dataPonto .
-                                                                        ' ' .
-                                                                        $horaControle
-                                                                    );
-
-                                                                $fimJanelaControle =
-                                                                    $inicioControle +
-                                                                    (
-                                                                        max(
-                                                                            0,
-                                                                            (int) $controle->tolerancia
-                                                                        ) * 60
-                                                                    );
-
+                                                            foreach ($listaControles as $candidato) {
                                                                 if (
-                                                                    $inicioControle !== false &&
+                                                                    $candidato->hora_respondida === null ||
+                                                                    $normalizarTipo($candidato->tipo) !== 'controle' ||
+                                                                    isset($controle02Usados[$candidato->id])
+                                                                ) {
+                                                                    continue;
+                                                                }
+                                                    
+                                                                $respostaTs = strtotime((string) $candidato->hora_respondida);
+                                                    
+                                                                if ($respostaTs === false) {
+                                                                    continue;
+                                                                }
+                                                    
+                                                                $diferenca = abs($respostaTs - $horaPonto);
+                                                    
+                                                                if ($diferenca < $menorDiferenca) {
+                                                                    $menorDiferenca = $diferenca;
+                                                                    $controle02Correspondente = $candidato;
+                                                                }
+                                                            }
+                                                        }
+                                                    
+                                                        if ($controle02Correspondente !== null) {
+                                                            $controle02Usados[$controle02Correspondente->id] = true;
+                                                    
+                                                            $esperadaTs = !empty($controle02Correspondente->hora_esperada)
+                                                                ? strtotime((string) $controle02Correspondente->hora_esperada)
+                                                                : false;
+                                                    
+                                                            $respostaTs = strtotime(
+                                                                (string) $controle02Correspondente->hora_respondida
+                                                            );
+                                                    
+                                                            $limiteTs = $esperadaTs !== false
+                                                                ? $esperadaTs
+                                                                    + (max(0, (int) $controle02Correspondente->tolerancia) * 60)
+                                                                : false;
+                                                    
+                                                            $dentroDoPrazo =
+                                                                $esperadaTs !== false &&
+                                                                $respostaTs !== false &&
+                                                                $respostaTs >= $esperadaTs &&
+                                                                $respostaTs <= $limiteTs;
+                                                    
+                                                            $controlesUnificados[] = [
+                                                                'hora_esperada' => $esperadaTs !== false
+                                                                    ? $controle02Correspondente->hora_esperada
+                                                                    : null,
+                                                    
+                                                                'hora_limite' => $limiteTs !== false
+                                                                    ? date('Y-m-d H:i:s', $limiteTs)
+                                                                    : null,
+                                                    
+                                                                // Mesmo valor do controle02: o filtro de duplicados mais abaixo
+                                                                // compara exatamente este texto e descarta a linha repetida.
+                                                                'hora_respondida' => $controle02Correspondente->hora_respondida,
+                                                    
+                                                                'status' => $dentroDoPrazo ? 'Dentro do prazo' : 'Fora do prazo',
+                                                    
+                                                                'classe' => $dentroDoPrazo ? 'table-success' : 'table-danger',
+                                                    
+                                                                'ordem' => $respostaTs !== false ? $respostaTs : PHP_INT_MAX,
+                                                            ];
+                                                    
+                                                            continue;
+                                                        }
+                                                    
+                                                        // 2) Sem controle02 correspondente: usa a tabela de controles da empresa.
+                                                        $controleRespondido = null;
+                                                    
+                                                        if ($horaPonto !== false) {
+                                                            $dataPonto = date('Y-m-d', $horaPonto);
+                                                    
+                                                            foreach ($controles as $controle) {
+                                                                $horaControle = substr((string) $controle->hora, 0, 8);
+                                                    
+                                                                $inicioControle = strtotime($dataPonto . ' ' . $horaControle);
+                                                    
+                                                                if ($inicioControle === false) {
+                                                                    continue;
+                                                                }
+                                                    
+                                                                $fimJanelaControle = $inicioControle
+                                                                    + (max(0, (int) $controle->tolerancia) * 60);
+                                                    
+                                                                if (
                                                                     $horaPonto >= $inicioControle &&
                                                                     $horaPonto <= $fimJanelaControle
                                                                 ) {
-                                                                    $controleRespondido =
-                                                                        $controle;
+                                                                    $controleRespondido = $controle;
                                                                     break;
                                                                 }
                                                             }
                                                         }
-
+                                                    
+                                                        $dentroDoPrazo = $pontoDentroDoPrazo($ponto, $controles);
+                                                    
                                                         $controlesUnificados[] = [
-                                                            'hora_esperada' =>
-                                                                $controleRespondido?->hora,
-
-                                                            'hora_limite' =>
-                                                                $controleRespondido
-                                                                    ? date(
-                                                                        'H:i:s',
-                                                                        strtotime(
-                                                                            substr(
-                                                                                (string) $controleRespondido->hora,
-                                                                                0,
-                                                                                8
-                                                                            )
-                                                                        ) +
-                                                                        (
-                                                                            (int)
-                                                                            $controleRespondido->tolerancia
-                                                                            * 60
-                                                                        )
-                                                                    )
-                                                                    : null,
-
-                                                            'hora_respondida' =>
-                                                                $horaRespondida,
-
-                                                            'status' =>
-                                                                $pontoDentroDoPrazo(
-                                                                    $ponto,
-                                                                    $controles
+                                                            'hora_esperada' => $controleRespondido?->hora,
+                                                    
+                                                            'hora_limite' => $controleRespondido
+                                                                ? date(
+                                                                    'H:i:s',
+                                                                    strtotime(substr((string) $controleRespondido->hora, 0, 8))
+                                                                        + ((int) $controleRespondido->tolerancia * 60)
                                                                 )
-                                                                    ? 'Dentro do prazo'
-                                                                    : 'Fora do prazo',
-
-                                                            'classe' =>
-                                                                $pontoDentroDoPrazo(
-                                                                    $ponto,
-                                                                    $controles
-                                                                )
-                                                                    ? 'table-success'
-                                                                    : 'table-danger',
-
-                                                            'ordem' =>
-                                                                strtotime(
-                                                                    (string) $horaRespondida
-                                                                ) ?: PHP_INT_MAX,
+                                                                : null,
+                                                    
+                                                            'hora_respondida' => $horaRespondida,
+                                                    
+                                                            'status' => $dentroDoPrazo ? 'Dentro do prazo' : 'Fora do prazo',
+                                                    
+                                                            'classe' => $dentroDoPrazo ? 'table-success' : 'table-danger',
+                                                    
+                                                            'ordem' => strtotime((string) $horaRespondida) ?: PHP_INT_MAX,
                                                         ];
                                                     }
 
