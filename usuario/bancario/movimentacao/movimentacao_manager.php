@@ -21,6 +21,7 @@ require_once '../../../db/entities/banco02.php';
 require_once '../../../db/entities/banco01.php';
 require_once '../../../db/entities/pagar.php';
 require_once '../../../db/entities/recebimentos.php';
+require_once '../../../db/entities/cadastro.php';
 
 require_once 'buscar_documento.php';
 
@@ -772,93 +773,100 @@ if ($fileExt === 'ofx') {
     }
 } else if($acao == 'adicionar') {
 
+    // Dados vêm da sessão (gravados na ação 'processar'), não do formulário
+    $transacoes = $_SESSION['ofx_transactions']['transactions'] ?? [];
+    $conta = $_SESSION['ofx_transactions']['ofx_conta'] ?? null;
+    $descricao_comp = $_POST['descricao_comp'] ?? [];
 
+    if (empty($transacoes) || empty($conta)) {
+        header('Location: movimentacao.php?erro=sessao');
+        exit;
+    }
 
-    $tipo = $_POST['tipo'];
-    $data = $_POST['data'];
-    $valor = $_POST['valor'];
-    $descricao = $_POST['descricao'];
-    $descricao_comp = $_POST['descricao_comp'];
-    $tamanho = $_POST['total_linhas'] ?? count($_POST['valor']);
-    $conta = $_POST['conta'];
+    // Segurança: confirma que a conta pertence à empresa do usuário
+    $conta_obj = Ban01::read($conta)[0] ?? null;
+    if (!$conta_obj || $conta_obj->id_empresa != $_SESSION['usuario']->id_empresa) {
+        header('Location: movimentacao.php?erro=sessao');
+        exit;
+    }
+
+    $id_empresa = $_SESSION['usuario']->id_empresa;
     $imp_lista = [];
-    $dias_usados = [];
+    $imp_datas = [];
     $cadastrado = false;
     $documento = buscarDocumento();
     $sucesso = true;
-    
 
-        if(Ban02::read( id_empresa:$_SESSION['usuario']->id_empresa,documento:$documento)) {
-            $cadastrado = true;
+    if (Ban02::read(id_empresa: $id_empresa, documento: $documento)) {
+        $cadastrado = true;
+    }
+
+    if ($cadastrado === false) {
+
+        foreach ($transacoes as $i => $t) {
+
+            $valor = str_replace('.', '', $t['valor']);
+            $valor = str_replace(',', '.', $valor);
+
+            $data_obj = DateTime::createFromFormat('d/m/Y', $t['data']);
+            if (!$data_obj) {
+                continue;
+            }
+            $data_formatada = $data_obj->format('Y-m-d');
+
+            if (!Ban02Imp::read($id_empresa, $conta, $data_formatada)) {
+
+                $nova_movimentacao = new Ban02(
+                    null,
+                    $id_empresa,
+                    $conta,
+                    $data_formatada,
+                    $documento,
+                    null,
+                    null,
+                    $t['descricao'] ?? '',
+                    $descricao_comp[$i] ?? '',
+                    $valor,
+                    null,
+                    1
+                );
+
+                Ban02::create($nova_movimentacao);
+
+                // Um registro de importação por data
+                if (!isset($imp_datas[$data_formatada])) {
+                    $imp_datas[$data_formatada] = true;
+                    $imp_lista[] = new Ban02Imp($id_empresa, $conta, $data_formatada);
+                }
+
+            } else {
+                $_SESSION['dias_usados'][$i] = $data_formatada;
+            }
+
+            $documento++;
         }
 
-   if($cadastrado === false) {
-    for($i = 0; $i < $tamanho; $i++) {
-        $valor[$i] = str_replace('.', '', $valor[$i]);
-        $valor[$i] = str_replace(',', '.', $valor[$i]);
-        
-        $data_formatada = DateTime::createFromFormat('d/m/Y', $data[$i])->format('Y-m-d');
-        
-        if(!Ban02Imp::read($_SESSION['usuario']->id_empresa,$conta,$data_formatada)) {
-            $nova_movimentacao = new Ban02(
-            null,
-            $_SESSION['usuario']->id_empresa,
-            $conta,
-            (DateTime::createFromFormat('d/m/Y', $data[$i]))->format('Y-m-d'),
-            $documento,
-            null,
-            null,
-            $descricao[$i],
-            $descricao_comp[$i],
-            $valor[$i],
-            null,
-            1
-        );
-
-        
-        $novo_imp = new Ban02Imp (
-            $_SESSION['usuario']->id_empresa,
-            $conta,
-            $data_formatada
-        );
-
-        Ban02::create($nova_movimentacao);
-
-        if(!in_array($novo_imp, $imp_lista)) {
-            $imp_lista[] = $novo_imp;
+        foreach ($imp_lista as $imp) {
+            if (!Ban02Imp::create($imp)) {
+                $sucesso = false;
+            }
         }
 
+        // Evita reimportar o mesmo extrato ao reabrir o modal
+        unset($_SESSION['ofx_transactions']);
+
+        if ($sucesso) {
+            header('Location: movimentacao.php?sucesso=sucesso');
+            exit;
         } else {
-            $_SESSION['dias_usados'][$i] = $data_formatada;
+            header('Location: movimentacao.php?sucesso=sucesso2');
+            exit;
         }
-        $documento++;
-    }
 
-
-    if(!empty($imp_lista)) {
-        
-        
-        foreach($imp_lista as $imp) {
-        if(!Ban02Imp::create($imp)) {
-            $sucesso = false;
-        }
-    }
-    }
-    
-    if($sucesso) {
-        header('Location: movimentacao.php?sucesso=sucesso');
-        exit;
     } else {
-        header('Location: movimentacao.php?sucesso=sucesso2');
+        header('Location: movimentacao.php?sucesso=cadastrado2');
         exit;
     }
-    
-    
-        
-   } else {
-    header('Location: movimentacao.php?sucesso=cadastrado2');
-    exit;
-   }
 } else if($acao == 'conciliar') {
     $titulo = filter_input(INPUT_POST, 'titulo') ?? null;
     $subtitulo = filter_input(INPUT_POST, 'subtitulo') ?? null;
@@ -1373,6 +1381,35 @@ else if($acao == 'conciliar_todas'){
 
     
 }
+
+else if($acao == 'vincular') {
+    $id_post = filter_input(INPUT_POST, 'id');
+    $cadastro_id_post = filter_input(INPUT_POST, 'cadastro');
+    $caminho = filter_input(INPUT_POST, 'caminho');
+
+    $ban02_obj = Ban02::read(id: $id_post, id_empresa: $_SESSION['usuario']->id_empresa)[0];
+    $id = $ban02_obj->id ?? null;
+    $cadastro_obj = Cadastro::read(id: $cadastro_id_post, id_empresa: $_SESSION['usuario']->id_empresa)[0];
+    $cadastro_id = $cadastro_obj->id_cadastro;
+
+    if(Ban02::vincular($id, $cadastro_id)){
+        if(str_ends_with($caminho, '.php')) {
+            header('Location: '. $caminho . '?status=sucesso');
+            exit;
+        } else if(str_ends_with($caminho, '&')) {
+            header('Location: ' . $caminho . 'status=sucesso');
+            exit;
+        } else {
+            header('Location: ' . $caminho . '&status=sucesso');
+            exit;
+        }
+    } else {
+        header('Location: ' . $caminho . '&status=erro');
+        exit;
+    }
+}
+
+
 
 
 
