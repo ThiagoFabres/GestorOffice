@@ -73,12 +73,12 @@
                                         $tipo = $valor > 0 ? 'Crédito' : 'Débito';
                                         ?>
                                         <tr>
-                                            <td><input class="form-control" readonly name="tipo[<?=$id_linha?>]" value="<?= $tipo ?>"></input></td>
-                                            <td><input class="form-control" readonly name="data[<?=$id_linha?>]" value="<?= htmlspecialchars($linha['data'] ?? '') ?>"></input></td>
-                                            <td><input class="form-control" readonly name="valor[<?=$id_linha?>]" value="<?= htmlspecialchars($linha['valor'] ?? '') ?>"></input></td>
-                                            <td><input class="form-control" readonly name="documento[<?=$id_linha?>]" value="<?= htmlspecialchars($novo_documento ?? '')?>"></input></td>
-                                            <td><input class="form-control" readonly name="descricao[<?=$id_linha?>]" value="<?= htmlspecialchars($linha['descricao'] ?? '') ?>"></input></td>
-                                            <td><input class="form-control" name="descricao_comp[<?=$id_linha?>]" value=""></input></td>
+                                            <td><?= $tipo ?></td>
+                                            <td><?= htmlspecialchars($linha['data'] ?? '') ?></td>
+                                            <td><?= htmlspecialchars($linha['valor'] ?? '') ?></td>
+                                            <td><?= htmlspecialchars($novo_documento ?? '') ?></td>
+                                            <td><?= htmlspecialchars($linha['descricao'] ?? '') ?></td>
+                                            <td><input class="form-control" name="descricao_comp[<?=$id_linha?>]" value=""></td>
                                         </tr>
                                     
                                     <?php
