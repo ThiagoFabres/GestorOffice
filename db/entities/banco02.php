@@ -319,7 +319,7 @@ class Ban02 {
         $stmt = $pdo->prepare($sql);
         $stmt->bindValue(':id', $id);
         return $stmt->execute();
-}
+    }
 
     public static function deletebyban01($id) {
         $pdo = (new Database())->connect();
@@ -328,7 +328,18 @@ class Ban02 {
         $stmt->bindValue(':id', $id);
         
         return $stmt->execute();
-}
+    }
+
+    public static function vincular($id, $cadastro) {
+        if($id == null || $cadastro == null) return;
+        $pdo = (new Database())->connect();
+        $sql = 'UPDATE ban02 SET id_cadastro = :id_cadastro WHERE id = :id';
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindValue(':id', $id);
+        $stmt->bindValue(':id_cadastro', $cadastro);
+        return $stmt->execute();
+    }
 
 
 }
