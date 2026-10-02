@@ -353,7 +353,7 @@ $baseQuery = [
                     </div>
                 </form>
 
-                <div class="table-responsive">
+                <div class="table-responsive table-striped">
                     <table class="table table-borderless align-middle mb-0 pn-tabela">
                         <thead>
                             <tr>
@@ -373,12 +373,19 @@ $baseQuery = [
                         <?php foreach ($registros as $r):
                             $esperada = new DateTime($r['hora_esperada']);
                             $esperada->setTimezone(new DateTimeZone('America/Sao_Paulo'));
+                            if($r['tipo'] == 'inicio') {
+                                $classe_linha = 'parcela_cor_verde';
+                            } else if($r['tipo'] == 'controle') {
+                                $classe_linha = 'parcela_cor_azul';
+                            } else if($r['tipo'] == 'termino') {
+                                $classe_linha = 'parcela_cor_amarela';
+                            }
                         ?>
-                            <tr class="parcela_cor_vermelha">
-                                <td class="parcela_cor_vermelha"><?= $esperada->format('d/m/Y') ?></td>
-                                <td class="parcela_cor_vermelha"><?= $esperada->modify('+3 hours')->format('H:i') ?></td>
-                                <td class="parcela_cor_vermelha"><?= h($r['empresa']) ?></td>
-                                <td class="parcela_cor_vermelha"><?= h(rotuloTipo((string) $r['tipo'])) ?></td>
+                            <tr class="<?= $classe_linha ?>">
+                                <td><?= $esperada->format('d/m/Y') ?></td>
+                                <td><?= $esperada->modify('+3 hours')->format('H:i') ?></td>
+                                <td><?= h($r['empresa']) ?></td>
+                                <td><?= h(rotuloTipo((string) $r['tipo'])) ?></td>
                             </tr>
                         <?php endforeach; ?>
                         </tbody>
