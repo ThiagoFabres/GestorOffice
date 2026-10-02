@@ -10,6 +10,7 @@
             <th>Título</th>
             <th>Subtítulo</th>
             <th>Código</th>
+            <th>Cliente / Fornecedor</th>
         </tr>
     </thead>
     <tbody>
@@ -42,6 +43,7 @@
                 $tipo = $movimentacao->valor < 0 ? 'Débito' : 'Crédito';
                 $data_lancamento = DateTime::createFromFormat('Y-m-d', $movimentacao->data)->format('d/m/Y');
                 $conta_nome = Ban01::read($movimentacao->id_ban01, $_SESSION['usuario']->id_empresa)[0]->nome;
+                $movimentacao->id_cadastro != null ? $cadastro_obj = Cadastro::read($movimentacao->id_cadastro)[0]->nom_fant : $cadastro_obj = null;
         ?>
             <!-- Linha 1: Dados Principais e Descrição Completa -->
             <tr>
@@ -64,6 +66,7 @@
                 <td onclick="window.location.href='<?=$link?>'"><?= isset($con01) ? substr($con01->nome, 0, 15) : ''?></td>
                 <td onclick="window.location.href='<?=$link?>'"><?= isset($con02) ? substr($con02->nome, 0, 15) : ''?></td>
                 <td onclick="window.location.href='<?=$link?>'"><?= isset($con02) ? $con02->codigo : ''?></td>
+                <td onclick="window.location.href='<?=$link?>'"><?= $cadastro_obj ?></td>
             </tr>
         <?php 
             } 
