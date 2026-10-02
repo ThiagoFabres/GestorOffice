@@ -39,7 +39,7 @@
                             class="form-control" placeholder="Agência"
                             >
                         </div>
-                        <button type="submit" class="btn-sm btn btn-primary">Gerar</button>
+                        <button type="submit" class="btn-sm btn btn-primary" style="float: right;">Importar Arquivo</button>
                     </form>
                     <?php } ?>
 
