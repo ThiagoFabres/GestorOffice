@@ -405,10 +405,7 @@ $qtdAtrasados = count($atrasados);
                             <div class="d-flex flex-row">
                                 <div class="d-flex flex-column" style="height: 1em;">
                                     <label for="filtro_hora_inicio" class="form-label">Data Inicial</label>
-                                    <input type="date"
-                                        name="filtro_hora_inicio"
-                                        class="form-control"
-                                        value="<?= $filtro_hora_inicio ?? '' ?>">
+                                    <input type="date" name="filtro_hora_inicio" class="form-control" value="<?= $filtro_hora_inicio ?? '' ?>">
                                 </div>
 
                                 <div class="d-flex flex-column" style="height: 1em;">
@@ -452,7 +449,7 @@ $qtdAtrasados = count($atrasados);
                                         Filtrar
                                     </button>
 
-                                    <a href="analitico.php"
+                                    <a href="seguranca.php"
                                         class="btn btn-secondary btn-sm">
                                         Limpar
                                     </a>

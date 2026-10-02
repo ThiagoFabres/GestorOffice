@@ -26,7 +26,8 @@ require_once '../../../db/entities/cadastro.php';
 require_once 'buscar_documento.php';
 
 
-$acao = filter_input(INPUT_POST, 'acao', FILTER_SANITIZE_STRING) ?? filter_input(INPUT_GET, 'acao', FILTER_SANITIZE_STRING);
+$acao = filter_input(INPUT_POST, 'acao', FILTER_UNSAFE_RAW) ?? filter_input(INPUT_GET, 'acao', FILTER_UNSAFE_RAW);
+$acao = is_string($acao) ? strip_tags($acao) : $acao;
 $caminho = filter_input(INPUT_POST, 'caminho') ?? 'movimentacao.php';
 if($acao == 'processar') {
 
@@ -774,21 +775,23 @@ if ($fileExt === 'ofx') {
 } else if($acao == 'adicionar') {
 
     // Dados vêm da sessão (gravados na ação 'processar'), não do formulário
-    $transacoes = $_SESSION['ofx_transactions']['transactions'] ?? [];
-    $conta = $_SESSION['ofx_transactions']['ofx_conta'] ?? null;
-    $descricao_comp = $_POST['descricao_comp'] ?? [];
+   $transacoes = $_SESSION['ofx_transactions']['transactions'] ?? [];
+$conta = $_SESSION['ofx_transactions']['ofx_conta'] ?? null;
+$descricao_comp = $_POST['descricao_comp'] ?? [];
 
-    if (empty($transacoes) || empty($conta)) {
-        header('Location: movimentacao.php?erro=sessao');
-        exit;
-    }
 
-    // Segurança: confirma que a conta pertence à empresa do usuário
-    $conta_obj = Ban01::read($conta)[0] ?? null;
-    if (!$conta_obj || $conta_obj->id_empresa != $_SESSION['usuario']->id_empresa) {
-        header('Location: movimentacao.php?erro=sessao');
-        exit;
-    }
+if (empty($transacoes) || empty($conta)) {
+    error_log('adicionar: sessao vazia, sid=' . session_id());
+    header('Location: movimentacao.php?erro=sessao_vazia');
+    exit;
+}
+
+$conta_obj = Ban01::read($conta)[0] ?? null;
+if (!$conta_obj || $conta_obj->id_empresa != $_SESSION['usuario']->id_empresa) {
+    error_log('adicionar: conta invalida conta=' . $conta);
+    header('Location: movimentacao.php?erro=sessao_conta');
+    exit;
+}
 
     $id_empresa = $_SESSION['usuario']->id_empresa;
     $imp_lista = [];
@@ -1407,6 +1410,153 @@ else if($acao == 'vincular') {
         header('Location: ' . $caminho . '&status=erro');
         exit;
     }
+} else if($acao == 'adicionar_lote') {
+
+    @set_time_limit(120);
+    ini_set('display_errors', '0');
+    ob_start();
+    header('Content-Type: application/json; charset=utf-8');
+
+    $responder = function (array $dados) {
+        ob_end_clean();
+        echo json_encode($dados);
+        exit;
+    };
+
+    $transacoes = $_SESSION['ofx_transactions']['transactions'] ?? [];
+    $conta = $_SESSION['ofx_transactions']['ofx_conta'] ?? null;
+
+    if (empty($transacoes) || empty($conta)) {
+        $responder(['ok' => false, 'erro' => 'sessao_vazia']);
+    }
+
+    $id_empresa = $_SESSION['usuario']->id_empresa;
+    $conta_obj = Ban01::read($conta)[0] ?? null;
+    if (!$conta_obj || $conta_obj->id_empresa != $id_empresa) {
+        $responder(['ok' => false, 'erro' => 'sessao_conta']);
+    }
+
+    $offset = max(0, (int)($_POST['offset'] ?? 0));
+    $tam_lote = min(200, max(1, (int)($_POST['tam_lote'] ?? 100)));
+    $descricao_comp = json_decode($_POST['descricao_comp_json'] ?? '{}', true);
+    if (!is_array($descricao_comp)) $descricao_comp = [];
+
+    if ($offset === 0) {
+        $documento_inicial = buscarDocumento();
+        $importadas_set = [];
+        foreach (Ban02Imp::read($id_empresa, $conta) as $imp) {
+            $importadas_set[$imp->data] = true;
+        }
+        $_SESSION['ofx_lote'] = [
+            'documento'   => $documento_inicial,
+            'importadas'  => $importadas_set,
+            'datas_novas' => [],
+        ];
+    }
+
+    if (!isset($_SESSION['ofx_lote'])) {
+        $responder(['ok' => false, 'erro' => 'lote_nao_iniciado']);
+    }
+
+    $fatia = array_slice($transacoes, $offset, $tam_lote, true);
+
+    foreach ($fatia as $i => $t) {
+        try {
+            $documento = $_SESSION['ofx_lote']['documento'] + $i;
+
+            $data_obj = DateTime::createFromFormat('d/m/Y', $t['data']);
+            if (!$data_obj) continue;
+            $data_formatada = $data_obj->format('Y-m-d');
+
+            if (isset($_SESSION['ofx_lote']['importadas'][$data_formatada])) {
+                continue;
+            }
+
+            $valor = str_replace('.', '', $t['valor']);
+            $valor = str_replace(',', '.', $valor);
+
+            // Já existe esse documento? Pula sem erro.
+            if (Ban02::read(id_empresa: $id_empresa, documento: $documento)) {
+                continue;
+            }
+
+            Ban02::create(new Ban02(
+                null,
+                $id_empresa,
+                $conta,
+                $data_formatada,
+                $documento,
+                null,
+                null,
+                $t['descricao'] ?? '',
+                $descricao_comp[$i] ?? '',
+                $valor,
+                null,
+                1
+            ));
+
+            $_SESSION['ofx_lote']['datas_novas'][$data_formatada] = true;
+
+        } catch (\Throwable $e) {
+            // Duplicidade (ou qualquer falha isolada): registra no log e segue
+            error_log('adicionar_lote linha ' . $i . ': ' . $e->getMessage());
+            continue;
+        }
+    }
+
+    $responder(['ok' => true]);
+
+} else if($acao == 'adicionar_finalizar') {
+
+    ini_set('display_errors', '0');
+    ob_start();
+    header('Content-Type: application/json; charset=utf-8');
+
+    $conta = $_SESSION['ofx_transactions']['ofx_conta'] ?? null;
+    $lote = $_SESSION['ofx_lote'] ?? null;
+    $id_empresa = $_SESSION['usuario']->id_empresa;
+
+    if (empty($conta) || $lote === null) {
+        ob_end_clean();
+        echo json_encode(['ok' => false]);
+        exit;
+    }
+
+    foreach (array_keys($lote['datas_novas']) as $data) {
+        try {
+            Ban02Imp::create(new Ban02Imp($id_empresa, $conta, $data));
+        } catch (\Throwable $e) {
+            error_log('adicionar_finalizar: ' . $e->getMessage());
+        }
+    }
+
+    unset($_SESSION['ofx_transactions'], $_SESSION['ofx_lote']);
+    ob_end_clean();
+    echo json_encode(['ok' => true]); // duplicidade nas datas não é erro
+    exit;
+} else if($acao == 'adicionar_finalizar') {
+
+    header('Content-Type: application/json; charset=utf-8');
+
+    $conta = $_SESSION['ofx_transactions']['ofx_conta'] ?? null;
+    $lote = $_SESSION['ofx_lote'] ?? null;
+    $id_empresa = $_SESSION['usuario']->id_empresa;
+
+    if (empty($conta) || $lote === null) {
+        echo json_encode(['ok' => false]);
+        exit;
+    }
+
+    $sucesso = true;
+    foreach (array_keys($lote['datas_novas']) as $data) {
+        if (!Ban02Imp::create(new Ban02Imp($id_empresa, $conta, $data))) {
+            $sucesso = false;
+        }
+    }
+
+    unset($_SESSION['ofx_transactions'], $_SESSION['ofx_lote']);
+    echo json_encode(['ok' => $sucesso]);
+    exit;
 }
 
 

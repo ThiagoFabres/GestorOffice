@@ -28,22 +28,63 @@ function extrairPontos(turnoEl) {
 
 function extrairControles(turnoEl) {
     const controles = [];
+    
+    // Procura por accordions ou cards que tenham explicitamente o título "controle"
     const secaoControles = [...turnoEl.querySelectorAll('.accordion-item, .card')].find(item => {
-        const txt = item.querySelector('.accordion-header, button, .card-header')?.textContent || '';
-        return txt.toLowerCase().includes('controles');
+        const header = item.querySelector('.accordion-header, .card-header, button, h1, h2, h3, h4, h5, h6');
+        const txt = header ? header.textContent.toLowerCase() : '';
+        return txt.includes('controle');
     });
 
     if (!secaoControles) return controles;
 
-    secaoControles.querySelectorAll('table tbody tr').forEach((tr) => {
+    // Busca apenas as tabelas diretas/internas desse bloco
+    const linhas = secaoControles.querySelectorAll('table tr');
+
+    linhas.forEach((tr) => {
+        if (tr.querySelector('th')) return; // Ignora o cabeçalho <th>
+
         const cells = [...tr.querySelectorAll('td')].map((td) => limparTexto(td.textContent));
-        if (cells.length) controles.push({
-            esperado: cells[0] || '',
-            respondido: cells[1] || '',
-            status: cells[2] || ''
-        });
+        
+        if (cells.length >= 2 && cells.some(c => c !== '')) {
+            controles.push({
+                esperado: cells[0] || '—',
+                respondido: cells[1] || '',
+                status: cells[2] || cells[1] || ''
+            });
+        }
     });
+
     return controles;
+}
+
+function extrairRondas(turnoEl) {
+    const rondas = [];
+    
+    // Procura por accordions ou cards que tenham explicitamente o título "ronda"
+    const secaoRondas = [...turnoEl.querySelectorAll('.accordion-item, .card')].find(item => {
+        const header = item.querySelector('.accordion-header, .card-header, button, h1, h2, h3, h4, h5, h6');
+        const txt = header ? header.textContent.toLowerCase() : '';
+        return txt.includes('ronda');
+    });
+
+    if (!secaoRondas) return rondas;
+
+    const linhas = secaoRondas.querySelectorAll('table tr');
+
+    linhas.forEach((tr) => {
+        if (tr.querySelector('th')) return;
+
+        const cells = [...tr.querySelectorAll('td')].map((td) => limparTexto(td.textContent));
+        if (cells.length >= 2 && cells.some(c => c !== '')) {
+            rondas.push({ 
+                descricao: cells[0] || 'Ronda', 
+                horario: cells[1] || '' 
+            });
+        }
+    });
+
+    return rondas;
 }
 
 function extrairPanicos(turnoEl) {
@@ -68,24 +109,6 @@ function extrairPanicos(turnoEl) {
     return itens;
 }
 
-function extrairRondas(turnoEl) {
-    const rondas = [];
-    const secaoRondas = [...turnoEl.querySelectorAll('.accordion-item, .card')].find(item => {
-        const txt = item.querySelector('.accordion-header, button, .card-header')?.textContent || '';
-        return txt.toLowerCase().includes('ronda');
-    });
-
-    if (!secaoRondas) return rondas;
-
-    secaoRondas.querySelectorAll('table tbody tr').forEach((tr) => {
-        const tds = [...tr.querySelectorAll('td')].map((td) => limparTexto(td.textContent));
-        if (tds.length) rondas.push({ descricao: tds[0] || 'Ronda', horario: tds[1] || '' });
-    });
-
-    return rondas;
-}
-
-// NOVA FUNÇÃO: Extrai o texto da ocorrência do turno
 function extrairOcorrencias(turnoEl) {
     const ocorrencias = [];
     // Busca divs de alerta que contenham ocorrências
@@ -114,7 +137,7 @@ function extrairEstruturaCompleta() {
         turnosEl.forEach((turnoEl) => {
             const inicio = turnoEl.dataset.turnoInicio || '';
             const fim = turnoEl.dataset.turnoFim;
-            const turnoTitulo = `${inicio}${fim && fim !== 'Em andamento' ? ' até ' + fim : ' - em andamento'}`;
+            const turnoTitulo = `${inicio}${fim && fim !== 'Em andamento' ? ' até ' + fim : ' em andamento'}`;
 
             const ocorrencias = extrairOcorrencias(turnoEl);
 
@@ -131,7 +154,7 @@ function extrairEstruturaCompleta() {
                 controles: extrairControles(turnoEl),
                 panicos: extrairPanicos(turnoEl),
                 rondas: extrairRondas(turnoEl),
-                ocorrencias: ocorrencias // Adicionado ao objeto do turno
+                ocorrencias: ocorrencias
             });
         });
 
@@ -158,7 +181,7 @@ function prepararGeracaoSeguranca(tipo) {
     if (dataInicial) periodo.push(`Início: ${formatarDataParaTexto(dataInicial)}`);
     if (dataFinal) periodo.push(`Fim: ${formatarDataParaTexto(dataFinal)}`);
 
-    const titulo = `Relatório de Segurança - ${nomeSelecionado}`;
+    const titulo = `Controle de Turno`;
     const subtitulo = periodo.join(' | ') || 'Período completo';
 
     if (tipo === 'pdf') {
@@ -223,7 +246,7 @@ function gerarPdfSeguranca(titulo, subtitulo, empresa) {
         pdf.setFontSize(10);
         pdf.setFont('helvetica', 'bold');
         pdf.setTextColor(255, 255, 255);
-        pdf.text(`SEGURANÇA: ${seg.seguranca.toUpperCase()}`, margem + 3, y + 5);
+        pdf.text(`Colaborador: ${seg.seguranca.toUpperCase()}`, margem + 3, y + 5);
         pdf.setTextColor(0, 0, 0);
         y += 10;
 
@@ -240,7 +263,7 @@ function gerarPdfSeguranca(titulo, subtitulo, empresa) {
             pdf.setFont('helvetica', 'bold');
             pdf.text(`TURNO: ${t.titulo}`, margem + 3, y + 4.5);
             pdf.setFont('helvetica', 'normal');
-            pdf.text(`Controles (${t.resumo.controles}) | Pânicos (${t.resumo.panicos}) | Rondas (${t.resumo.rondas}) | Ocorrências (${t.resumo.ocorrencias})`, margem + 3, y + 8.5);
+            pdf.text(`Controles (${t.resumo.controles}) | Pânicos (${t.resumo.panicos}) | Rondas (${t.resumo.rondas})`, margem + 3, y + 8.5);
             y += 12;
 
             // 1. Tabela de Ocorrências (Cabeçalho Roxo/Azul Escuro)
@@ -263,7 +286,7 @@ function gerarPdfSeguranca(titulo, subtitulo, empresa) {
                 autoTableFn.call(pdf, {
                     startY: y,
                     margin: { left: margem, right: margem },
-                    head: [['Controle', 'Horário respondido', 'Status']],
+                    head: [['Horário esperado', 'Horário respondido', 'Status']],
                     body: t.controles.map(c => [c.esperado, c.respondido, c.status]),
                     theme: 'grid',
                     styles: { fontSize: 8, cellPadding: 1.5 },
@@ -321,7 +344,7 @@ function gerarPdfSeguranca(titulo, subtitulo, empresa) {
         const pageHeight = pdf.internal.pageSize.height;
         pdf.setFontSize(8);
         pdf.setTextColor(100);
-        pdf.text('Gestor Office — Relatório de Segurança', margem, pageHeight - 8);
+        pdf.text('Gestor Office — Relatório de Colaborador', margem, pageHeight - 8);
         pdf.text(`Página ${i} de ${totalPages}`, pdf.internal.pageSize.getWidth() - margem - 20, pageHeight - 8);
     }
 
@@ -408,7 +431,7 @@ function gerarExcelSeguranca(titulo, subtitulo, empresa) {
                 dadosAoA.push(criarLinhaEstilizada([
                     '',
                     `TURNO: ${t.titulo}`,
-                    `Resumo: Controles (${t.resumo.controles}) | Pânicos (${t.resumo.panicos}) | Rondas (${t.resumo.rondas}) | Ocorrências (${t.resumo.ocorrencias})`,
+                    `Resumo: Controles (${t.resumo.controles}) | Pânicos (${t.resumo.panicos}) | Rondas (${t.resumo.rondas})`,
                     '',
                     ''
                 ], estTurno));
@@ -467,6 +490,6 @@ function gerarExcelSeguranca(titulo, subtitulo, empresa) {
         level: m.level
     }));
 
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Relatório Segurança');
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Relatório Colaborador');
     XLSX.writeFile(workbook, 'relatorio_seguranca.xlsx');
 }

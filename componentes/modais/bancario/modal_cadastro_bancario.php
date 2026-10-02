@@ -34,7 +34,7 @@
                         <div class="mb-3 gap-2">
                             <label for="agencia" class="form-label">Arquivo OFX / Excel</label>
                             <input type="file"
-                            onchange="this.form.submit()"
+                            
                             accept=".ofx, .xlsx, .csv" id="agencia" name="ofx"
                             class="form-control" placeholder="Agência"
                             >
@@ -44,7 +44,7 @@
                     <?php } ?>
 
                     <?php if (!empty($_SESSION['ofx_transactions']['transactions'])): ?>
-                        <form action="movimentacao_manager.php" method="post">
+                    <form action="movimentacao_manager.php" method="post" id="form_adicionar">
                     <input type="hidden" name="acao" value="adicionar"></input>
                     <input type="hidden" name="conta" value="<?=$_SESSION['ofx_transactions']['ofx_conta']?>"></input>
 
@@ -97,11 +97,68 @@
                     <!-- Botões -->
                     <div class="d-flex justify-content-end gap-2">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                        <button type="submit" class="btn btn-success" style="background-color: #5856d6; border-color: #5856d6;">Salvar</button>
+                        <button type="submit" id="btn_salvar" class="btn btn-success" style="background-color:#5856d6;border-color:#5856d6;">Salvar</button>
                     </div>
-                    <?php endif; ?>
                     </form>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
+
+<script>
+document.getElementById('form_adicionar').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var btn = document.getElementById('btn_salvar');
+    if (btn.disabled) return;
+    btn.disabled = true;
+
+    var TAM_LOTE = 100;
+    var total = parseInt(this.querySelector('[name="total_linhas"]').value, 10);
+
+    var comp = {};
+    this.querySelectorAll('input[name^="descricao_comp["]').forEach(function (el) {
+        var v = el.value.trim();
+        if (v !== '') comp[el.name.match(/\[(\d+)\]/)[1]] = v;
+    });
+
+    async function enviar(fd) {
+        var resp = await fetch('movimentacao_manager.php', { method: 'POST', body: fd });
+        var txt = await resp.text();
+        try { return JSON.parse(txt); }
+        catch (e) { console.warn('Resposta não-JSON (HTTP ' + resp.status + '):', txt.substring(0, 300)); return null; }
+    }
+
+    try {
+        for (var offset = 0; offset < total; offset += TAM_LOTE) {
+            btn.textContent = 'Salvando ' + Math.min(offset + TAM_LOTE, total) + ' de ' + total + '...';
+
+            var lote = {};
+            for (var i = offset; i < Math.min(offset + TAM_LOTE, total); i++) {
+                if (comp[i] !== undefined) lote[i] = comp[i];
+            }
+
+            var fd = new FormData();
+            fd.append('acao', 'adicionar_lote');
+            fd.append('offset', offset);
+            fd.append('tam_lote', TAM_LOTE);
+            fd.append('descricao_comp_json', JSON.stringify(lote));
+
+            var json = await enviar(fd);
+            // Só interrompe se a sessão se perdeu; qualquer outra coisa segue adiante
+            if (json && json.ok === false && (json.erro === 'sessao_vazia' || json.erro === 'sessao_conta' || json.erro === 'lote_nao_iniciado')) {
+                throw new Error('Sessão expirada. Gere o extrato novamente.');
+            }
+        }
+
+        var fim = new FormData();
+        fim.append('acao', 'adicionar_finalizar');
+        await enviar(fim);
+        window.location.href = 'movimentacao.php?sucesso=sucesso';
+    } catch (err) {
+        alert(err.message);
+        btn.disabled = false;
+        btn.textContent = 'Salvar';
+    }
+});
+</script>
