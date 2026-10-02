@@ -61,7 +61,7 @@ $ordenar_por = filter_input(INPUT_GET, 'ordenar_por') ?? filter_input(INPUT_POST
 
 
 $erro = filter_input(INPUT_GET, 'erro');
-$get_pdf = filter_input(INPUT_GET, 'pdf') == 1 ? true : false;
+$get_pdf = filter_input(INPUT_GET, 'pdf');
 $get_excel = filter_input(INPUT_GET, 'excel') == 1 ? true : false;
 $direcao = filter_input(INPUT_GET, 'direcao') ?? filter_input(INPUT_POST, 'direcao') ?? 'ASC';
 
@@ -224,8 +224,6 @@ if ($get_filtro_conta != null) {
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/dragscroll/0.0.8/dragscroll.min.js"></script>
 
-<script type="module" src="node_modules/smart-webcomponents/source/modules/smart.combobox.js"></script>
-<link rel="stylesheet" type="text/css" href="node_modules/smart-webcomponents/source/styles/smart.default.css" />
 
 
 
@@ -430,6 +428,7 @@ if ($get_filtro_conta != null) {
                             <th>Subtítulo</th>
                             <th>Descrição</th>
                             <th>Descrição Complementar</th>
+                            <th>Cliente / Fornecedor</th>
                             <?php if($_SESSION['usuario']->processar === 1) { ?>
                             <th class="td-acoes">Conciliar</th>
                             <th class="td-acoes">Desmembrar</th>
@@ -495,6 +494,7 @@ if ($get_filtro_conta != null) {
                                 $caminho_quitar = $movimentacao->valor < 0 ? '/usuario/pagar.php?filtro_data_inicial='.$movimentacao->data.'&filtro_data_final='.$movimentacao->data.'&opcao_filtro=abertos&filtro_por=lancamento' : '/usuario/receber.php?filtro_data_inicial='.$movimentacao->data.'&filtro_data_final='.$movimentacao->data.'&opcao_filtro=abertos&filtro_por=lancamento';
                                 $data_lancamento = DateTime::createFromFormat('Y-m-d', $movimentacao->data)->format('d/m/Y');
                                 $conta_nome = Ban01::read($movimentacao->id_ban01, $_SESSION['usuario']->id_empresa)[0]->nome;
+                                $movimentacao->id_cadastro != null ? $cadastro_obj = Cadastro::read($movimentacao->id_cadastro)[0]->nom_fant : $cadastro_obj = null;
                          {?>
                          <tr class="<?=$cor_parcela?> tr-bancario" 
                              oncontextmenu="return window.openCustomContextMenu ? window.openCustomContextMenu(event, this) : false;"
@@ -514,6 +514,7 @@ if ($get_filtro_conta != null) {
                             <td <?php if($_SESSION['usuario']->processar === 1) {?> data-bs-toggle="modal" data-bs-target="#modal_conciliar" <?php } ?>data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-id="<?=$movimentacao->id?>"><?= isset($con02) ? $con02->nome : ''?></td>
                             <td <?php if($_SESSION['usuario']->processar === 1) {?> data-bs-toggle="modal" data-bs-target="#modal_conciliar" <?php } ?>data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-id="<?=$movimentacao->id?>"><?=$movimentacao->descricao?></td>
                             <td <?php if($_SESSION['usuario']->processar === 1) {?> data-bs-toggle="modal" data-bs-target="#modal_conciliar" <?php } ?>data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-id="<?=$movimentacao->id?>"><?=$movimentacao->descricao_comp?></td>
+                            <td <?php if($_SESSION['usuario']->processar === 1) {?> data-bs-toggle="modal" data-bs-target="#modal_conciliar" <?php } ?>data-tipo="<?=$movimentacao->valor > 0 ? 'C' : 'D'?>" data-id="<?=$movimentacao->id?>"><?= $cadastro_obj?></td>
                             <?php if($_SESSION['usuario']->processar === 1) { ?>
                                 <td class="td-acoes">
                                     <button class="btn" type="button" data-bs-toggle="modal" data-bs-target="#modal_conciliar" data-id="<?=$movimentacao->id?>">
@@ -637,11 +638,17 @@ if ($get_filtro_conta != null) {
                     </button>
             <?php if($_SESSION['usuario']->processar === 1) { ?>
                     <button id="menu-quitar-bancario" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-arrow-90deg-up"></i> Quitar</button>
+                    <button id="menu-vincular" class="dropdown-item btn btn-light w-100 text-start" type="button"><i class="bi bi-arrow-90deg-down"></i> Vincular</button>
             <?php } ?>
         </div>
-        <div class="relatorios-botoes" style="float:left; width:100%">
-            <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf) {echo "gerarpdf('movimentacao', " . json_encode($nome_empresa) . ")";} else {?>window.location.href='<?php if(empty($filtros)) {echo $caminho . '?'?>pdf=1<?php } else { echo $caminho . 'pdf=1' ?> <?php }} ?>'">Gerar PDF</button>           
-            <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="<?php if($get_excel) {echo "gerarexcel('movimentacao', " . json_encode($nome_empresa) . ")";} else {?>window.location.href='<?php if(empty($filtros)) {echo $caminho . '?'?>excel=1<?php } else { echo $caminho . 'excel=1' ?> <?php }} ?>'">Gerar Excel</button>           
+        <div class="relatorios-botoes w-100" style="float:left;">
+            <div class="d-flex flex-column">
+                <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf) {echo "gerarpdf('movimentacao', " . json_encode($nome_empresa) . ")";} else {?>window.location.href='<?php if(empty($filtros)) {echo $caminho . '?'?>pdf=1<?php } else { echo $caminho . 'pdf=1' ?> <?php }} ?>'">Gerar PDF</button>           
+                <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf) { ?>gerarpdf('movimentacao', <?= json_encode($nome_empresa) ?>, 'reduzido');<?php } else { ?>window.location.href='<?= $caminho ?><?= empty($filtros) ? '?' : '&' ?>pdf=reduzido';<?php } ?>">Gerar PDF Reduzido</button>
+            </div>
+            <div class="d-flex flex-column">
+                <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="<?php if($get_excel) {echo "gerarexcel('movimentacao', " . json_encode($nome_empresa) . ")";} else {?>window.location.href='<?php if(empty($filtros)) {echo $caminho . '?'?>excel=1<?php } else { echo $caminho . 'excel=1' ?> <?php }} ?>'">Gerar Excel</button>           
+            </div>
         </div>
 
 
@@ -664,6 +671,11 @@ if ($get_filtro_conta != null) {
                 <?= number_format($saldo_total, 2, ',', '.') ?>
             </div>
         </div>
+        <?php if($get_pdf == 'reduzido') {?>
+        <div style="display:none;">
+            <?php require_once __DIR__ . '/../../../componentes/tabelas/pdf/reduzido/tabela_pdf_mov.php'; ?>
+        </div>
+        <?php } ?>
         <?php if($get_pdf) {?>
         <div style="display:none;">
             <?php require_once __DIR__ . '/../../../componentes/tabelas/pdf/tabela_pdf_mov.php'; ?>
@@ -695,18 +707,21 @@ if ($get_filtro_conta != null) {
     
     require_once __DIR__ . '/../../../componentes/modais/bancario/modal_quitar.php';
     require_once __DIR__ . '/../../../componentes/modais/bancario/modal_quitar_adicionar.php';
+    require_once __DIR__ . '/../../../componentes/modais/bancario/modal_vincular.php';
 
+    if($ofx != 1) {
         if (isset($_SESSION['ofx_transactions'])) {
-        unset($_SESSION['ofx_transactions']);
-    }
-    if (isset($_SESSION['ofx_conta'])) {
-        unset($_SESSION['ofx_conta']);
-    }
-    if (isset($_SESSION['file_name'])) {
-        unset($_SESSION['file_name']);
-    }
-    if (isset($_SESSION['dias_usados'])) {
-        unset($_SESSION['dias_usados']);
+            unset($_SESSION['ofx_transactions']);
+        }
+        if (isset($_SESSION['ofx_conta'])) {
+            unset($_SESSION['ofx_conta']);
+        }
+        if (isset($_SESSION['file_name'])) {
+            unset($_SESSION['file_name']);
+        }
+        if (isset($_SESSION['dias_usados'])) {
+            unset($_SESSION['dias_usados']);
+        }
     }
     ?>
 <?php require_once __DIR__ . '/../../../componentes/footer/footer.php' ?> 
@@ -764,7 +779,7 @@ if ($get_filtro_conta != null) {
             console.warn('custom-context-menu not found');
             return;
         }
-        const base = '<?php if(empty($filtros)) {echo $caminho . '?';} else {echo $caminho . '&';}?>';
+        const base = <?= json_encode(empty($filtros) ? $caminho . '?' : $caminho) ?>;
 
         function openMenuForEvent(e) {
             try {
@@ -823,12 +838,18 @@ if ($get_filtro_conta != null) {
         document.addEventListener('click', function(e){ if (!menu.contains(e.target)) { menu.style.display = 'none'; if (window._mov_ctx_row) window._mov_ctx_row.classList.remove('context-menu-open'); window._mov_ctx_row = null; } });
         window.addEventListener('scroll', ()=> { menu.style.display = 'none'; if (window._mov_ctx_row) window._mov_ctx_row.classList.remove('context-menu-open'); window._mov_ctx_row = null; });
 
-        function navigateTo(action, id) { window.location.href = base + 'acao=' + action + '&id=' + id; }
+        function navigateTo(action, id) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('acao', action);
+    url.searchParams.set('id', id);
+    window.location.href = url.toString();
+}
 
         const menuConciliarBtn = document.getElementById('menu-conciliar');
         const menuDesmembrarBtn = document.getElementById('menu-desmembrar');
         const menuEditarBtn = document.getElementById('menu-editar-bancario');
         const menuQuitarBtn = document.getElementById('menu-quitar-bancario');
+        const menuVincularBtn = document.getElementById('menu-vincular');
 
         if (menuConciliarBtn) {
             menuConciliarBtn.addEventListener('click', function(event){
@@ -867,6 +888,14 @@ if ($get_filtro_conta != null) {
                 event.preventDefault();
                 if (!window._mov_ctx_row) return;
                 navigateTo('quitar_bancario', window._mov_ctx_row.getAttribute('data-id'));
+            });
+        }
+
+        if (menuVincularBtn) {
+            menuVincularBtn.addEventListener('click', function(event){
+                event.preventDefault();
+                if (!window._mov_ctx_row) return;
+                navigateTo('vincular', window._mov_ctx_row.getAttribute('data-id'));
             });
         }
 
@@ -1139,6 +1168,18 @@ if ($get_filtro_conta != null) {
     <script>
         window.addEventListener('DOMContentLoaded', function () {
             var modalEl = document.getElementById('quitar_adicionar');
+            var Modal = new bootstrap.Modal(modalEl);
+            Modal.show();
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                window.location.href = '<?=$caminho?>';
+            });
+        });
+    </script>
+<?php } ?>
+<?php if($acao == 'vincular') {?>
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            var modalEl = document.getElementById('modal_vincular');
             var Modal = new bootstrap.Modal(modalEl);
             Modal.show();
             modalEl.addEventListener('hidden.bs.modal', function () {

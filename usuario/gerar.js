@@ -250,3 +250,204 @@ async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
 
     doc.save(`relatorio.pdf`);
 }
+
+function gerarexcel(nome, nomeEmpresa = '') {
+    try {
+        const tabela = document.querySelector('#tabela-pdf');
+
+        if (!tabela) {
+            alert("Tabela não encontrada!");
+            return;
+        }
+
+        /* -------------------------
+           AUXILIARES
+        ------------------------- */
+
+        const limpar = (t) => String(t ?? '')
+            .replace(/R\$\s?/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        // yyyy-mm-dd -> dd/mm/yyyy (só quando o texto inteiro é uma data ISO)
+        const fmtData = (t) => {
+            const m = String(t).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            return m ? `${m[3]}/${m[2]}/${m[1]}` : t;
+        };
+
+        // "1.234,56" -> 1234.56 (retorna null se não for valor monetário)
+        const paraNumero = (t) => {
+            const s = String(t).trim();
+            if (!/^-?\d{1,3}(\.\d{3})*(,\d+)?$|^-?\d+(,\d+)?$/.test(s)) return null;
+            const n = Number(s.replace(/\./g, '').replace(',', '.'));
+            return isNaN(n) ? null : n;
+        };
+
+        // Lê as células da linha. O colspan só é respeitado quando pedido
+        // (linha de totais); no corpo cada <td> vira exatamente uma coluna.
+        const lerLinha = (tr, seletor, respeitarColspan = false) => {
+            const out = [];
+            tr.querySelectorAll(seletor).forEach((c) => {
+                out.push({
+                    texto: limpar(c.textContent),
+                    acao: c.classList.contains('td-acoes')
+                });
+                if (respeitarColspan) {
+                    for (let i = 1; i < (c.colSpan || 1); i++) {
+                        out.push({ texto: '', acao: false });
+                    }
+                }
+            });
+            return out;
+        };
+
+        /* -------------------------
+           EXTRAIR TABELA
+        ------------------------- */
+
+        const linhasHead = [...tabela.querySelectorAll('thead tr')]
+            .map((tr) => lerLinha(tr, 'th'))
+            .filter((r) => r.some((c) => c.texto !== ''));
+
+        const cabecalho = (linhasHead[linhasHead.length - 1] || []).map((c) => c.texto);
+
+        const linhasBody = [];
+        const linhasTotal = [];
+
+        tabela.querySelectorAll('tbody tr, tfoot tr').forEach((tr) => {
+            const ehTotal = tr.id === 'tr-totais' || tr.parentElement.tagName.toLowerCase() === 'tfoot';
+            const cells = lerLinha(tr, 'td', ehTotal);
+
+            if (!cells.some((c) => c.texto !== '')) return;
+            (ehTotal ? linhasTotal : linhasBody).push(cells);
+        });
+
+        /* -------------------------
+           COLUNAS A MANTER
+        ------------------------- */
+
+        const totalCols = Math.max(
+            cabecalho.length,
+            ...linhasBody.map((r) => r.length),
+            ...linhasTotal.map((r) => r.length),
+            0
+        );
+
+        // Descarta a coluna de ações (botões editar/excluir etc.)
+        const excluidas = new Set();
+        for (let i = 0; i < totalCols; i++) {
+            if (/^a[çc][õo]es?$/i.test(cabecalho[i] || '')) excluidas.add(i);
+        }
+        [...linhasBody, ...linhasTotal].forEach((r) =>
+            r.forEach((c, i) => { if (c.acao) excluidas.add(i); })
+        );
+
+        const indices = [];
+        for (let i = 0; i < totalCols; i++) {
+            if (!excluidas.has(i)) indices.push(i);
+        }
+
+        // Colunas monetárias: qualquer cabeçalho com "valor" (VALOR, VALOR.PARC, VALOR.PAG...)
+        const colunasValor = new Set(
+            indices.filter((i) => /valor/i.test(cabecalho[i] || ''))
+        );
+
+        /* -------------------------
+           MONTAR LINHAS
+        ------------------------- */
+
+        const converter = (texto, colunaOriginal) => {
+            const t = fmtData(texto);
+            if (colunasValor.has(colunaOriginal)) {
+                const n = paraNumero(t);
+                if (n !== null) return n;
+            }
+            return t;
+        };
+
+        const dados = [];
+
+        dados.push(indices.map((i) => cabecalho[i] ?? ''));
+
+        linhasBody.forEach((r) => {
+            dados.push(indices.map((i) => converter(r[i]?.texto ?? '', i)));
+        });
+
+        if (linhasTotal.length) {
+            dados.push([]);
+            linhasTotal.forEach((r) => {
+                dados.push(indices.map((i) => converter(r[i]?.texto ?? '', i)));
+            });
+        }
+
+        /* -------------------------
+           CABEÇALHO COM FILTROS
+        ------------------------- */
+
+        const headerFiltros = [];
+
+        const titleEl = document.querySelector('.card .card-header h3');
+        const titleText = titleEl ? titleEl.textContent.trim() : `Contas a ${nome}`;
+
+        headerFiltros.push([`${nomeEmpresa} - ${titleText}`]);
+        headerFiltros.push([]);
+
+        const di = document.querySelector('#filtro_data_inicial')?.value;
+        const df = document.querySelector('#filtro_data_final')?.value;
+        const docNome = document.querySelector('#filtro_nome')?.value;
+
+        if (di && df) {
+            headerFiltros.push(['Período', `${fmtData(di)} até ${fmtData(df)}`]);
+        } else if (di) {
+            headerFiltros.push(['Data Inicial', fmtData(di)]);
+        } else if (df) {
+            headerFiltros.push(['Data Final', fmtData(df)]);
+        }
+
+        if (docNome) headerFiltros.push(['Documento', docNome]);
+
+        headerFiltros.push([]);
+
+        const aoaFinal = headerFiltros.concat(dados);
+
+        /* -------------------------
+           PLANILHA
+        ------------------------- */
+
+        const ws = XLSX.utils.aoa_to_sheet(aoaFinal);
+
+        // Formato monetário nas colunas de valor (continuam somáveis no Excel)
+        indices.forEach((colOriginal, c) => {
+            if (!colunasValor.has(colOriginal)) return;
+
+            for (let r = headerFiltros.length; r < aoaFinal.length; r++) {
+                const addr = XLSX.utils.encode_cell({ r: r, c: c });
+                if (ws[addr] && ws[addr].t === 'n') {
+                    ws[addr].z = '#,##0.00';
+                }
+            }
+        });
+
+        // Largura das colunas conforme o conteúdo (ignora o título e os filtros)
+        ws['!cols'] = indices.map((_, c) => {
+            const maior = dados.reduce((max, row) => {
+                const len = String(row[c] ?? '').length;
+                return len > max ? len : max;
+            }, 10);
+            return { wch: Math.min(maior + 2, 50) };
+        });
+
+        const nomeAba = (titleText || 'Relatorio')
+            .replace(/[\\\/\?\*\[\]:]/g, '')
+            .slice(0, 31);
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, nomeAba || 'Relatorio');
+
+        XLSX.writeFile(wb, 'relatorio.xlsx');
+
+    } catch (error) {
+        console.error('Erro ao gerar Excel:', error);
+        alert('Erro ao gerar arquivo Excel. Verifique o console para mais detalhes.');
+    }
+}

@@ -136,6 +136,7 @@ $nomesColaboradores = [];
 try {
     foreach ($idsConsulta as $idE) {
         foreach (Usuario::read(idempresa:$idE, cargo: 4) as $u) {
+            $idsColaboradores[(int) $u->id] = (string) $u->id;
             $nomesColaboradores[(int) $u->id] = (string) $u->nome;
         }
     }
@@ -184,6 +185,22 @@ try {
 } catch (Throwable $e) {
     $erroConsulta = 'Não foi possível carregar os registros no momento.';
     error_log('Painel Controle02: ' . $e->getMessage());
+}
+
+$panicos_lista = [];
+
+if(!isset($idsColaboradores)) {
+    $idsColaboradores = [];
+    foreach ($idsConsulta as $idE) {
+        foreach (Usuario::read(idempresa:$idE, cargo: 4) as $u) {
+            $idsColaboradores[(int) $u->id] = (int) $u->id;
+        }
+    }
+}
+foreach($idsColaboradores as $idC) {
+    foreach(Panico::read(null, $idC, $dataIni . ' 00:00:00', $dataFim . ' 23:59:59') as $p) {
+        $panicos_lista[] = $p;
+    }
 }
 
 // ── Paginação ────────────────────────────────────────────────────────────────
@@ -352,6 +369,54 @@ $baseQuery = [
                         </div>
                     </div>
                 </form>
+
+                
+
+                <div class="table-responsive table-striped">
+                    <table class="table table-borderless align-middle mb-0 pn-tabela">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Horário</th>
+                                <th>Empresa</th>
+                                <th>Localização</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <?php if (!$panicos_lista): ?>
+                            <tr class="pn-vazio">
+                                <td colspan="7">Nenhum Pânico Encontrado Com Esses Filtros.</td>
+                            </tr>
+                        <?php endif; ?>
+
+                        <?php foreach ($panicos_lista as $p):
+                            $usuario_id = $p->id_usuario;
+
+                            $usuario_obj = Usuario::read($usuario_id)[0] ?? 'Desconhecido';
+                            $usuario_nome = $usuario_obj->nome;
+                            $empresa_obj = Empresa::read($usuario_obj->id_empresa)[0];
+                            $empresa_nome = $empresa_obj->nom_fant ?? $empresa_obj->razao_soc ?? 'Desconhecida';
+                            [$latitude, $longitude] = explode( ',', $p->localizacao);
+                            [$panico_data, $panico_hora] = explode(' ', paraLocal($p->hora) ?? '');
+                        ?>
+                            <tr class="parcela_cor_vermelha">
+                                <td><?= $panico_data ?></td>
+                                <td><?= $panico_hora ?></td>
+                                <td><?= h($empresa_nome) ?></td>
+                                <td>
+                                    <a 
+                                    class="small" 
+                                    href="https://maps.google.com/?q=<?= urlencode($latitude . ',' . $longitude ) ?>"
+                                    target="_blank"
+                                    rel="noopener">
+                                    Ver localização no mapa
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
 
                 <div class="table-responsive table-striped">
                     <table class="table table-borderless align-middle mb-0 pn-tabela">

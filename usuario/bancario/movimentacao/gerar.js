@@ -1,6 +1,7 @@
-async function gerarpdf(nome, nomeEmpresa = '') {
+async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
     console.log('Rendering');
     const tabela = document.querySelector('#tabela-pdf');
+    const modoReducao = estilo === 'reduzido';
 
     if (!tabela) {
         alert("Tabela não encontrada!");
@@ -59,23 +60,21 @@ async function gerarpdf(nome, nomeEmpresa = '') {
     /* -------------------------
        EXTRAIR TABELA (tbody + tfoot)
     ------------------------- */
-    const head = [];
-    const body = [];
+    let head = [];
+    let body = [];
 
     tabela.querySelectorAll("thead tr").forEach(tr => {
         const row = [];
-        tr.querySelectorAll("th").forEach((th) => {
-            row.push(th.innerText.trim());
-        });
+        tr.querySelectorAll("th").forEach(th => row.push(th.innerText.trim()));
         head.push(row);
     });
 
     tabela.querySelectorAll("tbody tr, tfoot tr").forEach(tr => {
         const row = [];
-        tr.querySelectorAll("td").forEach((td) => {
-            row.push(td.textContent.replace('R$', '').trim());
+        tr.querySelectorAll("td").forEach(td => {
+            row.push(td.textContent.replace('R$', '').replace(/\s+/g, ' ').trim());
         });
-        
+
         if (tr.parentElement.tagName.toLowerCase() === 'tfoot' || tr.id === 'tr-totais') {
             row.isTotalRow = true;
         }
@@ -84,60 +83,97 @@ async function gerarpdf(nome, nomeEmpresa = '') {
     });
 
     /* -------------------------
+       MODO REDUZIDO: Data, Cliente/Fornecedor e Valor (sem Descrição)
+    ------------------------- */
+    if (modoReducao) {
+        const cabecalho = head[head.length - 1] || [];
+        const achar = (regex) => cabecalho.findIndex(t => regex.test(String(t || '')));
+
+        const idxData = achar(/data/i);
+        const idxNome = achar(/cliente|fornecedor|favorecido/i);
+        let idxValor = achar(/valor/i);
+        if (idxValor === -1 && cabecalho.length) idxValor = cabecalho.length - 1;
+
+        const indices = [idxData, idxNome, idxValor].filter(i => i !== -1);
+
+        head = [indices.map(i => cabecalho[i])];
+
+        body = body.map(row => {
+            const nova = indices.map(i => row[i] ?? '');
+            if (row.isTotalRow) nova.isTotalRow = true;
+            return nova;
+        });
+    }
+
+    /* -------------------------
+       ESTILOS DE COLUNA (pelo nome do cabeçalho)
+    ------------------------- */
+    const colunas = head[head.length - 1] || [];
+    const columnStylesConfig = {};
+
+    colunas.forEach((titulo, i) => {
+        const t = String(titulo || '');
+
+        if (/valor/i.test(t)) {
+            columnStylesConfig[i] = { halign: 'right', cellWidth: 40 };
+        } else if (/data/i.test(t)) {
+            columnStylesConfig[i] = { halign: modoReducao ? 'left' : 'center', cellWidth: 28 };
+        } else if (/descri/i.test(t) || /cliente|fornecedor|favorecido/i.test(t)) {
+            columnStylesConfig[i] = { halign: 'left' };
+        }
+    });
+
+    /* -------------------------
        DESENHAR TABELA
     ------------------------- */
     doc.autoTable({
-            head: head,
-            body: body,
-            startY: y + 2,
-            theme: 'striped',
+        head: head,
+        body: body,
+        startY: y + 2,
+        theme: 'striped',
+        showHead: 'everyPage',
+        rowPageBreak: 'avoid',
 
-            styles: {
-                fontSize: 8,
-                cellPadding: 2,
-                halign: "center",
-                valign: "middle"
-            },
+        styles: {
+            fontSize: modoReducao ? 12 : 9,
+            cellPadding: modoReducao ? 1.5 : 2,
+            halign: 'left',
+            valign: 'middle',
+            overflow: 'linebreak'
+        },
 
-            // Alinha especificamente a coluna de Valor (índice 4) à direita
-            columnStyles: {
-                4: { halign: "right" }
-            },
+        columnStyles: columnStylesConfig,
 
-            headStyles: {
-                fillColor: [206, 206, 206],
-                textColor: 0,
-                fontStyle: "bold"
-            },
+        headStyles: {
+            fillColor: [206, 206, 206],
+            textColor: 0,
+            fontStyle: "bold"
+        },
 
-            alternateRowStyles: {
-                fillColor: [255, 255, 255]
-            },
+        alternateRowStyles: {
+            fillColor: [255, 255, 255]
+        },
 
-            margin: {
-                left: 8,
-                right: 8
-            },
+        margin: {
+            top: 15,
+            left: 8,
+            right: 8
+        },
 
-            didParseCell: function (data) {
-                if (data.cell.raw?.classList?.contains('td-acoes')) {
-                    data.cell.text = '';
-                }
-
-                // Estilização especial para a linha de totais
-                if (data.row.raw?.isTotalRow || data.row.raw?.id === 'tr-totais') {
-                    data.cell.styles.fontStyle = 'bold';
-                    data.cell.styles.fillColor = [220, 220, 220];
-                    data.cell.styles.textColor = [0, 0, 0];
-                } else if (data.section === 'body') {
-                    const grupo = Math.floor(data.row.index / 2);
-                    if (grupo % 2 === 1) {
-                        data.cell.styles.fillColor = [245, 245, 245];
-                    }
-                }
+        didParseCell: function (data) {
+            if (data.row.raw?.isTotalRow) {
+                data.cell.styles.fontStyle = 'bold';
+                data.cell.styles.fillColor = [220, 220, 220];
+                data.cell.styles.textColor = [0, 0, 0];
+            } else if (data.section === 'body' && data.row.index % 2 === 1) {
+                data.cell.styles.fillColor = [245, 245, 245];
             }
-        });
+        }
+    });
 
+    /* -------------------------
+       RESUMO DE SALDOS
+    ------------------------- */
     const saldos = obterSaldos();
     let resumoY = doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 10 : y + 10;
 
@@ -162,15 +198,10 @@ async function gerarpdf(nome, nomeEmpresa = '') {
 
     for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
-        doc.text(
-            `Página ${i} de ${totalPages}`,
-            pageWidth - 10,
-            10,
-            { align: 'right' }
-        );
+        doc.text(`Página ${i} de ${totalPages}`, pageWidth - 10, 10, { align: 'right' });
     }
 
-    doc.save(`relatorio_movimentacao.pdf`);
+    doc.save(modoReducao ? `relatorio_movimentacao_reduzido.pdf` : `relatorio_movimentacao.pdf`);
 }
 
 /* -------------------------
