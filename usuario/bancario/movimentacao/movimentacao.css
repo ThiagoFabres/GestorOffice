@@ -13,7 +13,7 @@
 
 }
 .inputs-pagamento-text div:has(input[type="date"]){
-    width: calc(100%/3);
+    width: calc(100%);
     height: 5.175em;
 }
 
@@ -28,7 +28,7 @@
 }
 
 .inputs-pagamento-text div:has(select){
-    width: calc(100%/3);
+    width: calc(100%);
     height: 4.3em;
 }
 .inputs-pagamento-text div label {

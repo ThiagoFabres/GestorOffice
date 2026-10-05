@@ -81,6 +81,8 @@ class Ban02 {
         $ordenar_por = null,
         $direcao = ' DESC',
         $read_total = null,
+        $read_vinculados = null,
+        $filtro_cadastro = null
         ) {
 
         $pdo = (new Database())->connect();
@@ -172,7 +174,14 @@ class Ban02 {
         if($read_desmembramento != null) {
             $conditions[] = ' id_original != id';
         }
-        
+
+        if($filtro_cadastro != null) {
+            $conditions[] = ' id_cadastro = :filtro_cadastro';
+        }
+
+        if($read_vinculados != null) {
+            $conditions[] = ' id_cadastro IS NOT NULL';
+        }
 
         if ($conditions) {
             $query .= ' WHERE ' . implode(' AND ', $conditions);
@@ -254,6 +263,9 @@ class Ban02 {
         }
         if ($filtro_subtitulo !== null) {
             $stmt->bindValue(':filtro_subtitulo', $filtro_subtitulo);
+        }
+        if ($filtro_cadastro !== null) {
+            $stmt->bindValue(':filtro_cadastro', $filtro_cadastro);
         }
         if ($filtro_conta !== null) {
             $stmt->bindValue(':filtro_conta', $filtro_conta);

@@ -165,8 +165,29 @@ async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
                 data.cell.styles.fontStyle = 'bold';
                 data.cell.styles.fillColor = [220, 220, 220];
                 data.cell.styles.textColor = [0, 0, 0];
-            } else if (data.section === 'body' && data.row.index % 2 === 1) {
-                data.cell.styles.fillColor = [245, 245, 245];
+            } else if (data.section === 'body') {
+                // Identifica se a linha é o início de um novo registro (se tem 'Documento', 'Data' ou 'Tipo' preenchidos)
+                // Se o seu registro tiver mais ou menos de 2 linhas subjacentes, isso garante a alternância correta.
+                const rowData = data.row.raw || [];
+                const ehInicioDeRegistro = rowData[0] || rowData[1] || rowData[2];
+
+                // Atualiza o índice do grupo/lançamento
+                if (ehInicioDeRegistro && data.column.index === 0) {
+                    if (data.row.index === 0) {
+                        data.table._registroIndex = 0;
+                    } else {
+                        data.table._registroIndex = (data.table._registroIndex || 0) + 1;
+                    }
+                }
+
+                const registroAtual = data.table._registroIndex || 0;
+
+                // Aplica a cor zebra intercalando por REGISTRO COMPLETO (par/ímpar)
+                if (registroAtual % 2 === 1) {
+                    data.cell.styles.fillColor = [245, 245, 245];
+                } else {
+                    data.cell.styles.fillColor = [255, 255, 255];
+                }
             }
         }
     });
