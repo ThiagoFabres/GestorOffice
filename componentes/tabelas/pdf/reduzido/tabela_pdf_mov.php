@@ -21,8 +21,7 @@
         <tr class="tr-header">
             <th>Data</th>
             <th>Tipo</th>
-            <th>Descrição</th>
-            <th>Cliente / Fornecedor</th>
+            <th>Nome</th>
             <th style="text-align: right;">Valor</th>
         </tr>
     </thead>
