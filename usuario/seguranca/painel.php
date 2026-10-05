@@ -372,8 +372,14 @@ $baseQuery = [
 
                 
 
-                <div class="table-responsive table-striped">
+                <div class="table-responsive table-striped mb-4">
                     <table class="table table-borderless align-middle mb-0 pn-tabela">
+                        <colgroup>
+                            <col class="col-data">
+                            <col class="col-horario">
+                            <col class="col-empresa">
+                            <col class="col-info">
+                        </colgroup>
                         <thead>
                             <tr>
                                 <th>Data</th>
@@ -385,31 +391,33 @@ $baseQuery = [
                         <tbody>
                         <?php if (!$panicos_lista): ?>
                             <tr class="pn-vazio">
-                                <td colspan="7">Nenhum Pânico Encontrado Com Esses Filtros.</td>
+                                <td colspan="4">Nenhum Pânico Encontrado Com Esses Filtros.</td>
                             </tr>
                         <?php endif; ?>
 
                         <?php foreach ($panicos_lista as $p):
                             $usuario_id = $p->id_usuario;
-
                             $usuario_obj = Usuario::read($usuario_id)[0] ?? 'Desconhecido';
                             $usuario_nome = $usuario_obj->nome;
                             $empresa_obj = Empresa::read($usuario_obj->id_empresa)[0];
                             $empresa_nome = $empresa_obj->nom_fant ?? $empresa_obj->razao_soc ?? 'Desconhecida';
-                            [$latitude, $longitude] = explode( ',', $p->localizacao);
+                            [$latitude, $longitude] = explode(',', $p->localizacao);
                             [$panico_data, $panico_hora] = explode(' ', paraLocal($p->hora) ?? '');
+                            
+                            // Formatando a data do pânico para o padrão d/m/Y (igual à segunda tabela)
+                            $dtPanico = !empty($panico_data) ? (new DateTime($panico_data))->format('d/m/Y') : '';
                         ?>
                             <tr class="parcela_cor_vermelha">
-                                <td><?= $panico_data ?></td>
+                                <td><?= $dtPanico ?></td>
                                 <td><?= $panico_hora ?></td>
                                 <td><?= h($empresa_nome) ?></td>
                                 <td>
                                     <a 
-                                    class="small" 
-                                    href="https://maps.google.com/?q=<?= urlencode($latitude . ',' . $longitude ) ?>"
-                                    target="_blank"
-                                    rel="noopener">
-                                    Ver localização no mapa
+                                        class="small" 
+                                        href="https://maps.google.com/?q=<?= urlencode($latitude . ',' . $longitude) ?>"
+                                        target="_blank"
+                                        rel="noopener">
+                                        Ver localização no mapa
                                     </a>
                                 </td>
                             </tr>
@@ -420,6 +428,12 @@ $baseQuery = [
 
                 <div class="table-responsive table-striped">
                     <table class="table table-borderless align-middle mb-0 pn-tabela">
+                        <colgroup>
+                            <col class="col-data">
+                            <col class="col-horario">
+                            <col class="col-empresa">
+                            <col class="col-info">
+                        </colgroup>
                         <thead>
                             <tr>
                                 <th>Data</th>
@@ -431,7 +445,7 @@ $baseQuery = [
                         <tbody>
                         <?php if (!$registros): ?>
                             <tr class="pn-vazio">
-                                <td colspan="7">Nenhum registro encontrado para os filtros selecionados.</td>
+                                <td colspan="4">Nenhum registro encontrado para os filtros selecionados.</td>
                             </tr>
                         <?php endif; ?>
 
@@ -444,6 +458,8 @@ $baseQuery = [
                                 $classe_linha = 'parcela_cor_azul';
                             } else if($r['tipo'] == 'termino') {
                                 $classe_linha = 'parcela_cor_amarela';
+                            } else {
+                                $classe_linha = 'parcela_cor_vermelha';
                             }
                         ?>
                             <tr class="<?= $classe_linha ?>">

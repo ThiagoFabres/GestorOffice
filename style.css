@@ -494,7 +494,24 @@ input[type="checkbox"]:checked {
 
 
 
+.pn-tabela { 
+    table-layout: fixed; /* Força todas as tabelas a seguirem as proporções definidas nas colunas */
+    width: 100%;
+}
 
+.pn-tabela th, .pn-tabela td { 
+    text-align: center; 
+    white-space: nowrap; 
+    font-variant-numeric: tabular-nums; 
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Definição exata de largura para cada coluna para garantir alinhamento perfeito entre as duas tabelas */
+.col-data { width: 20%; }
+.col-horario { width: 20%; }
+.col-empresa { width: 35%; }
+.col-info { width: 25%; }
 
 
 .parcela_cor_azul td,
