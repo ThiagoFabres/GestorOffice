@@ -1207,10 +1207,14 @@ if ($get_filtro_conta != null) {
     </script>
 <?php } ?>
 <script>
-<?php if($get_pdf) {?>
+    <?php if($get_pdf == 'reduzido') {?>
+        gerarpdf('movimentacao', <?= json_encode($nome_empresa) ?>, 'reduzido') ;
+        window.location.href='<?=$caminho?>'
+<?php } ?>  
+<?php if($get_pdf && $get_pdf !== 'reduzido') {?>
         gerarpdf('movimentacao', <?= json_encode($nome_empresa) ?>);
         window.location.href='<?=$caminho?>'
-    <?php } ?>  
+<?php } ?>  
     <?php if($get_excel) {?>
         gerarexcel('movimentacao', <?= json_encode($nome_empresa) ?>);
         window.location.href='<?=$caminho?>'
