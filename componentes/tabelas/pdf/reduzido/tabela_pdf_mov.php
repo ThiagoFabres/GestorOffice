@@ -60,8 +60,8 @@
         <tr id="tr-totais" style="font-weight: bold; background-color: #dcdcdc;">
             <td></td>
             <td></td>
-            <td style="text-align: right;">TOTAL:</td>
-            <td style="text-align: right;">R$ <?=number_format($total_valor, 2, ',', '.')?></td>
+            <td></td>
+            <td style="text-align: right;">TOTAL:  <?=number_format($total_valor, 2, ',', '.')?></td>
         </tr>
     </tfoot>
 </table>
