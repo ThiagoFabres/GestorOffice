@@ -1,3 +1,12 @@
+function formatarData(dataStr) {
+            if (!dataStr || dataStr.trim() === '') return '';
+            const regex = /(\d{4})-(\d{2})-(\d{2})/;
+            const match = dataStr.match(regex);
+            if (match) {
+                return match[3] + '/' + match[2] + '/' + match[1];
+            }
+            return dataStr;
+        }
 async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
     console.log('Rendering');
     const tabela = document.querySelector('#tabela-pdf');
@@ -20,45 +29,53 @@ async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
     const pageHeight = doc.internal.pageSize.getHeight();
 
     /* -------------------------
-       CABEÇALHO
+       1. CABEÇALHO (Nome da Empresa e Título)
     ------------------------- */
     const titulo =
         document.querySelector('.card .card-header h3')?.textContent ||
         `Relatório de Movimentação Bancária`;
 
-    doc.setFontSize(16);
+    doc.setFontSize(14);
     doc.setFont(undefined, "bold");
-    doc.text(`${nomeEmpresa} - ${titulo}`, 10, 10);
+    
+    let y = 12;
+    if (nomeEmpresa) {
+        doc.text(nomeEmpresa, 10, y);
+        y += 6;
+    }
+    doc.setFontSize(12);
+    doc.text(titulo, 10, y);
+    y += 8;
 
+    /* -------------------------
+       2. PERÍODO / DATA INICIAL / DATA FINAL (Entre Cabeçalho e Tabela)
+    ------------------------- */
     doc.setFontSize(10);
     doc.setFont(undefined, "normal");
 
-    let y = 16;
+    const di = document.querySelector('#filtro_data_inicial')?.value;
+    const df = document.querySelector('#filtro_data_final')?.value;
 
-    const filtros = [
-        ['Período', '#filtro_data_inicial', '#filtro_data_final'],
-        ['Documento', '#filtro_nome']
-    ];
+    if (di && df) {
+        doc.text(`Período: ${formatarData(di)} até ${formatarData(df)}`, 10, y);
+        y += 6;
+    } else if (di) {
+        doc.text(`Data Inicial: ${formatarData(di)}`, 10, y);
+        y += 6;
+    } else if (df) {
+        doc.text(`Data Final: ${formatarData(df)}`, 10, y);
+        y += 6;
+    }
 
-    filtros.forEach(f => {
-        if (f.length === 3) {
-            const di = document.querySelector(f[1])?.value;
-            const df = document.querySelector(f[2])?.value;
-            if (di && df) {
-                doc.text(`${f[0]}: ${formatarData(di)} até ${formatarData(df)}`, 10, y);
-                y += 5;
-            }
-        } else {
-            const val = document.querySelector(f[1])?.value;
-            if (val) {
-                doc.text(`${f[0]}: ${val}`, 10, y);
-                y += 5;
-            }
-        }
-    });
+    // Demais filtros (ex.: Documento/Nome)
+    const valDoc = document.querySelector('#filtro_nome')?.value;
+    if (valDoc) {
+        doc.text(`Documento: ${valDoc}`, 10, y);
+        y += 6;
+    }
 
     /* -------------------------
-       EXTRAIR TABELA (tbody + tfoot)
+       3. EXTRAIR TABELA (tbody + tfoot)
     ------------------------- */
     let head = [];
     let body = [];
@@ -83,7 +100,7 @@ async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
     });
 
     /* -------------------------
-       MODO REDUZIDO: Data, Cliente/Fornecedor e Valor (sem Descrição)
+       MODO REDUZIDO: Data, Cliente/Fornecedor e Valor
     ------------------------- */
     if (modoReducao) {
         const cabecalho = head[head.length - 1] || [];
@@ -91,12 +108,11 @@ async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
 
         const idxData  = achar(/data/i);
         const idxTipo  = achar(/tipo/i);
-        const idxNome  = achar(/nome|cliente|fornecedor|favorecido/i); // Adicionado /nome/
+        const idxNome  = achar(/nome|cliente|fornecedor|favorecido/i);
         let   idxValor = achar(/valor/i);
 
         if (idxValor === -1 && cabecalho.length) idxValor = cabecalho.length - 1;
 
-        // Mapeia todos os índices encontrados
         const indices = [idxData, idxTipo, idxNome, idxValor].filter(i => i !== -1);
 
         head = [indices.map(i => cabecalho[i])];
@@ -109,32 +125,29 @@ async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
     }
 
     /* -------------------------
-       ESTILOS DE COLUNA (pelo nome do cabeçalho)
+       ESTILOS DE COLUNA
     ------------------------- */
     const colunas = head[head.length - 1] || [];
     const columnStylesConfig = {};
 
-    colunas.forEach((titulo, i) => {
-        const t = String(titulo || '');
+    colunas.forEach((tituloCol, i) => {
+        const t = String(tituloCol || '');
 
         if (/valor/i.test(t)) {
             columnStylesConfig[i] = { halign: 'right'};
         } else if (/data/i.test(t)) {
-            columnStylesConfig[i] = { halign:  'left', cellWidth: 20};
+            columnStylesConfig[i] = { halign: 'left', cellWidth: 20};
         } else if (/descri/i.test(t) || /cliente|fornecedor|favorecido/i.test(t)) {
             columnStylesConfig[i] = { halign: 'left' };
         } else if (/tipo/i.test(t)) {
-            columnStylesConfig[i] = { halign: 'center', cellWidth: 12};
+            columnStylesConfig[i] = { halign: 'center', cellWidth: 16};
         }
     });
 
     /* -------------------------
-       DESENHAR TABELA
+       4. DESENHAR TABELA
     ------------------------- */
-    /* -------------------------
-   DESENHAR TABELA
-------------------------- */
-doc.autoTable({
+    doc.autoTable({
     head: head,
     body: body,
     startY: y + 2,
@@ -152,10 +165,15 @@ doc.autoTable({
 
     columnStyles: columnStylesConfig,
 
+    /* ---------------------------------------------------------
+       1. AUMENTAR TAMANHO DO TH (Aumentado fontSize para 10 ou 11)
+    --------------------------------------------------------- */
     headStyles: {
         fillColor: [206, 206, 206],
         textColor: 0,
-        fontStyle: "bold"
+        fontStyle: "bold",
+        fontSize: 13,
+        cellPadding: 3
     },
 
     alternateRowStyles: {
@@ -169,12 +187,23 @@ doc.autoTable({
     },
 
     didParseCell: function (data) {
+        /* ---------------------------------------------------------
+           2. ALINHAR O CABEÇALHO "VALOR" À DIREITA
+        --------------------------------------------------------- */
+        if (data.section === 'head') {
+            const textoCabecalho = String(data.cell.raw || '');
+            if (/valor/i.test(textoCabecalho)) {
+                data.cell.styles.halign = 'right';
+            }
+        }
+
+        /* ---------------------------------------------------------
+           3. ESTILOS DAS LINHAS DE TOTAL E EFEITO ZEBRA
+        --------------------------------------------------------- */
         if (data.row.raw?.isTotalRow) {
             data.cell.styles.fontStyle = 'bold';
             data.cell.styles.fillColor = [220, 220, 220];
             data.cell.styles.textColor = [0, 0, 0];
-            
-            // ALINHA O TEXTO "TOTAL:" À DIREITA
             data.cell.styles.halign = 'right';
         } else if (data.section === 'body') {
             const rowData = data.row.raw || [];
@@ -200,17 +229,7 @@ doc.autoTable({
 });
 
     /* -------------------------
-       RESUMO DE SALDOS
-    ------------------------- */
-    const saldos = obterSaldos();
-    let resumoY = doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 10 : y + 10;
-
-    if (resumoY > pageHeight - 35) {
-        doc.addPage();
-        resumoY = 15;
-    }
-   /* -------------------------
-       RESUMO DE SALDOS (Apenas no modo normal/completo)
+       5. RESUMO DE SALDOS (Apenas no modo completo)
     ------------------------- */
     if (!modoReducao) {
         const saldos = obterSaldos();
@@ -245,59 +264,6 @@ doc.autoTable({
     doc.save(modoReducao ? `relatorio_movimentacao_vinculados.pdf` : `relatorio_movimentacao.pdf`);
 }
 
-/* -------------------------
-   UTIL
-------------------------- */
-
-function formatarData(data){
-
-    const [ano, mes, dia] = data.split('-');
-
-    return `${dia}/${mes}/${ano}`;
-
-}
-
-function parseMoeda(valor) {
-    if (valor === null || valor === undefined) return 0;
-
-    const texto = String(valor).replace(/[^\d,-]/g, '').trim();
-    if (!texto) return 0;
-
-    const normalizado = texto.includes(',')
-        ? texto.replace(/\./g, '').replace(',', '.')
-        : texto;
-
-    return Number(normalizado) || 0;
-}
-
-function formatarMoeda(valor) {
-    return Number(valor).toLocaleString('pt-BR', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    });
-}
-
-function obterSaldos() {
-    const resumo = document.querySelector('#totais-lancamento-pdf');
-    const lerSaldo = (atributo, seletor) => {
-        const valor = resumo?.dataset[atributo];
-        if (valor !== undefined) return Number(valor) || 0;
-
-        const elemento = document.querySelector(seletor);
-        return elemento ? parseMoeda(elemento.textContent) : 0;
-    };
-
-    const inicial = lerSaldo('saldoInicial', '#saldo-inicial-pdf');
-    const filtro = lerSaldo('saldoFiltro', '#saldo-filtro-pdf');
-    const total = lerSaldo('saldoTotal', '#saldo-total-pdf');
-
-    return {
-        inicial: formatarMoeda(inicial),
-        filtro: formatarMoeda(filtro),
-        total: formatarMoeda(total || inicial + filtro)
-    };
-}
-
 
 
 
@@ -314,26 +280,14 @@ function obterSaldos() {
 
 function gerarexcel(nome, nomeEmpresa = '') {
     try {
-        var tabela = document.querySelector('#tabela-pdf')
+        var tabela = document.querySelector('#tabela-pdf');
         if (!tabela) {
             alert("Tabela não encontrada!");
             return;
         }
 
-        // Função auxiliar para formatar datas de yyyy-mm-dd para dd/mm/yyyy
-        function formatarData(dataStr) {
-            if (!dataStr || dataStr.trim() === '') return '';
-            
-            const regex = /(\d{4})-(\d{2})-(\d{2})/;
-            const match = dataStr.match(regex);
-            
-            if (match) {
-                return match[3] + '/' + match[2] + '/' + match[1];
-            }
-            return dataStr;
-        }
+        
 
-        // Função para extrair valor do select
         function getSelectValue(selector) {
             var el = document.querySelector(selector);
             if (!el) return '';
@@ -341,7 +295,6 @@ function gerarexcel(nome, nomeEmpresa = '') {
                    el.options[el.selectedIndex].text.trim() : '';
         }
 
-        // Função para extrair valor do radio button
         function getRadioValue(name) {
             var checked = document.querySelector('input[name="' + name + '"]:checked');
             if (!checked) return '';
@@ -350,20 +303,66 @@ function gerarexcel(nome, nomeEmpresa = '') {
             return lbl ? lbl.textContent.trim() : checked.value;
         }
 
-        // Clona a tabela para não alterar o DOM original
+        var headerFiltros = [];
+
+        /* 1. Nome da Empresa e Título no topo */
+        if (nomeEmpresa) {
+            headerFiltros.push([nomeEmpresa]);
+        }
+
+        var titleEl = document.querySelector('.card .card-header h3') || document.querySelector('h3');
+        var titleText = titleEl ? titleEl.textContent.trim() : 'Relatório de Movimentação Bancária';
+        headerFiltros.push([titleText]);
+        headerFiltros.push([]); // Linha em branco
+
+        /* 2. Período / Data Inicial / Data Final */
+        var di = document.querySelector('#filtro_data_inicial');
+        var df = document.querySelector('#filtro_data_final');
+
+        if ((di && di.value) || (df && df.value)) {
+            var dataInicialFmt = di && di.value ? formatarData(di.value) : '';
+            var dataFinalFmt = df && df.value ? formatarData(df.value) : '';
+            
+            if (dataInicialFmt && dataFinalFmt) {
+                headerFiltros.push(['Período:', dataInicialFmt + ' até ' + dataFinalFmt]);
+            } else if (dataInicialFmt) {
+                headerFiltros.push(['Data Inicial:', dataInicialFmt]);
+            } else if (dataFinalFmt) {
+                headerFiltros.push(['Data Final:', dataFinalFmt]);
+            }
+        }
+
+        /* Demais filtros */
+        var tipo = getSelectValue('select[name="filtro_tipo"]');
+        var conta = getSelectValue('select[name="filtro_conta"]');
+        var titulo = getSelectValue('select[name="filtro_titulo"]') || getSelectValue('#titulo-filtro');
+        var subtitulo = getSelectValue('select[name="filtro_subtitulo"]') || getSelectValue('#subtitulo-filtro');
+        var conciliado = document.querySelector('input[name="filtro_conciliado"]');
+        var opcao = getRadioValue('opcao_filtro');
+        var por = getRadioValue('filtro_por');
+
+        if (tipo && tipo !== 'Selecione') headerFiltros.push(['Tipo:', tipo]);
+        if (conta && conta !== 'Selecione') headerFiltros.push(['Conta:', conta]);
+        if (titulo && titulo !== 'Selecione') headerFiltros.push(['Título:', titulo]);
+        if (subtitulo && subtitulo !== 'Selecione') headerFiltros.push(['Subtítulo:', subtitulo]);
+        if (conciliado && conciliado.checked) headerFiltros.push(['Conciliado:', 'Sim']);
+        if (opcao) headerFiltros.push(['Opção:', opcao]);
+        if (por) headerFiltros.push(['Filtro por:', por]);
+
+        headerFiltros.push([]); // Linha em branco antes da tabela
+
+        /* 3. Extrair dados da Tabela */
         var tabelaClone = tabela.cloneNode(true);
 
-        // Remove símbolos de moeda
         tabelaClone.querySelectorAll('td, th').forEach(function(el) {
             if (el.textContent.includes('R$')) {
                 el.textContent = el.textContent.replace(/R\$\s?/g, '').trim();
             }
         });
 
-        // Converte tabela HTML para array de arrays
         var dados = [];
         
-        // Adiciona cabeçalho
+        // Cabeçalho da Tabela
         var thElements = tabelaClone.querySelectorAll('thead tr:last-child th');
         if (thElements.length > 0) {
             var headerRow = [];
@@ -373,21 +372,17 @@ function gerarexcel(nome, nomeEmpresa = '') {
             dados.push(headerRow);
         }
 
-        // Adiciona linhas do corpo
+        // Linhas da Tabela
         var rows = tabelaClone.querySelectorAll('tbody tr');
         rows.forEach(function(tr) {
-            // Ignora a linha de totais
             if (tr.id === 'tr-totais') return;
             
             var row = [];
             var tds = tr.querySelectorAll('td');
             
-            tds.forEach(function(td, idx) {
+            tds.forEach(function(td) {
                 var valor = td.textContent.trim();
-                
-                // Formata datas
                 valor = formatarData(valor);
-                
                 row.push(valor);
             });
             
@@ -396,67 +391,23 @@ function gerarexcel(nome, nomeEmpresa = '') {
             }
         });
 
-var trTotais = tabelaClone.querySelector('#tr-totais') || tabelaClone.querySelector('tfoot tr');
-if (trTotais) {
-    var totalRow = [];
-    var totalTds = trTotais.querySelectorAll('td');
-    totalTds.forEach(function(td) {
-        var valor = td.textContent.trim();
-        valor = formatarData(valor);
-        totalRow.push(valor);
-    });
-    if (totalRow.length > 0) {
-        dados.push([]); 
-        dados.push(totalRow);
-    }
-}
-
-        // Constrói o header com filtros
-        var headerFiltros = [];
-        
-        // Título
-        var titleEl = document.querySelector('.card .card-header h3') || document.querySelector('h3');
-        var titleText = titleEl ? titleEl.textContent.trim() : ('Relatório de Movimentação Bancária');
-        
-        headerFiltros.push([nomeEmpresa + ' - ' + titleText]);
-        headerFiltros.push([]); // linha vazia
-
-        // Coleta os filtros aplicados
-        var di = document.querySelector('#filtro_data_inicial');
-        var df = document.querySelector('#filtro_data_final');
-        var titulo = getSelectValue('select[name="filtro_titulo"]') || getSelectValue('#titulo-filtro');
-        var subtitulo = getSelectValue('select[name="filtro_subtitulo"]') || getSelectValue('#subtitulo-filtro');
-        var tipo = getSelectValue('select[name="filtro_tipo"]');
-        var conta = getSelectValue('select[name="filtro_conta"]');
-        var conciliado = document.querySelector('input[name="filtro_conciliado"]');
-        var opcao = getRadioValue('opcao_filtro');
-        var por = getRadioValue('filtro_por');
-
-        // Adiciona filtros não vazios
-        if ((di && di.value) || (df && df.value)) {
-            var dataInicialFmt = di && di.value ? formatarData(di.value) : '';
-            var dataFinalFmt = df && df.value ? formatarData(df.value) : '';
-            
-            if (dataInicialFmt && dataFinalFmt) {
-                headerFiltros.push(['Período', dataInicialFmt + ' até ' + dataFinalFmt]);
-            } else if (dataInicialFmt) {
-                headerFiltros.push(['Data Inicial', dataInicialFmt]);
-            } else if (dataFinalFmt) {
-                headerFiltros.push(['Data Final', dataFinalFmt]);
+        // Linha de Totais
+        var trTotais = tabelaClone.querySelector('#tr-totais') || tabelaClone.querySelector('tfoot tr');
+        if (trTotais) {
+            var totalRow = [];
+            var totalTds = trTotais.querySelectorAll('td');
+            totalTds.forEach(function(td) {
+                var valor = td.textContent.trim();
+                valor = formatarData(valor);
+                totalRow.push(valor);
+            });
+            if (totalRow.length > 0) {
+                dados.push([]); 
+                dados.push(totalRow);
             }
         }
-        
-        if (tipo && tipo !== 'Selecione') headerFiltros.push(['Tipo', tipo]);
-        if (conta && conta !== 'Selecione') headerFiltros.push(['Conta', conta]);
-        if (titulo && titulo !== 'Selecione') headerFiltros.push(['Título', titulo]);
-        if (subtitulo && subtitulo !== 'Selecione') headerFiltros.push(['Subtítulo', subtitulo]);
-        if (conciliado && conciliado.checked) headerFiltros.push(['Conciliado', 'Sim']);
-        if (opcao) headerFiltros.push(['Opção', opcao]);
-        if (por) headerFiltros.push(['Filtro por', por]);
 
-        headerFiltros.push([]); // linha vazia
-        headerFiltros.push([]); // linha vazia
-
+        // Resumo de Saldos no fim da tabela
         var saldos = obterSaldos();
         dados.push([]);
         dados.push(['Resumo de saldos']);
@@ -464,26 +415,22 @@ if (trTotais) {
         dados.push(['Saldo do periodo', saldos.filtro]);
         dados.push(['Saldo total', saldos.total]);
 
-        // Combina header com dados
+        /* 4. Combinar Cabeçalho/Filtros com Dados da Tabela */
         var aoaFinal = headerFiltros.concat(dados);
 
-        // Cria workbook
+        // Criar Planilha
         var ws = XLSX.utils.aoa_to_sheet(aoaFinal);
         
-        // Define largura das colunas
         var colWidths = [];
         for (var i = 0; i < (dados[0] ? dados[0].length : 10); i++) {
             colWidths.push({ wch: 18 });
         }
         ws['!cols'] = colWidths;
 
-        // Cria workbook e adiciona worksheet
         var wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Relatório de Movimentação");
 
-        // Gera arquivo
-        var filename = "relatorio_movimentacao.xlsx";
-        XLSX.writeFile(wb, filename);
+        XLSX.writeFile(wb, "relatorio_movimentacao.xlsx");
 
     } catch (error) {
         console.error('Erro ao gerar Excel:', error);
