@@ -51,6 +51,8 @@ if(!$get_filtro_conciliado) {
 if(!$get_filtro_conciliado) {
     $get_filtro_conciliado = filter_input(INPUT_GET, 'filtro_conciliado') == '1' ? true : false;
 }
+$get_filtro_cadastro = filter_input(INPUT_GET, 'filtro_cadastro');
+if($get_filtro_cadastro == '') $get_filtro_cadastro = null;
 
 $get_filtro_descricao = filter_input(INPUT_GET, 'descricao');
 if($get_filtro_descricao === '') {
@@ -81,7 +83,8 @@ $bancario_paginas = Ban02::read(
     filtro_tipo: $get_filtro_tipo,
     filtro_descricao: $get_filtro_descricao,
     ordenar_por: $ordenar_por,
-    direcao: $direcao,
+    direcao:$direcao,
+    filtro_cadastro:$get_filtro_cadastro,
 ); 
 
 $total_paginas = ceil($bancario_paginas / $numero_exibir);
@@ -173,6 +176,8 @@ $movimentacoes_pdf = Ban02::read(
                             filtro_descricao: $get_filtro_descricao,
                             ordenar_por:$ordenar_por,
                             direcao:$direcao,
+                            filtro_cadastro:$get_filtro_cadastro,
+                            read_vinculados: $get_pdf == 'reduzido' ? true : null
                         );
 $movimentacoes_totais = $movimentacoes_pdf;
 
@@ -188,6 +193,7 @@ $saldo_geral = Ban02::read(
     filtro_conta: $get_filtro_conta,
     read_total: true
 );
+
 
 if ($get_filtro_conta != null) {
 
@@ -258,8 +264,6 @@ if ($get_filtro_conta != null) {
                     <!-- <div class="card-header-borda d-flex flex-row align-items-center" style="justify-content: space-between;"> -->
                         <div style=" display: flex; flex-direction: column;" class="input-movimentacao-text-group">    
                             <div class="inputs-pagamento-text">
-                                
-                                <!-- Data inicial -->
                                     <div>
                                         <label style="display:block; height:17px">Data Inicial:</label>
                                         <input type="date" id="filtro_data_inicial"
@@ -285,6 +289,10 @@ if ($get_filtro_conta != null) {
                                             <option <?php if($get_filtro_tipo == 'D') echo 'selected' ?> value="D">Débito</option>
                                         </select>
                                     </div>
+                                    <div class="form-check">
+                                        <label style="font-size: 100%; overflow: visible; white-space: nowrap;" for="filtro_documento">Não Conciliados:</label>
+                                        <input type="checkbox" <?php if($get_filtro_conciliado) echo 'checked' ?> name="filtro_conciliado">
+                                </div>
                                     
                                     
                                 </div>
@@ -335,11 +343,24 @@ if ($get_filtro_conta != null) {
                                             
                                         </select>
                                     </div>
-                                    <div class="d-flex flex-column w-25">
+                                    <div class="d-flex flex-column w-25 rounded-0">
                                         <label for="filtro_documento">Descrição:</label>
                                         <div class="h-100" style="top:1em; position: block;">
-                                        <input name="descricao" class="form-control" value="<?=$get_filtro_descricao?>" style="height:100%; top:1em; margin:0; padding:0;" placeholder="Descrição">
+                                        <input name="descricao" class="form-control" value="<?=$get_filtro_descricao?>" style="height:100%; top:1em; margin:0; padding:0; border-radius: 0;" placeholder="Descrição">
                                         </div>
+                                    </div>
+
+                                    <div class="w-25">
+                                        <label for="filtro_data_final">Cadastro:</label>
+                                        <select id="cadastro-filtro" name="filtro_cadastro">
+                                            <option value="">Selecione</option>
+                                            <?php $cadastros = Cadastro::read(id_empresa:$_SESSION['usuario']->id_empresa);
+                                        foreach ($cadastros as $cadastro) { ?>
+                                            <option value="<?= $cadastro->id_cadastro ?>" <?php if($cadastro->id_cadastro == $get_filtro_cadastro) echo 'selected' ?> >
+                                                <?= htmlspecialchars($cadastro->nom_fant, ENT_QUOTES, 'UTF-8') ?>
+                                            </option>
+                                        <?php } ?>
+                                        </select>
                                     </div>
 
                                     
@@ -354,10 +375,6 @@ if ($get_filtro_conta != null) {
                         
                             
                             <div class="inputs-pagamento-btn d-flex fd-column ai-start justify-content-space-between" style="width: 30%; justify-content: space-evenly; gap: 10%;">
-                                <div class="form-check">
-                                        <label style="font-size: 100%; overflow: visible; white-space: nowrap;" for="filtro_documento">Não Conciliados:</label>
-                                        <input type="checkbox" <?php if($get_filtro_conciliado) echo 'checked' ?> name="filtro_conciliado">
-                                </div>
                                 <div style=" display:flex; flex-direction:row; gap: 3%;">
                                     <div class="d-flex flex-direction-column" style="flex-direction: column; justify-content: center;">
                                         <div class="d-flex flex-direction-row" style="flex-direction: row; justify-content: space-between; gap:0.5em;">
@@ -461,6 +478,7 @@ if ($get_filtro_conta != null) {
                             filtro_descricao: $get_filtro_descricao,
                             ordenar_por: $ordenar_por,
                             direcao: $direcao,
+                            filtro_cadastro: $get_filtro_cadastro
                         );
 
                          if(!empty($movimentacoes)) {
@@ -644,7 +662,7 @@ if ($get_filtro_conta != null) {
         <div class="relatorios-botoes w-100" style="float:left;">
             <div class="d-flex flex-column">
                 <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf) {echo "gerarpdf('movimentacao', " . json_encode($nome_empresa) . ")";} else {?>window.location.href='<?php if(empty($filtros)) {echo $caminho . '?'?>pdf=1<?php } else { echo $caminho . 'pdf=1' ?> <?php }} ?>'">Gerar PDF</button>           
-                <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf) { ?>gerarpdf('movimentacao', <?= json_encode($nome_empresa) ?>, 'reduzido');<?php } else { ?>window.location.href='<?= $caminho ?><?= empty($filtros) ? '?' : '&' ?>pdf=reduzido';<?php } ?>">Gerar PDF Reduzido</button>
+                <button class="btn btn-primary btn-sm" id="botao-gerar-pdf" onclick="<?php if($get_pdf) { ?>gerarpdf('movimentacao', <?= json_encode($nome_empresa) ?>, 'reduzido');<?php } else { ?>window.location.href='<?= $caminho ?><?= empty($filtros) ? '?' : '&' ?>pdf=reduzido';<?php } ?>">Gerar PDF Vinculados</button>
             </div>
             <div class="d-flex flex-column">
                 <button class="btn btn-primary btn-sm" id="botao-gerar-excel" onclick="<?php if($get_excel) {echo "gerarexcel('movimentacao', " . json_encode($nome_empresa) . ")";} else {?>window.location.href='<?php if(empty($filtros)) {echo $caminho . '?'?>excel=1<?php } else { echo $caminho . 'excel=1' ?> <?php }} ?>'">Gerar Excel</button>           
