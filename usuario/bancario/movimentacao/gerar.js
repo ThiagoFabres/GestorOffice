@@ -89,12 +89,15 @@ async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
         const cabecalho = head[head.length - 1] || [];
         const achar = (regex) => cabecalho.findIndex(t => regex.test(String(t || '')));
 
-        const idxData = achar(/data/i);
-        const idxNome = achar(/cliente|fornecedor|favorecido/i);
-        let idxValor = achar(/valor/i);
+        const idxData  = achar(/data/i);
+        const idxTipo  = achar(/tipo/i);
+        const idxNome  = achar(/nome|cliente|fornecedor|favorecido/i); // Adicionado /nome/
+        let   idxValor = achar(/valor/i);
+
         if (idxValor === -1 && cabecalho.length) idxValor = cabecalho.length - 1;
 
-        const indices = [idxData, idxNome, idxValor].filter(i => i !== -1);
+        // Mapeia todos os índices encontrados
+        const indices = [idxData, idxTipo, idxNome, idxValor].filter(i => i !== -1);
 
         head = [indices.map(i => cabecalho[i])];
 
@@ -115,11 +118,13 @@ async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
         const t = String(titulo || '');
 
         if (/valor/i.test(t)) {
-            columnStylesConfig[i] = { halign: 'right', cellWidth: 40 };
+            columnStylesConfig[i] = { halign: 'right'};
         } else if (/data/i.test(t)) {
-            columnStylesConfig[i] = { halign: modoReducao ? 'left' : 'center', cellWidth: 28 };
+            columnStylesConfig[i] = { halign:  'left'};
         } else if (/descri/i.test(t) || /cliente|fornecedor|favorecido/i.test(t)) {
             columnStylesConfig[i] = { halign: 'left' };
+        } else if (/tipo/i.test(t)) {
+            columnStylesConfig[i] = { halign: 'center', cellWidth: 12};
         }
     });
 
@@ -135,8 +140,8 @@ async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
         rowPageBreak: 'avoid',
 
         styles: {
-            fontSize: modoReducao ? 12 : 9,
-            cellPadding: modoReducao ? 1.5 : 2,
+            fontSize: 9,
+            cellPadding: 2,
             halign: 'left',
             valign: 'middle',
             overflow: 'linebreak'
@@ -202,14 +207,27 @@ async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
         doc.addPage();
         resumoY = 15;
     }
+   /* -------------------------
+       RESUMO DE SALDOS (Apenas no modo normal/completo)
+    ------------------------- */
+    if (!modoReducao) {
+        const saldos = obterSaldos();
+        let resumoY = doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 10 : y + 10;
 
-    doc.setFontSize(10);
-    doc.setFont(undefined, "bold");
-    doc.text('Resumo de saldos', 10, resumoY);
-    doc.setFont(undefined, "normal");
-    doc.text(`Saldo inicial da conta: R$ ${saldos.inicial}`, 10, resumoY + 6);
-    doc.text(`Saldo do periodo: R$ ${saldos.filtro}`, 10, resumoY + 12);
-    doc.text(`Saldo total: R$ ${saldos.total}`, 10, resumoY + 18);
+        if (resumoY > pageHeight - 35) {
+            doc.addPage();
+            resumoY = 15;
+        }
+
+        doc.setFontSize(10);
+        doc.setFont(undefined, "bold");
+        doc.text('Resumo de saldos', 10, resumoY);
+        doc.setFont(undefined, "normal");
+        
+        doc.text(`Saldo inicial da conta: R$ ${saldos.inicial}`, 10, resumoY + 6);
+        doc.text(`Saldo do periodo: R$ ${saldos.filtro}`, 10, resumoY + 12);
+        doc.text(`Saldo total: R$ ${saldos.total}`, 10, resumoY + 18);
+    }
 
     /* -------------------------
        PAGINAÇÃO E SALVAMENTO
@@ -222,7 +240,7 @@ async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
         doc.text(`Página ${i} de ${totalPages}`, pageWidth - 10, 10, { align: 'right' });
     }
 
-    doc.save(modoReducao ? `relatorio_movimentacao_reduzido.pdf` : `relatorio_movimentacao.pdf`);
+    doc.save(modoReducao ? `relatorio_movimentacao_vinculados.pdf` : `relatorio_movimentacao.pdf`);
 }
 
 /* -------------------------
