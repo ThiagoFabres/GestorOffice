@@ -120,7 +120,7 @@ async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
         if (/valor/i.test(t)) {
             columnStylesConfig[i] = { halign: 'right'};
         } else if (/data/i.test(t)) {
-            columnStylesConfig[i] = { halign:  'left'};
+            columnStylesConfig[i] = { halign:  'left', cellWidth: 20};
         } else if (/descri/i.test(t) || /cliente|fornecedor|favorecido/i.test(t)) {
             columnStylesConfig[i] = { halign: 'left' };
         } else if (/tipo/i.test(t)) {
@@ -131,71 +131,73 @@ async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
     /* -------------------------
        DESENHAR TABELA
     ------------------------- */
-    doc.autoTable({
-        head: head,
-        body: body,
-        startY: y + 2,
-        theme: 'striped',
-        showHead: 'everyPage',
-        rowPageBreak: 'avoid',
+    /* -------------------------
+   DESENHAR TABELA
+------------------------- */
+doc.autoTable({
+    head: head,
+    body: body,
+    startY: y + 2,
+    theme: 'striped',
+    showHead: 'everyPage',
+    rowPageBreak: 'avoid',
 
-        styles: {
-            fontSize: 9,
-            cellPadding: 2,
-            halign: 'left',
-            valign: 'middle',
-            overflow: 'linebreak'
-        },
+    styles: {
+        fontSize: 9,
+        cellPadding: 2,
+        halign: 'left',
+        valign: 'middle',
+        overflow: 'linebreak'
+    },
 
-        columnStyles: columnStylesConfig,
+    columnStyles: columnStylesConfig,
 
-        headStyles: {
-            fillColor: [206, 206, 206],
-            textColor: 0,
-            fontStyle: "bold"
-        },
+    headStyles: {
+        fillColor: [206, 206, 206],
+        textColor: 0,
+        fontStyle: "bold"
+    },
 
-        alternateRowStyles: {
-            fillColor: [255, 255, 255]
-        },
+    alternateRowStyles: {
+        fillColor: [255, 255, 255]
+    },
 
-        margin: {
-            top: 15,
-            left: 8,
-            right: 8
-        },
+    margin: {
+        top: 15,
+        left: 8,
+        right: 8
+    },
 
-        didParseCell: function (data) {
-            if (data.row.raw?.isTotalRow) {
-                data.cell.styles.fontStyle = 'bold';
-                data.cell.styles.fillColor = [220, 220, 220];
-                data.cell.styles.textColor = [0, 0, 0];
-            } else if (data.section === 'body') {
-                // Identifica se a linha é o início de um novo registro (se tem 'Documento', 'Data' ou 'Tipo' preenchidos)
-                // Se o seu registro tiver mais ou menos de 2 linhas subjacentes, isso garante a alternância correta.
-                const rowData = data.row.raw || [];
-                const ehInicioDeRegistro = rowData[0] || rowData[1] || rowData[2];
+    didParseCell: function (data) {
+        if (data.row.raw?.isTotalRow) {
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.fillColor = [220, 220, 220];
+            data.cell.styles.textColor = [0, 0, 0];
+            
+            // ALINHA O TEXTO "TOTAL:" À DIREITA
+            data.cell.styles.halign = 'right';
+        } else if (data.section === 'body') {
+            const rowData = data.row.raw || [];
+            const ehInicioDeRegistro = rowData[0] || rowData[1] || rowData[2];
 
-                // Atualiza o índice do grupo/lançamento
-                if (ehInicioDeRegistro && data.column.index === 0) {
-                    if (data.row.index === 0) {
-                        data.table._registroIndex = 0;
-                    } else {
-                        data.table._registroIndex = (data.table._registroIndex || 0) + 1;
-                    }
-                }
-
-                const registroAtual = data.table._registroIndex || 0;
-
-                // Aplica a cor zebra intercalando por REGISTRO COMPLETO (par/ímpar)
-                if (registroAtual % 2 === 1) {
-                    data.cell.styles.fillColor = [245, 245, 245];
+            if (ehInicioDeRegistro && data.column.index === 0) {
+                if (data.row.index === 0) {
+                    data.table._registroIndex = 0;
                 } else {
-                    data.cell.styles.fillColor = [255, 255, 255];
+                    data.table._registroIndex = (data.table._registroIndex || 0) + 1;
                 }
             }
+
+            const registroAtual = data.table._registroIndex || 0;
+
+            if (registroAtual % 2 === 1) {
+                data.cell.styles.fillColor = [245, 245, 245];
+            } else {
+                data.cell.styles.fillColor = [255, 255, 255];
+            }
         }
-    });
+    }
+});
 
     /* -------------------------
        RESUMO DE SALDOS
