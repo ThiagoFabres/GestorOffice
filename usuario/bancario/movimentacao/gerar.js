@@ -6,7 +6,36 @@ function formatarData(dataStr) {
                 return match[3] + '/' + match[2] + '/' + match[1];
             }
             return dataStr;
-        }
+}
+
+function formatarMoeda(valor) {
+return Number(valor).toLocaleString('pt-BR', {
+minimumFractionDigits: 2,
+maximumFractionDigits: 2
+});
+
+} 
+
+function obterSaldos() {
+    const resumo = document.querySelector('#totais-lancamento-pdf');
+    const lerSaldo = (atributo, seletor) => {
+    const valor = resumo?.dataset[atributo];
+    if (valor !== undefined) return Number(valor) || 0;
+
+    const elemento = document.querySelector(seletor);
+    return elemento ? parseMoeda(elemento.textContent) : 0;
+    };
+    const inicial = lerSaldo('saldoInicial', '#saldo-inicial-pdf');
+    const filtro = lerSaldo('saldoFiltro', '#saldo-filtro-pdf');
+    const total = lerSaldo('saldoTotal', '#saldo-total-pdf');
+
+    return {
+    inicial: formatarMoeda(inicial),
+    filtro: formatarMoeda(filtro),
+    total: formatarMoeda(total || inicial + filtro)
+};
+
+} 
 async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
     console.log('Rendering');
     const tabela = document.querySelector('#tabela-pdf');
@@ -141,7 +170,7 @@ async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
             columnStylesConfig[i] = { halign: 'left' };
         } else if (/tipo/i.test(t)) {
             columnStylesConfig[i] = { halign: 'center', cellWidth: 16};
-        }
+        } 
     });
 
     /* -------------------------
@@ -172,7 +201,7 @@ async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
         fillColor: [206, 206, 206],
         textColor: 0,
         fontStyle: "bold",
-        fontSize: 13,
+        fontSize: modoReducao ? 13 : 9,
         cellPadding: 3
     },
 
