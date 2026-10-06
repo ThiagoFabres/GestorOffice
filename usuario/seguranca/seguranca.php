@@ -105,6 +105,62 @@ $normalizarTipo = static function ($tipo): string {
     );
 };
 
+/*
+ * Procura o controle de início/término mais próximo do horário real do turno
+ * (até 6h de distância). Se o horário real passou do fim da tolerância,
+ * devolve o horário esperado formatado; caso contrário, null.
+ */
+$esperadoSeAtrasado = static function (
+    string $tipo,
+    ?string $horaUtc,
+    array $controles
+) use ($normalizarTipo): ?string {
+    if (empty($horaUtc)) {
+        return null;
+    }
+
+    // Turnos são gravados em UTC; controle02 está em horário local (-3h)
+    $realTs = strtotime(
+        (new DateTime($horaUtc))->modify('-3 hours')->format('Y-m-d H:i:s')
+    );
+
+    if ($realTs === false) {
+        return null;
+    }
+
+    $melhor = null;
+    $menorDiferenca = 6 * 3600;
+
+    foreach ($controles as $controle) {
+        if ($normalizarTipo($controle->tipo) !== $tipo) {
+            continue;
+        }
+
+        $esperadaTs = strtotime((string) $controle->hora_esperada);
+
+        if ($esperadaTs === false) {
+            continue;
+        }
+
+        $diferenca = abs($realTs - $esperadaTs);
+
+        if ($diferenca <= $menorDiferenca) {
+            $menorDiferenca = $diferenca;
+            $melhor = [$esperadaTs, max(0, (int) $controle->tolerancia)];
+        }
+    }
+
+    if ($melhor === null) {
+        return null;
+    }
+
+    [$esperadaTs, $tolerancia] = $melhor;
+
+    return $realTs > $esperadaTs + ($tolerancia * 60)
+        ? date('d/m/Y H:i', $esperadaTs)
+        : null;
+};
+
 foreach ($segurancas as $i => $seguranca) {
     $turnos[$seguranca->id] = Turno::read(
         id_usuario: $seguranca->id,
@@ -194,6 +250,19 @@ $controlesPendentes = Controle02::read(
     hora_inicio: $inicioControleFiltro,
     hora_fim: $fimControleFiltro
 );
+
+/*
+ * Cópia (sem filtro de respondido/tolerância) usada para descobrir o horário
+ * esperado de início/término de cada turno.
+ */
+$controlesInicioFim = array_values(array_filter(
+    $controlesPendentes,
+    static fn($c) => in_array(
+        $normalizarTipo($c->tipo),
+        ['inicio', 'termino'],
+        true
+    )
+));
 
 /*
  * Mantém somente:
@@ -627,18 +696,18 @@ $qtdAtrasados = count($atrasados);
                                                     $controlesVistos = [];
 
                                                     $controle02Usados = [];
- 
+
                                                     foreach ($listaPontos as $ponto) {
                                                         $horaRespondida = $normalizarHorarioPonto(
                                                             $ponto->hora ?? $ponto->created_at
                                                         );
-                                                    
+
                                                         $horaPonto = strtotime((string) $horaRespondida);
-                                                    
+
                                                         // 1) controle02 do mesmo evento
                                                         $controle02Correspondente = null;
                                                         $menorDiferenca = 61;
-                                                    
+
                                                         if ($horaPonto !== false) {
                                                             foreach ($listaControles as $candidato) {
                                                                 if (
@@ -648,85 +717,85 @@ $qtdAtrasados = count($atrasados);
                                                                 ) {
                                                                     continue;
                                                                 }
-                                                    
+
                                                                 $respostaTs = strtotime((string) $candidato->hora_respondida);
-                                                    
+
                                                                 if ($respostaTs === false) {
                                                                     continue;
                                                                 }
-                                                    
+
                                                                 $diferenca = abs($respostaTs - $horaPonto);
-                                                    
+
                                                                 if ($diferenca < $menorDiferenca) {
                                                                     $menorDiferenca = $diferenca;
                                                                     $controle02Correspondente = $candidato;
                                                                 }
                                                             }
                                                         }
-                                                    
+
                                                         if ($controle02Correspondente !== null) {
                                                             $controle02Usados[$controle02Correspondente->id] = true;
-                                                    
+
                                                             $esperadaTs = !empty($controle02Correspondente->hora_esperada)
                                                                 ? strtotime((string) $controle02Correspondente->hora_esperada)
                                                                 : false;
-                                                    
+
                                                             $respostaTs = strtotime(
                                                                 (string) $controle02Correspondente->hora_respondida
                                                             );
-                                                    
+
                                                             $limiteTs = $esperadaTs !== false
                                                                 ? $esperadaTs
                                                                     + (max(0, (int) $controle02Correspondente->tolerancia) * 60)
                                                                 : false;
-                                                    
+
                                                             $dentroDoPrazo =
                                                                 $esperadaTs !== false &&
                                                                 $respostaTs !== false &&
                                                                 $respostaTs >= $esperadaTs &&
                                                                 $respostaTs <= $limiteTs;
-                                                    
+
                                                             $controlesUnificados[] = [
                                                                 'hora_esperada' => $esperadaTs !== false
                                                                     ? $controle02Correspondente->hora_esperada
                                                                     : null,
-                                                    
+
                                                                 'hora_limite' => $limiteTs !== false
                                                                     ? date('Y-m-d H:i:s', $limiteTs)
                                                                     : null,
-                                                    
+
                                                                 // Mesmo valor do controle02: o filtro de duplicados mais abaixo
                                                                 // compara exatamente este texto e descarta a linha repetida.
                                                                 'hora_respondida' => $controle02Correspondente->hora_respondida,
-                                                    
+
                                                                 'status' => $dentroDoPrazo ? 'Dentro do prazo' : 'Fora do prazo',
-                                                    
+
                                                                 'classe' => $dentroDoPrazo ? 'table-success' : 'table-danger',
-                                                    
+
                                                                 'ordem' => $respostaTs !== false ? $respostaTs : PHP_INT_MAX,
                                                             ];
-                                                    
+
                                                             continue;
                                                         }
-                                                    
+
                                                         // 2) Sem controle02 correspondente: usa a tabela de controles da empresa.
                                                         $controleRespondido = null;
-                                                    
+
                                                         if ($horaPonto !== false) {
                                                             $dataPonto = date('Y-m-d', $horaPonto);
-                                                    
+
                                                             foreach ($controles as $controle) {
                                                                 $horaControle = substr((string) $controle->hora, 0, 8);
-                                                    
+
                                                                 $inicioControle = strtotime($dataPonto . ' ' . $horaControle);
-                                                    
+
                                                                 if ($inicioControle === false) {
                                                                     continue;
                                                                 }
-                                                    
+
                                                                 $fimJanelaControle = $inicioControle
                                                                     + (max(0, (int) $controle->tolerancia) * 60);
-                                                    
+
                                                                 if (
                                                                     $horaPonto >= $inicioControle &&
                                                                     $horaPonto <= $fimJanelaControle
@@ -736,12 +805,12 @@ $qtdAtrasados = count($atrasados);
                                                                 }
                                                             }
                                                         }
-                                                    
+
                                                         $dentroDoPrazo = $pontoDentroDoPrazo($ponto, $controles);
-                                                    
+
                                                         $controlesUnificados[] = [
                                                             'hora_esperada' => $controleRespondido?->hora,
-                                                    
+
                                                             'hora_limite' => $controleRespondido
                                                                 ? date(
                                                                     'H:i:s',
@@ -749,13 +818,13 @@ $qtdAtrasados = count($atrasados);
                                                                         + ((int) $controleRespondido->tolerancia * 60)
                                                                 )
                                                                 : null,
-                                                    
+
                                                             'hora_respondida' => $horaRespondida,
-                                                    
+
                                                             'status' => $dentroDoPrazo ? 'Dentro do prazo' : 'Fora do prazo',
-                                                    
+
                                                             'classe' => $dentroDoPrazo ? 'table-success' : 'table-danger',
-                                                    
+
                                                             'ordem' => strtotime((string) $horaRespondida) ?: PHP_INT_MAX,
                                                         ];
                                                     }
@@ -967,6 +1036,19 @@ $qtdAtrasados = count($atrasados);
                                                             ->modify('-3 hours')
                                                             ->format('H:i')
                                                         : null;
+
+                                                    // Horário esperado (só preenchido se o início/fim foi atrasado)
+                                                    $inicioEsperado = $esperadoSeAtrasado(
+                                                        'inicio',
+                                                        $turno->started_at ?? null,
+                                                        $controlesInicioFim
+                                                    );
+
+                                                    $fimEsperado = $esperadoSeAtrasado(
+                                                        'termino',
+                                                        $turno->ended_at ?? null,
+                                                        $controlesInicioFim
+                                                    );
                                                     ?>
 
                                                     <div class="accordion-item"
@@ -1025,11 +1107,25 @@ $qtdAtrasados = count($atrasados);
                                                                         style="font-size: 1.5em;">
                                                                         Inicio:
                                                                         <?= htmlspecialchars($inicioFmt) ?>
+
+                                                                        <?php if ($inicioEsperado !== null): ?>
+                                                                            <span class="ms-2 text-warning" style="font-size: .7em;">
+                                                                                Esperado: <?= htmlspecialchars($inicioEsperado) ?>
+                                                                            </span>
+                                                                        <?php endif; ?>
                                                                         <br>
 
-                                                                        <?= $fimFmt !== 'Em Andamento'
-                                                                            ? 'Fim:' . htmlspecialchars($fimFmt)
-                                                                            : ' Em andamento' ?>
+                                                                        <?php if ($fimFmt !== 'Em Andamento'): ?>
+                                                                            Fim: <?= htmlspecialchars($fimFmt) ?>
+
+                                                                            <?php if ($fimEsperado !== null): ?>
+                                                                                <span class="ms-2 text-warning" style="font-size: .7em;">
+                                                                                    Esperado: <?= htmlspecialchars($fimEsperado) ?>
+                                                                                </span>
+                                                                            <?php endif; ?>
+                                                                        <?php else: ?>
+                                                                            Em andamento
+                                                                        <?php endif; ?>
                                                                     </div>
 
                                                                     <?php if ($ocorrenciaTurno !== null): ?>
@@ -1267,7 +1363,7 @@ $qtdAtrasados = count($atrasados);
 
                                                                                 <i class="bi bi-shield-check me-2 text-primary"></i>
 
-                                                                                Ronda
+                                                                                Ronda - Ocorrência
 
                                                                                 <span class="badge bg-secondary ms-2">
                                                                                     <?= count($listaRondas) ?>
