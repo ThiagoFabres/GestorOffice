@@ -231,6 +231,7 @@ $baseQuery = [
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <meta http-equiv="refresh" content="60">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -452,6 +453,8 @@ $baseQuery = [
                         <?php foreach ($registros as $r):
                             $esperada = new DateTime($r['hora_esperada']);
                             $esperada->setTimezone(new DateTimeZone('America/Sao_Paulo'));
+                            $hora_esperada = ($esperada->modify('+3 hours'));
+                            $hora_esperada = $hora_esperada->modify('+ ' . $r['tolerancia'] . 'minutes');
                             if($r['tipo'] == 'inicio') {
                                 $classe_linha = 'parcela_cor_verde';
                             } else if($r['tipo'] == 'controle') {
@@ -464,7 +467,7 @@ $baseQuery = [
                         ?>
                             <tr class="<?= $classe_linha ?>">
                                 <td><?= $esperada->format('d/m/Y') ?></td>
-                                <td><?= $esperada->modify('+3 hours')->format('H:i') ?></td>
+                                <td><?= $hora_esperada->format('H:i') ?></td>
                                 <td><?= h($r['empresa']) ?></td>
                                 <td><?= h(rotuloTipo((string) $r['tipo'])) ?></td>
                             </tr>
