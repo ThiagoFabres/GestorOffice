@@ -767,6 +767,7 @@ $qtdAtrasados = count($atrasados);
                                                                 // Mesmo valor do controle02: o filtro de duplicados mais abaixo
                                                                 // compara exatamente este texto e descarta a linha repetida.
                                                                 'hora_respondida' => $controle02Correspondente->hora_respondida,
+                                                                'localizacao' => $ponto->localizacao ?? null,
 
                                                                 'status' => $dentroDoPrazo ? 'Dentro do prazo' : 'Fora do prazo',
 
@@ -820,6 +821,7 @@ $qtdAtrasados = count($atrasados);
                                                                 : null,
 
                                                             'hora_respondida' => $horaRespondida,
+                                                            'localizacao' => $ponto->localizacao ?? null,
 
                                                             'status' => $dentroDoPrazo ? 'Dentro do prazo' : 'Fora do prazo',
 
@@ -1049,6 +1051,31 @@ $qtdAtrasados = count($atrasados);
                                                         $turno->ended_at ?? null,
                                                         $controlesInicioFim
                                                     );
+                                                    $inicioLocalizacao = array_map(
+                                                        'trim',
+                                                        explode(',', (string) ($turno->localizacao_inicial ?? ''), 2)
+                                                    );
+                                                    $inicioLocalizacaoLat = $inicioLocalizacao[0] ?? null;
+                                                    $inicioLocalizacaoLng = $inicioLocalizacao[1] ?? null;
+                                                    $inicioLocalizacaoLat = $inicioLocalizacaoLat !== ''
+                                                        ? $inicioLocalizacaoLat
+                                                        : null;
+                                                    $inicioLocalizacaoLng = $inicioLocalizacaoLng !== ''
+                                                        ? $inicioLocalizacaoLng
+                                                        : null;
+
+                                                    $fimLocalizacao = array_map(
+                                                        'trim',
+                                                        explode(',', (string) ($turno->localizacao_final ?? ''), 2)
+                                                    );
+                                                    $fimLocalizacaoLat = $fimLocalizacao[0] ?? null;
+                                                    $fimLocalizacaoLng = $fimLocalizacao[1] ?? null;
+                                                    $fimLocalizacaoLat = $fimLocalizacaoLat !== ''
+                                                        ? $fimLocalizacaoLat
+                                                        : null;
+                                                    $fimLocalizacaoLng = $fimLocalizacaoLng !== ''
+                                                        ? $fimLocalizacaoLng
+                                                        : null;
                                                     ?>
 
                                                     <div class="accordion-item"
@@ -1105,27 +1132,39 @@ $qtdAtrasados = count($atrasados);
 
                                                                     <div class="badge bg-secondary w-100 mb-3 text-start"
                                                                         style="font-size: 1.5em;">
-                                                                        Inicio:
-                                                                        <?= htmlspecialchars($inicioFmt) ?>
+                                                                        <div class="d-flex justify-content-between align-items-center gap-3">
+                                                                            <div>
+                                                                                Início: <?= htmlspecialchars($inicioFmt) ?>
+                                                                                <?php if ($inicioEsperado !== null) { ?>
+                                                                                    <span class="ms-2 text-warning" style="font-size: .7em;">
+                                                                                        Esperado: <?= htmlspecialchars($inicioEsperado) ?>
+                                                                                    </span>
+                                                                                <?php } ?>
+                                                                            </div>
+                                                                            <?php if ($inicioLocalizacaoLat !== null && $inicioLocalizacaoLng !== null) { ?>
+                                                                                    <a class="small text-nowrap"
+                                                                                    style="color: white;"
+                                                                                        href="https://maps.google.com/?q=<?= urlencode($inicioLocalizacaoLat . ',' . $inicioLocalizacaoLng) ?>"
+                                                                                        target="_blank" rel="noopener">Ver localização no mapa</a>
+                                                                            <?php } ?>
+                                                                        </div>
 
-                                                                        <?php if ($inicioEsperado !== null): ?>
-                                                                            <span class="ms-2 text-warning" style="font-size: .7em;">
-                                                                                Esperado: <?= htmlspecialchars($inicioEsperado) ?>
-                                                                            </span>
-                                                                        <?php endif; ?>
-                                                                        <br>
-
-                                                                        <?php if ($fimFmt !== 'Em Andamento'): ?>
-                                                                            Fim: <?= htmlspecialchars($fimFmt) ?>
-
-                                                                            <?php if ($fimEsperado !== null): ?>
-                                                                                <span class="ms-2 text-warning" style="font-size: .7em;">
-                                                                                    Esperado: <?= htmlspecialchars($fimEsperado) ?>
-                                                                                </span>
-                                                                            <?php endif; ?>
-                                                                        <?php else: ?>
-                                                                            Em andamento
-                                                                        <?php endif; ?>
+                                                                        <div class="d-flex justify-content-between align-items-center gap-3 mt-2">
+                                                                            <div>
+                                                                                Fim: <?= htmlspecialchars($fimFmt) ?>
+                                                                                <?php if ($fimEsperado !== null) { ?>
+                                                                                    <span class="ms-2 text-warning" style="font-size: .7em;">
+                                                                                        Esperado: <?= htmlspecialchars($fimEsperado) ?>
+                                                                                    </span>
+                                                                                <?php } ?>
+                                                                            </div>
+                                                                            <?php if ($fimLocalizacaoLat !== null && $fimLocalizacaoLng !== null) { ?>
+                                                                                <a class="small text-nowrap"
+                                                                                    style="color: white;"
+                                                                                        href="https://maps.google.com/?q=<?= urlencode($inicioLocalizacaoLat . ',' . $inicioLocalizacaoLng) ?>"
+                                                                                        target="_blank" rel="noopener">Ver localização no mapa</a>
+                                                                            <?php } ?>
+                                                                        </div>
                                                                     </div>
 
                                                                     <?php if ($ocorrenciaTurno !== null): ?>
@@ -1181,6 +1220,7 @@ $qtdAtrasados = count($atrasados);
                                                                                             <tr>
                                                                                                 <th>Horário esperado</th>
                                                                                                 <th>Horário respondido</th>
+                                                                                                <th>Localização</th>
                                                                                                 <th>Status</th>
                                                                                             </tr>
                                                                                         </thead>
@@ -1220,6 +1260,19 @@ $qtdAtrasados = count($atrasados);
                                                                                                                     )
                                                                                                                 )->format('H:i:s')
                                                                                                             ) ?>
+                                                                                                    </td>
+
+                                                                                                    <td>
+                                                                                                        <?php if (!empty($controle['localizacao'])) { ?>
+                                                                                                            <a class="small"
+                                                                                                                href="https://maps.google.com/?q=<?= urlencode((string) $controle['localizacao']) ?>"
+                                                                                                                target="_blank"
+                                                                                                                rel="noopener">
+                                                                                                                Ver localização no mapa
+                                                                                                            </a>
+                                                                                                        <?php } else { ?>
+                                                                                                            —
+                                                                                                        <?php } ?>
                                                                                                     </td>
 
                                                                                                     <td>
@@ -1390,6 +1443,7 @@ $qtdAtrasados = count($atrasados);
                                                                                             <tr>
                                                                                                 <th>Descrição</th>
                                                                                                 <th>Horário</th>
+                                                                                                <th>Localização</th>
                                                                                             </tr>
                                                                                         </thead>
 
@@ -1421,6 +1475,19 @@ $qtdAtrasados = count($atrasados);
                                                                                                             : htmlspecialchars(
                                                                                                                 $ronda->created_at ?? ''
                                                                                                             ) ?>
+                                                                                                    </td>
+
+                                                                                                    <td>
+                                                                                                        <?php if (!empty($ronda->localizacao)) { ?>
+                                                                                                            <a class="small"
+                                                                                                                href="https://maps.google.com/?q=<?= urlencode((string) $ronda->localizacao) ?>"
+                                                                                                                target="_blank"
+                                                                                                                rel="noopener">
+                                                                                                                Ver localização no mapa
+                                                                                                            </a>
+                                                                                                        <?php } else { ?>
+                                                                                                            —
+                                                                                                        <?php } ?>
                                                                                                     </td>
                                                                                                 </tr>
 
