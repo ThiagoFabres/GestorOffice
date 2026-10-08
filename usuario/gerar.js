@@ -16,7 +16,7 @@ async function gerarpdf(nome, nomeEmpresa = '', estilo = 'completo') {
     const { jsPDF } = window.jspdf;
 
     const doc = new jsPDF({
-        orientation: "landscape",
+        orientation: modoReducao ? "portrait" : "landscape",
         unit: "mm",
         format: "a4"
     });
