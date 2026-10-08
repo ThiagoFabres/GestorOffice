@@ -239,13 +239,6 @@ if ($filtros != []) {
                             <?php if ($direcao != '') { ?> <input type="hidden" value="<?= $direcao ?>"
                                     name="direcao" /><?php } ?>
 
-                            <?php if (!empty($recebimentos_pagos)) {
-                                foreach ($recebimentos_pagos as $i => $id_rec01) { ?>
-
-                                    <input type="hidden" name="recebimentos_pagos[<?= $i ?>]" value="<?= $id_rec01 ?>">
-                                <?php }
-                            } ?>
-
                             <?php for ($i = 1; $i <= $total_paginas; $i++) {
                                 if ((($i == ($numero_pagina + 4) || $i == ($numero_pagina - 4)) && $i != 1) && $i != $total_paginas) { ?>
                                     ...
