@@ -5,6 +5,8 @@ Class Turno {
     public $started_at;
     public $ended_at;
     public $status;
+    public $localizacao_inicial;
+    public $localizacao_final;
     public $created_at;
     public $updated_at;
 
@@ -15,13 +17,17 @@ Class Turno {
         $ended_at = null,
         $status = null,
         $created_at = null,
-        $updated_at = null
+        $updated_at = null,
+        $localizacao_inicial = null,
+        $localizacao_final = null
         ) {
             $this->id = $id;
             $this->id_usuario = $id_usuario;
             $this->started_at = $started_at;
             $this->ended_at = $ended_at;
             $this->status = $status;
+            $this->localizacao_inicial = $localizacao_inicial;
+            $this->localizacao_final = $localizacao_final;
             $this->created_at = $created_at;
             $this->updated_at = $updated_at;
         }

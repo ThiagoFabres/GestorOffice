@@ -4,6 +4,7 @@ Class Ronda {
     public $id_empresa;
     public $id_usuario;
     public $descricao;
+    public $localizacao;
     public $hora;
     public $created_at;
     public $updated_at;
@@ -15,12 +16,14 @@ Class Ronda {
         $descricao = null, 
         $hora = null,
         $created_at = null,
-        $updated_at = null
+        $updated_at = null,
+        $localizacao = null
         ) {
             $this->id = $id;
             $this->id_empresa = $id_empresa;
             $this->id_usuario = $id_usuario;
             $this->descricao = $descricao;
+            $this->localizacao = $localizacao;
             $this->hora = $hora;
             $this->created_at = $created_at;
             $this->updated_at = $updated_at;
