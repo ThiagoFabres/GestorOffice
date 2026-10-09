@@ -51,6 +51,18 @@ $controles = Controle::read($empresa_usuario_obj->id);
 
 $timezoneLocal = new DateTimeZone('America/Sao_Paulo');
 
+$timestampHorarioLocal = static function ($valor) use ($timezoneLocal): ?int {
+    if (!is_string($valor) || trim($valor) === '') {
+        return null;
+    }
+
+    try {
+        return (new DateTimeImmutable($valor, $timezoneLocal))->getTimestamp();
+    } catch (Throwable $e) {
+        return null;
+    }
+};
+
 $normalizarHorarioPonto = static function ($valor) use ($timezoneLocal): ?string {
     if (empty($valor) || strtotime((string) $valor) === false) {
         return null;
@@ -61,28 +73,29 @@ $normalizarHorarioPonto = static function ($valor) use ($timezoneLocal): ?string
         ->format('Y-m-d H:i:s');
 };
 
-$pontoDentroDoPrazo = static function ($ponto, array $controles): bool {
+$pontoDentroDoPrazo = static function ($ponto, array $controles) use ($timezoneLocal): bool {
     $valorHora = $ponto->hora ?? $ponto->created_at;
 
-    if (empty($valorHora) || strtotime((string) $valorHora) === false) {
+    if (empty($valorHora)) {
         return false;
     }
 
-    $horaPonto = (new DateTime((string) $valorHora))
-        ->modify('-3 hours')
-        ->getTimestamp();
-
-    if ($horaPonto === false) {
+    try {
+        $horaPontoUtc = new DateTimeImmutable((string) $valorHora, new DateTimeZone('UTC'));
+        $horaPonto = $horaPontoUtc->getTimestamp();
+        $dataPonto = $horaPontoUtc->setTimezone($timezoneLocal)->format('Y-m-d');
+    } catch (Throwable $e) {
         return false;
     }
-
-    $dataPonto = date('Y-m-d', $horaPonto);
 
     foreach ($controles as $controle) {
         $horaControle = substr((string) $controle->hora, 0, 8);
-        $inicio = strtotime($dataPonto . ' ' . $horaControle);
-
-        if ($inicio === false) {
+        try {
+            $inicio = (new DateTimeImmutable(
+                $dataPonto . ' ' . $horaControle,
+                $timezoneLocal
+            ))->getTimestamp();
+        } catch (Throwable $e) {
             continue;
         }
 
@@ -106,6 +119,11 @@ $normalizarTipo = static function ($tipo): string {
         ['é' => 'e', 'ê' => 'e']
     );
 };
+
+$controlesAgendados = array_values(array_filter(
+    $controles,
+    static fn($controle) => $normalizarTipo($controle->tipo) === 'controle'
+));
 
 /*
  * Procura o controle de início/término mais próximo do horário real do turno
@@ -693,6 +711,11 @@ $qtdAtrasados = count($atrasados);
 
                                                     $listaControles =
                                                         $controlesTurno[$seguranca->id][$turno->id] ?? [];
+                                                    $listaControles = array_values(array_filter(
+                                                        $listaControles,
+                                                        static fn($controle) =>
+                                                            $normalizarTipo($controle->tipo) === 'controle'
+                                                    ));
 
                                                     $controlesUnificados = [];
                                                     $controlesVistos = [];
@@ -704,13 +727,13 @@ $qtdAtrasados = count($atrasados);
                                                             $ponto->hora ?? $ponto->created_at
                                                         );
 
-                                                        $horaPonto = strtotime((string) $horaRespondida);
+                                                        $horaPonto = $timestampHorarioLocal($horaRespondida);
 
                                                         // 1) controle02 do mesmo evento
                                                         $controle02Correspondente = null;
                                                         $menorDiferenca = 61;
 
-                                                        if ($horaPonto !== false) {
+                                                        if ($horaPonto !== null) {
                                                             foreach ($listaControles as $candidato) {
                                                                 if (
                                                                     $candidato->hora_respondida === null ||
@@ -720,9 +743,11 @@ $qtdAtrasados = count($atrasados);
                                                                     continue;
                                                                 }
 
-                                                                $respostaTs = strtotime((string) $candidato->hora_respondida);
+                                                                $respostaTs = $timestampHorarioLocal(
+                                                                    (string) $candidato->hora_respondida
+                                                                );
 
-                                                                if ($respostaTs === false) {
+                                                                if ($respostaTs === null) {
                                                                     continue;
                                                                 }
 
@@ -738,32 +763,34 @@ $qtdAtrasados = count($atrasados);
                                                         if ($controle02Correspondente !== null) {
                                                             $controle02Usados[$controle02Correspondente->id] = true;
 
-                                                            $esperadaTs = !empty($controle02Correspondente->hora_esperada)
-                                                                ? strtotime((string) $controle02Correspondente->hora_esperada)
-                                                                : false;
+                                                            $esperadaTs = $timestampHorarioLocal(
+                                                                (string) $controle02Correspondente->hora_esperada
+                                                            );
 
-                                                            $respostaTs = strtotime(
+                                                            $respostaTs = $timestampHorarioLocal(
                                                                 (string) $controle02Correspondente->hora_respondida
                                                             );
 
-                                                            $limiteTs = $esperadaTs !== false
+                                                            $limiteTs = $esperadaTs !== null
                                                                 ? $esperadaTs
                                                                     + (max(0, (int) $controle02Correspondente->tolerancia) * 60)
-                                                                : false;
+                                                                : null;
 
                                                             $dentroDoPrazo =
-                                                                $esperadaTs !== false &&
-                                                                $respostaTs !== false &&
+                                                                $esperadaTs !== null &&
+                                                                $respostaTs !== null &&
                                                                 $respostaTs >= $esperadaTs &&
                                                                 $respostaTs <= $limiteTs;
 
                                                             $controlesUnificados[] = [
-                                                                'hora_esperada' => $esperadaTs !== false
+                                                                'hora_esperada' => $esperadaTs !== null
                                                                     ? $controle02Correspondente->hora_esperada
                                                                     : null,
 
-                                                                'hora_limite' => $limiteTs !== false
-                                                                    ? date('Y-m-d H:i:s', $limiteTs)
+                                                                'hora_limite' => $limiteTs !== null
+                                                                    ? (new DateTimeImmutable('@' . $limiteTs))
+                                                                        ->setTimezone($timezoneLocal)
+                                                                        ->format('Y-m-d H:i:s')
                                                                     : null,
 
                                                                 // Mesmo valor do controle02: o filtro de duplicados mais abaixo
@@ -775,7 +802,7 @@ $qtdAtrasados = count($atrasados);
 
                                                                 'classe' => $dentroDoPrazo ? 'table-success' : 'table-danger',
 
-                                                                'ordem' => $respostaTs !== false ? $respostaTs : PHP_INT_MAX,
+                                                                'ordem' => $respostaTs ?? PHP_INT_MAX,
                                                             ];
 
                                                             continue;
@@ -784,15 +811,20 @@ $qtdAtrasados = count($atrasados);
                                                         // 2) Sem controle02 correspondente: usa a tabela de controles da empresa.
                                                         $controleRespondido = null;
 
-                                                        if ($horaPonto !== false) {
-                                                            $dataPonto = date('Y-m-d', $horaPonto);
+                                                        if ($horaPonto !== null) {
+                                                            $dataPonto = (new DateTimeImmutable('@' . $horaPonto))
+                                                                ->setTimezone($timezoneLocal)
+                                                                ->format('Y-m-d');
 
-                                                            foreach ($controles as $controle) {
+                                                            foreach ($controlesAgendados as $controle) {
                                                                 $horaControle = substr((string) $controle->hora, 0, 8);
 
-                                                                $inicioControle = strtotime($dataPonto . ' ' . $horaControle);
-
-                                                                if ($inicioControle === false) {
+                                                                try {
+                                                                    $inicioControle = (new DateTimeImmutable(
+                                                                        $dataPonto . ' ' . $horaControle,
+                                                                        $timezoneLocal
+                                                                    ))->getTimestamp();
+                                                                } catch (Throwable $e) {
                                                                     continue;
                                                                 }
 
@@ -809,17 +841,27 @@ $qtdAtrasados = count($atrasados);
                                                             }
                                                         }
 
-                                                        $dentroDoPrazo = $pontoDentroDoPrazo($ponto, $controles);
+                                                        $dentroDoPrazo = $pontoDentroDoPrazo($ponto, $controlesAgendados);
 
                                                         $controlesUnificados[] = [
                                                             'hora_esperada' => $controleRespondido?->hora,
 
                                                             'hora_limite' => $controleRespondido
-                                                                ? date(
-                                                                    'H:i:s',
-                                                                    strtotime(substr((string) $controleRespondido->hora, 0, 8))
-                                                                        + ((int) $controleRespondido->tolerancia * 60)
+                                                                ? (
+                                                                    new DateTimeImmutable(
+                                                                        $horaRespondida,
+                                                                        $timezoneLocal
+                                                                    )
                                                                 )
+                                                                    ->setTime(
+                                                                        (int) substr((string) $controleRespondido->hora, 0, 2),
+                                                                        (int) substr((string) $controleRespondido->hora, 3, 2),
+                                                                        (int) substr((string) $controleRespondido->hora, 6, 2)
+                                                                    )
+                                                                    ->modify(
+                                                                        '+' . (int) $controleRespondido->tolerancia . ' minutes'
+                                                                    )
+                                                                    ->format('H:i:s')
                                                                 : null,
 
                                                             'hora_respondida' => $horaRespondida,
@@ -829,7 +871,7 @@ $qtdAtrasados = count($atrasados);
 
                                                             'classe' => $dentroDoPrazo ? 'table-success' : 'table-danger',
 
-                                                            'ordem' => strtotime((string) $horaRespondida) ?: PHP_INT_MAX,
+                                                            'ordem' => $horaPonto ?? PHP_INT_MAX,
                                                         ];
                                                     }
 
@@ -855,20 +897,19 @@ $qtdAtrasados = count($atrasados);
                                                         $horaEsperada =
                                                             $controleTurno->hora_esperada;
 
+                                                        $horaEsperadaTimestamp = $timestampHorarioLocal(
+                                                            (string) $horaEsperada
+                                                        );
+                                                        $horaRespondidaTimestamp = $timestampHorarioLocal(
+                                                            (string) $horaRespondida
+                                                        );
+
                                                         $chaveControle =
                                                             $horaRespondida !== null
                                                                 ? 'respondido:' .
-                                                                    (
-                                                                        new DateTime(
-                                                                            (string) $horaRespondida
-                                                                        )
-                                                                    )->format('Y-m-d H:i:s')
+                                                                    $horaRespondidaTimestamp
                                                                 : 'pendente:' .
-                                                                    (
-                                                                        new DateTime(
-                                                                            (string) $horaEsperada
-                                                                        )
-                                                                    )->format('Y-m-d H:i:s') .
+                                                                    $horaEsperadaTimestamp .
                                                                     ':' .
                                                                     (int) $controleTurno->tolerancia;
 
@@ -894,12 +935,9 @@ $qtdAtrasados = count($atrasados);
                                                                 }
                                                             }
                                                         } elseif ($horaEsperada !== null) {
-                                                            $inicioJanela =
-                                                                strtotime(
-                                                                    (string) $horaEsperada
-                                                                );
+                                                            $inicioJanela = $horaEsperadaTimestamp;
 
-                                                            if ($inicioJanela !== false) {
+                                                            if ($inicioJanela !== null) {
                                                                 $fimJanela =
                                                                     $inicioJanela +
                                                                     (
@@ -920,16 +958,12 @@ $qtdAtrasados = count($atrasados);
                                                                         continue;
                                                                     }
 
-                                                                    $respostaTs =
-                                                                        strtotime(
-                                                                            (string)
-                                                                            $controleUnificado[
-                                                                                'hora_respondida'
-                                                                            ]
-                                                                        );
+                                                                    $respostaTs = $timestampHorarioLocal(
+                                                                        (string) $controleUnificado['hora_respondida']
+                                                                    );
 
                                                                     if (
-                                                                        $respostaTs !== false &&
+                                                                        $respostaTs !== null &&
                                                                         $respostaTs >= $inicioJanela &&
                                                                         $respostaTs <= $fimJanela
                                                                     ) {
@@ -949,49 +983,48 @@ $qtdAtrasados = count($atrasados);
                                                                 $horaEsperada,
 
                                                             'hora_limite' =>
-                                                                $horaEsperada !== null
-                                                                    ? (
-                                                                        new DateTime(
-                                                                            (string) $horaEsperada
-                                                                        )
-                                                                    )
-                                                                        ->modify(
-                                                                            '+' .
-                                                                            (int) $controleTurno->tolerancia .
-                                                                            ' minutes'
-                                                                        )
+                                                                $horaEsperadaTimestamp !== null
+                                                                    ? (new DateTimeImmutable('@' . (
+                                                                        $horaEsperadaTimestamp +
+                                                                        (max(0, (int) $controleTurno->tolerancia) * 60)
+                                                                    )))
+                                                                        ->setTimezone($timezoneLocal)
                                                                         ->format('Y-m-d H:i:s')
                                                                     : null,
 
                                                             'hora_respondida' =>
                                                                 $horaRespondida,
 
-                                                            'status' =>
-                                                                $horaRespondida === null
-                                                                    ? 'Não respondido'
-                                                                    : (
-                                                                        $horaEsperada === null
-                                                                            ? 'Fora do prazo'
-                                                                            : 'Respondido'
-                                                                    ),
+                                                            'status' => $horaRespondida === null
+                                                                ? 'Não respondido'
+                                                                : (
+                                                                    $horaEsperadaTimestamp !== null &&
+                                                                    $horaRespondidaTimestamp !== null &&
+                                                                    $horaRespondidaTimestamp >= $horaEsperadaTimestamp &&
+                                                                    $horaRespondidaTimestamp <=
+                                                                        $horaEsperadaTimestamp +
+                                                                        (max(0, (int) $controleTurno->tolerancia) * 60)
+                                                                        ? 'Dentro do prazo'
+                                                                        : 'Fora do prazo'
+                                                                ),
 
-                                                            'classe' =>
-                                                                $horaRespondida === null ||
-                                                                $horaEsperada === null
-                                                                    ? 'table-danger'
-                                                                    : 'table-success',
+                                                            'classe' => $horaRespondida === null ||
+                                                                $horaEsperadaTimestamp === null ||
+                                                                $horaRespondidaTimestamp === null ||
+                                                                $horaRespondidaTimestamp < $horaEsperadaTimestamp ||
+                                                                $horaRespondidaTimestamp >
+                                                                    $horaEsperadaTimestamp +
+                                                                    (max(0, (int) $controleTurno->tolerancia) * 60)
+                                                                        ? 'table-danger'
+                                                                        : 'table-success',
 
                                                             'ordem' =>
                                                                 $horaRespondida !== null
                                                                     ? (
-                                                                        strtotime(
-                                                                            (string) $horaRespondida
-                                                                        ) ?: PHP_INT_MAX
+                                                                        $horaRespondidaTimestamp ?? PHP_INT_MAX
                                                                     )
                                                                     : (
-                                                                        strtotime(
-                                                                            (string) $horaEsperada
-                                                                        ) ?: PHP_INT_MAX
+                                                                        $horaEsperadaTimestamp ?? PHP_INT_MAX
                                                                     ),
                                                         ];
                                                     }
