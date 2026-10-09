@@ -92,7 +92,7 @@
                 <?php endif; ?>
 
                 <?php if ((!empty($_SESSION['vendas']['transactions']) || !empty($_SESSION['vendas']['cancelados'])) && empty($_SESSION['vendas_invalidas'])): ?>
-                    <form method="post" action="receber_manager.php">
+                    <form method="post" action="receber_manager.php" id="form_adicionar_vendas">
                         <input type="hidden" name="acao" value="adicionar">
                         <input type="hidden" name="operadora" value="<?=$_SESSION['vendas']['conta']?>">
                         
@@ -130,6 +130,7 @@
                                             </tbody>
                                         </table>
                                     </div>
+
                                 </div>          
                             <?php } ?>
 
@@ -163,7 +164,82 @@
                                         </table>
                                     </div>
                                 </div>
-                            <?php } ?>
+                                <?php } ?>
+
+                                <script>
+                                (function () {
+                                    var form = document.getElementById('form_adicionar_vendas');
+                                    if (!form) return;
+
+                                    form.addEventListener('submit', async function (event) {
+                                        event.preventDefault();
+
+                                        var btn = form.querySelector('button[type="submit"]');
+                                        if (btn.disabled) return;
+                                        btn.disabled = true;
+
+                                        try {
+                                            var aprovadas = JSON.parse(form.querySelector('[name="aprovadas_json"]').value || '[]');
+                                            var canceladas = JSON.parse(form.querySelector('[name="canceladas_json"]').value || '[]');
+                                            var grupos = new Map();
+
+                                            aprovadas.forEach(function (linha) {
+                                                var bandeira = linha.tipo === 'Pix' ? 'Pix' : (linha.bandeira ?? '');
+                                                var chave = JSON.stringify([
+                                                    String(linha.data ?? ''),
+                                                    String(bandeira),
+                                                    String(linha.tipo ?? ''),
+                                                    String(linha.parcela ?? 1)
+                                                ]);
+                                                if (!grupos.has(chave)) grupos.set(chave, []);
+                                                grupos.get(chave).push(linha);
+                                            });
+
+                                            var itens = Array.from(grupos.values()).map(function (linhas) {
+                                                return { tipo: 'aprovadas', linhas: linhas };
+                                            });
+                                            canceladas.forEach(function (linha) {
+                                                itens.push({ tipo: 'cancelada', linha: linha });
+                                            });
+
+                                            var total = itens.length;
+                                            var tamanhoLote = 100;
+
+                                            async function enviar(formData) {
+                                                var resposta = await fetch(form.action, { method: 'POST', body: formData });
+                                                var texto = await resposta.text();
+                                                var json;
+                                                try {
+                                                    json = JSON.parse(texto);
+                                                } catch (error) {
+                                                    throw new Error('Não foi possível confirmar o salvamento das vendas.');
+                                                }
+                                                if (!resposta.ok || !json || json.ok !== true) {
+                                                    throw new Error('Ocorreu um erro ao salvar as vendas. Tente novamente.');
+                                                }
+                                            }
+
+                                            for (var offset = 0; offset < total; offset += tamanhoLote) {
+                                                btn.textContent = 'Salvando ' + Math.min(offset + tamanhoLote, total) + ' de ' + total + '...';
+                                                var dadosLote = new FormData();
+                                                dadosLote.append('acao', 'adicionar_lote');
+                                                dadosLote.append('operadora', form.querySelector('[name="operadora"]').value);
+                                                dadosLote.append('lote_json', JSON.stringify(itens.slice(offset, offset + tamanhoLote)));
+                                                await enviar(dadosLote);
+                                            }
+
+                                            var finalizar = new FormData();
+                                            finalizar.append('acao', 'adicionar_finalizar');
+                                            await enviar(finalizar);
+                                            window.location.href = '/usuario/cartao/cadastro_vendas.php?sucesso=1';
+                                        } catch (error) {
+                                            alert(error.message);
+                                            btn.disabled = false;
+                                            btn.textContent = 'Salvar';
+                                        }
+                                    });
+                                })();
+                                </script>
                         </div>
 
                         <div class="d-flex justify-content-end gap-2 mt-3">

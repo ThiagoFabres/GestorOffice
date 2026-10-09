@@ -22,8 +22,49 @@ require_once __DIR__ . '/../../db/entities/pra01.php';
 require_once __DIR__ . '/../../db/entities/recebimentos.php';
 require_once __DIR__ . '/../../db/buscar_documento_rec.php';
 
+$acao = filter_input(INPUT_POST, 'acao', FILTER_UNSAFE_RAW);
+$is_lote = $acao === 'adicionar_lote';
+$is_finalizar_lote = $acao === 'adicionar_finalizar';
+$responder_lote = null;
+
+if ($is_lote || $is_finalizar_lote) {
+    ob_start();
+    header('Content-Type: application/json; charset=utf-8');
+    $responder_lote = function (array $dados) {
+        ob_end_clean();
+        echo json_encode($dados);
+        exit;
+    };
+}
+
+if ($is_finalizar_lote) {
+    unset($_SESSION['vendas'], $_SESSION['vendas_invalidas']);
+    $responder_lote(['ok' => true]);
+}
+
 $aprovadas_raw = json_decode($_POST['aprovadas_json'] ?? '[]', true);
 $canceladas_raw = json_decode($_POST['canceladas_json'] ?? '[]', true);
+
+if ($is_lote) {
+    $itens_lote = json_decode($_POST['lote_json'] ?? '[]', true);
+    if (!is_array($itens_lote) || count($itens_lote) > 100) {
+        $responder_lote(['ok' => false, 'erro' => 'lote_invalido']);
+    }
+
+    $aprovadas_raw = [];
+    $canceladas_raw = [];
+    foreach ($itens_lote as $item) {
+        if (($item['tipo'] ?? null) === 'aprovadas' && is_array($item['linhas'] ?? null)) {
+            foreach ($item['linhas'] as $linha) {
+                $aprovadas_raw[] = $linha;
+            }
+        } elseif (($item['tipo'] ?? null) === 'cancelada' && is_array($item['linha'] ?? null)) {
+            $canceladas_raw[] = $item['linha'];
+        } else {
+            $responder_lote(['ok' => false, 'erro' => 'lote_invalido']);
+        }
+    }
+}
 
 $transactions['canceladas'] = [];
 foreach ($canceladas_raw as $linha) {
@@ -297,6 +338,10 @@ foreach($transactions['canceladas'] as $t) {
 }
 
 // Limpa as variáveis da sessão após salvar para resetar o modal
+if ($is_lote) {
+    $responder_lote(['ok' => true]);
+}
+
 unset($_SESSION['vendas']);
 unset($_SESSION['vendas_invalidas']);
 
