@@ -49,13 +49,15 @@ $controlesTurno = [];
 
 $controles = Controle::read($empresa_usuario_obj->id);
 
-$normalizarHorarioPonto = static function ($valor): ?string {
+$timezoneLocal = new DateTimeZone('America/Sao_Paulo');
+
+$normalizarHorarioPonto = static function ($valor) use ($timezoneLocal): ?string {
     if (empty($valor) || strtotime((string) $valor) === false) {
         return null;
     }
 
-    return (new DateTime((string) $valor))
-        ->modify('-3 hours')
+    return (new DateTime((string) $valor, new DateTimeZone('UTC')))
+        ->setTimezone($timezoneLocal)
         ->format('Y-m-d H:i:s');
 };
 
@@ -967,10 +969,15 @@ $qtdAtrasados = count($atrasados);
                                                             'status' =>
                                                                 $horaRespondida === null
                                                                     ? 'Não respondido'
-                                                                    : 'Respondido',
+                                                                    : (
+                                                                        $horaEsperada === null
+                                                                            ? 'Fora do prazo'
+                                                                            : 'Respondido'
+                                                                    ),
 
                                                             'classe' =>
-                                                                $horaRespondida === null
+                                                                $horaRespondida === null ||
+                                                                $horaEsperada === null
                                                                     ? 'table-danger'
                                                                     : 'table-success',
 
