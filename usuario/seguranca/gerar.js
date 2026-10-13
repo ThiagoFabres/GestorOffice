@@ -286,7 +286,7 @@ function gerarPdfSeguranca(titulo, subtitulo, empresa) {
                 autoTableFn.call(pdf, {
                     startY: y,
                     margin: { left: margem, right: margem },
-                    head: [['Horário esperado', 'Horário respondido', 'Status']],
+                    head: [['Controle - Esperado', 'Horário respondido', 'Status']],
                     body: t.controles.map(c => [c.esperado, c.respondido, c.status]),
                     theme: 'grid',
                     styles: { fontSize: 8, cellPadding: 1.5 },
@@ -445,7 +445,7 @@ function gerarExcelSeguranca(titulo, subtitulo, empresa) {
                 }
 
                 if (t.controles.length) {
-                    dadosAoA.push(criarLinhaEstilizada(['', '', 'Horário esperado', 'Horário respondido', 'Status'], estHeaderControle, 1));
+                    dadosAoA.push(criarLinhaEstilizada(['', '', 'Controle - Esperado', 'Horário respondido', 'Status'], estHeaderControle, 1));
                     t.controles.forEach((c) => {
                         dadosAoA.push(criarLinhaEstilizada(['', '', c.esperado, c.respondido, c.status], estDado, 1));
                     });
