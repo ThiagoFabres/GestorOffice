@@ -179,8 +179,42 @@
                                         btn.disabled = true;
 
                                         try {
-                                            var aprovadas = JSON.parse(form.querySelector('[name="aprovadas_json"]').value || '[]');
-                                            var canceladas = JSON.parse(form.querySelector('[name="canceladas_json"]').value || '[]');
+                                            function normalizarLista(valor) {
+                                                if (valor === null || valor === undefined || valor === '') {
+                                                    return [];
+                                                }
+
+                                                var parsed = JSON.parse(valor);
+                                                if (Array.isArray(parsed)) {
+                                                    return parsed;
+                                                }
+
+                                                if (parsed && typeof parsed === 'object') {
+                                                    var camposDeLinha = [
+                                                        'data',
+                                                        'bandeira',
+                                                        'tipo',
+                                                        'parcela',
+                                                        'valor_b',
+                                                        'valor',
+                                                        'comprovante'
+                                                    ];
+                                                    var ehLinha = camposDeLinha.some(function (campo) {
+                                                        return Object.prototype.hasOwnProperty.call(parsed, campo);
+                                                    });
+
+                                                    return ehLinha
+                                                        ? [parsed]
+                                                        : Object.values(parsed).filter(function (linha) {
+                                                            return linha && typeof linha === 'object';
+                                                        });
+                                                }
+
+                                                return [];
+                                            }
+
+                                            var aprovadas = normalizarLista(form.querySelector('[name="aprovadas_json"]').value || '[]');
+                                            var canceladas = normalizarLista(form.querySelector('[name="canceladas_json"]').value || '[]');
                                             var grupos = new Map();
 
                                             aprovadas.forEach(function (linha) {
@@ -212,10 +246,10 @@
                                                 try {
                                                     json = JSON.parse(texto);
                                                 } catch (error) {
-                                                    throw new Error('Não foi possível confirmar o salvamento das vendas.');
+                                                    throw new Error('Resposta inválida do servidor durante o salvamento das vendas: ' + texto.slice(0, 200));
                                                 }
                                                 if (!resposta.ok || !json || json.ok !== true) {
-                                                    throw new Error('Ocorreu um erro ao salvar as vendas. Tente novamente.');
+                                                    throw new Error('Erro ao salvar vendas: ' + ((json && json.erro) || 'resposta inválida') + (json && json.detalhe ? ' - ' + json.detalhe : ''));
                                                 }
                                             }
 

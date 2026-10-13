@@ -27,44 +27,51 @@ $is_lote = $acao === 'adicionar_lote';
 $is_finalizar_lote = $acao === 'adicionar_finalizar';
 $responder_lote = null;
 
+set_error_handler(static function ($errno, $errstr, $errfile, $errline) {
+    throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+});
+
 if ($is_lote || $is_finalizar_lote) {
     ob_start();
     header('Content-Type: application/json; charset=utf-8');
-    $responder_lote = function (array $dados) {
-        ob_end_clean();
+    $responder_lote = static function (array $dados) {
+        if (ob_get_length() !== false) {
+            ob_clean();
+        }
         echo json_encode($dados);
         exit;
     };
 }
 
-if ($is_finalizar_lote) {
-    unset($_SESSION['vendas'], $_SESSION['vendas_invalidas']);
-    $responder_lote(['ok' => true]);
-}
-
-$aprovadas_raw = json_decode($_POST['aprovadas_json'] ?? '[]', true);
-$canceladas_raw = json_decode($_POST['canceladas_json'] ?? '[]', true);
-
-if ($is_lote) {
-    $itens_lote = json_decode($_POST['lote_json'] ?? '[]', true);
-    if (!is_array($itens_lote) || count($itens_lote) > 100) {
-        $responder_lote(['ok' => false, 'erro' => 'lote_invalido']);
+try {
+    if ($is_finalizar_lote) {
+        unset($_SESSION['vendas'], $_SESSION['vendas_invalidas']);
+        $responder_lote(['ok' => true]);
     }
 
-    $aprovadas_raw = [];
-    $canceladas_raw = [];
-    foreach ($itens_lote as $item) {
-        if (($item['tipo'] ?? null) === 'aprovadas' && is_array($item['linhas'] ?? null)) {
-            foreach ($item['linhas'] as $linha) {
-                $aprovadas_raw[] = $linha;
-            }
-        } elseif (($item['tipo'] ?? null) === 'cancelada' && is_array($item['linha'] ?? null)) {
-            $canceladas_raw[] = $item['linha'];
-        } else {
+    $aprovadas_raw = json_decode($_POST['aprovadas_json'] ?? '[]', true);
+    $canceladas_raw = json_decode($_POST['canceladas_json'] ?? '[]', true);
+
+    if ($is_lote) {
+        $itens_lote = json_decode($_POST['lote_json'] ?? '[]', true);
+        if (!is_array($itens_lote) || count($itens_lote) > 100) {
             $responder_lote(['ok' => false, 'erro' => 'lote_invalido']);
         }
+
+        $aprovadas_raw = [];
+        $canceladas_raw = [];
+        foreach ($itens_lote as $item) {
+            if (($item['tipo'] ?? null) === 'aprovadas' && is_array($item['linhas'] ?? null)) {
+                foreach ($item['linhas'] as $linha) {
+                    $aprovadas_raw[] = $linha;
+                }
+            } elseif (($item['tipo'] ?? null) === 'cancelada' && is_array($item['linha'] ?? null)) {
+                $canceladas_raw[] = $item['linha'];
+            } else {
+                $responder_lote(['ok' => false, 'erro' => 'lote_invalido']);
+            }
+        }
     }
-}
 
 $transactions['canceladas'] = [];
 foreach ($canceladas_raw as $linha) {
@@ -181,11 +188,20 @@ foreach($grupos as $key => $group) {
 
     // TRATAMENTO DA DATA (LINHA 144 CORRIGIDA):
     // Aceita múltiplos formatos sem quebrar a execução
-    $raw_data = $grupo_base['data'];
-    $dt = DateTime::createFromFormat('d/m/Y', $raw_data);
-    if (!$dt) {
-        $dt = new DateTime($raw_data);
+    $raw_data = $grupo_base['data'] ?? null;
+    if (!is_string($raw_data) || trim($raw_data) === '') {
+        continue;
     }
+
+    $dt = DateTime::createFromFormat('d/m/Y', $raw_data);
+    if ($dt === false) {
+        try {
+            $dt = new DateTime((string) $raw_data);
+        } catch (Throwable $e) {
+            continue;
+        }
+    }
+
     $data = $dt->format('Y-m-d');
 
     if(Rec03::read(
@@ -294,7 +310,7 @@ require_once __DIR__ . '/../../db/entities/cancelada.php';
 $canceladas_para_processar = [];
 
 foreach($transactions['canceladas'] as $t) {
-    $data        = $t['data'];
+    $data        = $t['data'] ?? null;
     $bandeira    = $t['bandeira'];
     $tipo        = $t['tipo'];
     $estado      = $t['estado'];
@@ -310,12 +326,18 @@ foreach($transactions['canceladas'] as $t) {
     }
     $valor = floatval($valor);
 
-    if (!empty($data)) {
+    if (is_string($data) && trim($data) !== '') {
         $dt_canc = DateTime::createFromFormat('d/m/Y', $data);
-        if (!$dt_canc) {
-            $dt_canc = new DateTime($data);
+        if ($dt_canc === false) {
+            try {
+                $dt_canc = new DateTime((string) $data);
+            } catch (Throwable $e) {
+                continue;
+            }
         }
         $data = $dt_canc->format('Y-m-d');
+    } else {
+        continue;
     }
 
     $nova_cancelada = new Cancelada(
@@ -347,3 +369,17 @@ unset($_SESSION['vendas_invalidas']);
 
 header('Location: /usuario/cartao/cadastro_vendas.php?sucesso=1');
 exit;
+} catch (Throwable $e) {
+    if ($is_lote || $is_finalizar_lote) {
+        $responder_lote([
+            'ok' => false,
+            'erro' => 'processamento_erro',
+            'detalhe' => $e->getMessage(),
+        ]);
+    }
+
+    throw $e;
+}
+finally {
+    restore_error_handler();
+}
