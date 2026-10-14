@@ -343,6 +343,156 @@ foreach ($lista_plano_contas as $titulo => $dados) {
 
 } else {
     $error = "Dados inválidos.";
+}
 
+if (isset($_GET['acao']) && $_GET['acao'] === 'excluir') {
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
+
+    if (!isset($_SESSION['usuario']) || $_SESSION['usuario']->cargo != 1) {
+        header('Location: /');
+        exit;
+    }
+
+    $entidadesRaiz = glob(__DIR__ . '/../db/entities/*.php');
+    $entidadesSeguranca = glob(__DIR__ . '/../db/entities/seguranca/*.php');
+    $todosArquivos = array_merge($entidadesRaiz, $entidadesSeguranca);
+
+    foreach ($todosArquivos as $arquivo) {
+        require_once $arquivo;
+    }
+
+    $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+    if ($id === false || $id === null || $id < 1) {
+        header('Location: index.php?erro=empresa_nao_encontrada');
+        exit;
+    }
+
+    if ($id === 1) {
+        header('Location: index.php?erro=empresa_protegida');
+        exit;
+    }
+
+    $pdo = (new Database())->connect();
+    $pdo->beginTransaction();
+
+    try {
+        $stmt = $pdo->prepare('SELECT status FROM empresas WHERE id = :id FOR UPDATE');
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        $empresa = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$empresa) {
+            $pdo->rollBack();
+            header('Location: index.php?erro=empresa_nao_encontrada');
+            exit;
+        }
+
+        if ((int) $empresa['status'] !== 0) {
+            $pdo->rollBack();
+            header('Location: index.php?erro=empresa_ativa');
+            exit;
+        }
+
+        $stmt = $pdo->prepare('SELECT id FROM usuario WHERE id_empresa = :id_empresa');
+        $stmt->bindValue(':id_empresa', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        $usuarios = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        $stmt = $pdo->query('SHOW TABLES');
+        $tabelasExistentes = array_flip($stmt->fetchAll(PDO::FETCH_COLUMN));
+
+        // Excluir primeiro os registros dependentes, respeitando a ordem das chaves estrangeiras.
+        $tabelasEmpresa = [
+            'ban02_imp',
+            'ban02',
+            'pag02',
+            'rec02',
+            'rec03',
+            'seg03',
+            'seg04',
+            'ocorrencias',
+            'fecha01',
+            'canceladas',
+            'pag01',
+            'rec01',
+            'controle02',
+            'pontos',
+            'rondas',
+            'seg02',
+            'ope01',
+            'pra01',
+            'band01',
+            'seg01',
+            'ban01',
+            'ativ01',
+            'logo',
+            'procedimentos',
+            'tipo_pag',
+            'pal01',
+            'con02',
+            'con01',
+            'custos',
+            'cadastro',
+            'bairro',
+            'cidade',
+            'categoria',
+            'controle',
+        ];
+
+        foreach ($tabelasEmpresa as $tabela) {
+            if (!isset($tabelasExistentes[$tabela])) {
+                continue;
+            }
+
+            if ($tabela === 'con02' && isset($tabelasExistentes['ban02'])) {
+                $stmt = $pdo->prepare(
+                    'DELETE b
+                     FROM ban02 b
+                     INNER JOIN con02 c ON c.id = b.id_con02
+                     WHERE c.id_empresa = :id_empresa'
+                );
+                $stmt->bindValue(':id_empresa', $id, PDO::PARAM_INT);
+                $stmt->execute();
+            }
+
+            $stmt = $pdo->prepare("DELETE FROM {$tabela} WHERE id_empresa = :id_empresa");
+            $stmt->bindValue(':id_empresa', $id, PDO::PARAM_INT);
+            $stmt->execute();
+        }
+
+        $tabelasUsuario = ['alarmes', 'panico', 'turnos'];
+        foreach ($usuarios as $idUsuario) {
+            foreach ($tabelasUsuario as $tabela) {
+                if (!isset($tabelasExistentes[$tabela])) {
+                    continue;
+                }
+
+                $stmt = $pdo->prepare("DELETE FROM {$tabela} WHERE id_usuario = :id_usuario");
+                $stmt->bindValue(':id_usuario', $idUsuario, PDO::PARAM_INT);
+                $stmt->execute();
+            }
+
+            $stmt = $pdo->prepare('DELETE FROM usuario WHERE id = :id AND id_empresa = :id_empresa');
+            $stmt->bindValue(':id', $idUsuario, PDO::PARAM_INT);
+            $stmt->bindValue(':id_empresa', $id, PDO::PARAM_INT);
+            $stmt->execute();
+        }
+
+        $stmt = $pdo->prepare('DELETE FROM empresas WHERE id = :id');
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $e;
+    }
+
+    header('Location: index.php');
+    exit;
 }
 ?>

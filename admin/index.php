@@ -524,8 +524,14 @@ $lista_cidades = [];
             
         </div>
     </div>
+    <div class="w-100">
+        <?php if($empresa->status == 0) { ?>
 
-    <button name="acao" value="editar" type="submit" style="background-color:#5856d6; padding-inline:1.5em; " class="btn btn-primary">Salvar</button>
+            <button name="acao" value="excluir" type="button" onclick="window.location.href='admin.php?acao=excluir&id=<?= $empresa->id ?>'" style="padding-inline:1.5em; " class="btn btn-danger">Excluir</button>
+        <?php } ?>
+        <button name="acao" value="editar" type="submit" style="background-color:#5856d6; padding-inline:1.5em; float:right;" class="btn btn-primary">Salvar</button>
+    </div>
+
 </form>
 
     </div>
@@ -862,6 +868,15 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php } if(isset($erro) && $erro == 'usado') { ?>
                 alert('Não é possível adicionar essa empresa, pois já existe um usuario ou gestor com esse e-mail');
                 window.location.href = 'index.php';
+<?php } elseif (isset($erro) && $erro === 'empresa_ativa') { ?>
+                alert('Não é possível excluir uma empresa ativa.');
+                window.location.href = 'index.php';
+<?php } elseif (isset($erro) && $erro === 'empresa_protegida') { ?>
+                alert('Esta empresa não pode ser excluída.');
+                window.location.href = 'index.php';
+<?php } elseif (isset($erro) && $erro === 'empresa_nao_encontrada') { ?>
+                alert('Empresa não encontrada.');
+                window.location.href = 'index.php';
 <?php } ?>
 
 </script>
@@ -871,5 +886,3 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 </html>
-
-
