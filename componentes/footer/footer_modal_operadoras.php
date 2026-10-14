@@ -14,6 +14,7 @@
                                     <th>XLSX</th>
                                     <th>XLS</th>
                                     <th>CSV</th>
+                                    <th>Canceladas</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -21,8 +22,12 @@
                                 $sup_xlsx = false;
                                 $sup_xls = false;
                                 $sup_csv = false;
+                                $sup_canceladas = false;
                                 foreach($ope as $ext => $i) {
-                                    
+                                    // echo '<pre>';
+                                    // print_r($i);
+                                    // echo '</pre>';
+
                                     if($ext == 'xlsx') {
                                         $sup_xlsx = true;
                                     }
@@ -32,6 +37,9 @@
                                     if($ext == 'csv') {
                                         $sup_csv = true;
                                     }
+                                    if(isset($i['coluna_comprovante'])) {
+                                        $sup_canceladas = true;
+                                    }
                                 }
                                 ?>
                                 <tr>
@@ -39,6 +47,7 @@
                                     <td><?= $sup_xlsx ? '✅' : '❌'?></td>
                                     <td><?= $sup_xls ? '✅' : '❌'?></td>
                                     <td><?= $sup_csv ? '✅' : '❌'?></td>
+                                    <td><?= $sup_canceladas ? '✅' : '❌'?></td>
                                 </tr>
                             <?php }?>
                             </tbody>

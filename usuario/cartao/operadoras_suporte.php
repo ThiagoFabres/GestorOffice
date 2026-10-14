@@ -48,6 +48,7 @@ $operadoras_suporte = [
             ],
             'start_row' => 9,
             'start_end_columns' => ['start' => 'D', 'end' => 'R'],
+            'coluna_comprovante' => 'M',
             'organizador' => [
                 'data' => 2,
                 'bandeira' => 0,
@@ -306,6 +307,7 @@ $operadoras_suporte = [
             'excluded_columns' => [
                 'B', 'C', 'D', 'I'
             ],
+            'coluna_comprovante' => 'Q',
             'start_row' => 11,
             'start_end_columns' => [ 'start' => 'A', 'end' => 'K'],
             'organizador' => [
@@ -558,6 +560,45 @@ $operadoras_suporte = [
             'suporte_estado' => true,
             'suporte_data' =>'formatada(Y-m-d)'
         ],
+    ],
+    'pagueveloz' => [
+        // 'xlsx' => [
+        //     'excluded_columns' => [
+        //         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'I', 'J',
+        //     ],
+        //     'start_row' => 2,
+        //     'start_end_columns' => [ 'start' => 'A', 'end' => 'O'],
+        //     'organizador' => [
+        //         'data' => 0,
+        //         'bandeira' => 1,
+        //         'tipo' => null,
+        //         'parcela' => 2,
+        //         'valor_b' => 3,
+        //         'valor_l' => 4,
+        //         'estado' => 5
+        //     ],
+        //     'suporte_tipo_parcela' => true,
+        //     'suporte_data' =>'formatada(Y-m-d)'
+        // ],
+
+        'csv' => [
+            'colunas' => [
+                'data' => 'Data Venda',
+                'status' => 'Status',
+                'valor_b' => 'Valor Bruto',
+                'valor_l' => 'Valor Liquido',
+                'tipo' => 'Tipo',
+                'bandeira' => 'Bandeira',
+                'parcela' => 'Qtde. Parcelas'
+            ],
+            'coluna_comprovante' => 'NSU Emissor',
+            'suporte_tipo_parcela' => true,
+            'separator' => ';',
+            'linha_inicial' => null,
+            'suporte_data' => 'hora',
+            'suporte_numero' => 'formatado(,)',
+            'encoding' => 'UTF-8',
+        ]
 
     ]
 ]

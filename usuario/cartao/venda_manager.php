@@ -70,7 +70,8 @@ function parse_excel($numero_arquivo = null) {
         'capim',
         'saudeservice',
         'ton',
-        'mercadopago'
+        'mercadopago',
+        'pagueveloz'
     ];
     
     $tipo_arquivo = filter_input(INPUT_POST, 'tipo_arquivo');
@@ -793,7 +794,7 @@ function parse_csv(string $caminhoCsv): array {
         };
         
         $status = $get_valor_coluna($operadora_sup['colunas']['status']) ?? null;
-        if($operadora_sup['suporte_parcela'] === false) {
+        if(isset($operadora_sup['suporte_parcela']) && $operadora_sup['suporte_parcela'] === false) {
             $parcela = 1;
         } else {
             $parcela = $get_valor_coluna($operadora_sup['colunas']['parcela']);
@@ -884,7 +885,16 @@ function parse_csv(string $caminhoCsv): array {
         $parcela = intval($parcela);
     
         $bandeira_valor = $get_valor_coluna($operadora_sup['colunas']['bandeira']) ?? '';
-        $tipo_valor = $get_valor_coluna($operadora_sup['colunas']['tipo']) ?? '';
+        if(isset($operadora_sup['suporte_tipo_parcela']) && $operadora_sup['suporte_tipo_parcela'] === true) {
+            if($parcela == 0 ) {
+                $tipo_valor = 'debito';
+            } else {
+                $tipo_valor = 'credito';
+            }
+        } else {
+            $tipo_valor = $get_valor_coluna($operadora_sup['colunas']['tipo']) ?? '';
+        }
+        
 
         if($bandeira_valor == null && (isset($operadora_sup['suporte_bandeira']) && $operadora_sup['suporte_bandeira'] == 'pix')) {
             $bandeira_valor = 'pix';
