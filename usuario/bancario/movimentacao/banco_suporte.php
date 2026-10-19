@@ -42,7 +42,22 @@ $bancos_suporte = [
         'suporte_data' => 'formatada(d-m-y)',
         
         ]
+    ],
+    'pagueveloz' => [
+        'csv' => [
+            'colunas' => [
+                'data' => 'Data',
+                'descricao' => 'Descricao',
+                'documento' => 'Id',
+                'valor' => 'Valor',
+            ],
+            'linha_inicial' => 1,
+            'separator' => 'auto',
+            'encoding' => 'UTF-8',
+            'suporte_numero' => 'formatado(.)',
+            'suporte_valor_assinado' => true,
+        ]
     ]
-]
+];
 
 ?>
