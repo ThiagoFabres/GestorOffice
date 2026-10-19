@@ -429,7 +429,8 @@ if($acao == 'processar') {
     $banco_sup = $bancos_suporte[$conta_nome_preg]['csv'] ?? null;
 
     // fallback defaults
-    $separator = $banco_sup['separator'] ?? ';';
+    $separatorConfigurado = $banco_sup['separator'] ?? ';';
+    $separator = $separatorConfigurado === 'auto' ? ';' : $separatorConfigurado;
     $encoding = $banco_sup['encoding'] ?? 'ISO-8859-1';
     $linha_inicial = $banco_sup['linha_inicial'] ?? 1;
 
@@ -462,13 +463,40 @@ if($acao == 'processar') {
             $cabecalho_str = array_shift($linhas_trim);
         }
 
+        $cabecalho_str = preg_replace('/^\xEF\xBB\xBF/', '', (string) $cabecalho_str);
+        $remover_acentos = function($str) {
+            return strtolower(preg_replace('/[^a-z0-9]/i', '', iconv('UTF-8', 'ASCII//TRANSLIT', $str)));
+        };
+
+        if ($separatorConfigurado === 'auto' && $cabecalho_str !== '') {
+            $colunasEsperadas = array_filter($banco_sup['colunas'] ?? []);
+            $maiorCorrespondencia = -1;
+
+            foreach ([";", ",", "\t"] as $separadorCandidato) {
+                $cabecalhoCandidato = str_getcsv($cabecalho_str, $separadorCandidato);
+                $cabecalhoNormalizado = array_map(
+                    static fn($coluna) => $remover_acentos(trim($coluna)),
+                    $cabecalhoCandidato
+                );
+                $correspondencias = 0;
+
+                foreach ($colunasEsperadas as $colunaEsperada) {
+                    if (in_array($remover_acentos($colunaEsperada), $cabecalhoNormalizado, true)) {
+                        $correspondencias++;
+                    }
+                }
+
+                if ($correspondencias > $maiorCorrespondencia) {
+                    $maiorCorrespondencia = $correspondencias;
+                    $separator = $separadorCandidato;
+                }
+            }
+        }
+
         $cabecalho = $cabecalho_str ? str_getcsv($cabecalho_str, $separator) : [];
         $cabecalho = array_map('trim', $cabecalho);
 
         // Normaliza cabeçalho
-        $remover_acentos = function($str) {
-            return strtolower(preg_replace('/[^a-z0-9]/i', '', iconv('UTF-8', 'ASCII//TRANSLIT', $str)));
-        };
         $mapa_normalizado = [];
         foreach ($cabecalho as $chave) {
             $mapa_normalizado[$remover_acentos($chave)] = $chave;
@@ -511,17 +539,21 @@ if($acao == 'processar') {
             if ($banco_sup) {
                 $descricao = trim($get_valor_coluna($banco_sup['colunas']['descricao'] ?? 'descricao', $row) ?? '');
                 $documento = trim($get_valor_coluna($banco_sup['colunas']['documento'] ?? 'documento', $row) ?? '');
+                $valor_assinado_str = isset($banco_sup['colunas']['valor'])
+                    ? trim($get_valor_coluna($banco_sup['colunas']['valor'], $row) ?? '')
+                    : null;
                 $credito_str = trim($get_valor_coluna($banco_sup['colunas']['credito'] ?? 'credito', $row) ?? '');
                 $debito_str = trim($get_valor_coluna($banco_sup['colunas']['debito'] ?? 'debito', $row) ?? '');
             } else {
                 $descricao = trim($row[1] ?? '');
                 $documento = trim($row[2] ?? '');
+                $valor_assinado_str = null;
                 $credito_str = trim($row[3] ?? '');
                 $debito_str = trim($row[4] ?? '');
             }
 
             // Converte data
-            $data_obj = DateTime::createFromFormat('d/m/Y', $data_str);
+            $data_obj = DateTime::createFromFormat('d/m/Y', substr($data_str, 0, 10));
             if (!$data_obj) continue;
             $data_analizada = $data_obj->format('Y-m-d');
             $data_formatada = $data_obj->format('d/m/Y');
@@ -531,22 +563,36 @@ if($acao == 'processar') {
             if ((($ultima_data != null && ($data_analizada >= $data_atual || $data_analizada == $ultima_data)) || $conta_obj->data > $data_analizada)) { continue; }
             if ($data_analizada >= $data_atual) continue;
 
-            // Normaliza valores
-            $credito_str = str_replace(['R$', ' '], ['', ''], $credito_str);
-            $debito_str = str_replace(['R$', ' '], ['', ''], $debito_str);
-            $credito_str = str_replace('.', '', $credito_str);
-            $credito_str = str_replace(',', '.', $credito_str);
-            $debito_str = str_replace('.', '', $debito_str);
-            $debito_str = str_replace(',', '.', $debito_str);
+            if (!empty($banco_sup['suporte_valor_assinado'])) {
+                if (($banco_sup['suporte_numero'] ?? null) === 'formatado(.)') {
+                    $valorNormalizado = str_replace(
+                        ['R$', ' ', "\xc2\xa0", ',', '−', '–', '—'],
+                        ['', '', '', '', '-', '-', '-'],
+                        $valor_assinado_str ?? ''
+                    );
+                    $valor = (float) preg_replace('/[^0-9.\-]/', '', $valorNormalizado);
+                } else {
+                    $valor = normalize_brazilian_number($valor_assinado_str ?? '');
+                }
+                $tipo = $valor < 0 ? 'Débito' : 'Crédito';
+            } else {
+                // Normaliza valores de arquivos com colunas separadas.
+                $credito_str = str_replace(['R$', ' '], ['', ''], $credito_str);
+                $debito_str = str_replace(['R$', ' '], ['', ''], $debito_str);
+                $credito_str = str_replace('.', '', $credito_str);
+                $credito_str = str_replace(',', '.', $credito_str);
+                $debito_str = str_replace('.', '', $debito_str);
+                $debito_str = str_replace(',', '.', $debito_str);
 
-            $valor = 0;
-            $tipo = '';
-            if ($credito_str !== '' && $credito_str !== '0') {
-                $valor = (float)$credito_str;
-                $tipo = 'Crédito';
-            } elseif ($debito_str !== '' && $debito_str !== '0') {
-                $valor = -(float)$debito_str;
-                $tipo = 'Débito';
+                $valor = 0;
+                $tipo = '';
+                if ($credito_str !== '' && $credito_str !== '0') {
+                    $valor = (float)$credito_str;
+                    $tipo = 'Crédito';
+                } elseif ($debito_str !== '' && $debito_str !== '0') {
+                    $valor = -(float)$debito_str;
+                    $tipo = 'Débito';
+                }
             }
             if ($valor == 0) continue;
 
