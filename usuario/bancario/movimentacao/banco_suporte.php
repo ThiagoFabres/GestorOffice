@@ -12,6 +12,19 @@ $bancos_suporte = [
             ],
         'suporte_data' => 'formatada(d-m-y)',
         'suporte_numero' => 'formatado(1.000,00)'
+        ],
+        'csv' => [
+            'colunas' => [
+                'data' => 'RELEASE_DATE',
+                'descricao' => 'TRANSACTION_TYPE',
+                'documento' => 'REFERENCE_ID',
+                'valor' => 'TRANSACTION_NET_AMOUNT',
+            ],
+            'linha_inicial' => 4,
+            'separator' => 'auto',
+            'encoding' => 'UTF-8',
+            'suporte_numero' => 'formatado(1.000,00)',
+            'suporte_valor_assinado' => true,
         ]
     ],
     'ton' => [
