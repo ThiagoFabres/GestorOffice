@@ -406,6 +406,7 @@ if($acao == 'processar') {
 
     
     function parse_csv($filePath) {
+        
     require __DIR__ . '/banco_suporte.php';
     $conta = filter_input(INPUT_POST, 'conta');
     $data_atual = (new DateTime())->format('Y-m-d');
@@ -534,6 +535,7 @@ if($acao == 'processar') {
                     continue;
                 }
             }
+            
 
             // Leitura de campos via suporte se disponível
             if ($banco_sup) {
@@ -551,6 +553,7 @@ if($acao == 'processar') {
                 $credito_str = trim($row[3] ?? '');
                 $debito_str = trim($row[4] ?? '');
             }
+            
 
             // Converte data
             $data_obj = DateTime::createFromFormat('d/m/Y', substr($data_str, 0, 10));
@@ -564,13 +567,16 @@ if($acao == 'processar') {
             if ($data_analizada >= $data_atual) continue;
 
             if (!empty($banco_sup['suporte_valor_assinado'])) {
-                if (($banco_sup['suporte_numero'] ?? null) === 'formatado(.)') {
+                if (($banco_sup['suporte_numero'] ?? null) === 'formatado(1.000,00)') {
+                    $valor = normalize_brazilian_number($valor_assinado_str ?? '');
+                } elseif (($banco_sup['suporte_numero'] ?? null) === 'formatado(.)') {
                     $valorNormalizado = str_replace(
                         ['R$', ' ', "\xc2\xa0", ',', '−', '–', '—'],
                         ['', '', '', '', '-', '-', '-'],
                         $valor_assinado_str ?? ''
                     );
                     $valor = (float) preg_replace('/[^0-9.\-]/', '', $valorNormalizado);
+                    
                 } else {
                     $valor = normalize_brazilian_number($valor_assinado_str ?? '');
                 }
@@ -594,8 +600,8 @@ if($acao == 'processar') {
                     $tipo = 'Débito';
                 }
             }
-            if ($valor == 0) continue;
-
+            
+            // if ($valor == 0) continue;
             $transactions['current'][] = [
                 'data' => $data_formatada,
                 'data_analizada' => $data_analizada,
