@@ -381,7 +381,7 @@ if ($get_filtro_conta != null) {
                                             <button class="btn btn-primary btn" type="submit">Buscar</button>
                                             <a class="btn btn-secondary btn" href="movimentacao.php">Limpar</a>
                                         </div>
-                                        <button type="button" class="btn btn-success btn" data-bs-toggle="modal" data-bs-target="#modal_conciliar_palavra">Conciliar</button>
+                                        <a href="movimentacao_manager.php?acao=conciliar_todas" class="btn btn-success btn">Conciliar</a>
                                     </div>
                                      
                                 </div>
