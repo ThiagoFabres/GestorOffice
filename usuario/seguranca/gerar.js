@@ -1,8 +1,8 @@
 function formatarDataParaTexto(data) {
     if (!data) return '';
-    const d = new Date(data);
-    if (Number.isNaN(d.getTime())) return data;
-    return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+    const partes = /^(\d{4})-(\d{2})-(\d{2})$/.exec(data);
+    if (!partes) return data;
+    return `${partes[3]}/${partes[2]}/${partes[1]}`;
 }
 
 function limparTexto(valor) {
