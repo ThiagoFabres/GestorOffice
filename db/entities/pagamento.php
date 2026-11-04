@@ -14,8 +14,8 @@ class TipoPagamento {
 
     }
 
-public static function create($tipo_pag) {
-    $pdo = (new Database())->connect();
+public static function create($tipo_pag, ?PDO $pdo = null) {
+$pdo = $pdo ?? (new Database())->connect();
 
     $sql = 'INSERT INTO tipo_pag (id_empresa, nome) 
             VALUES (:id_empresa, :nome)';
@@ -26,11 +26,15 @@ public static function create($tipo_pag) {
 
     
 
-    return $stmt->execute();
+    $criado = $stmt->execute();
+    if ($criado) {
+        $tipo_pag->id = (int) $pdo->lastInsertId();
+    }
+    return $criado;
 }
 
-    public static function read($id = null, $idempresa = null, $nome = null): array {
-    $pdo = (new Database())->connect();
+    public static function read($id = null, $idempresa = null, $nome = null, ?PDO $pdo = null): array {
+    $pdo = $pdo ?? (new Database())->connect();
     $query = 'SELECT * FROM tipo_pag';
     $conditions = [];
 
@@ -55,6 +59,20 @@ public static function create($tipo_pag) {
    $stmt->setFetchMode(PDO::FETCH_CLASS | PDO::FETCH_PROPS_LATE, TipoPagamento::class);
 return $stmt->fetchAll();
 }
+
+    public static function ehCrediario($nome): bool {
+        $nome = strtr(trim((string) $nome), [
+            'Á' => 'A', 'À' => 'A', 'Â' => 'A', 'Ã' => 'A',
+            'á' => 'a', 'à' => 'a', 'â' => 'a', 'ã' => 'a',
+            'É' => 'E', 'Ê' => 'E', 'é' => 'e', 'ê' => 'e',
+            'Í' => 'I', 'í' => 'i',
+            'Ó' => 'O', 'Ô' => 'O', 'Õ' => 'O',
+            'ó' => 'o', 'ô' => 'o', 'õ' => 'o',
+            'Ú' => 'U', 'Ü' => 'U', 'ú' => 'u', 'ü' => 'u',
+            'Ç' => 'C', 'ç' => 'c',
+        ]);
+        return strtolower($nome) === 'crediario';
+    }
 
     public static function update($tipo_pag) {
     $pdo = (new Database())->connect();

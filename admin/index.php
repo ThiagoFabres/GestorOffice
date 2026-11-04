@@ -56,11 +56,11 @@ $lista_estados = [];
                             }
                             $estados_unicos = [];
                             foreach ($lista_estados as $estado) {
-                                $chave = mb_strtolower(trim($estado), 'UTF-8');
+                                $chave = strtolower(trim($estado));
                                 if(strlen($chave) != 2) {
-                                    $estados_unicos[$chave] = ucfirst(mb_strtolower($estado, 'UTF-8'));
+                                    $estados_unicos[$chave] = ucfirst(strtolower($estado));
                                 } else {
-                                    $estados_unicos[$chave] = mb_strtoupper($estado, 'UTF-8');
+                                    $estados_unicos[$chave] = strtoupper($estado);
                                 }
 
                                 
@@ -75,8 +75,8 @@ $lista_bairros = [];
 
                             $bairros_unicos = [];
                             foreach ($lista_bairros as $bairro) {
-                                $chave = mb_strtolower(trim($bairro), 'UTF-8');
-                                $bairros_unicos[$chave] = ucfirst(mb_strtolower($bairro, 'UTF-8'));
+                                $chave = strtolower(trim($bairro));
+                                $bairros_unicos[$chave] = ucfirst(strtolower($bairro));
                             }
                             
 $lista_parceiros = [];
@@ -89,20 +89,21 @@ $lista_parceiros = [];
 
                                 $parceiros_unicos = [];
                                 foreach ($lista_parceiros as $parceiro) {
-                                    $chave = mb_strtolower(trim($parceiro), 'UTF-8');
+                                    $chave = strtolower(trim($parceiro));
                                     $parceiros_unicos[$chave] = $parceiro;
                                 }
                             
 $lista_cidades = [];
                             foreach ($empresas as $empresa) {
-                                if (!in_array(mb_strtolower($empresa->cidade), $lista_cidades) && ($empresa->cidade != null && $empresa->cidade != '')) {
-                                    $lista_cidades[] = $empresa->cidade;
-                                }
-                            }
+    if ($empresa->cidade !== null && $empresa->cidade !== ''
+        && !in_array(strtolower($empresa->cidade), $lista_cidades, true)) {
+        $lista_cidades[] = $empresa->cidade;
+    }
+}
                             $cidades_unicas = [];
                             foreach ($lista_cidades as $cidade) {
-                                $chave = mb_strtolower(trim($cidade), 'UTF-8');
-                                $cidades_unicas[$chave] = ucfirst(mb_strtolower($cidade, 'UTF-8'));
+                                $chave = strtolower(trim($cidade));
+                                $cidades_unicas[$chave] = ucfirst(strtolower($cidade));
                             }
 ?>
 <!DOCTYPE html>
@@ -512,6 +513,10 @@ $lista_cidades = [];
                     value="">
             </div>
             <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="permissao_estoque" style="margin-bottom:0;">Estoque</label>
+                    <input type="checkbox" <?php if($empresa->permissao_estoque == 1) {?> checked <?php }; ?> name="permissao_estoque" class="form-check-input" value="1">
+            </div>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
                     <label for="status" style="margin-bottom:0;">Inicio</label>
                     <input type="checkbox" <?php if($empresa->permissao_inicio == 1 ) {?> checked <?php }; ?> onchange="" name="permissao_inicio" class="form-check-input"
                     value="">
@@ -706,6 +711,10 @@ $lista_cidades = [];
                     <label for="status" style="margin-bottom:0;">Operacional</label>
                     <input type="checkbox" checked onchange="" name="permissao_operacional" class="form-check-input"
                     value="">
+            </div>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="permissao_estoque" style="margin-bottom:0;">Estoque</label>
+                    <input type="checkbox" name="permissao_estoque" class="form-check-input" value="1">
             </div>
             <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
                     <label for="status" style="margin-bottom:0;">Inicio</label>

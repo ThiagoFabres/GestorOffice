@@ -19,6 +19,8 @@
     $permissao_bancario_req = isset($_POST['permissao_bancario']) ? 1 : 0;
     $permissao_operacional_req = isset($_POST['permissao_operacional']) ? 1 : 0;
     $permissao_inicio_req = isset($_POST['permissao_inicio']) ? 1 : 0;
+    $empresa_permite_estoque = (int) (Empresa::read($_SESSION['usuario']->id_empresa)[0]->permissao_estoque ?? 0) === 1;
+    $permissao_estoque_req = $empresa_permite_estoque && isset($_POST['permissao_estoque']) ? 1 : 0;
     $post_acao = filter_input(INPUT_POST, 'acao');
 
     $nome = filter_input(INPUT_POST, 'nome');
@@ -59,7 +61,8 @@ $usuario = new Usuario(
     $permissao_bancario_req,
     $permissao_operacional_req,
     $permissao_inicio_req,
-    $principal
+    $principal,
+    $permissao_estoque_req
 );
 
     Usuario::update($usuario);
@@ -109,6 +112,7 @@ $usuario = new Usuario(
     $permissao_operacional_req,
     $permissao_inicio_req,
     $principal,
+    $permissao_estoque_req,
 );
 
 

@@ -8,6 +8,24 @@ require_once __DIR__ . '/../db/entities/centrocustos.php';
 require_once __DIR__ . '/../db/entities/pagamento.php';
 require_once __DIR__ . '/../db/entities/contas.php';
 
+function parseValorMonetario($valor): ?float {
+    if (!is_scalar($valor)) {
+        return null;
+    }
+
+    $valor = trim((string) $valor);
+    if ($valor === '') {
+        return null;
+    }
+
+    if (str_contains($valor, ',')) {
+        $valor = str_replace('.', '', $valor);
+        $valor = str_replace(',', '.', $valor);
+    }
+
+    return is_numeric($valor) ? (float) $valor : null;
+}
+
 function permissao() {
         // Exemplo: só permite se o usuário logado for admin
         return isset($_SESSION['usuario']) && $_SESSION['usuario']->cargo == Cargo::ADMIN;
@@ -48,22 +66,17 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'editar') {
     $permissao_bancario = isset($_POST['permissao_bancario']) ? 1 : 0;
     $permissao_operacional = isset($_POST['permissao_operacional']) ? 1 : 0;
     $permissao_inicio = isset($_POST['permissao_inicio']) ? 1 : 0;
-    $inicio_atividade = $_POST['ativ_inicio'] == '' ? null : $_POST['ativ_inicio'] ?? null;
-    $tolerancia_atividade = $_POST['tolerancia'] == '' ? null : $_POST['tolerancia'] ?? null;
+    $permissao_estoque = isset($_POST['permissao_estoque']) ? 1 : 0;
+    $inicio_atividade = ($_POST['ativ_inicio'] ?? '') === '' ? null : $_POST['ativ_inicio'];
+    $tolerancia_atividade = ($_POST['tolerancia'] ?? '') === '' ? null : $_POST['tolerancia'];
     $celular1_atividade = $_POST['cel1'] ?? null;
     $celular2_atividade = $_POST['cel2'] ?? null;
     $parceiro = $_POST['parceiro'] ?? null;
     $permissao_notificacao = isset($_POST['permissao_notificacao']) ? 1 : 0;
-    $royalty = $_POST['royalty'] == '' ? null : floatval(str_replace(',', '.', $_POST['royalty'])) ?? null;
-    if($royalty == '0,00') {
-        $royalty = null;
-    }
-    $taxa_marketing = $_POST['taxa_marketing'] == '' ? null : floatval(str_replace(',', '.', $_POST['taxa_marketing'])) ?? null;
-    if($taxa_marketing == '0,00') {
-        $taxa_marketing = null;
-    }
+    $royalty = parseValorMonetario($_POST['royalty'] ?? '');
+    $taxa_marketing = parseValorMonetario($_POST['taxa_marketing'] ?? '');
 
-    if(strlen($estado) == 2){$estado = mb_strtoupper($estado);};
+    if(strlen($estado) == 2){$estado = strtoupper($estado);};
 
     $empresa = new Empresa(
         $id, // id
@@ -95,10 +108,16 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'editar') {
         parceiro: $parceiro,
         permissao_notificacao: $permissao_notificacao,
         royalty: $royalty,
-        taxa_marketing: $taxa_marketing
+        taxa_marketing: $taxa_marketing,
+        permissao_estoque: $permissao_estoque
 );
 
-$gestor_atual = Usuario::read(idempresa:$id, cargo:Cargo::GESTOR)[0];
+$gestores = Usuario::read(idempresa:$id, cargo:Cargo::GESTOR);
+$gestor_atual = $gestores[0] ?? null;
+if (!$gestor_atual) {
+    header('Location: index.php?erro=gestor_nao_encontrado');
+    exit;
+}
 
 $gestor = new Usuario(
     $gestor_atual->id, // id_usuario
@@ -108,7 +127,8 @@ $gestor = new Usuario(
     null,
     0, // processar
     0, // consultar
-    Cargo::GESTOR
+    Cargo::GESTOR,
+    permissao_estoque: $permissao_estoque
 );
 
 
@@ -170,19 +190,14 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'adicionar') {
     $permissao_bancario = isset($_POST['permissao_bancario']) ? 1 : 0;
     $permissao_operacional = isset($_POST['permissao_operacional']) ? 1 : 0;
     $permissao_inicio = isset($_POST['permissao_inicio']) ? 1 : 0;
+    $permissao_estoque = isset($_POST['permissao_estoque']) ? 1 : 0;
     $inicio_atividade = $_POST['ativ_inicio'] ?? null;
-    $tolerancia_atividade = $_POST['tolerancia'] == '' ? null : $_POST['tolerancia'] ?? null;
+    $tolerancia_atividade = ($_POST['tolerancia'] ?? '') === '' ? null : $_POST['tolerancia'];
     $celular1_atividade = $_POST['cel1'] ?? null;
     $celular2_atividade = $_POST['cel2'] ?? null;
     $parceiro = $_POST['parceiro'] ?? null;
-    $royalty = $_POST['royalty'] == '' ? null : floatval(str_replace(',', '.', $_POST['royalty'])) ?? null;
-    if($royalty == '0,00') {
-        $royalty = null;
-    }
-    $taxa_marketing = $_POST['taxa_marketing'] == '' ? null : floatval(str_replace(',', '.', $_POST['taxa_marketing'])) ?? null;
-    if($taxa_marketing == '0,00') {
-        $taxa_marketing = null;
-    }
+    $royalty = parseValorMonetario($_POST['royalty'] ?? '');
+    $taxa_marketing = parseValorMonetario($_POST['taxa_marketing'] ?? '');
 
     $empresa = new Empresa(
         null, // id
@@ -213,7 +228,8 @@ if (isset($_POST['acao']) && $_POST['acao'] == 'adicionar') {
         celular2_atividade: $celular2_atividade,
         parceiro: $parceiro,
         royalty: $royalty,
-        taxa_marketing: $taxa_marketing
+        taxa_marketing: $taxa_marketing,
+        permissao_estoque: $permissao_estoque
     );
     
 $gestor = new Usuario(
@@ -225,7 +241,8 @@ $gestor = new Usuario(
     0, // processar
     0, // consultar
     Cargo::GESTOR,
-    $status
+    $status,
+    permissao_estoque: $permissao_estoque
 );
 
 

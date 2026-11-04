@@ -79,7 +79,7 @@ $actual_url = $_SERVER['REQUEST_URI'];
     </div>
 
     <div id="conta-header">
-        <a href="/" class="dropdown-item">
+        <a href="/index.php?acao=sair" class="dropdown-item">
             <i class="bi bi-box-arrow-left"></i> Sair
         </a>
     </div>

@@ -18,9 +18,11 @@ class Usuario {
     public $permissao_operacional;
     public $permissao_inicio;
     public $principal;
+    public $data_r;
+    public $permissao_estoque;
 
 
-    public function __construct($id = null, $id_empresa = null, $nome = '', $email = '', $senha = '', $processar = 0, $consultar = 0, $cargo = null, $status = 0, $permissao_cartao = 1, $permissao_seguranca = 0, $permissao_financeiro = 1, $permissao_bancario = 1, $permissao_operacional = 1, $permissao_inicio = 1, $principal = 0) {
+    public function __construct($id = null, $id_empresa = null, $nome = '', $email = '', $senha = '', $processar = 0, $consultar = 0, $cargo = null, $status = 0, $permissao_cartao = 1, $permissao_seguranca = 0, $permissao_financeiro = 1, $permissao_bancario = 1, $permissao_operacional = 1, $permissao_inicio = 1, $principal = 0, $permissao_estoque = 0) {
         $this->id = $id;
         $this->id_empresa = $id_empresa;
         $this->nome = $nome;
@@ -37,6 +39,7 @@ class Usuario {
         $this->permissao_operacional = $permissao_operacional;
         $this->permissao_inicio = $permissao_inicio;
         $this->principal = $principal;
+        $this->permissao_estoque = $permissao_estoque;
     }
 
 public static function create($usuario) {
@@ -45,8 +48,8 @@ public static function create($usuario) {
     // Senha padrão fixa "123456"
     $senhaHash = password_hash('123456', PASSWORD_DEFAULT);
 
-    $sql = 'INSERT INTO usuario (id_empresa, nome, email, senha, processar, consultar, cargo, status, permissao_cartao, permissao_seguranca, permissao_financeiro, permissao_bancario, permissao_operacional, permissao_inicio, principal) 
-            VALUES (:id_empresa, :nome, :email, :senha, :processar, :consultar, :cargo, :status, :permissao_cartao, :permissao_seguranca, :permissao_financeiro, :permissao_bancario, :permissao_operacional, :permissao_inicio, :principal)';
+    $sql = 'INSERT INTO usuario (id_empresa, nome, email, senha, processar, consultar, cargo, status, permissao_cartao, permissao_seguranca, permissao_financeiro, permissao_bancario, permissao_operacional, permissao_inicio, principal, permissao_estoque)
+            VALUES (:id_empresa, :nome, :email, :senha, :processar, :consultar, :cargo, :status, :permissao_cartao, :permissao_seguranca, :permissao_financeiro, :permissao_bancario, :permissao_operacional, :permissao_inicio, :principal, :permissao_estoque)';
     $stmt = $pdo->prepare($sql);
     $stmt->bindValue(':id_empresa', $usuario->id_empresa);
     $stmt->bindValue(':nome', $usuario->nome);
@@ -63,6 +66,7 @@ public static function create($usuario) {
     $stmt->bindValue(':permissao_operacional', $usuario->permissao_operacional, PDO::PARAM_INT);
     $stmt->bindValue(':permissao_inicio', $usuario->permissao_inicio, PDO::PARAM_INT);
     $stmt->bindValue(':principal', $usuario->principal, PDO::PARAM_INT);
+    $stmt->bindValue(':permissao_estoque', $usuario->permissao_estoque, PDO::PARAM_INT);
 
     
 
@@ -135,7 +139,8 @@ return $stmt->fetchAll();
                 permissao_bancario = :permissao_bancario,
                 permissao_operacional = :permissao_operacional,
                 permissao_inicio = :permissao_inicio,
-                principal = :principal
+                principal = :principal,
+                permissao_estoque = :permissao_estoque
             WHERE id = :id';
 
     $stmt = $pdo->prepare($sql);
@@ -156,6 +161,7 @@ return $stmt->fetchAll();
     $stmt->bindValue(':permissao_operacional', $usuario->permissao_operacional, PDO::PARAM_INT);
     $stmt->bindValue(':permissao_inicio', $usuario->permissao_inicio, PDO::PARAM_INT);
     $stmt->bindValue(':principal', $usuario->principal, PDO::PARAM_INT);
+    $stmt->bindValue(':permissao_estoque', $usuario->permissao_estoque, PDO::PARAM_INT);
 
     return $stmt->execute();
 }
