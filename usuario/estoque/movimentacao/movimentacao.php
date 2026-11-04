@@ -91,7 +91,7 @@ $filtroSubgrupo = isset($subgruposPorId[$filtroSubgrupo ?? 0]) ? $filtroSubgrupo
 $filtroProduto = isset($produtosPorId[$filtroProduto ?? 0]) ? $filtroProduto : null;
 $movimentosObjetos = Mov01::read(
     id_empresa: $idEmpresa,
-    data_inicial: $dataInicial . ' 00:00:00',
+    data_inicial: $dataInicial ? $dataInicial . ' 00:00:00' : null,
     data_final: $dataFinalExclusiva,
     tipo: $tipo !== '' ? $tipo : null,
     id_cadastro: $filtroCadastro
@@ -221,6 +221,7 @@ $lateral_target = 'estoque_movimentacao';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
+    
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -265,6 +266,7 @@ $lateral_target = 'estoque_movimentacao';
             min-height: 90px;
         }
     </style>
+<title>Gestor Office Control</title>
 </head>
 <body id="body">
     <?php require_once __DIR__ . '/../../../componentes/lateral/lateral.php'; ?>

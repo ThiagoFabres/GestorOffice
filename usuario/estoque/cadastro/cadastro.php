@@ -138,6 +138,7 @@ function valorEstoque($valor, $decimais = 2) {
             }
         }
     </style>
+    <title>Gestor Office Control</title>
 </head>
 <body id="body" data-nome-empresa="<?= escaparEstoque($nomeEmpresa) ?>">
     <?php require_once __DIR__ . '/../../../componentes/lateral/lateral.php'; ?>
