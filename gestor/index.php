@@ -47,9 +47,9 @@ $link_vinculo_2 = "https://web.telegram.org/#/im?tgaddr=tg%3A%2F%2Fresolve%3Fdom
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="gestor-office.png" type="image/x-icon">
-    <link rel="stylesheet" href="/../components/header/header.css"> 
-    <link rel="stylesheet" href="/../usuario/style/responsivo.css"> 
-    <link rel="stylesheet" href="/../components/lateral/lateral.css">
+    <link rel="stylesheet" href="/componentes/header/header.css">
+    <link rel="stylesheet" href="/usuario/style/responsivo.css">
+    <link rel="stylesheet" href="/componentes/lateral/lateral.css">
     <title>Gestor Office Control</title>
 </head>
 
@@ -127,7 +127,7 @@ $link_vinculo_2 = "https://web.telegram.org/#/im?tgaddr=tg%3A%2F%2Fresolve%3Fdom
 
     <div class="conta-header" style="position:relative; float:right; margin-right:2em;">
 
-            <a href="/" class="dropdown-item">
+            <a href="/index.php?acao=sair" class="dropdown-item">
                 <i class="bi bi-box-arrow-left"></i> Logout
             </a>
 
@@ -362,6 +362,12 @@ $link_vinculo_2 = "https://web.telegram.org/#/im?tgaddr=tg%3A%2F%2Fresolve%3Fdom
                     value="">
             </div>
             <?php } ?>
+            <?php if($empresa_usuario_obj->permissao_estoque) {?>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="permissao_estoque" style="margin-bottom:0;">Estoque</label>
+                    <input type="checkbox" <?php if($usuario->permissao_estoque == 1) {?> checked <?php } ?> name="permissao_estoque" class="form-check-input" value="1">
+            </div>
+            <?php } ?>
         </div>
     </div>
 
@@ -484,6 +490,12 @@ $link_vinculo_2 = "https://web.telegram.org/#/im?tgaddr=tg%3A%2F%2Fresolve%3Fdom
                     <label for="status" style="margin-bottom:0;">Inicio</label>
                     <input type="checkbox" checked onchange="" name="permissao_inicio" class="form-check-input"
                     value="">
+            </div>
+            <?php } ?>
+            <?php if($empresa_usuario_obj->permissao_estoque) {?>
+            <div style="margin-left:1.25em; margin-top:0; align-self:center;" class="input-status input-form-adm">
+                    <label for="permissao_estoque" style="margin-bottom:0;">Estoque</label>
+                    <input type="checkbox" name="permissao_estoque" class="form-check-input" value="1">
             </div>
             <?php } ?>
         </div>

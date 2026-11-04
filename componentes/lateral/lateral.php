@@ -149,6 +149,29 @@ $logo_blob = null;
                     </div>
                 </div>
                 <?php } ?>
+                <?php if($empresa_usuario_obj->permissao_estoque && $usuario_obj->permissao_estoque){ ?>  
+                <div class="menu-item accordion <?php if( isset($lateral_estoque) && $lateral_estoque ){ 
+                    ?>menu-item-atual<?php } ?>">
+                    <a class="nav-link text-white" data-bs-toggle="collapse" href="#estoqueMenu" role="button"
+                        aria-expanded="false" aria-controls="estoqueMenu">
+                        <div style=" align-items:center;"><i class="bi bi-bookshelf"></i></div>Controle Estoque
+                    </a>
+                    <div class="<?php if( !isset($lateral_estoque) || !$lateral_estoque ){ ?>collapse<?php } ?>" id="estoqueMenu">
+                        <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small ps-3">
+                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'estoque_cadastro') { ?> menu-li-atual <?php } ?>"><a href="/usuario/estoque/cadastro/cadastro.php" class="link-light text-decoration-none">
+                                <i class="bi bi-tag"></i>Cadastro</a></li>
+                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'estoque_movimentacao') { ?> menu-li-atual <?php } ?>"><a href="/usuario/estoque/movimentacao/movimentacao.php" class="link-light text-decoration-none">
+                                <i class="bi bi-arrow-down-up"></i>Movimentação</a></li>
+                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'balanco') { ?> menu-li-atual <?php } ?>"><a href="/usuario/estoque/balanco/balanco.php" class="link-light text-decoration-none">
+                                <i class="bi bi-clipboard"></i>Balanço</a></li>
+                            <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'estoque_venda') { ?> menu-li-atual <?php } ?>"><a href="/usuario/estoque/venda/venda.php" class="link-light text-decoration-none">
+                                <i class="bi bi-cart3"></i>Venda</a></li>
+                            <!-- <li class=" menu-li <?php if(isset($lateral_target) && $lateral_target == 'estoque_relatorios') { ?> menu-li-atual <?php } ?>"><a href="/usuario/estoque/relatorios.php" class="link-light text-decoration-none">
+                                <i class="bi bi-file-earmark-text"></i>Relatórios</a></li> -->
+                        </ul>
+                    </div>
+                </div>
+                <?php } ?>
 
                 <?php if($empresa_usuario_obj->permissao_financeiro && $usuario_obj->permissao_financeiro){ ?>
                 <div class="menu-item accordion <?php if( isset($lateral_recorrente) && $lateral_recorrente ){ 

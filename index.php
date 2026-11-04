@@ -1,7 +1,25 @@
 <?php
 session_start();
-if (isset($_SESSION['usuario'])) {
+
+if (isset($_GET['acao']) && $_GET['acao'] === 'sair') {
+    $_SESSION = [];
+
+    if (ini_get('session.use_cookies')) {
+        $cookie_params = session_get_cookie_params();
+        setcookie(
+            session_name(),
+            '',
+            time() - 42000,
+            $cookie_params['path'],
+            $cookie_params['domain'],
+            $cookie_params['secure'],
+            $cookie_params['httponly']
+        );
+    }
+
     session_destroy();
+    header('Location: /index.php');
+    exit;
 }
 
 

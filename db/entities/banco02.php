@@ -12,6 +12,7 @@ class Ban02 {
     public $valor;
     public $id_original;    
     public $ativo;
+    public $id_cadastro;
     
     
 
