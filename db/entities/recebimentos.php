@@ -40,8 +40,8 @@ class Rec01 {
         $this->nf = $nf;
     }
 
-    public static function create($rec01) {
-        $pdo = (new Database())->connect();
+    public static function create($rec01, ?PDO $pdo = null) {
+        $pdo = $pdo ?? (new Database())->connect();
 
         $sql = 'INSERT INTO rec01 (centro_custos, id_empresa, id_cadastro, id_con01, id_con02, documento, nf, descricao, valor, parcelas, data_lanc, id_usuario, id_convertido, valor_b, valor_liq_go, taxa_cadastrada) 
                 VALUES (:centro_custos, :id_empresa, :id_cadastro, :id_con01, :id_con02, :documento, :nf, :descricao, :valor, :parcelas, :data_lanc, :id_usuario, :id_convertido, :valor_b, :valor_liq_go, :taxa_cadastrada)';
@@ -64,7 +64,11 @@ class Rec01 {
         $stmt->bindValue(':taxa_cadastrada', $rec01->taxa_cadastrada);
         
 
-        return $stmt->execute();
+        $criado = $stmt->execute();
+        if ($criado) {
+            $rec01->id = (int) $pdo->lastInsertId();
+        }
+        return $criado;
     }
 
     public static function read(
@@ -83,9 +87,10 @@ class Rec01 {
         $filtro_data_final = null,
         $filtro_custos = null,
         $filtro_nf = null,
+        ?PDO $pdo = null,
         ) {
 
-        $pdo = (new Database())->connect();
+        $pdo = $pdo ?? (new Database())->connect();
         if($read_paginas === true) {
             $query = 'SELECT COUNT(*) FROM rec01';
         }else {
@@ -146,6 +151,18 @@ class Rec01 {
         }
     }
 
+    public static function proximoDocumento($id_empresa, ?PDO $pdo = null): int {
+        $pdo = $pdo ?? (new Database())->connect();
+        $stmt = $pdo->prepare(
+            'SELECT COALESCE(MAX(CAST(documento AS UNSIGNED)), 0)
+               FROM rec01
+              WHERE id_empresa = :id_empresa'
+        );
+        $stmt->bindValue(':id_empresa', $id_empresa);
+        $stmt->execute();
+        return (int) $stmt->fetchColumn() + 1;
+    }
+
     public static function update($rec01) {
         $pdo = (new Database())->connect();
 
@@ -197,7 +214,7 @@ class Rec01 {
 }
 }
 
-//parcelas
+#[AllowDynamicProperties]
 class Rec02 {
     public $id;
     public $id_empresa;
@@ -223,8 +240,8 @@ class Rec02 {
         $this->id_pgto = $id_pgto;
     }
 
-    public static function create($rec02) {
-        $pdo = (new Database())->connect();
+    public static function create($rec02, ?PDO $pdo = null) {
+        $pdo = $pdo ?? (new Database())->connect();
 
         $sql = 'INSERT INTO rec02 (id_empresa, id_rec01, valor_par, parcela, vencimento, valor_pag, data_pag, obs, id_pgto) 
                 VALUES (:id_empresa, :id_rec01, :valor_par, :parcela, :vencimento, :valor_pag, :data_pag, :obs, :id_pgto)';
@@ -241,7 +258,11 @@ class Rec02 {
 
         
 
-        return $stmt->execute();
+        $criado = $stmt->execute();
+        if ($criado) {
+            $rec02->id = (int) $pdo->lastInsertId();
+        }
+        return $criado;
     }
 
     public static function read(
