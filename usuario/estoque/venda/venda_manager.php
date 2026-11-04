@@ -1,8 +1,11 @@
 <?php
 require_once __DIR__ . '/../../../db/base.php';
+require_once __DIR__ . '/../../../db/entities/fecha01.php';
 require_once __DIR__ . '/../../../db/entities/usuarios.php';
 require_once __DIR__ . '/../../../db/entities/empresas.php';
 require_once __DIR__ . '/../../../db/entities/cadastro.php';
+require_once __DIR__ . '/../../../db/entities/centrocustos.php';
+require_once __DIR__ . '/../../../db/entities/contas.php';
 require_once __DIR__ . '/../../../db/entities/pagamento.php';
 require_once __DIR__ . '/../../../db/entities/recebimentos.php';
 require_once __DIR__ . '/../../../db/entities/estoque/cx01.php';
@@ -32,6 +35,8 @@ if ((int) $_SESSION['usuario']->processar !== 1) {
 $idEmpresa = (int) $_SESSION['usuario']->id_empresa;
 $idUsuario = (int) $_SESSION['usuario']->id;
 $hoje = date('Y-m-d');
+
+$fecha01_rec = Fecha01::read(id_empresa: $_SESSION['usuario']->id_empresa, tipo: 'C')[0] ?? null;
 
 function redirecionarVenda(string $resultado): void {
     header('Location: venda.php?resultado=' . rawurlencode($resultado));
@@ -123,6 +128,32 @@ if ($acao === 'abrir_caixa') {
 
 if ($acao !== 'finalizar_venda') {
     redirecionarVenda('acao_invalida');
+}
+
+$tituloReceita = $fecha01_rec && $fecha01_rec->id_titulo
+    ? Con01::read(
+        id: $fecha01_rec->id_titulo,
+        idempresa: $idEmpresa,
+        tipo: 'C'
+    )[0] ?? null
+    : null;
+$subtituloReceita = $tituloReceita && $fecha01_rec->id_subtitulo
+    ? Con02::read(
+        id: $fecha01_rec->id_subtitulo,
+        idempresa: $idEmpresa,
+        con01_id: $tituloReceita->id
+    )[0] ?? null
+    : null;
+$centroCustosReceita = $fecha01_rec && $fecha01_rec->id_custos
+    ? CentroCustos::read(
+        id: $fecha01_rec->id_custos,
+        id_empresa: $idEmpresa
+    )[0] ?? null
+    : null;
+
+if ($tituloReceita === null || $subtituloReceita === null || $centroCustosReceita === null) {
+    header('Location: /usuario/operacional/fechamento/parametro_receber.php?erro=campos_obrigatorios');
+    exit;
 }
 
 $itensJson = $_POST['itens'] ?? '';
@@ -328,12 +359,15 @@ try {
     $recebimento = new Rec01(
         id_empresa: $idEmpresa,
         id_cadastro: $cliente->id_cadastro,
+        id_con01: $tituloReceita->id,
+        id_con02: $subtituloReceita->id,
         documento: Rec01::proximoDocumento($idEmpresa, $pdo),
         descricao: 'Venda balcão',
         valor: round($totalVenda, 2),
         parcelas: 1,
         data_lanc: date('Y-m-d H:i:s'),
-        id_usuario: $idUsuario
+        id_usuario: $idUsuario,
+        centro_custos: $centroCustosReceita->id
     );
     if (!Rec01::create($recebimento, $pdo)) {
         throw new RuntimeException('Não foi possível criar o contas a receber da venda.');
