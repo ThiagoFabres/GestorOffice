@@ -40,8 +40,8 @@ class Cadastro {
         $this->data_r= $data_r;
     }
 
-    public static function create($cadastro) {
-        $pdo = (new Database())->connect();
+    public static function create($cadastro, ?PDO $pdo = null) {
+        $pdo = $pdo ?? (new Database())->connect();
         $sql = 'INSERT INTO cadastro (id_empresa, razao_soc, nom_fant, cep, rua, id_bairro, id_cidade, estado, cpf, cnpj, email, celular, fixo, id_categoria, data_r) 
                             VALUES (:id_empresa, :razao_soc, :nom_fant, :cep, :rua, :bairro, :cidade, :estado, :cpf, :cnpj, :email, :celular, :fixo, :id_categoria, :data_r)';
         $stmt = $pdo->prepare($sql);
@@ -62,7 +62,11 @@ class Cadastro {
         $stmt->bindvalue(':id_categoria', $cadastro->id_categoria);
         $stmt->bindvalue(':data_r', $cadastro->data_r);
 
-       return $stmt->execute(); 
+        $criado = $stmt->execute();
+        if ($criado) {
+            $cadastro->id_cadastro = (int) $pdo->lastInsertId();
+        }
+        return $criado;
     }
 
     public static function read(
@@ -75,9 +79,11 @@ class Cadastro {
         $filto_estado = null, 
         $filtro_cidade = null, 
         $filtro_bairro = null, 
-        $filtro_categoria = null): array {
+        $filtro_categoria = null,
+        ?PDO $pdo = null,
+        bool $forUpdate = false): array {
             
-    $pdo = (new Database())->connect();
+    $pdo = $pdo ?? (new Database())->connect();
     $query = 'SELECT * FROM cadastro';
     $conditions = [];
 
@@ -103,6 +109,9 @@ class Cadastro {
     }
     else {
         $query .= ' ORDER BY nom_fant ASC';
+    }
+    if ($forUpdate) {
+        $query .= ' FOR UPDATE';
     }
 
     $stmt = $pdo->prepare($query);
