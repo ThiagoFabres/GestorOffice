@@ -347,9 +347,6 @@ try {
         vencimento: $hoje,
         valor_pag: $crediario ? 0 : round($totalVenda, 2),
         data_pag: $crediario ? null : $hoje,
-        obs: $crediario
-            ? 'Venda de balcão no crediário; pagamento ainda não registrado.'
-            : 'Venda de balcão paga no ato.',
         id_pgto: $idTipoPagamento
     );
     if (!Rec02::create($parcela, $pdo)) {
