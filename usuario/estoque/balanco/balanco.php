@@ -84,6 +84,7 @@ $lateral_target = 'balanco';
             max-width: 180px;
         }
     </style>
+    <title>Gestor Office Control</title>
 </head>
 <body id="body">
     <?php require_once __DIR__ . '/../../../componentes/lateral/lateral.php'; ?>

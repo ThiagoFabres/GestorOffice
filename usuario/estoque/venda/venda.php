@@ -88,6 +88,9 @@ $produtosJson = json_encode(
     }, $produtos),
     JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE
 );
+
+$lateral_estoque = true;
+$lateral_target = 'estoque_venda';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -111,6 +114,7 @@ $produtosJson = json_encode(
             .pdv-catalogo { max-height: 320px; }
         }
     </style>
+<title>Gestor Office Control</title>
 </head>
 <body id="body">
     <?php require_once __DIR__ . '/../../../componentes/lateral/lateral.php'; ?>
