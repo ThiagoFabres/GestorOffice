@@ -93,6 +93,7 @@
                                 ordenar_por: $ordenar_por,
                                 direcao: $direcao,
                                 filtro_custos: $get_filtro_custo,
+                                filtro_descricao: $get_filtro_descricao,
                                 read_vendas: true,
                             );
                             if (!empty($parcelas)) {
