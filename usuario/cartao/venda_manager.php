@@ -673,7 +673,14 @@ function parse_csv(string $caminhoCsv): array {
 
     // Ler arquivo inteiro e converter encoding
     $conteudo = file_get_contents($caminhoCsv);
-    $conteudo = mb_convert_encoding($conteudo, 'UTF-8', $operadora_sup['encoding']);
+    if ($conteudo === false) {
+        throw new RuntimeException('Não foi possível ler o arquivo CSV.');
+    }
+    $conteudoConvertido = iconv($operadora_sup['encoding'], 'UTF-8', $conteudo);
+    if ($conteudoConvertido === false) {
+        throw new RuntimeException('Não foi possível converter o arquivo CSV para UTF-8.');
+    }
+    $conteudo = $conteudoConvertido;
     $conteudo = preg_replace('/^\xEF\xBB\xBF/', '', $conteudo); // remove BOM se existir
 
     // Dividir em linhas
@@ -681,7 +688,7 @@ function parse_csv(string $caminhoCsv): array {
     
     // Processar cabeçalho
     $cabecalho_str = array_shift($linhas);
-    $cabecalho = str_getcsv($cabecalho_str, $operadora_sup['separator']);
+    $cabecalho = str_getcsv($cabecalho_str, $operadora_sup['separator'], '"', '');
     $cabecalho = array_map('trim', $cabecalho);
     foreach ($cabecalho as &$chave) {
         $chave = str_replace("\xEF\xBB\xBF", '', $chave);
@@ -696,7 +703,7 @@ function parse_csv(string $caminhoCsv): array {
         }
         if(!empty($linhas)) {
             $cabecalho_str = array_shift($linhas);
-            $cabecalho = str_getcsv($cabecalho_str, $operadora_sup['separator']);
+            $cabecalho = str_getcsv($cabecalho_str, $operadora_sup['separator'], '"', '');
             $cabecalho = array_map('trim', $cabecalho);
         }
     }
@@ -772,7 +779,7 @@ function parse_csv(string $caminhoCsv): array {
     foreach ($linhas as $linha_str) {
         if (trim($linha_str) === '') continue;
         
-        $linha = str_getcsv($linha_str, $operadora_sup['separator']);
+        $linha = str_getcsv($linha_str, $operadora_sup['separator'], '"', '');
         // Função auxiliar para obter valor da linha pela coluna
         $get_valor_coluna = function($nome_coluna) use ($linha) {
             $mapa_normalizado = $GLOBALS['mapa_normalizado'];
@@ -879,7 +886,8 @@ function parse_csv(string $caminhoCsv): array {
         
 
 
-        if(preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $parcela))) == 'avista' || intval($parcela) == 0) {
+        $parcela_texto = (string) ($parcela ?? '');
+        if(preg_replace('/[^a-zA-Z0-9]/', '', strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $parcela_texto))) == 'avista' || intval($parcela) == 0) {
             $parcela = 1;
         }
         $parcela = intval($parcela);
@@ -1070,15 +1078,10 @@ $acao = filter_input(INPUT_POST, 'acao');
 if($acao == 'processar') {
     $id_operadora = filter_input(INPUT_POST, 'operadora');
     $file = $_FILES['vendas_excel'] ?? null;
-    $limite_tamanho_arquivo = 1.5 * 1024 * 1024;
+
 
     if($file === null || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
         header('Location: cadastro_vendas.php?erro=arquivo');
-        exit;
-    }
-
-    if($file['size'] > $limite_tamanho_arquivo) {
-        header('Location: cadastro_vendas.php?erro=tamanho_arquivo');
         exit;
     }
 
