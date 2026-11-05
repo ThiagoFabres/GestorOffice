@@ -275,8 +275,7 @@ function parse_excel($numero_arquivo = null) {
         if(isset($operadora_sup['suporte_valor_taxa']) && $operadora_sup['suporte_valor_taxa'] == true) {
            $cells[4] = $cells[5] + $cells[4];   
         }
-            
-        
+
         if(($tipo_arquivo == 'personalizado' && isset($cells[6])) || ($tipo_arquivo == 'padrao' && !isset($cells[6])) ) {
             if(!empty($transactions['lancamentos'])) {
                 continue;
@@ -457,16 +456,24 @@ function parse_excel($numero_arquivo = null) {
             }
         }
 
+        $is_pix = str_starts_with(strtolower((string) $cells[2]), 'pix')
+            || str_starts_with(strtolower((string) $cells[1]), 'pix');
+        if ($is_pix) {
+            $cells[2] = 'pix';
+            $cells[1] = 'pix';
+            if ((float) $cells[4] == 0 && (float) $cells[5] != 0) {
+                $cells[4] = $cells[5];
+            } elseif ((float) $cells[5] == 0 && (float) $cells[4] != 0) {
+                $cells[5] = $cells[4];
+            }
+        }
+
         $valor_invalido = false;
 
         if( $cells[4] == 0 || ($cells[5] == 0 && $tipo_arquivo == 'padrao')) {
             $valor_invalido = true;
         }
    
-        if(str_starts_with(strtolower($cells[2]), 'pix') || str_starts_with(strtolower($cells[1]), 'pix')) {
-            $cells[2] = 'pix';
-            $cells[1] = 'pix';
-        }
         if(str_starts_with($tipo_preg, 'debit') || $tipo_preg == 'cartaodedebito') {
             $cells[2] = 'debito';
         } 
@@ -981,8 +988,16 @@ function parse_csv(string $caminhoCsv): array {
             continue;
         }
 
-                $valor_invalido = false;
+        $is_pix = $tipo === 'pix' || $bandeira_preg === 'pix';
+        if ($is_pix) {
+            if ((float) $valorBruto == 0 && (float) $valorLiquido != 0) {
+                $valorBruto = $valorLiquido;
+            } elseif ((float) $valorLiquido == 0 && (float) $valorBruto != 0) {
+                $valorLiquido = $valorBruto;
+            }
+        }
 
+        $valor_invalido = false;
         if(($valorLiquido == 0 && (!isset($operadora_sup['suporte_valor_liquido']) || $operadora_sup['suporte_valor_liquido'] === false)) || $valorBruto == 0) {
             $valor_invalido = true;
         }

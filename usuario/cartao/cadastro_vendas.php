@@ -80,6 +80,7 @@ $get_filtro_titulo = filter_input(INPUT_GET, 'filtro_titulo') ?? null;
 $get_filtro_subtitulo = filter_input(INPUT_GET, 'filtro_subtitulo') ?? null;
 $get_filtro_custo = filter_input(INPUT_GET, 'filtro_custo') ?? null;
 $get_filtro_status = filter_input(INPUT_GET, 'filtro_status') ?? null;
+$get_filtro_descricao = filter_input(INPUT_GET, 'filtro_descricao') ?? null;
 
 $exibir_detalhes = filter_input(INPUT_GET, 'filtro_detalhes') == 'on' ? true : false;
 $exibir_diferencas = filter_input(INPUT_GET, 'filtro_diferencas') == 'on' ? true : false;
@@ -108,6 +109,7 @@ if($exibir_detalhes === false){
         filtro_pagamento: $get_filtro_pagamento ?? null,
         filtro_cadastro:$get_filtro_cadastro ?? null, 
         filtro_custos: $get_filtro_custo ?? null,
+        filtro_descricao: $get_filtro_descricao ?? null,
         read_paginas: true
     );
 } else {
@@ -119,7 +121,8 @@ if($exibir_detalhes === false){
         filtro_data_inicial: $get_filtro_data_inicial ?? null,
         filtro_data_final: $get_filtro_data_final ?? null,
         id_cadastro: $get_filtro_cadastro,
-        filtro_custos: $get_filtro_custo
+        filtro_custos: $get_filtro_custo,
+        filtro_descricao: $get_filtro_descricao
     );
 }
 $total_paginas = ceil($parcela_paginas / $numero_exibir);
@@ -150,6 +153,8 @@ if ($get_filtro_custo != '')
     $filtros[] = 'filtro_custo=' . $get_filtro_custo;
 if($get_filtro_status)
     $filtros[] = 'filtro_status=' . $get_filtro_status;
+if ($get_filtro_descricao != '')
+    $filtros[] = 'filtro_descricao=' . urlencode($get_filtro_descricao);
 if ($exibir_detalhes)
     $filtros[] = 'filtro_detalhes=on';
 if($exibir_diferencas)
@@ -279,7 +284,12 @@ if ($filtros != []) {
                                                     <div style="display:flex; flex-direction: column; width:100%;" >
                                                         <label for="centro-custos-filtro">Status (Canceladas)</label>
                                                         <input style="height:2.85em" placeholder="Status" class="form-control" value="<?= $get_filtro_status ?>" type="text" name="filtro_status">
-                                                    </div>                           
+                                                    </div>
+
+                                                    <div style="display:flex; flex-direction: column; width:100%;" >
+                                                        <label for="centro-custos-filtro">Descrição</label>
+                                                        <input style="height:2.85em" placeholder="Descrição" class="form-control" value="<?= htmlspecialchars($get_filtro_descricao ?? '', ENT_QUOTES, 'UTF-8') ?>" type="text" name="filtro_descricao">
+                                                    </div>
                                                 </div>
 
 
@@ -451,6 +461,7 @@ if ($filtros != []) {
                                     filtro_con01: $get_filtro_titulo,
                                     filtro_con02: $get_filtro_subtitulo,
                                     filtro_custos: $get_filtro_custo,
+                                    filtro_descricao: $get_filtro_descricao,
                                     read_totais:true,
                                     read_vendas:true,
                             );
@@ -469,6 +480,7 @@ if ($filtros != []) {
                                 filtro_data_final: $get_filtro_data_final,
                                 id_cadastro: $get_filtro_cadastro,
                                 filtro_custos: $get_filtro_custo,
+                                filtro_descricao: $get_filtro_descricao,
                             );
                             foreach($recebimentos as $rec) {
                                 $total_parcelas += $rec->valor;

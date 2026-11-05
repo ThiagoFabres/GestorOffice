@@ -39,6 +39,7 @@
                                 filtro_data_final: $get_filtro_data_final,
                                 id_cadastro: $get_filtro_cadastro,
                                 filtro_custos: $get_filtro_custo,
+                                filtro_descricao: $get_filtro_descricao,
                             );
                             if (!empty($recebimentos)) {
                         

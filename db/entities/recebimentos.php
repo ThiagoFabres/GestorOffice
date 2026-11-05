@@ -88,6 +88,7 @@ class Rec01 {
         $filtro_custos = null,
         $filtro_nf = null,
         ?PDO $pdo = null,
+        $filtro_descricao = null,
         ) {
 
         $pdo = $pdo ?? (new Database())->connect();
@@ -115,6 +116,7 @@ class Rec01 {
         if ($filtro_data_final != null) $conditions[] = 'data_lanc <= :filtro_data_final';
         if ($filtro_custos != null) $conditions[] = 'centro_custos = :centro_custos';
         if ($filtro_nf != null) $conditions[] = 'nf = :nf';
+        if ($filtro_descricao != null && $filtro_descricao !== '') $conditions[] = 'descricao LIKE :filtro_descricao';
 
 
         if ($conditions) {
@@ -138,6 +140,9 @@ class Rec01 {
         if ($filtro_data_final != null) $stmt->bindValue(':filtro_data_final', $filtro_data_final);
         if ($filtro_custos != null) $stmt->bindValue(':centro_custos', $filtro_custos);
         if ($filtro_nf != null) $stmt->bindValue(':nf', $filtro_nf);
+        if ($filtro_descricao != null && $filtro_descricao !== '') {
+            $stmt->bindValue(':filtro_descricao', '%' . $filtro_descricao . '%');
+        }
         // if ($read_paginas === null){
         //     echo $query;
         //     exit;
