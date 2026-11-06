@@ -703,7 +703,14 @@ function parse_csv(string $caminhoCsv): array {
     if ($conteudo === false) {
         throw new RuntimeException('Não foi possível ler o arquivo CSV.');
     }
-    $conteudoConvertido = iconv($operadora_sup['encoding'], 'UTF-8', $conteudo);
+    $encoding = $operadora_sup['encoding'] ?? 'UTF-8';
+    if (mb_check_encoding($conteudo, $encoding)) {
+        $conteudoConvertido = iconv($encoding, 'UTF-8', $conteudo);
+    } elseif (strcasecmp($encoding, 'UTF-8') === 0) {
+        $conteudoConvertido = mb_convert_encoding($conteudo, 'UTF-8', 'Windows-1252');
+    } else {
+        $conteudoConvertido = mb_convert_encoding($conteudo, 'UTF-8', $encoding);
+    }
     if ($conteudoConvertido === false) {
         throw new RuntimeException('Não foi possível converter o arquivo CSV para UTF-8.');
     }
@@ -741,7 +748,9 @@ function parse_csv(string $caminhoCsv): array {
     
     // Função auxiliar para remover acentos
     $remover_acentos = function($str) {
-        return strtolower(preg_replace('/[^a-z0-9]/i', '', iconv('UTF-8', 'ASCII//TRANSLIT', $str)));
+        $texto = (string) ($str ?? '');
+        $texto_ascii = iconv('UTF-8', 'ASCII//TRANSLIT', $texto);
+        return strtolower(preg_replace('/[^a-z0-9]/i', '', $texto_ascii === false ? '' : $texto_ascii));
     };
 
     // Criar mapa normalizado para busca
@@ -812,15 +821,19 @@ function parse_csv(string $caminhoCsv): array {
             $mapa_normalizado = $GLOBALS['mapa_normalizado'];
             $mapa = $GLOBALS['mapa'];
             $remover_acentos = $GLOBALS['remover_acentos'];
-            
-            $nome_normalizado = $remover_acentos($nome_coluna);
-            if(isset($mapa_normalizado[$nome_normalizado])) {
-                $chave_original = $mapa_normalizado[$nome_normalizado];
-                if(isset($mapa[$chave_original])) {
-                    $indice = $mapa[$chave_original];
-                    if(isset($linha[$indice])) {
-                        
-                        return $linha[$indice];
+
+            foreach ((array) $nome_coluna as $nome) {
+                if ($nome === null || trim((string) $nome) === '') {
+                    continue;
+                }
+                $nome_normalizado = $remover_acentos($nome);
+                if (isset($mapa_normalizado[$nome_normalizado])) {
+                    $chave_original = $mapa_normalizado[$nome_normalizado];
+                    if (isset($mapa[$chave_original])) {
+                        $indice = $mapa[$chave_original];
+                        if (isset($linha[$indice])) {
+                            return $linha[$indice];
+                        }
                     }
                 }
             }

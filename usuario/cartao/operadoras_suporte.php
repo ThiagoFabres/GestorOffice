@@ -274,7 +274,7 @@ $operadoras_suporte = [
                 'valor_l' => 'VALOR LIQUIDO',
                 'tipo' => 'MODALIDADE',
                 'bandeira' => 'PRODUTO',
-                'parcela' => 'PL'
+                'parcela' => 'TotalParcelas'
             ],
             'suporte_encoding' => false,
             'linha_inicial' => null,
