@@ -76,14 +76,14 @@ $target = filter_input(INPUT_GET, 'target');
     $bandeiras = Band01::read(null, $_SESSION['usuario']->id_empresa, $operadora->id);
     ?>
 
-<div class="accordion custom-accordion" id="accordionExample">
+<div class="accordion custom-accordion" id="accordion-operadora-<?=$operadora->id?>">
     <div class="accordion-item">
-        <h2 class="accordion-header" id="heading<?=$i?>">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<?=$i?>" aria-expanded="false" aria-controls="collapse<?=$i?>">
+        <h2 class="accordion-header" id="heading-operadora-<?=$operadora->id?>">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-operadora-<?=$operadora->id?>" aria-expanded="false" aria-controls="collapse-operadora-<?=$operadora->id?>">
                 <span style="color: #303640; font-size:1em; font-weight:500;"> <?php echo htmlspecialchars($operadora->descricao, ENT_QUOTES, 'UTF-8'); ?> </span>
             </button>
         </h2>
-        <div id="collapse<?=$i?>" class="accordion-collapse collapse" aria-labelledby="heading<?=$i?>">
+        <div id="collapse-operadora-<?=$operadora->id?>" class="accordion-collapse collapse" aria-labelledby="heading-operadora-<?=$operadora->id?>">
             <div class="accordion-body">
                 <div class="inner-accordion">
                     <?php if($_SESSION['usuario']->processar === 1) { ?>
@@ -95,14 +95,14 @@ $target = filter_input(INPUT_GET, 'target');
                         <?php foreach($bandeiras as $j => $bandeira) { 
                             $prazos = Pra01::read(null, $operadora->id, $_SESSION['usuario']->id_empresa, id_bandeira: $bandeira->id);
                             ?>
-                                <div class="accordion custom-accordion" id="accordionExample">
+                                <div class="accordion custom-accordion" id="accordion-bandeira-<?=$bandeira->id?>">
                                     <div class="accordion-item">
-                                        <h2 class="accordion-header" id="headingb<?=$j?>">
-                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseb<?=$j?>" aria-expanded="false" aria-controls="collapseb<?=$j?>">
+                                        <h2 class="accordion-header" id="heading-bandeira-<?=$bandeira->id?>">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-bandeira-<?=$bandeira->id?>" aria-expanded="false" aria-controls="collapse-bandeira-<?=$bandeira->id?>">
                                                 <span style="color: #303640; font-size:0.8em; font-weight:500;"><?php echo htmlspecialchars($bandeira->descricao, ENT_QUOTES, 'UTF-8') . '  (' . $bandeira->tipo . ')'; ?> </span>
                                             </button>
                                         </h2>
-                                        <div id="collapseb<?=$j?>" class="accordion-collapse collapse" aria-labelledby="headingb<?=$j?>">
+                                        <div id="collapse-bandeira-<?=$bandeira->id?>" class="accordion-collapse collapse" aria-labelledby="heading-bandeira-<?=$bandeira->id?>">
                                             <div class="accordion-body">
                                                 <div class="inner-accordion">
                                                     <?php if($_SESSION['usuario']->processar === 1) { ?>
@@ -329,6 +329,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const operadoraId = params.get('abrir_operadora');
+
+    if (!/^\d+$/.test(operadoraId ?? '')) return;
+
+    const operadoraCollapse = document.getElementById(`collapse-operadora-${operadoraId}`);
+    if (!operadoraCollapse) return;
+
+    const bandeiraId = params.get('abrir_bandeira');
+    const abrirBandeira = () => {
+        if (!/^\d+$/.test(bandeiraId ?? '')) return;
+
+        const bandeiraCollapse = document.getElementById(`collapse-bandeira-${bandeiraId}`);
+        if (bandeiraCollapse) {
+            bootstrap.Collapse.getOrCreateInstance(bandeiraCollapse, { toggle: false }).show();
+        }
+    };
+
+    if (operadoraCollapse.classList.contains('show')) {
+        abrirBandeira();
+        return;
+    }
+
+    operadoraCollapse.addEventListener('shown.bs.collapse', abrirBandeira, { once: true });
+    bootstrap.Collapse.getOrCreateInstance(operadoraCollapse, { toggle: false }).show();
+});
 
 
 <?php if($acao == 'editar') { ?>
