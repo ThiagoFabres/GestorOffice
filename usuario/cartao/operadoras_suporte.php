@@ -171,6 +171,7 @@ $operadoras_suporte = [
             'start_end_columns' => [ 'start' => 'A', 'end' => 'N'],
             'coluna_comprovante' => 'P',
             'suporte_coluna_transacao' => 'J',
+            'suporte_coluna_produto' => 'F',
             'organizador' => [
                 'data' => 0, //A
                 'bandeira' => 3, // H

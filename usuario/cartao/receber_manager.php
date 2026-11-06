@@ -138,6 +138,36 @@ foreach(array_keys($bandeiras_unicas) as $id_bandeira) {
     $cache_prazo[$id_bandeira] = Pra01::read(id_empresa:$_SESSION['usuario']->id_empresa, id_bandeira: $id_bandeira, direcao: 'DESC')[0] ?? null;
 }
 
+$prazos_por_grupo = [];
+foreach ($grupos as $key => $group) {
+    $grupo_base = $group[0];
+    $id_bandeira = $grupo_base['id_bandeira'];
+    if (empty($id_bandeira)) {
+        throw new RuntimeException(
+            'Bandeira não cadastrada para a venda de ' . ($grupo_base['data'] ?? 'data desconhecida') . '.'
+        );
+    }
+
+    $max_parcela = max(array_map(
+        static fn($parcela) => (int) ($parcela['parcela'] ?? 1),
+        $group
+    ));
+    $prazo = Pra01::read(
+        id_empresa: $_SESSION['usuario']->id_empresa,
+        id_bandeira: $id_bandeira,
+        parcela: $max_parcela
+    )[0] ?? ($cache_prazo[$id_bandeira] ?? null);
+
+    if ($prazo === null) {
+        throw new RuntimeException(
+            'Prazo não cadastrado para a bandeira "' . $grupo_base['bandeira']
+            . '", tipo "' . $grupo_base['tipo'] . '" e parcela ' . $max_parcela
+            . 'x. Cadastre o prazo e importe o arquivo novamente.'
+        );
+    }
+    $prazos_por_grupo[$key] = $prazo;
+}
+
 foreach($grupos as $key => $group) {
     $valor_l_total = 0;
     $valor_b_total = 0;
@@ -178,7 +208,7 @@ foreach($grupos as $key => $group) {
         $group[$idx] = $parcela;
     }
 
-    $prazo = Pra01::read(id_empresa:$_SESSION['usuario']->id_empresa, id_bandeira: $id_bandeira, parcela: $max_parcela)[0] ?? $cache_prazo[$id_bandeira];
+    $prazo = $prazos_por_grupo[$key];
     
     if($valor_b_total != $valor_l_total && $prazo){
         $valor_liq_go = $valor_b_total - (($valor_b_total / 100) * $prazo->taxa);

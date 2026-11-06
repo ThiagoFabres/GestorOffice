@@ -60,7 +60,9 @@ if($acao == 'adicionar') {
 
         
         Band01::create($bandeira);
-        header('Location: cadastro_cartao.php');
+        header('Location: cadastro_cartao.php?' . http_build_query([
+            'abrir_operadora' => $id_operadora,
+        ]));
         exit;
     }
     else if($target == 'prazo') {
@@ -84,7 +86,10 @@ if($acao == 'adicionar') {
 
         
         Pra01::create($prazo);
-        header('Location: cadastro_cartao.php');
+        header('Location: cadastro_cartao.php?' . http_build_query([
+            'abrir_operadora' => $id_operadora,
+            'abrir_bandeira' => $id_bandeira,
+        ]));
         exit;
     }
 } else if($acao == 'editar') {

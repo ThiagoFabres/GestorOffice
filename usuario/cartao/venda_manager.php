@@ -328,6 +328,7 @@ function parse_excel($numero_arquivo = null) {
             }
         }    
         $palavras_negadas = [
+            'cancelado',
             'cancelada',
             'recusada',
             'negada',
@@ -448,19 +449,51 @@ function parse_excel($numero_arquivo = null) {
         $cells[4] = floatval($cells[4]);
         $cells[5] = floatval($cells[5]);
 
-        if(isset($operadora_sup['suporte_valor_liquido']) && $operadora_sup['suporte_valor_liquido'] === 'bruto') {
-            $valor_l_str = $cells[4];
-
-            if(isset($valor_l_str) && $valor_l_str == 0) {
-                $cells[4] = $cells[5];
+        if ((float) $cells[4] == 0 && (float) $cells[5] != 0) {
+            $cells[4] = $cells[5];
+        } elseif ((float) $cells[5] == 0 && (float) $cells[4] != 0) {
+            $cells[5] = $cells[4];
+        } elseif (
+            (float) $cells[4] == 0
+            && (float) $cells[5] == 0
+            && isset($operadora_sup['suporte_coluna_transacao'])
+        ) {
+            $cell_valor_transacao = $row->getWorksheet()->getCell(
+                $operadora_sup['suporte_coluna_transacao'] . $row->getRowIndex()
+            );
+            $valor_transacao = $cell_valor_transacao->getCalculatedValue();
+            if (is_numeric($valor_transacao)) {
+                $valor_transacao = floatval($valor_transacao);
+            } else {
+                $valor_transacao = floatval(str_replace(
+                    [',', '.'],
+                    ['.', ''],
+                    (string) $valor_transacao
+                ));
+            }
+            if ($valor_transacao != 0) {
+                $cells[4] = $valor_transacao;
+                $cells[5] = $valor_transacao;
             }
         }
 
-        $is_pix = str_starts_with(strtolower((string) $cells[2]), 'pix')
-            || str_starts_with(strtolower((string) $cells[1]), 'pix');
-        if ($is_pix) {
-            $cells[2] = 'pix';
-            $cells[1] = 'pix';
+        $produto = '';
+        if (isset($operadora_sup['suporte_coluna_produto'])) {
+            $cell_produto = $row->getWorksheet()->getCell(
+                $operadora_sup['suporte_coluna_produto'] . $row->getRowIndex()
+            );
+            $produto = (string) $cell_produto->getCalculatedValue();
+        }
+        $is_voucher = stripos($produto, 'voucher') !== false;
+
+        $is_pix = str_starts_with(strtolower(trim((string) $cells[2])), 'pix')
+            || str_starts_with(strtolower(trim((string) $cells[1])), 'pix');
+        $is_pix_or_voucher = $is_pix || $is_voucher;
+        if ($is_pix_or_voucher) {
+            if ($is_pix) {
+                $cells[2] = 'pix';
+                $cells[1] = 'pix';
+            }
             if ((float) $cells[4] == 0 && (float) $cells[5] != 0) {
                 $cells[4] = $cells[5];
             } elseif ((float) $cells[5] == 0 && (float) $cells[4] != 0) {
@@ -468,11 +501,7 @@ function parse_excel($numero_arquivo = null) {
             }
         }
 
-        $valor_invalido = false;
-
-        if( $cells[4] == 0 || ($cells[5] == 0 && $tipo_arquivo == 'padrao')) {
-            $valor_invalido = true;
-        }
+        $valor_invalido = (float) $cells[4] == 0 && (float) $cells[5] == 0;
    
         if(str_starts_with($tipo_preg, 'debit') || $tipo_preg == 'cartaodedebito') {
             $cells[2] = 'debito';
@@ -527,37 +556,25 @@ function parse_excel($numero_arquivo = null) {
             continue;
         }
 
-        $valor_cancelado = null;
         if($tipo_arquivo == 'padrao') {
-            if (in_array(strtolower($cells[6]), $palavras_negadas) || $valor_invalido) {
+            if (in_array(strtolower(trim((string) $cells[6])), $palavras_negadas) || $valor_invalido) {
+                $cell_comprovante = '';
                 if(isset($operadora_sup['coluna_comprovante'])) {
-
                     $cell_cancelada = $row->getWorksheet()->getCell( $operadora_sup['coluna_comprovante'] . $row->getRowIndex());
                     $cell_comprovante = trim((string) $cell_cancelada->getCalculatedValue());
 
                     if($cell_comprovante !== '' && isset($importadas_canceladas_set[$data_formatada][$cell_comprovante])) {
                         continue;
                     }
-
-                    if(isset($operadora_sup['suporte_coluna_transacao'])) {
-                        $cell_valor_cancelado = $row->getWorksheet()->getCell( $operadora_sup['suporte_coluna_transacao'] . $row->getRowIndex()); 
-                        $valor_cancelado = $cell_valor_cancelado->getCalculatedValue();
-                    }
-                    if($valor_cancelado != null && $valor_cancelado !== 0) {
-                        if($cells[4] == 0) {
-                            $cells[4] = $valor_cancelado;
-                        } 
-                    }
-                    
-                    $transactions['cancelados'][$i]= [
-                        'data' => $data_formatada,
-                        'bandeira' => $cells[1],
-                        'tipo' => $cells[2],
-                        'status' => $cells[6],
-                        'valor' => floatval($cells[4]) !== 0 ? $cells[4] : $cells[5],
-                        'comprovante' => $cell_comprovante
-                    ];
-                } 
+                }
+                $transactions['cancelados'][$i]= [
+                    'data' => $data_formatada,
+                    'bandeira' => $cells[1],
+                    'tipo' => $cells[2],
+                    'status' => $cells[6],
+                    'valor' => floatval($cells[4]) !== 0 ? $cells[4] : $cells[5],
+                    'comprovante' => $cell_comprovante
+                ];
                 continue;
             }
         }
@@ -597,6 +614,9 @@ function parse_excel($numero_arquivo = null) {
             $transactions['lancamentos'][$i]['motivo'][] = 'bandeira';
             $transactions['lancamentos'][$i]['motivo'][] = 'tipo';
         } 
+        if (empty($prazo_id)) {
+            $transactions['lancamentos'][$i]['motivo'][] = 'parcela';
+        }
         if((!in_array($tipo_preg, $bandeiras_tipo) ||
             !in_array($bandeira_preg, $bandeiras_parcelas)) ) {
             if(isset($tipos_bandeira[$bandeira_preg][$tipo_preg])) {
@@ -824,48 +844,52 @@ function parse_csv(string $caminhoCsv): array {
 
         
 
-        if(isset($operadora_sup['suporte_valor_liquido']) && $operadora_sup['suporte_valor_liquido'] != 'bruto') {
-            $valor_liquido = 0;
-        }
-        
-        
         $valor_b_str = $get_valor_coluna($operadora_sup['colunas']['valor_b']);
         // Limpar "R$" e espaços antes de converter
         $valor_b_str = trim(str_replace('R$', '', $valor_b_str ?? ''));
 
-        
-
-        if(isset($operadora_sup['suporte_numero']) && $operadora_sup['suporte_numero'] == 'formatado(.)') {
-            $valorBruto = $valor_b_str;
+        if (isset($operadora_sup['suporte_numero']) && $operadora_sup['suporte_numero'] === 'formatado(.)') {
+            $valorBruto = !empty($valor_b_str) ? floatval($valor_b_str) : 0;
         } else {
-        $valorBruto = !empty($valor_b_str) 
-            ? floatval(str_replace(['.', ','], ['', '.'], $valor_b_str))
-            : 0;
+            $valorBruto = !empty($valor_b_str)
+                ? floatval(str_replace(['.', ','], ['', '.'], $valor_b_str))
+                : 0;
         }
 
-        if(isset($valor_liquido)) {
-            unset($valor_liquido);
-        }
-        
-        if(isset($operadora_sup['suporte_valor_liquido']) && $operadora_sup['suporte_valor_liquido'] === 'bruto') {
-            $valor_l_str = $get_valor_coluna($operadora_sup['colunas']['valor_l']);
-            if(!isset($valor_l_str) || $valor_l_str == 0 || $valor_l_str == null || $valor_l_str == '') {
-                $valor_liquido = $valorBruto;
-            }
-        }
-
-        $valor_l_str = isset($valor_liquido) ? $valor_liquido : $get_valor_coluna($operadora_sup['colunas']['valor_l']);
-        
-        
+        $valor_l_str = $get_valor_coluna($operadora_sup['colunas']['valor_l']);
         // Limpar "R$" e espaços antes de converter
         $valor_l_str = trim(str_replace('R$', '', $valor_l_str ?? ''));
 
-        if(!isset($valor_liquido)) {
-            $valorLiquido = !empty($valor_l_str) 
+        if (isset($operadora_sup['suporte_numero']) && $operadora_sup['suporte_numero'] === 'formatado(.)') {
+            $valorLiquido = !empty($valor_l_str) ? floatval($valor_l_str) : 0;
+        } else {
+            $valorLiquido = !empty($valor_l_str)
                 ? floatval(str_replace(['.', ','], ['', '.'], $valor_l_str))
                 : 0;
-        } else {
-            $valorLiquido = isset($valor_liquido) ? $valor_liquido : 0;
+        }
+
+        if ((float) $valorBruto == 0 && (float) $valorLiquido != 0) {
+            $valorBruto = $valorLiquido;
+        } elseif ((float) $valorLiquido == 0 && (float) $valorBruto != 0) {
+            $valorLiquido = $valorBruto;
+        } elseif (
+            (float) $valorBruto == 0
+            && (float) $valorLiquido == 0
+            && isset($operadora_sup['suporte_coluna_transacao'])
+        ) {
+            $valor_transacao_str = $get_valor_coluna($operadora_sup['suporte_coluna_transacao']);
+            $valor_transacao_str = trim(str_replace('R$', '', $valor_transacao_str ?? ''));
+            if (isset($operadora_sup['suporte_numero']) && $operadora_sup['suporte_numero'] === 'formatado(.)') {
+                $valor_transacao = !empty($valor_transacao_str) ? floatval($valor_transacao_str) : 0;
+            } else {
+                $valor_transacao = !empty($valor_transacao_str)
+                    ? floatval(str_replace(['.', ','], ['', '.'], $valor_transacao_str))
+                    : 0;
+            }
+            if ($valor_transacao != 0) {
+                $valorBruto = $valor_transacao;
+                $valorLiquido = $valor_transacao;
+            }
         }
 
       
@@ -997,12 +1021,10 @@ function parse_csv(string $caminhoCsv): array {
             }
         }
 
-        $valor_invalido = false;
-        if(($valorLiquido == 0 && (!isset($operadora_sup['suporte_valor_liquido']) || $operadora_sup['suporte_valor_liquido'] === false)) || $valorBruto == 0) {
-            $valor_invalido = true;
-        }
+        $valor_invalido = (float) $valorBruto == 0 && (float) $valorLiquido == 0;
 
         $palavras_negadas = [
+            'cancelado',
             'cancelada',
             'recusada',
             'negada',
@@ -1018,24 +1040,23 @@ function parse_csv(string $caminhoCsv): array {
             'falha'
         ];
 
-if (in_array($status, $palavras_negadas) || $valor_invalido) {
-    
+if (in_array(strtolower(trim((string) $status)), $palavras_negadas) || $valor_invalido) {
+    $cell_comprovante = '';
     if(isset($operadora_sup['coluna_comprovante'])) {
         $cell_comprovante = $get_valor_coluna($operadora_sup['coluna_comprovante']);
 
         if($cell_comprovante !== '' && isset($importadas_canceladas_set[$data][$cell_comprovante])) {
             continue;
         }
-
-        $transactions['cancelados'][$i] = [
-            'data'        => $data,
-            'bandeira'    => $bandeira,
-            'tipo'        => $tipo,
-            'status'      => $status,
-            'valor'       => floatval($valorBruto) !== 0.0 ? $valorBruto : $valorLiquido,
-            'comprovante' => $cell_comprovante
-        ];
     }
+    $transactions['cancelados'][$i] = [
+        'data'        => $data,
+        'bandeira'    => $bandeira,
+        'tipo'        => $tipo,
+        'status'      => $status,
+        'valor'       => floatval($valorBruto) !== 0.0 ? $valorBruto : $valorLiquido,
+        'comprovante' => $cell_comprovante
+    ];
     continue;
 }
         
@@ -1066,6 +1087,9 @@ if (in_array($status, $palavras_negadas) || $valor_invalido) {
             $transactions['lancamentos'][$i]['motivo'][] = 'bandeira';
             $transactions['lancamentos'][$i]['motivo'][] = 'tipo';
         } 
+        if (empty($prazo_id)) {
+            $transactions['lancamentos'][$i]['motivo'][] = 'parcela';
+        }
         if((!in_array($tipo_preg, $bandeiras_tipo) ||
             !in_array($bandeira_preg, $bandeiras_parcelas)) ) {
             if(isset($tipos_bandeira[$bandeira_preg][$tipo_preg])) {
